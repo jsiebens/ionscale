@@ -1,0 +1,34 @@
+syntax = "proto3";
+package api;
+option go_package = "github.com/jsiebens/ionscale/pkg/gen;api";
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/duration.proto";
+
+import "api/ref.proto";
+
+message ListMachinesRequest {
+  uint64 tailnet_id = 1;
+}
+
+message ListMachinesResponse {
+  repeated Machine machines = 1;
+}
+
+message DeleteMachineRequest {
+  uint64 machine_id = 1;
+}
+
+message DeleteMachineResponse {}
+
+message Machine {
+  uint64 id = 1;
+  string name = 2;
+  string ipv4 = 3;
+  string ipv6 = 4;
+  bool ephemeral = 5;
+  google.protobuf.Timestamp last_seen = 6;
+  bool connected = 7;
+  Ref tailnet = 8;
+  Ref user = 9;
+}

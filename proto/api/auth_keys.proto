@@ -1,0 +1,44 @@
+syntax = "proto3";
+package api;
+option go_package = "github.com/jsiebens/ionscale/pkg/gen;api";
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/duration.proto";
+
+import "api/ref.proto";
+
+message CreateAuthKeyRequest {
+  uint64 tailnet_id = 1;
+  bool ephemeral = 2;
+  optional google.protobuf.Duration expiry = 3;
+  repeated string tags = 4;
+}
+
+message CreateAuthKeyResponse {
+  AuthKey auth_key = 1;
+  string value = 2;
+}
+
+message DeleteAuthKeyRequest {
+  uint64 auth_key_id = 1;
+}
+
+message DeleteAuthKeyResponse {}
+
+message ListAuthKeysRequest {
+  uint64 tailnet_id = 1;
+}
+
+message ListAuthKeysResponse {
+  repeated AuthKey auth_keys = 1;
+}
+
+message AuthKey {
+  uint64 id = 1;
+  string key = 2;
+  bool ephemeral = 3;
+  repeated string tags = 4;
+  google.protobuf.Timestamp created_at = 5;
+  optional google.protobuf.Timestamp expires_at = 6;
+  Ref tailnet = 7;
+}

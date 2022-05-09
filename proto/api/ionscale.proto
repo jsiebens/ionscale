@@ -1,0 +1,25 @@
+syntax = "proto3";
+package api;
+option go_package = "github.com/jsiebens/ionscale/pkg/gen;api";
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/duration.proto";
+
+import "api/version.proto";
+import "api/tailnets.proto";
+import "api/auth_keys.proto";
+import "api/machines.proto";
+
+service Ionscale {
+  rpc GetVersion (GetVersionRequest) returns (GetVersionResponse) {}
+
+  rpc CreateTailnet (CreateTailnetRequest) returns (CreateTailnetResponse) {}
+  rpc ListTailnets (ListTailnetRequest) returns (ListTailnetResponse) {}
+
+  rpc CreateAuthKey (CreateAuthKeyRequest) returns (CreateAuthKeyResponse) {}
+  rpc DeleteAuthKey (DeleteAuthKeyRequest) returns (DeleteAuthKeyResponse) {}
+  rpc ListAuthKeys (ListAuthKeysRequest) returns (ListAuthKeysResponse) {}
+
+  rpc ListMachines (ListMachinesRequest) returns (ListMachinesResponse) {}
+  rpc DeleteMachine(DeleteMachineRequest) returns (DeleteMachineResponse) {}
+}

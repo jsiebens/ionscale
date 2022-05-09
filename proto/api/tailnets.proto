@@ -1,0 +1,23 @@
+syntax = "proto3";
+package api;
+option go_package = "github.com/jsiebens/ionscale/pkg/gen;api";
+
+message Tailnet {
+  uint64 id = 1;
+  string name = 2;
+}
+
+message CreateTailnetRequest {
+  string name = 1;
+}
+
+message CreateTailnetResponse {
+  Tailnet tailnet = 1;
+}
+
+message ListTailnetRequest {
+}
+
+message ListTailnetResponse {
+  repeated Tailnet tailnet = 1;
+}

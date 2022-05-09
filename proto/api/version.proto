@@ -1,0 +1,11 @@
+syntax = "proto3";
+package api;
+option go_package = "github.com/jsiebens/ionscale/pkg/gen;api";
+
+message GetVersionRequest {
+}
+
+message GetVersionResponse {
+  string version = 1;
+  string revision = 2;
+}
