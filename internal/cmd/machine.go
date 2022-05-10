@@ -7,6 +7,7 @@ import (
 	"github.com/muesli/coral"
 	"github.com/nleeper/goment"
 	"github.com/rodaine/table"
+	"strings"
 )
 
 func machineCommands() *coral.Command {
@@ -88,7 +89,7 @@ func listMachinesCommand() *coral.Command {
 			return err
 		}
 
-		tbl := table.New("ID", "TAILNET", "NAME", "IPv4", "IPv6", "EPHEMERAL", "LAST_SEEN", "USER")
+		tbl := table.New("ID", "TAILNET", "NAME", "IPv4", "IPv6", "EPHEMERAL", "LAST_SEEN", "TAGS")
 		for _, m := range resp.Machines {
 			var lastSeen = "N/A"
 			if m.Connected {
@@ -99,7 +100,7 @@ func listMachinesCommand() *coral.Command {
 					lastSeen = mom.FromNow()
 				}
 			}
-			tbl.AddRow(m.Id, m.Tailnet.Name, m.Name, m.Ipv4, m.Ipv6, m.Ephemeral, lastSeen, m.User.Name)
+			tbl.AddRow(m.Id, m.Tailnet.Name, m.Name, m.Ipv4, m.Ipv6, m.Ephemeral, lastSeen, strings.Join(m.Tags, ","))
 		}
 		tbl.Print()
 

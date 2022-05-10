@@ -40,6 +40,7 @@ func (s *Service) ListMachines(ctx context.Context, req *api.ListMachinesRequest
 			Ipv4:      m.IPv4,
 			Ipv6:      m.IPv6,
 			Ephemeral: m.Ephemeral,
+			Tags:      m.Tags,
 			LastSeen:  lastSeen,
 			Connected: online,
 			Tailnet: &api.Ref{

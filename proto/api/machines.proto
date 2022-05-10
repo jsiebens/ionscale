@@ -31,4 +31,5 @@ message Machine {
   bool connected = 7;
   Ref tailnet = 8;
   Ref user = 9;
+  repeated string tags = 10;
 }
