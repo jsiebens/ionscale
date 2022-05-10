@@ -37,6 +37,7 @@ func (s *Service) ListAuthKeys(ctx context.Context, req *api.ListAuthKeysRequest
 			Id:        key.ID,
 			Key:       key.Key,
 			Ephemeral: key.Ephemeral,
+			Tags:      key.Tags,
 			CreatedAt: timestamppb.New(key.CreatedAt),
 			ExpiresAt: expiresAt,
 			Tailnet: &api.Ref{

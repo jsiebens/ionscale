@@ -8,6 +8,7 @@ import (
 	"github.com/rodaine/table"
 	str2dur "github.com/xhit/go-str2duration/v2"
 	"google.golang.org/protobuf/types/known/durationpb"
+	"strings"
 	"time"
 )
 
@@ -163,7 +164,7 @@ func listAuthkeysCommand() *coral.Command {
 }
 
 func printAuthKeyTable(authKeys ...*api.AuthKey) {
-	tbl := table.New("ID", "VALUE", "EPHEMERAL", "EXPIRED", "CREATED_AT", "EXPIRES_AT")
+	tbl := table.New("ID", "KEY", "EPHEMERAL", "EXPIRED", "EXPIRES_AT", "TAGS")
 	for _, authKey := range authKeys {
 		addAuthKeyToTable(tbl, authKey)
 	}
@@ -177,5 +178,5 @@ func addAuthKeyToTable(tbl table.Table, authKey *api.AuthKey) {
 		expiresAt = authKey.ExpiresAt.AsTime().Local().Format("2006-01-02 15:04:05")
 		expired = time.Now().After(authKey.ExpiresAt.AsTime())
 	}
-	tbl.AddRow(authKey.Id, fmt.Sprintf("%s...", authKey.Key), authKey.Ephemeral, expired, authKey.CreatedAt.AsTime().Local().Format("2006-01-02 15:04:05"), expiresAt)
+	tbl.AddRow(authKey.Id, fmt.Sprintf("%s...", authKey.Key), authKey.Ephemeral, expired, expiresAt, strings.Join(authKey.Tags, ","))
 }
