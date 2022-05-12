@@ -187,8 +187,8 @@ func (h *RegistrationHandlers) authenticateMachineWithAuthKey(c echo.Context, bi
 		if err != nil {
 			return err
 		}
-		m.IPv4 = ipv4.String()
-		m.IPv6 = ipv6.String()
+		m.IPv4 = domain.IP{IP: ipv4}
+		m.IPv6 = domain.IP{IP: ipv6}
 	} else {
 		registeredTags := authKey.Tags
 		advertisedTags := domain.SanitizeTags(req.Hostinfo.RequestTags)

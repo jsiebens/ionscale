@@ -37,8 +37,8 @@ func (s *Service) ListMachines(ctx context.Context, req *api.ListMachinesRequest
 		response.Machines = append(response.Machines, &api.Machine{
 			Id:        m.ID,
 			Name:      name,
-			Ipv4:      m.IPv4,
-			Ipv6:      m.IPv6,
+			Ipv4:      m.IPv4.String(),
+			Ipv6:      m.IPv6.String(),
 			Ephemeral: m.Ephemeral,
 			Tags:      m.Tags,
 			LastSeen:  lastSeen,

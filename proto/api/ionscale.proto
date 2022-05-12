@@ -9,12 +9,16 @@ import "api/version.proto";
 import "api/tailnets.proto";
 import "api/auth_keys.proto";
 import "api/machines.proto";
+import "api/acl.proto";
 
 service Ionscale {
   rpc GetVersion (GetVersionRequest) returns (GetVersionResponse) {}
 
   rpc CreateTailnet (CreateTailnetRequest) returns (CreateTailnetResponse) {}
   rpc ListTailnets (ListTailnetRequest) returns (ListTailnetResponse) {}
+
+  rpc GetACLPolicy (GetACLPolicyRequest) returns (GetACLPolicyResponse) {}
+  rpc SetACLPolicy (SetACLPolicyRequest) returns (SetACLPolicyResponse) {}
 
   rpc CreateAuthKey (CreateAuthKeyRequest) returns (CreateAuthKeyResponse) {}
   rpc DeleteAuthKey (DeleteAuthKeyRequest) returns (DeleteAuthKeyResponse) {}

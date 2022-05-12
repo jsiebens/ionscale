@@ -1,6 +1,7 @@
 package mapping
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/jsiebens/ionscale/internal/domain"
 	"github.com/jsiebens/ionscale/internal/util"
@@ -12,6 +13,19 @@ import (
 )
 
 const NetworkMagicDNSSuffix = "ionscale.net"
+
+func CopyViaJson[F any, T any](f F, t T) error {
+	raw, err := json.Marshal(f)
+	if err != nil {
+		return err
+	}
+
+	if err := json.Unmarshal(raw, t); err != nil {
+		return err
+	}
+
+	return nil
+}
 
 func ToNode(m *domain.Machine, connected bool) (*tailcfg.Node, error) {
 	nKey, err := util.ParseNodePublicKey(m.NodeKey)
@@ -39,8 +53,8 @@ func ToNode(m *domain.Machine, connected bool) (*tailcfg.Node, error) {
 	var addrs []netaddr.IPPrefix
 	var allowedIPs []netaddr.IPPrefix
 
-	if m.IPv4 != "" {
-		ipv4, err := netaddr.ParseIPPrefix(fmt.Sprintf("%s/32", m.IPv4))
+	if !m.IPv4.IsZero() {
+		ipv4, err := m.IPv4.Prefix(32)
 		if err != nil {
 			return nil, err
 		}
@@ -48,8 +62,8 @@ func ToNode(m *domain.Machine, connected bool) (*tailcfg.Node, error) {
 		allowedIPs = append(allowedIPs, ipv4)
 	}
 
-	if m.IPv6 != "" {
-		ipv6, err := netaddr.ParseIPPrefix(fmt.Sprintf("%s/128", m.IPv6))
+	if !m.IPv6.IsZero() {
+		ipv6, err := m.IPv6.Prefix(128)
 		if err != nil {
 			return nil, err
 		}

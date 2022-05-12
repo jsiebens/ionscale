@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"gorm.io/gorm"
 	"gorm.io/gorm/schema"
+	"inet.af/netaddr"
 	"tailscale.com/tailcfg"
 	"time"
 )
@@ -26,8 +27,8 @@ type Machine struct {
 	HostInfo  HostInfo
 	Endpoints Endpoints
 
-	IPv4 string
-	IPv6 string
+	IPv4 IP
+	IPv6 IP
 
 	CreatedAt time.Time
 	ExpiresAt *time.Time
@@ -41,6 +42,44 @@ type Machine struct {
 }
 
 type Machines []Machine
+
+func (m *Machine) HasIP(v netaddr.IP) bool {
+	return v.Compare(*m.IPv4.IP) == 0 || v.Compare(*m.IPv6.IP) == 0
+}
+
+func (m *Machine) HasTag(tag string) bool {
+	for _, t := range m.Tags {
+		if t == tag {
+			return true
+		}
+	}
+	return false
+}
+
+type IP struct {
+	*netaddr.IP
+}
+
+func (i *IP) Scan(destination interface{}) error {
+	switch value := destination.(type) {
+	case string:
+		ip, err := netaddr.ParseIP(value)
+		if err != nil {
+			return err
+		}
+		*i = IP{&ip}
+		return nil
+	default:
+		return fmt.Errorf("unexpected data type %T", destination)
+	}
+}
+
+func (i IP) Value() (driver.Value, error) {
+	if i.IP == nil {
+		return nil, nil
+	}
+	return i.String(), nil
+}
 
 type HostInfo tailcfg.Hostinfo
 

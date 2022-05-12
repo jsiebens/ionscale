@@ -15,6 +15,9 @@ type Repository interface {
 	GetTailnet(ctx context.Context, id uint64) (*Tailnet, error)
 	ListTailnets(ctx context.Context) ([]Tailnet, error)
 
+	GetACLPolicy(ctx context.Context, tailnetID uint64) (*ACLPolicy, error)
+	SetACLPolicy(ctx context.Context, tailnetID uint64, policy *ACLPolicy) error
+
 	SaveAuthKey(ctx context.Context, key *AuthKey) error
 	DeleteAuthKey(ctx context.Context, id uint64) (bool, error)
 	ListAuthKeys(ctx context.Context, tailnetID uint64) ([]AuthKey, error)

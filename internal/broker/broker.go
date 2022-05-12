@@ -13,6 +13,7 @@ type BrokerPool struct {
 type Signal struct {
 	PeerUpdated  *uint64
 	PeersRemoved []uint64
+	ACLUpdated   bool
 }
 
 type Broker interface {
@@ -21,6 +22,7 @@ type Broker interface {
 
 	SignalPeerUpdated(id uint64)
 	SignalPeersRemoved([]uint64)
+	SignalACLUpdated()
 
 	IsConnected(uint64) bool
 }
@@ -84,6 +86,10 @@ func (h *broker) SignalPeerUpdated(id uint64) {
 
 func (h *broker) SignalPeersRemoved(ids []uint64) {
 	h.signalChannel <- &Signal{PeersRemoved: ids}
+}
+
+func (h *broker) SignalACLUpdated() {
+	h.signalChannel <- &Signal{ACLUpdated: true}
 }
 
 func (h *broker) listen() {

@@ -1,0 +1,35 @@
+syntax = "proto3";
+package api;
+option go_package = "github.com/jsiebens/ionscale/pkg/gen;api";
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/duration.proto";
+
+import "api/ref.proto";
+
+message GetACLPolicyRequest {
+  uint64 tailnet_id = 1;
+}
+
+message GetACLPolicyResponse {
+  Policy policy = 1;
+}
+
+message SetACLPolicyRequest {
+  uint64 tailnet_id = 1;
+  Policy policy = 2;
+}
+
+message SetACLPolicyResponse {
+}
+
+message Policy {
+  map<string, string> hosts = 1;
+  repeated ACL acls = 2;
+}
+
+message ACL {
+  string action = 1;
+  repeated string src = 2;
+  repeated string dst = 3;
+}

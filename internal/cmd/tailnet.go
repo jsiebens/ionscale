@@ -16,6 +16,8 @@ func tailnetCommand() *coral.Command {
 
 	command.AddCommand(listTailnetsCommand())
 	command.AddCommand(createTailnetsCommand())
+	command.AddCommand(getACLConfig())
+	command.AddCommand(setACLConfig())
 
 	return command
 }

@@ -21,6 +21,8 @@ type IonscaleClient interface {
 	GetVersion(ctx context.Context, in *GetVersionRequest, opts ...grpc.CallOption) (*GetVersionResponse, error)
 	CreateTailnet(ctx context.Context, in *CreateTailnetRequest, opts ...grpc.CallOption) (*CreateTailnetResponse, error)
 	ListTailnets(ctx context.Context, in *ListTailnetRequest, opts ...grpc.CallOption) (*ListTailnetResponse, error)
+	GetACLPolicy(ctx context.Context, in *GetACLPolicyRequest, opts ...grpc.CallOption) (*GetACLPolicyResponse, error)
+	SetACLPolicy(ctx context.Context, in *SetACLPolicyRequest, opts ...grpc.CallOption) (*SetACLPolicyResponse, error)
 	CreateAuthKey(ctx context.Context, in *CreateAuthKeyRequest, opts ...grpc.CallOption) (*CreateAuthKeyResponse, error)
 	DeleteAuthKey(ctx context.Context, in *DeleteAuthKeyRequest, opts ...grpc.CallOption) (*DeleteAuthKeyResponse, error)
 	ListAuthKeys(ctx context.Context, in *ListAuthKeysRequest, opts ...grpc.CallOption) (*ListAuthKeysResponse, error)
@@ -57,6 +59,24 @@ func (c *ionscaleClient) CreateTailnet(ctx context.Context, in *CreateTailnetReq
 func (c *ionscaleClient) ListTailnets(ctx context.Context, in *ListTailnetRequest, opts ...grpc.CallOption) (*ListTailnetResponse, error) {
 	out := new(ListTailnetResponse)
 	err := c.cc.Invoke(ctx, "/api.Ionscale/ListTailnets", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *ionscaleClient) GetACLPolicy(ctx context.Context, in *GetACLPolicyRequest, opts ...grpc.CallOption) (*GetACLPolicyResponse, error) {
+	out := new(GetACLPolicyResponse)
+	err := c.cc.Invoke(ctx, "/api.Ionscale/GetACLPolicy", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *ionscaleClient) SetACLPolicy(ctx context.Context, in *SetACLPolicyRequest, opts ...grpc.CallOption) (*SetACLPolicyResponse, error) {
+	out := new(SetACLPolicyResponse)
+	err := c.cc.Invoke(ctx, "/api.Ionscale/SetACLPolicy", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -115,6 +135,8 @@ type IonscaleServer interface {
 	GetVersion(context.Context, *GetVersionRequest) (*GetVersionResponse, error)
 	CreateTailnet(context.Context, *CreateTailnetRequest) (*CreateTailnetResponse, error)
 	ListTailnets(context.Context, *ListTailnetRequest) (*ListTailnetResponse, error)
+	GetACLPolicy(context.Context, *GetACLPolicyRequest) (*GetACLPolicyResponse, error)
+	SetACLPolicy(context.Context, *SetACLPolicyRequest) (*SetACLPolicyResponse, error)
 	CreateAuthKey(context.Context, *CreateAuthKeyRequest) (*CreateAuthKeyResponse, error)
 	DeleteAuthKey(context.Context, *DeleteAuthKeyRequest) (*DeleteAuthKeyResponse, error)
 	ListAuthKeys(context.Context, *ListAuthKeysRequest) (*ListAuthKeysResponse, error)
@@ -134,6 +156,12 @@ func (UnimplementedIonscaleServer) CreateTailnet(context.Context, *CreateTailnet
 }
 func (UnimplementedIonscaleServer) ListTailnets(context.Context, *ListTailnetRequest) (*ListTailnetResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListTailnets not implemented")
+}
+func (UnimplementedIonscaleServer) GetACLPolicy(context.Context, *GetACLPolicyRequest) (*GetACLPolicyResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetACLPolicy not implemented")
+}
+func (UnimplementedIonscaleServer) SetACLPolicy(context.Context, *SetACLPolicyRequest) (*SetACLPolicyResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SetACLPolicy not implemented")
 }
 func (UnimplementedIonscaleServer) CreateAuthKey(context.Context, *CreateAuthKeyRequest) (*CreateAuthKeyResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateAuthKey not implemented")
@@ -212,6 +240,42 @@ func _Ionscale_ListTailnets_Handler(srv interface{}, ctx context.Context, dec fu
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(IonscaleServer).ListTailnets(ctx, req.(*ListTailnetRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Ionscale_GetACLPolicy_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetACLPolicyRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(IonscaleServer).GetACLPolicy(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/api.Ionscale/GetACLPolicy",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(IonscaleServer).GetACLPolicy(ctx, req.(*GetACLPolicyRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Ionscale_SetACLPolicy_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SetACLPolicyRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(IonscaleServer).SetACLPolicy(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/api.Ionscale/SetACLPolicy",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(IonscaleServer).SetACLPolicy(ctx, req.(*SetACLPolicyRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -324,6 +388,14 @@ var Ionscale_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ListTailnets",
 			Handler:    _Ionscale_ListTailnets_Handler,
+		},
+		{
+			MethodName: "GetACLPolicy",
+			Handler:    _Ionscale_GetACLPolicy_Handler,
+		},
+		{
+			MethodName: "SetACLPolicy",
+			Handler:    _Ionscale_SetACLPolicy_Handler,
 		},
 		{
 			MethodName: "CreateAuthKey",

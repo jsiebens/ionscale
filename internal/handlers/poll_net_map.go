@@ -219,12 +219,19 @@ func (h *PollNetMapHandler) createKeepAliveResponse(binder bind.Binder, request 
 }
 
 func (h *PollNetMapHandler) createMapResponse(m *domain.Machine, binder bind.Binder, request *tailcfg.MapRequest, delta bool, prevSyncedPeerIDs map[uint64]bool) ([]byte, map[uint64]bool, error) {
+	ctx := context.TODO()
+
 	node, err := mapping.ToNode(m, true)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	users, err := h.repository.ListUsers(context.TODO(), m.TailnetID)
+	policies, err := h.repository.GetACLPolicy(ctx, m.TailnetID)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	users, err := h.repository.ListUsers(ctx, m.TailnetID)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -232,7 +239,7 @@ func (h *PollNetMapHandler) createMapResponse(m *domain.Machine, binder bind.Bin
 	var changedPeers []*tailcfg.Node
 	var removedPeers []tailcfg.NodeID
 
-	candidatePeers, err := h.repository.ListMachinePeers(context.TODO(), m.TailnetID, m.MachineKey)
+	candidatePeers, err := h.repository.ListMachinePeers(ctx, m.TailnetID, m.MachineKey)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -240,25 +247,27 @@ func (h *PollNetMapHandler) createMapResponse(m *domain.Machine, binder bind.Bin
 	syncedPeerIDs := map[uint64]bool{}
 
 	for _, peer := range candidatePeers {
-		n, err := mapping.ToNode(&peer, h.brokers(peer.TailnetID).IsConnected(peer.ID))
-		if err != nil {
-			return nil, nil, err
+		if domain.IsValidPeer(policies, m, &peer) || domain.IsValidPeer(policies, &peer, m) {
+			n, err := mapping.ToNode(&peer, h.brokers(peer.TailnetID).IsConnected(peer.ID))
+			if err != nil {
+				return nil, nil, err
+			}
+			changedPeers = append(changedPeers, n)
+			syncedPeerIDs[peer.ID] = true
+			delete(prevSyncedPeerIDs, peer.ID)
 		}
-		changedPeers = append(changedPeers, n)
-		syncedPeerIDs[peer.ID] = true
-		delete(prevSyncedPeerIDs, peer.ID)
 	}
 
 	for p, _ := range prevSyncedPeerIDs {
 		removedPeers = append(removedPeers, tailcfg.NodeID(p))
 	}
 
-	derpMap, err := h.repository.GetDERPMap(context.TODO())
+	derpMap, err := h.repository.GetDERPMap(ctx)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	rules := tailcfg.FilterAllowAll
+	rules := domain.BuildFilterRules(policies, m, candidatePeers)
 
 	controlTime := time.Now().UTC()
 	var mapResponse *tailcfg.MapResponse
