@@ -13,6 +13,26 @@ type TailnetConfig struct {
 	Value     []byte
 }
 
+type DNSConfig struct {
+	MagicDNS         bool
+	OverrideLocalDNS bool
+	Nameservers      []string
+	Routes           map[string][]string
+}
+
+func (r *repository) GetDNSConfig(ctx context.Context, tailnetID uint64) (*DNSConfig, error) {
+	var m DNSConfig
+	err := r.getConfig(ctx, "dns_config", tailnetID, &m)
+	if err != nil {
+		return nil, err
+	}
+	return &m, nil
+}
+
+func (r *repository) SetDNSConfig(ctx context.Context, tailnetID uint64, config *DNSConfig) error {
+	return r.setConfig(ctx, "dns_config", tailnetID, config)
+}
+
 func (r *repository) SetACLPolicy(ctx context.Context, tailnetID uint64, policy *ACLPolicy) error {
 	if err := r.setConfig(ctx, "acl_policy", tailnetID, policy); err != nil {
 		return err

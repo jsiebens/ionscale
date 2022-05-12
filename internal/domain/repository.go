@@ -15,6 +15,8 @@ type Repository interface {
 	GetTailnet(ctx context.Context, id uint64) (*Tailnet, error)
 	ListTailnets(ctx context.Context) ([]Tailnet, error)
 
+	GetDNSConfig(ctx context.Context, tailnetID uint64) (*DNSConfig, error)
+	SetDNSConfig(ctx context.Context, tailnetID uint64, config *DNSConfig) error
 	GetACLPolicy(ctx context.Context, tailnetID uint64) (*ACLPolicy, error)
 	SetACLPolicy(ctx context.Context, tailnetID uint64, policy *ACLPolicy) error
 

@@ -1,0 +1,34 @@
+syntax = "proto3";
+package api;
+option go_package = "github.com/jsiebens/ionscale/pkg/gen;api";
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/duration.proto";
+
+message GetDNSConfigRequest {
+  uint64 tailnet_id = 1;
+}
+
+message GetDNSConfigResponse {
+  DNSConfig config = 1;
+}
+
+message SetDNSConfigRequest {
+  uint64 tailnet_id = 1;
+  DNSConfig config = 2;
+}
+
+message SetDNSConfigResponse {
+  DNSConfig config = 1;
+}
+
+message DNSConfig {
+  bool magic_dns = 1;
+  bool override_local_dns = 2;
+  repeated string nameservers = 3;
+  map<string, Routes> routes = 4;
+}
+
+message Routes {
+  repeated string routes = 1;
+}

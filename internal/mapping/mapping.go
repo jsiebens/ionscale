@@ -8,6 +8,7 @@ import (
 	"inet.af/netaddr"
 	"strconv"
 	"tailscale.com/tailcfg"
+	"tailscale.com/types/dnstype"
 	"tailscale.com/types/key"
 	"tailscale.com/util/dnsname"
 )
@@ -25,6 +26,50 @@ func CopyViaJson[F any, T any](f F, t T) error {
 	}
 
 	return nil
+}
+
+func ToDNSConfig(tailnet *domain.Tailnet, c *domain.DNSConfig) *tailcfg.DNSConfig {
+	tailnetDomain := dnsname.SanitizeHostname(tailnet.Name)
+	resolvers := []dnstype.Resolver{}
+	for _, r := range c.Nameservers {
+		resolver := dnstype.Resolver{
+			Addr: r,
+		}
+		resolvers = append(resolvers, resolver)
+	}
+
+	config := &tailcfg.DNSConfig{}
+
+	var domains []string
+
+	if c.MagicDNS {
+		domains = append(domains, fmt.Sprintf("%s.%s", tailnetDomain, NetworkMagicDNSSuffix))
+		config.Proxied = true
+	}
+
+	if c.OverrideLocalDNS {
+		config.Resolvers = resolvers
+	} else {
+		config.FallbackResolvers = resolvers
+	}
+
+	if len(c.Routes) != 0 {
+		routes := make(map[string][]dnstype.Resolver)
+		for r, s := range c.Routes {
+			routeResolver := []dnstype.Resolver{}
+			for _, addr := range s {
+				resolver := dnstype.Resolver{Addr: addr}
+				routeResolver = append(routeResolver, resolver)
+			}
+			routes[r] = routeResolver
+			domains = append(domains, r)
+		}
+		config.Routes = routes
+	}
+
+	config.Domains = domains
+
+	return config
 }
 
 func ToNode(m *domain.Machine, connected bool) (*tailcfg.Node, error) {

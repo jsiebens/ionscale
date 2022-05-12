@@ -262,6 +262,11 @@ func (h *PollNetMapHandler) createMapResponse(m *domain.Machine, binder bind.Bin
 		removedPeers = append(removedPeers, tailcfg.NodeID(p))
 	}
 
+	dnsConfig, err := h.repository.GetDNSConfig(ctx, m.TailnetID)
+	if err != nil {
+		return nil, nil, err
+	}
+
 	derpMap, err := h.repository.GetDERPMap(ctx)
 	if err != nil {
 		return nil, nil, err
@@ -276,6 +281,7 @@ func (h *PollNetMapHandler) createMapResponse(m *domain.Machine, binder bind.Bin
 		mapResponse = &tailcfg.MapResponse{
 			KeepAlive:    false,
 			Node:         node,
+			DNSConfig:    mapping.ToDNSConfig(&m.Tailnet, dnsConfig),
 			PacketFilter: rules,
 			DERPMap:      derpMap,
 			Domain:       dnsname.SanitizeHostname(m.Tailnet.Name),

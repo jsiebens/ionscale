@@ -21,6 +21,8 @@ type IonscaleClient interface {
 	GetVersion(ctx context.Context, in *GetVersionRequest, opts ...grpc.CallOption) (*GetVersionResponse, error)
 	CreateTailnet(ctx context.Context, in *CreateTailnetRequest, opts ...grpc.CallOption) (*CreateTailnetResponse, error)
 	ListTailnets(ctx context.Context, in *ListTailnetRequest, opts ...grpc.CallOption) (*ListTailnetResponse, error)
+	GetDNSConfig(ctx context.Context, in *GetDNSConfigRequest, opts ...grpc.CallOption) (*GetDNSConfigResponse, error)
+	SetDNSConfig(ctx context.Context, in *SetDNSConfigRequest, opts ...grpc.CallOption) (*SetDNSConfigResponse, error)
 	GetACLPolicy(ctx context.Context, in *GetACLPolicyRequest, opts ...grpc.CallOption) (*GetACLPolicyResponse, error)
 	SetACLPolicy(ctx context.Context, in *SetACLPolicyRequest, opts ...grpc.CallOption) (*SetACLPolicyResponse, error)
 	CreateAuthKey(ctx context.Context, in *CreateAuthKeyRequest, opts ...grpc.CallOption) (*CreateAuthKeyResponse, error)
@@ -59,6 +61,24 @@ func (c *ionscaleClient) CreateTailnet(ctx context.Context, in *CreateTailnetReq
 func (c *ionscaleClient) ListTailnets(ctx context.Context, in *ListTailnetRequest, opts ...grpc.CallOption) (*ListTailnetResponse, error) {
 	out := new(ListTailnetResponse)
 	err := c.cc.Invoke(ctx, "/api.Ionscale/ListTailnets", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *ionscaleClient) GetDNSConfig(ctx context.Context, in *GetDNSConfigRequest, opts ...grpc.CallOption) (*GetDNSConfigResponse, error) {
+	out := new(GetDNSConfigResponse)
+	err := c.cc.Invoke(ctx, "/api.Ionscale/GetDNSConfig", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *ionscaleClient) SetDNSConfig(ctx context.Context, in *SetDNSConfigRequest, opts ...grpc.CallOption) (*SetDNSConfigResponse, error) {
+	out := new(SetDNSConfigResponse)
+	err := c.cc.Invoke(ctx, "/api.Ionscale/SetDNSConfig", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -135,6 +155,8 @@ type IonscaleServer interface {
 	GetVersion(context.Context, *GetVersionRequest) (*GetVersionResponse, error)
 	CreateTailnet(context.Context, *CreateTailnetRequest) (*CreateTailnetResponse, error)
 	ListTailnets(context.Context, *ListTailnetRequest) (*ListTailnetResponse, error)
+	GetDNSConfig(context.Context, *GetDNSConfigRequest) (*GetDNSConfigResponse, error)
+	SetDNSConfig(context.Context, *SetDNSConfigRequest) (*SetDNSConfigResponse, error)
 	GetACLPolicy(context.Context, *GetACLPolicyRequest) (*GetACLPolicyResponse, error)
 	SetACLPolicy(context.Context, *SetACLPolicyRequest) (*SetACLPolicyResponse, error)
 	CreateAuthKey(context.Context, *CreateAuthKeyRequest) (*CreateAuthKeyResponse, error)
@@ -156,6 +178,12 @@ func (UnimplementedIonscaleServer) CreateTailnet(context.Context, *CreateTailnet
 }
 func (UnimplementedIonscaleServer) ListTailnets(context.Context, *ListTailnetRequest) (*ListTailnetResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListTailnets not implemented")
+}
+func (UnimplementedIonscaleServer) GetDNSConfig(context.Context, *GetDNSConfigRequest) (*GetDNSConfigResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetDNSConfig not implemented")
+}
+func (UnimplementedIonscaleServer) SetDNSConfig(context.Context, *SetDNSConfigRequest) (*SetDNSConfigResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SetDNSConfig not implemented")
 }
 func (UnimplementedIonscaleServer) GetACLPolicy(context.Context, *GetACLPolicyRequest) (*GetACLPolicyResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetACLPolicy not implemented")
@@ -240,6 +268,42 @@ func _Ionscale_ListTailnets_Handler(srv interface{}, ctx context.Context, dec fu
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(IonscaleServer).ListTailnets(ctx, req.(*ListTailnetRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Ionscale_GetDNSConfig_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetDNSConfigRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(IonscaleServer).GetDNSConfig(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/api.Ionscale/GetDNSConfig",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(IonscaleServer).GetDNSConfig(ctx, req.(*GetDNSConfigRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Ionscale_SetDNSConfig_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SetDNSConfigRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(IonscaleServer).SetDNSConfig(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/api.Ionscale/SetDNSConfig",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(IonscaleServer).SetDNSConfig(ctx, req.(*SetDNSConfigRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -388,6 +452,14 @@ var Ionscale_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ListTailnets",
 			Handler:    _Ionscale_ListTailnets_Handler,
+		},
+		{
+			MethodName: "GetDNSConfig",
+			Handler:    _Ionscale_GetDNSConfig_Handler,
+		},
+		{
+			MethodName: "SetDNSConfig",
+			Handler:    _Ionscale_SetDNSConfig_Handler,
 		},
 		{
 			MethodName: "GetACLPolicy",

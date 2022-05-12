@@ -9,6 +9,7 @@ import "api/version.proto";
 import "api/tailnets.proto";
 import "api/auth_keys.proto";
 import "api/machines.proto";
+import "api/dns.proto";
 import "api/acl.proto";
 
 service Ionscale {
@@ -16,6 +17,9 @@ service Ionscale {
 
   rpc CreateTailnet (CreateTailnetRequest) returns (CreateTailnetResponse) {}
   rpc ListTailnets (ListTailnetRequest) returns (ListTailnetResponse) {}
+
+  rpc GetDNSConfig (GetDNSConfigRequest) returns (GetDNSConfigResponse) {}
+  rpc SetDNSConfig (SetDNSConfigRequest) returns (SetDNSConfigResponse) {}
 
   rpc GetACLPolicy (GetACLPolicyRequest) returns (GetACLPolicyResponse) {}
   rpc SetACLPolicy (SetACLPolicyRequest) returns (SetACLPolicyResponse) {}
