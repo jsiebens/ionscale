@@ -2,6 +2,7 @@ package mux
 
 import (
 	"crypto/tls"
+	"github.com/improbable-eng/grpc-web/go/grpcweb"
 	"github.com/jsiebens/ionscale/internal/config"
 	"github.com/soheilhy/cmux"
 	"golang.org/x/sync/errgroup"
@@ -26,11 +27,15 @@ func Serve(grpcServer *grpc.Server, appHandler http.Handler, metricsHandler http
 		cmux.HTTP2MatchHeaderFieldPrefixSendSettings("content-type", "application/grpc"),
 		cmux.HTTP2MatchHeaderFieldPrefixSendSettings("content-type", "application/grpc+proto"),
 	)
+	grpcWebL := mux.Match(cmux.HTTP1HeaderFieldPrefix("content-type", "application/grpc-web"))
 	httpL := mux.Match(cmux.Any())
+
+	grpcWebHandler := grpcweb.WrapServer(grpcServer)
 
 	g := new(errgroup.Group)
 
 	g.Go(func() error { return grpcServer.Serve(grpcL) })
+	g.Go(func() error { return http.Serve(grpcWebL, grpcWebHandler) })
 	g.Go(func() error { return http.Serve(httpL, appHandler) })
 	g.Go(func() error { return http.Serve(metricsL, metricsHandler) })
 	g.Go(func() error { return mux.Serve() })

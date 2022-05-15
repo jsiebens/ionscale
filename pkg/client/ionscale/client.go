@@ -10,10 +10,23 @@ import (
 	"net/url"
 )
 
-func NewClient(clientAuth ClientAuth, serverURL string, insecureSkipVerify bool) (api.IonscaleClient, io.Closer, error) {
+func NewClient(clientAuth ClientAuth, serverURL string, insecureSkipVerify bool, useGrpcWebProxy bool) (api.IonscaleClient, io.Closer, error) {
 	parsedUrl, err := url.Parse(serverURL)
 	if err != nil {
 		return nil, nil, err
+	}
+
+	if parsedUrl.Scheme == "" {
+		parsedUrl.Scheme = "https"
+	}
+
+	if useGrpcWebProxy {
+		conn, err := NewGrpcWebProxy(*parsedUrl, insecureSkipVerify).Dial(grpc.WithPerRPCCredentials(clientAuth))
+		if err != nil {
+			return nil, nil, err
+		}
+
+		return api.NewIonscaleClient(conn), conn, nil
 	}
 
 	var targetAddr = parsedUrl.Host
