@@ -92,7 +92,7 @@ func (s *Service) GetMachineRoutes(ctx context.Context, req *api.GetMachineRoute
 	for _, r := range m.HostInfo.RoutableIPs {
 		routes = append(routes, &api.RoutableIP{
 			Advertised: r.String(),
-			Allowed:    m.IsAllowedIP(r),
+			Allowed:    m.IsAllowedIPPrefix(r),
 		})
 	}
 
@@ -133,7 +133,7 @@ func (s *Service) SetMachineRoutes(ctx context.Context, req *api.SetMachineRoute
 	for _, r := range m.HostInfo.RoutableIPs {
 		routes = append(routes, &api.RoutableIP{
 			Advertised: r.String(),
-			Allowed:    m.IsAllowedIP(r),
+			Allowed:    m.IsAllowedIPPrefix(r),
 		})
 	}
 

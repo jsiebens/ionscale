@@ -58,7 +58,7 @@ func (a *aclEngine) isValidPeer(src *Machine, dest *Machine) bool {
 		}
 
 		for _, alias := range acl.Src {
-			if len(a.expandMachineAlias(src, alias)) != 0 {
+			if len(a.expandMachineAlias(src, alias, true)) != 0 {
 				return true
 			}
 		}
@@ -78,7 +78,7 @@ func (a *aclEngine) build(dst *Machine, peers []Machine) []tailcfg.FilterRule {
 		var allSrcIPs []string
 		for _, src := range acl.Src {
 			for _, peer := range peers {
-				srcIPs := a.expandMachineAlias(&peer, src)
+				srcIPs := a.expandMachineAlias(&peer, src, true)
 				allSrcIPs = append(allSrcIPs, srcIPs...)
 			}
 		}
@@ -129,7 +129,7 @@ func (a *aclEngine) expandMachineDestToNetPortRanges(m *Machine, dest string) []
 		return nil
 	}
 
-	ips := a.expandMachineAlias(m, alias)
+	ips := a.expandMachineAlias(m, alias, false)
 	if len(ips) == 0 {
 		return nil
 	}
@@ -148,26 +148,36 @@ func (a *aclEngine) expandMachineDestToNetPortRanges(m *Machine, dest string) []
 	return dests
 }
 
-func (a *aclEngine) expandMachineAlias(m *Machine, src string) []string {
-	if src == "*" {
-		if src == "*" {
+func (a *aclEngine) expandMachineAlias(m *Machine, alias string, src bool) []string {
+	if alias == "*" {
+		if alias == "*" {
 			return []string{"*"}
 		}
 	}
 
-	machineIPs := []string{m.IPv4.String(), m.IPv6.String()}
-
-	if strings.HasPrefix(src, "tag:") && m.HasTag(src[4:]) {
-		return machineIPs
+	if strings.HasPrefix(alias, "tag:") && m.HasTag(alias[4:]) {
+		return []string{m.IPv4.String(), m.IPv6.String()}
 	}
 
-	if h, ok := a.policy.Hosts[src]; ok {
-		src = h
+	if h, ok := a.policy.Hosts[alias]; ok {
+		alias = h
 	}
 
-	ip, err := netaddr.ParseIP(src)
-	if err == nil && m.HasIP(ip) {
-		return machineIPs
+	if src {
+		ip, err := netaddr.ParseIP(alias)
+		if err == nil && m.HasIP(ip) {
+			return []string{ip.String()}
+		}
+	} else {
+		ip, err := netaddr.ParseIP(alias)
+		if err == nil && m.IsAllowedIP(ip) {
+			return []string{ip.String()}
+		}
+
+		prefix, err := netaddr.ParseIPPrefix(alias)
+		if err == nil && m.IsAllowedIPPrefix(prefix) {
+			return []string{prefix.String()}
+		}
 	}
 
 	return []string{}

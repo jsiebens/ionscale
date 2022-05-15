@@ -57,7 +57,19 @@ func (m *Machine) HasTag(tag string) bool {
 	return false
 }
 
-func (m *Machine) IsAllowedIP(i netaddr.IPPrefix) bool {
+func (m *Machine) IsAllowedIP(i netaddr.IP) bool {
+	if m.HasIP(i) {
+		return true
+	}
+	for _, t := range m.AllowIPs {
+		if t.Contains(i) {
+			return true
+		}
+	}
+	return false
+}
+
+func (m *Machine) IsAllowedIPPrefix(i netaddr.IPPrefix) bool {
 	for _, t := range m.AllowIPs {
 		if t.Overlaps(i) {
 			return true
