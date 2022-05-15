@@ -9,6 +9,7 @@ import "api/version.proto";
 import "api/tailnets.proto";
 import "api/auth_keys.proto";
 import "api/machines.proto";
+import "api/routes.proto";
 import "api/dns.proto";
 import "api/acl.proto";
 
@@ -30,4 +31,7 @@ service Ionscale {
 
   rpc ListMachines (ListMachinesRequest) returns (ListMachinesResponse) {}
   rpc DeleteMachine(DeleteMachineRequest) returns (DeleteMachineResponse) {}
+
+  rpc GetMachineRoutes (GetMachineRoutesRequest) returns (GetMachineRoutesResponse) {}
+  rpc SetMachineRoutes (SetMachineRoutesRequest) returns (GetMachineRoutesResponse) {}
 }

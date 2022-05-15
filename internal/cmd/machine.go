@@ -7,6 +7,7 @@ import (
 	"github.com/muesli/coral"
 	"github.com/nleeper/goment"
 	"github.com/rodaine/table"
+	"inet.af/netaddr"
 	"strings"
 )
 
@@ -19,6 +20,8 @@ func machineCommands() *coral.Command {
 
 	command.AddCommand(deleteMachineCommand())
 	command.AddCommand(listMachinesCommand())
+	command.AddCommand(getMachineRoutesCommand())
+	command.AddCommand(setMachineRoutesCommand())
 
 	return command
 }
@@ -101,6 +104,91 @@ func listMachinesCommand() *coral.Command {
 				}
 			}
 			tbl.AddRow(m.Id, m.Tailnet.Name, m.Name, m.Ipv4, m.Ipv6, m.Ephemeral, lastSeen, strings.Join(m.Tags, ","))
+		}
+		tbl.Print()
+
+		return nil
+	}
+
+	return command
+}
+
+func getMachineRoutesCommand() *coral.Command {
+	command := &coral.Command{
+		Use:          "get-routes",
+		Short:        "Show the routes of a machine",
+		SilenceUsage: true,
+	}
+
+	var machineID uint64
+	var target = Target{}
+	target.prepareCommand(command)
+	command.Flags().Uint64Var(&machineID, "machine-id", 0, "")
+
+	command.RunE = func(command *coral.Command, args []string) error {
+		grpcClient, c, err := target.createGRPCClient()
+		if err != nil {
+			return err
+		}
+		defer safeClose(c)
+
+		req := api.GetMachineRoutesRequest{MachineId: machineID}
+		resp, err := grpcClient.GetMachineRoutes(context.Background(), &req)
+		if err != nil {
+			return err
+		}
+
+		tbl := table.New("ROUTE", "ALLOWED")
+		for _, r := range resp.Routes {
+			tbl.AddRow(r.Advertised, r.Allowed)
+		}
+		tbl.Print()
+
+		return nil
+	}
+
+	return command
+}
+
+func setMachineRoutesCommand() *coral.Command {
+	command := &coral.Command{
+		Use:          "set-routes",
+		Short:        "Enable routes of a machine",
+		SilenceUsage: true,
+	}
+
+	var machineID uint64
+	var allowedIps []string
+	var target = Target{}
+	target.prepareCommand(command)
+	command.Flags().Uint64Var(&machineID, "machine-id", 0, "")
+	command.Flags().StringSliceVar(&allowedIps, "allowed-ips", []string{}, "")
+
+	command.RunE = func(command *coral.Command, args []string) error {
+		client, c, err := target.createGRPCClient()
+		if err != nil {
+			return err
+		}
+		defer safeClose(c)
+
+		var prefixes []netaddr.IPPrefix
+		for _, r := range allowedIps {
+			p, err := netaddr.ParseIPPrefix(r)
+			if err != nil {
+				return err
+			}
+			prefixes = append(prefixes, p)
+		}
+
+		req := api.SetMachineRoutesRequest{MachineId: machineID, AllowedIps: allowedIps}
+		resp, err := client.SetMachineRoutes(context.Background(), &req)
+		if err != nil {
+			return err
+		}
+
+		tbl := table.New("ROUTE", "ALLOWED")
+		for _, r := range resp.Routes {
+			tbl.AddRow(r.Advertised, r.Allowed)
 		}
 		tbl.Print()
 

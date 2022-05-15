@@ -30,6 +30,8 @@ type IonscaleClient interface {
 	ListAuthKeys(ctx context.Context, in *ListAuthKeysRequest, opts ...grpc.CallOption) (*ListAuthKeysResponse, error)
 	ListMachines(ctx context.Context, in *ListMachinesRequest, opts ...grpc.CallOption) (*ListMachinesResponse, error)
 	DeleteMachine(ctx context.Context, in *DeleteMachineRequest, opts ...grpc.CallOption) (*DeleteMachineResponse, error)
+	GetMachineRoutes(ctx context.Context, in *GetMachineRoutesRequest, opts ...grpc.CallOption) (*GetMachineRoutesResponse, error)
+	SetMachineRoutes(ctx context.Context, in *SetMachineRoutesRequest, opts ...grpc.CallOption) (*GetMachineRoutesResponse, error)
 }
 
 type ionscaleClient struct {
@@ -148,6 +150,24 @@ func (c *ionscaleClient) DeleteMachine(ctx context.Context, in *DeleteMachineReq
 	return out, nil
 }
 
+func (c *ionscaleClient) GetMachineRoutes(ctx context.Context, in *GetMachineRoutesRequest, opts ...grpc.CallOption) (*GetMachineRoutesResponse, error) {
+	out := new(GetMachineRoutesResponse)
+	err := c.cc.Invoke(ctx, "/api.Ionscale/GetMachineRoutes", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *ionscaleClient) SetMachineRoutes(ctx context.Context, in *SetMachineRoutesRequest, opts ...grpc.CallOption) (*GetMachineRoutesResponse, error) {
+	out := new(GetMachineRoutesResponse)
+	err := c.cc.Invoke(ctx, "/api.Ionscale/SetMachineRoutes", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // IonscaleServer is the server API for Ionscale service.
 // All implementations should embed UnimplementedIonscaleServer
 // for forward compatibility
@@ -164,6 +184,8 @@ type IonscaleServer interface {
 	ListAuthKeys(context.Context, *ListAuthKeysRequest) (*ListAuthKeysResponse, error)
 	ListMachines(context.Context, *ListMachinesRequest) (*ListMachinesResponse, error)
 	DeleteMachine(context.Context, *DeleteMachineRequest) (*DeleteMachineResponse, error)
+	GetMachineRoutes(context.Context, *GetMachineRoutesRequest) (*GetMachineRoutesResponse, error)
+	SetMachineRoutes(context.Context, *SetMachineRoutesRequest) (*GetMachineRoutesResponse, error)
 }
 
 // UnimplementedIonscaleServer should be embedded to have forward compatible implementations.
@@ -205,6 +227,12 @@ func (UnimplementedIonscaleServer) ListMachines(context.Context, *ListMachinesRe
 }
 func (UnimplementedIonscaleServer) DeleteMachine(context.Context, *DeleteMachineRequest) (*DeleteMachineResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteMachine not implemented")
+}
+func (UnimplementedIonscaleServer) GetMachineRoutes(context.Context, *GetMachineRoutesRequest) (*GetMachineRoutesResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetMachineRoutes not implemented")
+}
+func (UnimplementedIonscaleServer) SetMachineRoutes(context.Context, *SetMachineRoutesRequest) (*GetMachineRoutesResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SetMachineRoutes not implemented")
 }
 
 // UnsafeIonscaleServer may be embedded to opt out of forward compatibility for this service.
@@ -434,6 +462,42 @@ func _Ionscale_DeleteMachine_Handler(srv interface{}, ctx context.Context, dec f
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Ionscale_GetMachineRoutes_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetMachineRoutesRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(IonscaleServer).GetMachineRoutes(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/api.Ionscale/GetMachineRoutes",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(IonscaleServer).GetMachineRoutes(ctx, req.(*GetMachineRoutesRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Ionscale_SetMachineRoutes_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SetMachineRoutesRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(IonscaleServer).SetMachineRoutes(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/api.Ionscale/SetMachineRoutes",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(IonscaleServer).SetMachineRoutes(ctx, req.(*SetMachineRoutesRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Ionscale_ServiceDesc is the grpc.ServiceDesc for Ionscale service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -488,6 +552,14 @@ var Ionscale_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "DeleteMachine",
 			Handler:    _Ionscale_DeleteMachine_Handler,
+		},
+		{
+			MethodName: "GetMachineRoutes",
+			Handler:    _Ionscale_GetMachineRoutes_Handler,
+		},
+		{
+			MethodName: "SetMachineRoutes",
+			Handler:    _Ionscale_SetMachineRoutes_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

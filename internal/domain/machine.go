@@ -26,6 +26,7 @@ type Machine struct {
 
 	HostInfo  HostInfo
 	Endpoints Endpoints
+	AllowIPs  AllowIPs
 
 	IPv4 IP
 	IPv6 IP
@@ -56,6 +57,15 @@ func (m *Machine) HasTag(tag string) bool {
 	return false
 }
 
+func (m *Machine) IsAllowedIP(i netaddr.IPPrefix) bool {
+	for _, t := range m.AllowIPs {
+		if t.Overlaps(i) {
+			return true
+		}
+	}
+	return false
+}
+
 type IP struct {
 	*netaddr.IP
 }
@@ -79,6 +89,36 @@ func (i IP) Value() (driver.Value, error) {
 		return nil, nil
 	}
 	return i.String(), nil
+}
+
+type AllowIPs []netaddr.IPPrefix
+
+func (hi *AllowIPs) Scan(destination interface{}) error {
+	switch value := destination.(type) {
+	case []byte:
+		return json.Unmarshal(value, hi)
+	default:
+		return fmt.Errorf("unexpected data type %T", destination)
+	}
+}
+
+func (hi AllowIPs) Value() (driver.Value, error) {
+	bytes, err := json.Marshal(hi)
+	return bytes, err
+}
+
+// GormDataType gorm common data type
+func (AllowIPs) GormDataType() string {
+	return "json"
+}
+
+// GormDBDataType gorm db data type
+func (AllowIPs) GormDBDataType(db *gorm.DB, field *schema.Field) string {
+	switch db.Dialector.Name() {
+	case "sqlite":
+		return "JSON"
+	}
+	return ""
 }
 
 type HostInfo tailcfg.Hostinfo

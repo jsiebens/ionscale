@@ -116,6 +116,8 @@ func ToNode(m *domain.Machine, connected bool) (*tailcfg.Node, error) {
 		allowedIPs = append(allowedIPs, ipv6)
 	}
 
+	allowedIPs = append(allowedIPs, m.AllowIPs...)
+
 	var derp string
 	if hostinfo.NetInfo != nil {
 		derp = fmt.Sprintf("127.3.3.40:%d", hostinfo.NetInfo.PreferredDERP)
