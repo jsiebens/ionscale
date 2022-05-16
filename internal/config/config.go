@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+	"github.com/caddyserver/certmagic"
 	"github.com/jsiebens/ionscale/internal/util"
 	"github.com/mitchellh/go-homedir"
 	"gopkg.in/yaml.v3"
@@ -42,6 +43,10 @@ const (
 	tlsDisableKey           = "IONSCALE_TLS_DISABLE"
 	tlsCertFileKey          = "IONSCALE_TLS_CERT_FILE"
 	tlsKeyFileKey           = "IONSCALE_TLS_KEY_FILE"
+	tlsCertMagicCAKey       = "IONSCALE_TLS_CERT_MAGIC_CA"
+	tlsCertMagicDomainKey   = "IONSCALE_TLS_CERT_MAGIC_DOMAIN"
+	tlsCertMagicEmailKey    = "IONSCALE_TLS_CERT_MAGIC_EMAIL"
+	tlsCertMagicStoragePath = "IONSCALE_TLS_CERT_MAGIC_STORAGE_PATH"
 	metricsListenAddrKey    = "IONSCALE_METRICS_LISTEN_ADDR"
 	loggingLevelKey         = "IONSCALE_LOGGING_LEVEL"
 	loggingFormatKey        = "IONSCALE_LOGGING_FORMAT"
@@ -63,9 +68,13 @@ func defaultConfig() *Config {
 			Url: GetString(databaseUrlKey, "ionscale.db"),
 		},
 		Tls: Tls{
-			Disable:  GetBool(tlsDisableKey, false),
-			CertFile: GetString(tlsCertFileKey, ""),
-			KeyFile:  GetString(tlsKeyFileKey, ""),
+			Disable:              GetBool(tlsDisableKey, false),
+			CertFile:             GetString(tlsCertFileKey, ""),
+			KeyFile:              GetString(tlsKeyFileKey, ""),
+			CertMagicCA:          GetString(tlsCertMagicCAKey, certmagic.LetsEncryptProductionCA),
+			CertMagicDomain:      GetString(tlsCertMagicDomainKey, ""),
+			CertMagicEmail:       GetString(tlsCertMagicEmailKey, ""),
+			CertMagicStoragePath: GetString(tlsCertMagicStoragePath, ""),
 		},
 		Logging: Logging{
 			Level:  GetString(loggingLevelKey, "info"),
@@ -93,9 +102,13 @@ type Config struct {
 }
 
 type Tls struct {
-	Disable  bool   `yaml:"disable"`
-	CertFile string `yaml:"cert_file"`
-	KeyFile  string `yaml:"key_file"`
+	Disable              bool   `yaml:"disable"`
+	CertFile             string `yaml:"cert_file"`
+	KeyFile              string `yaml:"key_file"`
+	CertMagicDomain      string `yaml:"cert_magic_domain"`
+	CertMagicEmail       string `yaml:"cert_magic_email"`
+	CertMagicCA          string `yaml:"cert_magic_ca"`
+	CertMagicStoragePath string `yaml:"cert_magic_storage_path"`
 }
 
 type Logging struct {
