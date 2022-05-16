@@ -32,7 +32,8 @@ func LoadConfig(path string) (*Config, error) {
 }
 
 const (
-	listenAddrKey           = "IONSCALE_LISTEN_ADDR"
+	httpListenAddrKey       = "IONSCALE_HTTP_LISTEN_ADDR"
+	httpsListenAddrKey      = "IONSCALE_HTTPS_LISTEN_ADDR"
 	serverUrlKey            = "IONSCALE_SERVER_URL"
 	keysSystemAdminKeyKey   = "IONSCALE_SYSTEM_ADMIN_KEY"
 	keysControlKeyKey       = "IONSCALE_CONTROL_KEY"
@@ -49,8 +50,10 @@ const (
 
 func defaultConfig() *Config {
 	return &Config{
-		ListenAddr: GetString(listenAddrKey, ":8000"),
-		ServerUrl:  GetString(serverUrlKey, "https://localhost:8000"),
+		HttpListenAddr:    GetString(httpListenAddrKey, ":8080"),
+		HttpsListenAddr:   GetString(httpsListenAddrKey, ":8443"),
+		MetricsListenAddr: GetString(metricsListenAddrKey, ":8081"),
+		ServerUrl:         GetString(serverUrlKey, "https://localhost:8443"),
 		Keys: Keys{
 			SystemAdminKey:   GetString(keysSystemAdminKeyKey, ""),
 			ControlKey:       GetString(keysControlKeyKey, ""),
@@ -64,7 +67,6 @@ func defaultConfig() *Config {
 			CertFile: GetString(tlsCertFileKey, ""),
 			KeyFile:  GetString(tlsKeyFileKey, ""),
 		},
-		Metrics: Metrics{ListenAddr: GetString(metricsListenAddrKey, ":8001")},
 		Logging: Logging{
 			Level:  GetString(loggingLevelKey, "info"),
 			Format: GetString(loggingFormatKey, ""),
@@ -80,17 +82,14 @@ type ServerKeys struct {
 }
 
 type Config struct {
-	ListenAddr string   `yaml:"listen_addr"`
-	ServerUrl  string   `yaml:"server_url"`
-	Tls        Tls      `yaml:"tls"`
-	Metrics    Metrics  `yaml:"metrics"`
-	Logging    Logging  `yaml:"logging"`
-	Keys       Keys     `yaml:"keys"`
-	Database   Database `yaml:"database"`
-}
-
-type Metrics struct {
-	ListenAddr string `yaml:"listen_addr"`
+	HttpListenAddr    string   `yaml:"http_listen_addr"`
+	HttpsListenAddr   string   `yaml:"https_listen_addr"`
+	MetricsListenAddr string   `yaml:"metrics_listen_addr"`
+	ServerUrl         string   `yaml:"server_url"`
+	Tls               Tls      `yaml:"tls"`
+	Logging           Logging  `yaml:"logging"`
+	Keys              Keys     `yaml:"keys"`
+	Database          Database `yaml:"database"`
 }
 
 type Tls struct {
