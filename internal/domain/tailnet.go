@@ -48,3 +48,8 @@ func (r *repository) ListTailnets(ctx context.Context) ([]Tailnet, error) {
 	}
 	return tailnets, nil
 }
+
+func (r *repository) DeleteTailnet(ctx context.Context, id uint64) error {
+	tx := r.withContext(ctx).Delete(&Tailnet{ID: id})
+	return tx.Error
+}

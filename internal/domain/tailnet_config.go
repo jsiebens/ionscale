@@ -33,6 +33,10 @@ func (r *repository) SetDNSConfig(ctx context.Context, tailnetID uint64, config 
 	return r.setConfig(ctx, "dns_config", tailnetID, config)
 }
 
+func (r *repository) DeleteDNSConfig(ctx context.Context, tailnetID uint64) error {
+	return r.deleteConfig(ctx, "dns_config", tailnetID)
+}
+
 func (r *repository) SetACLPolicy(ctx context.Context, tailnetID uint64, policy *ACLPolicy) error {
 	if err := r.setConfig(ctx, "acl_policy", tailnetID, policy); err != nil {
 		return err
@@ -47,6 +51,10 @@ func (r *repository) GetACLPolicy(ctx context.Context, tailnetID uint64) (*ACLPo
 		return nil, err
 	}
 	return &p, nil
+}
+
+func (r *repository) DeleteACLPolicy(ctx context.Context, tailnetID uint64) error {
+	return r.deleteConfig(ctx, "acl_policy", tailnetID)
 }
 
 func (r *repository) getConfig(ctx context.Context, s string, tailnetID uint64, v interface{}) error {
@@ -80,6 +88,16 @@ func (r *repository) setConfig(ctx context.Context, s string, tailnetID uint64, 
 		TailnetID: tailnetID,
 	}
 	tx := r.withContext(ctx).Save(c)
+
+	return tx.Error
+}
+
+func (r *repository) deleteConfig(ctx context.Context, s string, tailnetID uint64) error {
+	c := &TailnetConfig{
+		Key:       s,
+		TailnetID: tailnetID,
+	}
+	tx := r.withContext(ctx).Delete(c)
 
 	return tx.Error
 }

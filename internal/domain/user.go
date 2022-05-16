@@ -49,3 +49,8 @@ func (r *repository) ListUsers(ctx context.Context, tailnetID uint64) (Users, er
 
 	return users, nil
 }
+
+func (r *repository) DeleteUsersByTailnet(ctx context.Context, tailnetID uint64) error {
+	tx := r.withContext(ctx).Where("tailnet_id = ?", tailnetID).Delete(&User{})
+	return tx.Error
+}

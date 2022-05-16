@@ -21,3 +21,10 @@ message ListTailnetRequest {
 message ListTailnetResponse {
   repeated Tailnet tailnet = 1;
 }
+
+message DeleteTailnetRequest {
+  uint64 tailnet_id = 1;
+  bool force = 2;
+}
+
+message DeleteTailnetResponse {}

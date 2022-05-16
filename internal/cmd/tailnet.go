@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"context"
+	"fmt"
 	"github.com/jsiebens/ionscale/pkg/gen/api"
 	"github.com/muesli/coral"
 	"github.com/rodaine/table"
@@ -16,6 +17,7 @@ func tailnetCommand() *coral.Command {
 
 	command.AddCommand(listTailnetsCommand())
 	command.AddCommand(createTailnetsCommand())
+	command.AddCommand(deleteTailnetCommand())
 	command.AddCommand(getDNSConfig())
 	command.AddCommand(setDNSConfig())
 	command.AddCommand(getACLConfig())
@@ -65,7 +67,6 @@ func createTailnetsCommand() *coral.Command {
 	command := &coral.Command{
 		Use:          "create",
 		Short:        "Create a new tailnet",
-		Long:         `List tailnets in this ionscale instance.`,
 		SilenceUsage: true,
 	}
 
@@ -93,6 +94,50 @@ func createTailnetsCommand() *coral.Command {
 		tbl := table.New("ID", "NAME")
 		tbl.AddRow(resp.Tailnet.Id, resp.Tailnet.Name)
 		tbl.Print()
+
+		return nil
+	}
+
+	return command
+}
+
+func deleteTailnetCommand() *coral.Command {
+	command := &coral.Command{
+		Use:          "delete",
+		Short:        "Delete a tailnet",
+		SilenceUsage: true,
+	}
+
+	var tailnetID uint64
+	var tailnetName string
+	var force bool
+	var target = Target{}
+	target.prepareCommand(command)
+
+	command.Flags().StringVar(&tailnetName, "tailnet", "", "")
+	command.Flags().Uint64Var(&tailnetID, "tailnet-id", 0, "")
+	command.Flags().BoolVar(&force, "force", false, "")
+
+	command.RunE = func(command *coral.Command, args []string) error {
+
+		client, c, err := target.createGRPCClient()
+		if err != nil {
+			return err
+		}
+		defer safeClose(c)
+
+		tailnet, err := findTailnet(client, tailnetName, tailnetID)
+		if err != nil {
+			return err
+		}
+
+		_, err = client.DeleteTailnet(context.Background(), &api.DeleteTailnetRequest{TailnetId: tailnet.Id, Force: force})
+
+		if err != nil {
+			return err
+		}
+
+		fmt.Println("Tailnet deleted.")
 
 		return nil
 	}

@@ -284,6 +284,23 @@ func (r *repository) CountMachinesWithIPv4(ctx context.Context, ip string) (int6
 	return count, nil
 }
 
+func (r *repository) CountMachineByTailnet(ctx context.Context, tailnetID uint64) (int64, error) {
+	var count int64
+
+	tx := r.withContext(ctx).Model(&Machine{}).Where("tailnet_id = ?", tailnetID).Count(&count)
+
+	if tx.Error != nil {
+		return 0, tx.Error
+	}
+
+	return count, nil
+}
+
+func (r *repository) DeleteMachineByTailnet(ctx context.Context, tailnetID uint64) error {
+	tx := r.withContext(ctx).Model(&Machine{}).Where("tailnet_id = ?", tailnetID).Delete(&Machine{})
+	return tx.Error
+}
+
 func (r *repository) ListMachineByTailnet(ctx context.Context, tailnetID uint64) (Machines, error) {
 	var machines = []Machine{}
 

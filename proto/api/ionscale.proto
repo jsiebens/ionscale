@@ -18,6 +18,7 @@ service Ionscale {
 
   rpc CreateTailnet (CreateTailnetRequest) returns (CreateTailnetResponse) {}
   rpc ListTailnets (ListTailnetRequest) returns (ListTailnetResponse) {}
+  rpc DeleteTailnet (DeleteTailnetRequest) returns (DeleteTailnetResponse) {}
 
   rpc GetDNSConfig (GetDNSConfigRequest) returns (GetDNSConfigResponse) {}
   rpc SetDNSConfig (SetDNSConfigRequest) returns (SetDNSConfigResponse) {}

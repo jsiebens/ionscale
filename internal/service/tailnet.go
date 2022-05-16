@@ -3,7 +3,10 @@ package service
 import (
 	"context"
 	"fmt"
+	"github.com/jsiebens/ionscale/internal/domain"
 	"github.com/jsiebens/ionscale/pkg/gen/api"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 func (s *Service) CreateTailnet(ctx context.Context, req *api.CreateTailnetRequest) (*api.CreateTailnetResponse, error) {
@@ -36,4 +39,52 @@ func (s *Service) ListTailnets(ctx context.Context, _ *api.ListTailnetRequest) (
 		resp.Tailnet = append(resp.Tailnet, &gt)
 	}
 	return resp, nil
+}
+
+func (s *Service) DeleteTailnet(ctx context.Context, req *api.DeleteTailnetRequest) (*api.DeleteTailnetResponse, error) {
+
+	count, err := s.repository.CountMachineByTailnet(ctx, req.TailnetId)
+	if err != nil {
+		return nil, err
+	}
+
+	if !req.Force && count > 0 {
+		return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("tailnet is not empty, number of machines: %d", count))
+	}
+
+	err = s.repository.Transaction(func(tx domain.Repository) error {
+		if err := tx.DeleteMachineByTailnet(ctx, req.TailnetId); err != nil {
+			return err
+		}
+
+		if err := tx.DeleteAuthKeysByTailnet(ctx, req.TailnetId); err != nil {
+			return err
+		}
+
+		if err := tx.DeleteUsersByTailnet(ctx, req.TailnetId); err != nil {
+			return err
+		}
+
+		if err := tx.DeleteACLPolicy(ctx, req.TailnetId); err != nil {
+			return err
+		}
+
+		if err := tx.DeleteDNSConfig(ctx, req.TailnetId); err != nil {
+			return err
+		}
+
+		if err := tx.DeleteTailnet(ctx, req.TailnetId); err != nil {
+			return err
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	s.brokers(req.TailnetId).SignalTailnedDeleted()
+
+	return &api.DeleteTailnetResponse{}, nil
 }
