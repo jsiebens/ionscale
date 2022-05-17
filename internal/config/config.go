@@ -37,8 +37,7 @@ const (
 	httpsListenAddrKey      = "IONSCALE_HTTPS_LISTEN_ADDR"
 	serverUrlKey            = "IONSCALE_SERVER_URL"
 	keysSystemAdminKeyKey   = "IONSCALE_SYSTEM_ADMIN_KEY"
-	keysControlKeyKey       = "IONSCALE_CONTROL_KEY"
-	keysLegacyControlKeyKey = "IONSCALE_LEGACY_CONTROL_KEY"
+	keysEncryptionKeyKey    = "IONSCALE_ENCRYPTION_KEY"
 	databaseUrlKey          = "IONSCALE_DB_URL"
 	tlsDisableKey           = "IONSCALE_TLS_DISABLE"
 	tlsCertFileKey          = "IONSCALE_TLS_CERT_FILE"
@@ -60,9 +59,8 @@ func defaultConfig() *Config {
 		MetricsListenAddr: GetString(metricsListenAddrKey, ":8081"),
 		ServerUrl:         GetString(serverUrlKey, "https://localhost:8443"),
 		Keys: Keys{
-			SystemAdminKey:   GetString(keysSystemAdminKeyKey, ""),
-			ControlKey:       GetString(keysControlKeyKey, ""),
-			LegacyControlKey: GetString(keysLegacyControlKeyKey, ""),
+			SystemAdminKey: GetString(keysSystemAdminKeyKey, ""),
+			EncryptionKey:  GetString(keysEncryptionKeyKey, ""),
 		},
 		Database: Database{
 			Url: GetString(databaseUrlKey, "ionscale.db"),
@@ -85,9 +83,7 @@ func defaultConfig() *Config {
 }
 
 type ServerKeys struct {
-	SystemAdminKey   key.MachinePrivate
-	ControlKey       key.MachinePrivate
-	LegacyControlKey key.MachinePrivate
+	SystemAdminKey key.MachinePrivate
 }
 
 type Config struct {
@@ -122,9 +118,8 @@ type Database struct {
 }
 
 type Keys struct {
-	SystemAdminKey   string `yaml:"system_admin_key"`
-	ControlKey       string `yaml:"control_key"`
-	LegacyControlKey string `yaml:"legacy_control_key"`
+	SystemAdminKey string `yaml:"system_admin_key"`
+	EncryptionKey  string `yaml:"encryption_key"`
 }
 
 func (c *Config) CreateUrl(format string, a ...interface{}) string {
@@ -138,19 +133,7 @@ func (c *Config) ReadServerKeys() (*ServerKeys, error) {
 		return nil, fmt.Errorf("error reading system admin key: %v", err)
 	}
 
-	controlKey, err := util.ParseMachinePrivateKey(c.Keys.ControlKey)
-	if err != nil {
-		return nil, fmt.Errorf("error reading control key: %v", err)
-	}
-
-	legacyControlKey, err := util.ParseMachinePrivateKey(c.Keys.LegacyControlKey)
-	if err != nil {
-		return nil, fmt.Errorf("error reading legacy control key: %v", err)
-	}
-
 	return &ServerKeys{
-		SystemAdminKey:   *systemAdminKey,
-		ControlKey:       *controlKey,
-		LegacyControlKey: *legacyControlKey,
+		SystemAdminKey: *systemAdminKey,
 	}, nil
 }

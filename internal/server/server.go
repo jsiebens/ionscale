@@ -39,12 +39,17 @@ func Start(config *config.Config) error {
 
 	logger.Info("Starting ionscale server")
 
+	serverKey, err := config.ReadServerKeys()
+	if err != nil {
+		return err
+	}
+
 	_, repository, err := database.OpenDB(&config.Database, logger)
 	if err != nil {
 		return err
 	}
 
-	serverKey, err := config.ReadServerKeys()
+	controlKeys, err := repository.GetControlKeys(context.Background())
 	if err != nil {
 		return err
 	}
@@ -88,9 +93,9 @@ func Start(config *config.Config) error {
 		return e
 	}
 
-	noiseHandlers := handlers.NewNoiseHandlers(serverKey.ControlKey, createPeerHandler)
-	registrationHandlers := handlers.NewRegistrationHandlers(bind.BoxBinder(serverKey.LegacyControlKey), config, repository, pendingMachineRegistrationRequests)
-	pollNetMapHandler := handlers.NewPollNetMapHandler(bind.BoxBinder(serverKey.LegacyControlKey), brokers, repository, offlineTimers)
+	noiseHandlers := handlers.NewNoiseHandlers(controlKeys.ControlKey, createPeerHandler)
+	registrationHandlers := handlers.NewRegistrationHandlers(bind.BoxBinder(controlKeys.LegacyControlKey), config, repository, pendingMachineRegistrationRequests)
+	pollNetMapHandler := handlers.NewPollNetMapHandler(bind.BoxBinder(controlKeys.LegacyControlKey), brokers, repository, offlineTimers)
 	authenticationHandlers := handlers.NewAuthenticationHandlers(
 		config,
 		repository,
@@ -118,7 +123,7 @@ func Start(config *config.Config) error {
 	tlsAppHandler.Any("/*", handlers.IndexHandler(http.StatusNotFound))
 	tlsAppHandler.Any("/", handlers.IndexHandler(http.StatusOK))
 	tlsAppHandler.GET("/version", handlers.Version)
-	tlsAppHandler.GET("/key", handlers.KeyHandler(serverKey))
+	tlsAppHandler.GET("/key", handlers.KeyHandler(controlKeys))
 	tlsAppHandler.POST("/ts2021", noiseHandlers.Upgrade)
 	tlsAppHandler.POST("/machine/:id", registrationHandlers.Register)
 	tlsAppHandler.POST("/machine/:id/map", pollNetMapHandler.PollNetMap)

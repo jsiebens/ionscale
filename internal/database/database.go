@@ -8,6 +8,7 @@ import (
 	"github.com/hashicorp/go-hclog"
 	"net/http"
 	"tailscale.com/tailcfg"
+	"tailscale.com/types/key"
 	"time"
 
 	"github.com/jsiebens/ionscale/internal/config"
@@ -53,6 +54,10 @@ func migrate(db *gorm.DB, repository domain.Repository) error {
 		return err
 	}
 
+	if err := initializeControlKeys(repository); err != nil {
+		return err
+	}
+
 	if err := initializeDERPMap(repository); err != nil {
 		return err
 	}
@@ -91,6 +96,21 @@ func initializeDERPMap(repository domain.Repository) error {
 	}
 
 	return nil
+}
+
+func initializeControlKeys(repository domain.Repository) error {
+	ctx := context.Background()
+	keys, err := repository.GetControlKeys(ctx)
+	if keys != nil || err != nil {
+		return err
+	}
+
+	keys = &domain.ControlKeys{
+		ControlKey:       key.NewMachine(),
+		LegacyControlKey: key.NewMachine(),
+	}
+
+	return repository.SetControlKeys(ctx, keys)
 }
 
 type GormLoggerAdapter struct {
