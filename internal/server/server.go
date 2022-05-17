@@ -72,7 +72,7 @@ func Start(config *config.Config) error {
 		}
 
 		cfg := certmagic.NewDefault()
-		if err := cfg.ManageSync(context.Background(), []string{config.Tls.CertMagicDomain}); err != nil {
+		if err := cfg.ManageAsync(context.Background(), []string{config.Tls.CertMagicDomain}); err != nil {
 			return err
 		}
 
