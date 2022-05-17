@@ -6,6 +6,7 @@ import (
 
 func Command() *coral.Command {
 	rootCmd := rootCommand()
+	rootCmd.AddCommand(keyCommand())
 	rootCmd.AddCommand(serverCommand())
 	rootCmd.AddCommand(versionCommand())
 	rootCmd.AddCommand(tailnetCommand())
