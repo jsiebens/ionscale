@@ -3,19 +3,14 @@ package ionscale
 import (
 	"context"
 	"fmt"
+	"github.com/jsiebens/ionscale/internal/key"
 	"github.com/jsiebens/ionscale/internal/token"
-	"github.com/jsiebens/ionscale/internal/util"
 	"google.golang.org/grpc/credentials"
-	"tailscale.com/types/key"
 )
-
-func HasCredentials(systemAdminKey string) bool {
-	return systemAdminKey != ""
-}
 
 func LoadClientAuth(systemAdminKey string) (ClientAuth, error) {
 	if systemAdminKey != "" {
-		k, err := util.ParseMachinePrivateKey(systemAdminKey)
+		k, err := key.ParsePrivateKey(systemAdminKey)
 		if err != nil {
 			return nil, fmt.Errorf("invalid system admin key")
 		}
@@ -41,7 +36,7 @@ func (m *anonymous) RequireTransportSecurity() bool {
 }
 
 type systemAdminTokenAuth struct {
-	key key.MachinePrivate
+	key key.ServerPrivate
 }
 
 func (m *systemAdminTokenAuth) GetRequestMetadata(ctx context.Context, uri ...string) (map[string]string, error) {
@@ -55,19 +50,5 @@ func (m *systemAdminTokenAuth) GetRequestMetadata(ctx context.Context, uri ...st
 }
 
 func (m *systemAdminTokenAuth) RequireTransportSecurity() bool {
-	return false
-}
-
-type tokenAuth struct {
-	token string
-}
-
-func (m *tokenAuth) GetRequestMetadata(ctx context.Context, uri ...string) (map[string]string, error) {
-	return map[string]string{
-		"authorization": "Bearer " + m.token,
-	}, nil
-}
-
-func (m *tokenAuth) RequireTransportSecurity() bool {
 	return false
 }

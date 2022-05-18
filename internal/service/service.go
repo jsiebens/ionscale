@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/jsiebens/ionscale/internal/broker"
 	"github.com/jsiebens/ionscale/internal/domain"
+	"github.com/jsiebens/ionscale/internal/key"
 	"github.com/jsiebens/ionscale/internal/token"
 	"github.com/jsiebens/ionscale/internal/version"
 	"github.com/jsiebens/ionscale/pkg/gen/api"
@@ -12,7 +13,6 @@ import (
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 	"strings"
-	"tailscale.com/types/key"
 )
 
 var (
@@ -44,7 +44,7 @@ func (s *Service) GetVersion(ctx context.Context, req *api.GetVersionRequest) (*
 	}, nil
 }
 
-func UnaryServerTokenAuth(systemAdminKey key.MachinePrivate) func(context.Context, interface{}, *grpc.UnaryServerInfo, grpc.UnaryHandler) (interface{}, error) {
+func UnaryServerTokenAuth(systemAdminKey key.ServerPrivate) func(context.Context, interface{}, *grpc.UnaryServerInfo, grpc.UnaryHandler) (interface{}, error) {
 	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
 
 		if strings.HasSuffix(info.FullMethod, "/GetVersion") {
@@ -68,7 +68,7 @@ func UnaryServerTokenAuth(systemAdminKey key.MachinePrivate) func(context.Contex
 	}
 }
 
-func validateAuthorizationToken(systemAdminKey key.MachinePrivate, authorization []string) bool {
+func validateAuthorizationToken(systemAdminKey key.ServerPrivate, authorization []string) bool {
 	if len(authorization) != 1 {
 		return false
 	}

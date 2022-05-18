@@ -3,12 +3,11 @@ package config
 import (
 	"fmt"
 	"github.com/caddyserver/certmagic"
-	"github.com/jsiebens/ionscale/internal/util"
+	"github.com/jsiebens/ionscale/internal/key"
 	"github.com/mitchellh/go-homedir"
 	"gopkg.in/yaml.v3"
 	"io/ioutil"
 	"strings"
-	"tailscale.com/types/key"
 )
 
 func LoadConfig(path string) (*Config, error) {
@@ -83,43 +82,43 @@ func defaultConfig() *Config {
 }
 
 type ServerKeys struct {
-	SystemAdminKey key.MachinePrivate
+	SystemAdminKey key.ServerPrivate
 }
 
 type Config struct {
-	HttpListenAddr    string   `yaml:"http_listen_addr"`
-	HttpsListenAddr   string   `yaml:"https_listen_addr"`
-	MetricsListenAddr string   `yaml:"metrics_listen_addr"`
-	ServerUrl         string   `yaml:"server_url"`
-	Tls               Tls      `yaml:"tls"`
-	Logging           Logging  `yaml:"logging"`
-	Keys              Keys     `yaml:"keys"`
-	Database          Database `yaml:"database"`
+	HttpListenAddr    string   `yaml:"http_listen_addr,omitempty"`
+	HttpsListenAddr   string   `yaml:"https_listen_addr,omitempty"`
+	MetricsListenAddr string   `yaml:"metrics_listen_addr,omitempty"`
+	ServerUrl         string   `yaml:"server_url,omitempty"`
+	Tls               Tls      `yaml:"tls,omitempty"`
+	Logging           Logging  `yaml:"logging,omitempty"`
+	Keys              Keys     `yaml:"keys,omitempty"`
+	Database          Database `yaml:"database,omitempty"`
 }
 
 type Tls struct {
 	Disable              bool   `yaml:"disable"`
-	CertFile             string `yaml:"cert_file"`
-	KeyFile              string `yaml:"key_file"`
-	CertMagicDomain      string `yaml:"cert_magic_domain"`
-	CertMagicEmail       string `yaml:"cert_magic_email"`
-	CertMagicCA          string `yaml:"cert_magic_ca"`
-	CertMagicStoragePath string `yaml:"cert_magic_storage_path"`
+	CertFile             string `yaml:"cert_file,omitempty"`
+	KeyFile              string `yaml:"key_file,omitempty"`
+	CertMagicDomain      string `yaml:"cert_magic_domain,omitempty"`
+	CertMagicEmail       string `yaml:"cert_magic_email,omitempty"`
+	CertMagicCA          string `yaml:"cert_magic_ca,omitempty"`
+	CertMagicStoragePath string `yaml:"cert_magic_storage_path,omitempty"`
 }
 
 type Logging struct {
-	Level  string `yaml:"level"`
-	Format string `yaml:"format"`
-	File   string `yaml:"file"`
+	Level  string `yaml:"level,omitempty"`
+	Format string `yaml:"format,omitempty"`
+	File   string `yaml:"file,omitempty"`
 }
 
 type Database struct {
-	Url string `yaml:"url"`
+	Url string `yaml:"url,omitempty"`
 }
 
 type Keys struct {
-	SystemAdminKey string `yaml:"system_admin_key"`
-	EncryptionKey  string `yaml:"encryption_key"`
+	SystemAdminKey string `yaml:"system_admin_key,omitempty"`
+	EncryptionKey  string `yaml:"encryption_key,omitempty"`
 }
 
 func (c *Config) CreateUrl(format string, a ...interface{}) string {
@@ -128,7 +127,7 @@ func (c *Config) CreateUrl(format string, a ...interface{}) string {
 }
 
 func (c *Config) ReadServerKeys() (*ServerKeys, error) {
-	systemAdminKey, err := util.ParseMachinePrivateKey(c.Keys.SystemAdminKey)
+	systemAdminKey, err := key.ParsePrivateKey(c.Keys.SystemAdminKey)
 	if err != nil {
 		return nil, fmt.Errorf("error reading system admin key: %v", err)
 	}

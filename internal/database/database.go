@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/go-hclog"
 	"net/http"
 	"tailscale.com/tailcfg"
-	"tailscale.com/types/key"
+	tskey "tailscale.com/types/key"
 	"time"
 
 	"github.com/jsiebens/ionscale/internal/config"
@@ -106,8 +106,8 @@ func initializeControlKeys(repository domain.Repository) error {
 	}
 
 	keys = &domain.ControlKeys{
-		ControlKey:       key.NewMachine(),
-		LegacyControlKey: key.NewMachine(),
+		ControlKey:       tskey.NewMachine(),
+		LegacyControlKey: tskey.NewMachine(),
 	}
 
 	return repository.SetControlKeys(ctx, keys)

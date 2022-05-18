@@ -6,16 +6,16 @@ import (
 	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/recovery"
 	"github.com/grpc-ecosystem/go-grpc-prometheus"
 	"github.com/hashicorp/go-hclog"
+	"github.com/jsiebens/ionscale/internal/key"
 	"github.com/jsiebens/ionscale/internal/service"
 	"google.golang.org/grpc"
-	"tailscale.com/types/key"
 )
 
 func init() {
 	grpc_prometheus.EnableHandlingTimeHistogram()
 }
 
-func NewGrpcServer(logger hclog.Logger, systemAdminKey key.MachinePrivate) *grpc.Server {
+func NewGrpcServer(logger hclog.Logger, systemAdminKey key.ServerPrivate) *grpc.Server {
 	return grpc.NewServer(
 		middleware.WithUnaryServerChain(
 			logging.UnaryServerInterceptor(

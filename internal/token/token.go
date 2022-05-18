@@ -5,10 +5,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/jsiebens/ionscale/internal/key"
 	"github.com/jsiebens/ionscale/internal/util"
 	"github.com/mr-tron/base58"
 	"strings"
-	"tailscale.com/types/key"
 	"time"
 )
 
@@ -29,7 +29,7 @@ func IsSystemAdminToken(token string) bool {
 	return strings.HasPrefix(token, systemAdminTokenPrefix)
 }
 
-func ParseSystemAdminToken(privKey key.MachinePrivate, versionedToken string) (*Info, error) {
+func ParseSystemAdminToken(privKey key.ServerPrivate, versionedToken string) (*Info, error) {
 	versionedToken = strings.TrimSpace(versionedToken)
 	if versionedToken == "" {
 		return nil, errors.New("empty token")
@@ -50,7 +50,7 @@ func ParseSystemAdminToken(privKey key.MachinePrivate, versionedToken string) (*
 
 	info := new(Info)
 
-	if err := unmarshal(marshaledBlob, info, privKey.Public(), privKey); err != nil {
+	if err := unmarshal(marshaledBlob, info, privKey); err != nil {
 		return nil, fmt.Errorf("error unmarshaling token info: %w", err)
 	}
 
@@ -77,7 +77,7 @@ func ParseSystemAdminToken(privKey key.MachinePrivate, versionedToken string) (*
 	return info, nil
 }
 
-func GenerateSystemAdminToken(privKey key.MachinePrivate) (string, error) {
+func GenerateSystemAdminToken(privKey key.ServerPrivate) (string, error) {
 	b, err := util.RandomBytes(nonceLength)
 	if err != nil {
 		return "", fmt.Errorf("error generating random bytes for token nonce: %w", err)
@@ -87,11 +87,11 @@ func GenerateSystemAdminToken(privKey key.MachinePrivate) (string, error) {
 		CreationTime: time.Now(),
 	}
 
-	return formatToken(privKey.Public(), privKey, systemAdminTokenPrefix, info)
+	return formatToken(privKey, systemAdminTokenPrefix, info)
 }
 
-func formatToken(pubKey key.MachinePublic, privKey key.MachinePrivate, prefix string, v interface{}) (string, error) {
-	blobInfo, err := marshal(v, pubKey, privKey)
+func formatToken(privKey key.ServerPrivate, prefix string, v interface{}) (string, error) {
+	blobInfo, err := marshal(v, privKey)
 	if err != nil {
 		return "", fmt.Errorf("error encrypting info: %w", err)
 	}
@@ -101,17 +101,17 @@ func formatToken(pubKey key.MachinePublic, privKey key.MachinePrivate, prefix st
 	return fmt.Sprintf("%s%s", prefix, encodedMarshaledBlob), nil
 }
 
-func marshal(v interface{}, pubKey key.MachinePublic, privKey key.MachinePrivate) ([]byte, error) {
+func marshal(v interface{}, privKey key.ServerPrivate) ([]byte, error) {
 	b, err := json.Marshal(v)
 	if err != nil {
 		return nil, err
 	}
 
-	return privKey.SealTo(pubKey, b), nil
+	return privKey.Seal(b), nil
 }
 
-func unmarshal(msg []byte, v interface{}, publicKey key.MachinePublic, privateKey key.MachinePrivate) error {
-	decrypted, ok := privateKey.OpenFrom(publicKey, msg)
+func unmarshal(msg []byte, v interface{}, privateKey key.ServerPrivate) error {
+	decrypted, ok := privateKey.Open(msg)
 	if !ok {
 		return fmt.Errorf("unable to decrypt payload")
 	}
