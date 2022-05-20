@@ -23,6 +23,9 @@ builds:
     ldflags:
       - -s -w -X github.com/jsiebens/ionscale/internal/version.Version={{.Version}} -X github.com/jsiebens/ionscale/internal/version.Revision={{.ShortCommit}}
 
+checksum:
+  name_template: "checksums.txt"
+
 dockers:
   - image_templates: [ "ghcr.io/jsiebens/{{ .ProjectName }}:{{ .Version }}-amd64" ]
     dockerfile: Dockerfile
