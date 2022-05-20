@@ -69,9 +69,11 @@ docker_signs:
       - '${artifact}'
 
 archives:
-  - format_overrides:
-      - goos: windows
-        format: zip
+  - format: binary
+    name_template: '{{ .Binary }}_{{ .Os }}_{{ .Arch }}{{ with .Arm }}v{{ . }}{{ end }}'
+
+release:
+  prerelease: auto
 
 changelog:
   sort: asc
