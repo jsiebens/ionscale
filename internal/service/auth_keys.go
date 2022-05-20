@@ -93,6 +93,7 @@ func (s *Service) CreateAuthKey(ctx context.Context, req *api.CreateAuthKeyReque
 			Id:        authKey.ID,
 			Key:       authKey.Key,
 			Ephemeral: authKey.Ephemeral,
+			Tags:      authKey.Tags,
 			CreatedAt: timestamppb.New(authKey.CreatedAt),
 			ExpiresAt: expiresAtPb,
 			Tailnet: &api.Ref{
