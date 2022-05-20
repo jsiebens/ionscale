@@ -75,13 +75,15 @@ func (a *aclEngine) build(dst *Machine, peers []Machine) []tailcfg.FilterRule {
 			continue
 		}
 
-		var allSrcIPs []string
+		var allSrcIPsSet = &StringSet{}
 		for _, src := range acl.Src {
 			for _, peer := range peers {
 				srcIPs := a.expandMachineAlias(&peer, src, true)
-				allSrcIPs = append(allSrcIPs, srcIPs...)
+				allSrcIPsSet.Add(srcIPs...)
 			}
 		}
+
+		allSrcIPs := allSrcIPsSet.Items()
 
 		if len(allSrcIPs) == 0 {
 			allSrcIPs = nil
@@ -218,4 +220,28 @@ func (a *aclEngine) expandValuePortToPortRange(s string) ([]tailcfg.PortRange, e
 		}
 	}
 	return ports, nil
+}
+
+type StringSet struct {
+	items map[string]bool
+}
+
+func (s *StringSet) Add(t ...string) *StringSet {
+	if s.items == nil {
+		s.items = make(map[string]bool)
+	}
+
+	for _, v := range t {
+		s.items[v] = true
+	}
+
+	return s
+}
+
+func (s *StringSet) Items() []string {
+	items := []string{}
+	for i := range s.items {
+		items = append(items, i)
+	}
+	return items
 }
