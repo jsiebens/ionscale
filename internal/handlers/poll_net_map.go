@@ -119,9 +119,6 @@ func (h *PollNetMapHandler) handleUpdate(c echo.Context, binder bind.Binder, m *
 	keepAliveTicker := time.NewTicker(keepAliveInterval)
 	syncTicker := time.NewTicker(5 * time.Second)
 
-	var latestSync = time.Now()
-	var latestUpdate = latestSync
-
 	c.Response().WriteHeader(http.StatusOK)
 
 	if _, err := c.Response().Write(response); err != nil {
@@ -136,6 +133,9 @@ func (h *PollNetMapHandler) handleUpdate(c echo.Context, binder bind.Binder, m *
 		_ = h.repository.SetMachineLastSeen(ctx, machineID)
 		h.scheduleOfflineMessage(tailnetID, machineID)
 	}()
+
+	var latestSync = time.Now()
+	var latestUpdate = latestSync
 
 	for {
 		select {
@@ -292,6 +292,7 @@ func (h *PollNetMapHandler) createMapResponse(m *domain.Machine, binder bind.Bin
 	} else {
 		mapResponse = &tailcfg.MapResponse{
 			PacketFilter: rules,
+			DERPMap:      derpMap,
 			PeersChanged: changedPeers,
 			PeersRemoved: removedPeers,
 			UserProfiles: mapping.ToUserProfiles(users),

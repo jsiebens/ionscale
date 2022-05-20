@@ -2,6 +2,7 @@ package broker
 
 import (
 	"sync"
+	"tailscale.com/tailcfg"
 	"tailscale.com/types/key"
 )
 
@@ -15,6 +16,7 @@ type Signal struct {
 	PeersRemoved []uint64
 	ACLUpdated   bool
 	DNSUpdated   bool
+	derpMap      *tailcfg.DERPMap
 }
 
 type Broker interface {
@@ -26,6 +28,7 @@ type Broker interface {
 	SignalPeersRemoved([]uint64)
 	SignalDNSUpdated()
 	SignalACLUpdated()
+	SignalDERPMapUpdated(c *tailcfg.DERPMap)
 
 	IsConnected(uint64) bool
 }
@@ -45,6 +48,14 @@ func (m *BrokerPool) Get(tailnetID uint64) Broker {
 		m.store[tailnetID] = b
 	}
 	return b
+}
+
+func (m *BrokerPool) SignalDERPMapUpdated(c *tailcfg.DERPMap) {
+	m.lock.Lock()
+	defer m.lock.Unlock()
+	for _, b := range m.store {
+		b.SignalDERPMapUpdated(c)
+	}
 }
 
 func newBroker(tailnetID uint64) Broker {
@@ -101,6 +112,10 @@ func (h *broker) SignalDNSUpdated() {
 
 func (h *broker) SignalACLUpdated() {
 	h.signalChannel <- &Signal{ACLUpdated: true}
+}
+
+func (h *broker) SignalDERPMapUpdated(c *tailcfg.DERPMap) {
+	h.signalChannel <- &Signal{derpMap: c}
 }
 
 func (h *broker) listen() {

@@ -1,0 +1,17 @@
+syntax = "proto3";
+package api;
+option go_package = "github.com/jsiebens/ionscale/pkg/gen;api";
+
+message GetDERPMapRequest {}
+
+message GetDERPMapResponse {
+  bytes value = 1;
+}
+
+message SetDERPMapRequest {
+  bytes value = 1;
+}
+
+message SetDERPMapResponse {
+  bytes value = 1;
+}

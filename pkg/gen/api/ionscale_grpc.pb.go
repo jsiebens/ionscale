@@ -19,6 +19,8 @@ const _ = grpc.SupportPackageIsVersion7
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type IonscaleClient interface {
 	GetVersion(ctx context.Context, in *GetVersionRequest, opts ...grpc.CallOption) (*GetVersionResponse, error)
+	GetDERPMap(ctx context.Context, in *GetDERPMapRequest, opts ...grpc.CallOption) (*GetDERPMapResponse, error)
+	SetDERPMap(ctx context.Context, in *SetDERPMapRequest, opts ...grpc.CallOption) (*SetDERPMapResponse, error)
 	CreateTailnet(ctx context.Context, in *CreateTailnetRequest, opts ...grpc.CallOption) (*CreateTailnetResponse, error)
 	ListTailnets(ctx context.Context, in *ListTailnetRequest, opts ...grpc.CallOption) (*ListTailnetResponse, error)
 	DeleteTailnet(ctx context.Context, in *DeleteTailnetRequest, opts ...grpc.CallOption) (*DeleteTailnetResponse, error)
@@ -46,6 +48,24 @@ func NewIonscaleClient(cc grpc.ClientConnInterface) IonscaleClient {
 func (c *ionscaleClient) GetVersion(ctx context.Context, in *GetVersionRequest, opts ...grpc.CallOption) (*GetVersionResponse, error) {
 	out := new(GetVersionResponse)
 	err := c.cc.Invoke(ctx, "/api.Ionscale/GetVersion", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *ionscaleClient) GetDERPMap(ctx context.Context, in *GetDERPMapRequest, opts ...grpc.CallOption) (*GetDERPMapResponse, error) {
+	out := new(GetDERPMapResponse)
+	err := c.cc.Invoke(ctx, "/api.Ionscale/GetDERPMap", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *ionscaleClient) SetDERPMap(ctx context.Context, in *SetDERPMapRequest, opts ...grpc.CallOption) (*SetDERPMapResponse, error) {
+	out := new(SetDERPMapResponse)
+	err := c.cc.Invoke(ctx, "/api.Ionscale/SetDERPMap", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -183,6 +203,8 @@ func (c *ionscaleClient) SetMachineRoutes(ctx context.Context, in *SetMachineRou
 // for forward compatibility
 type IonscaleServer interface {
 	GetVersion(context.Context, *GetVersionRequest) (*GetVersionResponse, error)
+	GetDERPMap(context.Context, *GetDERPMapRequest) (*GetDERPMapResponse, error)
+	SetDERPMap(context.Context, *SetDERPMapRequest) (*SetDERPMapResponse, error)
 	CreateTailnet(context.Context, *CreateTailnetRequest) (*CreateTailnetResponse, error)
 	ListTailnets(context.Context, *ListTailnetRequest) (*ListTailnetResponse, error)
 	DeleteTailnet(context.Context, *DeleteTailnetRequest) (*DeleteTailnetResponse, error)
@@ -205,6 +227,12 @@ type UnimplementedIonscaleServer struct {
 
 func (UnimplementedIonscaleServer) GetVersion(context.Context, *GetVersionRequest) (*GetVersionResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetVersion not implemented")
+}
+func (UnimplementedIonscaleServer) GetDERPMap(context.Context, *GetDERPMapRequest) (*GetDERPMapResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetDERPMap not implemented")
+}
+func (UnimplementedIonscaleServer) SetDERPMap(context.Context, *SetDERPMapRequest) (*SetDERPMapResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SetDERPMap not implemented")
 }
 func (UnimplementedIonscaleServer) CreateTailnet(context.Context, *CreateTailnetRequest) (*CreateTailnetResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateTailnet not implemented")
@@ -274,6 +302,42 @@ func _Ionscale_GetVersion_Handler(srv interface{}, ctx context.Context, dec func
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(IonscaleServer).GetVersion(ctx, req.(*GetVersionRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Ionscale_GetDERPMap_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetDERPMapRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(IonscaleServer).GetDERPMap(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/api.Ionscale/GetDERPMap",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(IonscaleServer).GetDERPMap(ctx, req.(*GetDERPMapRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Ionscale_SetDERPMap_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SetDERPMapRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(IonscaleServer).SetDERPMap(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/api.Ionscale/SetDERPMap",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(IonscaleServer).SetDERPMap(ctx, req.(*SetDERPMapRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -540,6 +604,14 @@ var Ionscale_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetVersion",
 			Handler:    _Ionscale_GetVersion_Handler,
+		},
+		{
+			MethodName: "GetDERPMap",
+			Handler:    _Ionscale_GetDERPMap_Handler,
+		},
+		{
+			MethodName: "SetDERPMap",
+			Handler:    _Ionscale_SetDERPMap_Handler,
 		},
 		{
 			MethodName: "CreateTailnet",

@@ -12,9 +12,13 @@ import "api/machines.proto";
 import "api/routes.proto";
 import "api/dns.proto";
 import "api/acl.proto";
+import "api/derp.proto";
 
 service Ionscale {
   rpc GetVersion (GetVersionRequest) returns (GetVersionResponse) {}
+
+  rpc GetDERPMap (GetDERPMapRequest) returns (GetDERPMapResponse) {}
+  rpc SetDERPMap (SetDERPMapRequest) returns (SetDERPMapResponse) {}
 
   rpc CreateTailnet (CreateTailnetRequest) returns (CreateTailnetResponse) {}
   rpc ListTailnets (ListTailnetRequest) returns (ListTailnetResponse) {}
