@@ -7,6 +7,14 @@ import "google/protobuf/duration.proto";
 
 import "api/ref.proto";
 
+message GetAuthKeyRequest {
+  uint64 auth_key_id = 1;
+}
+
+message GetAuthKeyResponse {
+  AuthKey authKey = 1;
+}
+
 message CreateAuthKeyRequest {
   uint64 tailnet_id = 1;
   bool ephemeral = 2;

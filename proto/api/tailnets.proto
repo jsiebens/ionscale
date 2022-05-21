@@ -15,6 +15,14 @@ message CreateTailnetResponse {
   Tailnet tailnet = 1;
 }
 
+message GetTailnetRequest {
+  uint64 id = 1;
+}
+
+message GetTailnetResponse {
+  Tailnet tailnet = 1;
+}
+
 message ListTailnetRequest {
 }
 

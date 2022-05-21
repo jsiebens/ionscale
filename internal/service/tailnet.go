@@ -27,6 +27,22 @@ func (s *Service) CreateTailnet(ctx context.Context, req *api.CreateTailnetReque
 	return resp, nil
 }
 
+func (s *Service) GetTailnet(ctx context.Context, req *api.GetTailnetRequest) (*api.GetTailnetResponse, error) {
+	tailnet, err := s.repository.GetTailnet(ctx, req.Id)
+	if err != nil {
+		return nil, err
+	}
+
+	if tailnet == nil {
+		return nil, status.Error(codes.NotFound, "")
+	}
+
+	return &api.GetTailnetResponse{Tailnet: &api.Tailnet{
+		Id:   tailnet.ID,
+		Name: tailnet.Name,
+	}}, nil
+}
+
 func (s *Service) ListTailnets(ctx context.Context, _ *api.ListTailnetRequest) (*api.ListTailnetResponse, error) {
 	resp := &api.ListTailnetResponse{}
 

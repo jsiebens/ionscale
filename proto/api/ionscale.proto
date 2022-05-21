@@ -21,6 +21,7 @@ service Ionscale {
   rpc SetDERPMap (SetDERPMapRequest) returns (SetDERPMapResponse) {}
 
   rpc CreateTailnet (CreateTailnetRequest) returns (CreateTailnetResponse) {}
+  rpc GetTailnet (GetTailnetRequest) returns (GetTailnetResponse) {}
   rpc ListTailnets (ListTailnetRequest) returns (ListTailnetResponse) {}
   rpc DeleteTailnet (DeleteTailnetRequest) returns (DeleteTailnetResponse) {}
 
@@ -30,6 +31,7 @@ service Ionscale {
   rpc GetACLPolicy (GetACLPolicyRequest) returns (GetACLPolicyResponse) {}
   rpc SetACLPolicy (SetACLPolicyRequest) returns (SetACLPolicyResponse) {}
 
+  rpc GetAuthKey (GetAuthKeyRequest) returns (GetAuthKeyResponse) {}
   rpc CreateAuthKey (CreateAuthKeyRequest) returns (CreateAuthKeyResponse) {}
   rpc DeleteAuthKey (DeleteAuthKeyRequest) returns (DeleteAuthKeyResponse) {}
   rpc ListAuthKeys (ListAuthKeysRequest) returns (ListAuthKeysResponse) {}

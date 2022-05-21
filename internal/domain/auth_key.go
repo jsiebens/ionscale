@@ -52,6 +52,24 @@ type AuthKey struct {
 	User   User
 }
 
+func (r *repository) GetAuthKey(ctx context.Context, authKeyId uint64) (*AuthKey, error) {
+	var t AuthKey
+	tx := r.withContext(ctx).
+		Preload("User").
+		Preload("Tailnet").
+		Take(&t, "id = ?", authKeyId)
+
+	if errors.Is(tx.Error, gorm.ErrRecordNotFound) {
+		return nil, nil
+	}
+
+	if tx.Error != nil {
+		return nil, tx.Error
+	}
+
+	return &t, nil
+}
+
 func (r *repository) SaveAuthKey(ctx context.Context, key *AuthKey) error {
 	tx := r.withContext(ctx).Save(key)
 

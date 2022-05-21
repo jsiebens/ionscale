@@ -10,6 +10,35 @@ import (
 	"time"
 )
 
+func (s *Service) GetAuthKey(ctx context.Context, req *api.GetAuthKeyRequest) (*api.GetAuthKeyResponse, error) {
+	key, err := s.repository.GetAuthKey(ctx, req.AuthKeyId)
+	if err != nil {
+		return nil, err
+	}
+
+	if key == nil {
+		return nil, status.Error(codes.NotFound, "")
+	}
+
+	var expiresAt *timestamppb.Timestamp
+	if key.ExpiresAt != nil {
+		expiresAt = timestamppb.New(*key.ExpiresAt)
+	}
+
+	return &api.GetAuthKeyResponse{AuthKey: &api.AuthKey{
+		Id:        key.ID,
+		Key:       key.Key,
+		Ephemeral: key.Ephemeral,
+		Tags:      key.Tags,
+		CreatedAt: timestamppb.New(key.CreatedAt),
+		ExpiresAt: expiresAt,
+		Tailnet: &api.Ref{
+			Id:   key.Tailnet.ID,
+			Name: key.Tailnet.Name,
+		},
+	}}, nil
+}
+
 func (s *Service) ListAuthKeys(ctx context.Context, req *api.ListAuthKeysRequest) (*api.ListAuthKeysResponse, error) {
 	tailnet, err := s.repository.GetTailnet(ctx, req.TailnetId)
 	if err != nil {

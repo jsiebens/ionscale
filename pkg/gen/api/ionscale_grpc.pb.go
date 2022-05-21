@@ -22,12 +22,14 @@ type IonscaleClient interface {
 	GetDERPMap(ctx context.Context, in *GetDERPMapRequest, opts ...grpc.CallOption) (*GetDERPMapResponse, error)
 	SetDERPMap(ctx context.Context, in *SetDERPMapRequest, opts ...grpc.CallOption) (*SetDERPMapResponse, error)
 	CreateTailnet(ctx context.Context, in *CreateTailnetRequest, opts ...grpc.CallOption) (*CreateTailnetResponse, error)
+	GetTailnet(ctx context.Context, in *GetTailnetRequest, opts ...grpc.CallOption) (*GetTailnetResponse, error)
 	ListTailnets(ctx context.Context, in *ListTailnetRequest, opts ...grpc.CallOption) (*ListTailnetResponse, error)
 	DeleteTailnet(ctx context.Context, in *DeleteTailnetRequest, opts ...grpc.CallOption) (*DeleteTailnetResponse, error)
 	GetDNSConfig(ctx context.Context, in *GetDNSConfigRequest, opts ...grpc.CallOption) (*GetDNSConfigResponse, error)
 	SetDNSConfig(ctx context.Context, in *SetDNSConfigRequest, opts ...grpc.CallOption) (*SetDNSConfigResponse, error)
 	GetACLPolicy(ctx context.Context, in *GetACLPolicyRequest, opts ...grpc.CallOption) (*GetACLPolicyResponse, error)
 	SetACLPolicy(ctx context.Context, in *SetACLPolicyRequest, opts ...grpc.CallOption) (*SetACLPolicyResponse, error)
+	GetAuthKey(ctx context.Context, in *GetAuthKeyRequest, opts ...grpc.CallOption) (*GetAuthKeyResponse, error)
 	CreateAuthKey(ctx context.Context, in *CreateAuthKeyRequest, opts ...grpc.CallOption) (*CreateAuthKeyResponse, error)
 	DeleteAuthKey(ctx context.Context, in *DeleteAuthKeyRequest, opts ...grpc.CallOption) (*DeleteAuthKeyResponse, error)
 	ListAuthKeys(ctx context.Context, in *ListAuthKeysRequest, opts ...grpc.CallOption) (*ListAuthKeysResponse, error)
@@ -75,6 +77,15 @@ func (c *ionscaleClient) SetDERPMap(ctx context.Context, in *SetDERPMapRequest, 
 func (c *ionscaleClient) CreateTailnet(ctx context.Context, in *CreateTailnetRequest, opts ...grpc.CallOption) (*CreateTailnetResponse, error) {
 	out := new(CreateTailnetResponse)
 	err := c.cc.Invoke(ctx, "/api.Ionscale/CreateTailnet", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *ionscaleClient) GetTailnet(ctx context.Context, in *GetTailnetRequest, opts ...grpc.CallOption) (*GetTailnetResponse, error) {
+	out := new(GetTailnetResponse)
+	err := c.cc.Invoke(ctx, "/api.Ionscale/GetTailnet", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -129,6 +140,15 @@ func (c *ionscaleClient) GetACLPolicy(ctx context.Context, in *GetACLPolicyReque
 func (c *ionscaleClient) SetACLPolicy(ctx context.Context, in *SetACLPolicyRequest, opts ...grpc.CallOption) (*SetACLPolicyResponse, error) {
 	out := new(SetACLPolicyResponse)
 	err := c.cc.Invoke(ctx, "/api.Ionscale/SetACLPolicy", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *ionscaleClient) GetAuthKey(ctx context.Context, in *GetAuthKeyRequest, opts ...grpc.CallOption) (*GetAuthKeyResponse, error) {
+	out := new(GetAuthKeyResponse)
+	err := c.cc.Invoke(ctx, "/api.Ionscale/GetAuthKey", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -206,12 +226,14 @@ type IonscaleServer interface {
 	GetDERPMap(context.Context, *GetDERPMapRequest) (*GetDERPMapResponse, error)
 	SetDERPMap(context.Context, *SetDERPMapRequest) (*SetDERPMapResponse, error)
 	CreateTailnet(context.Context, *CreateTailnetRequest) (*CreateTailnetResponse, error)
+	GetTailnet(context.Context, *GetTailnetRequest) (*GetTailnetResponse, error)
 	ListTailnets(context.Context, *ListTailnetRequest) (*ListTailnetResponse, error)
 	DeleteTailnet(context.Context, *DeleteTailnetRequest) (*DeleteTailnetResponse, error)
 	GetDNSConfig(context.Context, *GetDNSConfigRequest) (*GetDNSConfigResponse, error)
 	SetDNSConfig(context.Context, *SetDNSConfigRequest) (*SetDNSConfigResponse, error)
 	GetACLPolicy(context.Context, *GetACLPolicyRequest) (*GetACLPolicyResponse, error)
 	SetACLPolicy(context.Context, *SetACLPolicyRequest) (*SetACLPolicyResponse, error)
+	GetAuthKey(context.Context, *GetAuthKeyRequest) (*GetAuthKeyResponse, error)
 	CreateAuthKey(context.Context, *CreateAuthKeyRequest) (*CreateAuthKeyResponse, error)
 	DeleteAuthKey(context.Context, *DeleteAuthKeyRequest) (*DeleteAuthKeyResponse, error)
 	ListAuthKeys(context.Context, *ListAuthKeysRequest) (*ListAuthKeysResponse, error)
@@ -237,6 +259,9 @@ func (UnimplementedIonscaleServer) SetDERPMap(context.Context, *SetDERPMapReques
 func (UnimplementedIonscaleServer) CreateTailnet(context.Context, *CreateTailnetRequest) (*CreateTailnetResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateTailnet not implemented")
 }
+func (UnimplementedIonscaleServer) GetTailnet(context.Context, *GetTailnetRequest) (*GetTailnetResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetTailnet not implemented")
+}
 func (UnimplementedIonscaleServer) ListTailnets(context.Context, *ListTailnetRequest) (*ListTailnetResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListTailnets not implemented")
 }
@@ -254,6 +279,9 @@ func (UnimplementedIonscaleServer) GetACLPolicy(context.Context, *GetACLPolicyRe
 }
 func (UnimplementedIonscaleServer) SetACLPolicy(context.Context, *SetACLPolicyRequest) (*SetACLPolicyResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SetACLPolicy not implemented")
+}
+func (UnimplementedIonscaleServer) GetAuthKey(context.Context, *GetAuthKeyRequest) (*GetAuthKeyResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetAuthKey not implemented")
 }
 func (UnimplementedIonscaleServer) CreateAuthKey(context.Context, *CreateAuthKeyRequest) (*CreateAuthKeyResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateAuthKey not implemented")
@@ -356,6 +384,24 @@ func _Ionscale_CreateTailnet_Handler(srv interface{}, ctx context.Context, dec f
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(IonscaleServer).CreateTailnet(ctx, req.(*CreateTailnetRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Ionscale_GetTailnet_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetTailnetRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(IonscaleServer).GetTailnet(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/api.Ionscale/GetTailnet",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(IonscaleServer).GetTailnet(ctx, req.(*GetTailnetRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -464,6 +510,24 @@ func _Ionscale_SetACLPolicy_Handler(srv interface{}, ctx context.Context, dec fu
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(IonscaleServer).SetACLPolicy(ctx, req.(*SetACLPolicyRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Ionscale_GetAuthKey_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetAuthKeyRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(IonscaleServer).GetAuthKey(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/api.Ionscale/GetAuthKey",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(IonscaleServer).GetAuthKey(ctx, req.(*GetAuthKeyRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -618,6 +682,10 @@ var Ionscale_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Ionscale_CreateTailnet_Handler,
 		},
 		{
+			MethodName: "GetTailnet",
+			Handler:    _Ionscale_GetTailnet_Handler,
+		},
+		{
 			MethodName: "ListTailnets",
 			Handler:    _Ionscale_ListTailnets_Handler,
 		},
@@ -640,6 +708,10 @@ var Ionscale_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "SetACLPolicy",
 			Handler:    _Ionscale_SetACLPolicy_Handler,
+		},
+		{
+			MethodName: "GetAuthKey",
+			Handler:    _Ionscale_GetAuthKey_Handler,
 		},
 		{
 			MethodName: "CreateAuthKey",
