@@ -201,6 +201,91 @@ func (*DeleteMachineResponse) Descriptor() ([]byte, []int) {
 	return file_api_machines_proto_rawDescGZIP(), []int{3}
 }
 
+type ExpireMachineRequest struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	MachineId uint64 `protobuf:"varint,1,opt,name=machine_id,json=machineId,proto3" json:"machine_id,omitempty"`
+}
+
+func (x *ExpireMachineRequest) Reset() {
+	*x = ExpireMachineRequest{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_api_machines_proto_msgTypes[4]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *ExpireMachineRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ExpireMachineRequest) ProtoMessage() {}
+
+func (x *ExpireMachineRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_api_machines_proto_msgTypes[4]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ExpireMachineRequest.ProtoReflect.Descriptor instead.
+func (*ExpireMachineRequest) Descriptor() ([]byte, []int) {
+	return file_api_machines_proto_rawDescGZIP(), []int{4}
+}
+
+func (x *ExpireMachineRequest) GetMachineId() uint64 {
+	if x != nil {
+		return x.MachineId
+	}
+	return 0
+}
+
+type ExpireMachineResponse struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+}
+
+func (x *ExpireMachineResponse) Reset() {
+	*x = ExpireMachineResponse{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_api_machines_proto_msgTypes[5]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *ExpireMachineResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ExpireMachineResponse) ProtoMessage() {}
+
+func (x *ExpireMachineResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_api_machines_proto_msgTypes[5]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ExpireMachineResponse.ProtoReflect.Descriptor instead.
+func (*ExpireMachineResponse) Descriptor() ([]byte, []int) {
+	return file_api_machines_proto_rawDescGZIP(), []int{5}
+}
+
 type Machine struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -221,7 +306,7 @@ type Machine struct {
 func (x *Machine) Reset() {
 	*x = Machine{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_api_machines_proto_msgTypes[4]
+		mi := &file_api_machines_proto_msgTypes[6]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -234,7 +319,7 @@ func (x *Machine) String() string {
 func (*Machine) ProtoMessage() {}
 
 func (x *Machine) ProtoReflect() protoreflect.Message {
-	mi := &file_api_machines_proto_msgTypes[4]
+	mi := &file_api_machines_proto_msgTypes[6]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -247,7 +332,7 @@ func (x *Machine) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Machine.ProtoReflect.Descriptor instead.
 func (*Machine) Descriptor() ([]byte, []int) {
-	return file_api_machines_proto_rawDescGZIP(), []int{4}
+	return file_api_machines_proto_rawDescGZIP(), []int{6}
 }
 
 func (x *Machine) GetId() uint64 {
@@ -342,6 +427,11 @@ var file_api_machines_proto_rawDesc = []byte{
 	0x68, 0x69, 0x6e, 0x65, 0x5f, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x04, 0x52, 0x09, 0x6d,
 	0x61, 0x63, 0x68, 0x69, 0x6e, 0x65, 0x49, 0x64, 0x22, 0x17, 0x0a, 0x15, 0x44, 0x65, 0x6c, 0x65,
 	0x74, 0x65, 0x4d, 0x61, 0x63, 0x68, 0x69, 0x6e, 0x65, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73,
+	0x65, 0x22, 0x35, 0x0a, 0x14, 0x45, 0x78, 0x70, 0x69, 0x72, 0x65, 0x4d, 0x61, 0x63, 0x68, 0x69,
+	0x6e, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x1d, 0x0a, 0x0a, 0x6d, 0x61, 0x63,
+	0x68, 0x69, 0x6e, 0x65, 0x5f, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x04, 0x52, 0x09, 0x6d,
+	0x61, 0x63, 0x68, 0x69, 0x6e, 0x65, 0x49, 0x64, 0x22, 0x17, 0x0a, 0x15, 0x45, 0x78, 0x70, 0x69,
+	0x72, 0x65, 0x4d, 0x61, 0x63, 0x68, 0x69, 0x6e, 0x65, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73,
 	0x65, 0x22, 0xa0, 0x02, 0x0a, 0x07, 0x4d, 0x61, 0x63, 0x68, 0x69, 0x6e, 0x65, 0x12, 0x0e, 0x0a,
 	0x02, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x04, 0x52, 0x02, 0x69, 0x64, 0x12, 0x12, 0x0a,
 	0x04, 0x6e, 0x61, 0x6d, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x04, 0x6e, 0x61, 0x6d,
@@ -378,21 +468,23 @@ func file_api_machines_proto_rawDescGZIP() []byte {
 	return file_api_machines_proto_rawDescData
 }
 
-var file_api_machines_proto_msgTypes = make([]protoimpl.MessageInfo, 5)
+var file_api_machines_proto_msgTypes = make([]protoimpl.MessageInfo, 7)
 var file_api_machines_proto_goTypes = []interface{}{
 	(*ListMachinesRequest)(nil),   // 0: api.ListMachinesRequest
 	(*ListMachinesResponse)(nil),  // 1: api.ListMachinesResponse
 	(*DeleteMachineRequest)(nil),  // 2: api.DeleteMachineRequest
 	(*DeleteMachineResponse)(nil), // 3: api.DeleteMachineResponse
-	(*Machine)(nil),               // 4: api.Machine
-	(*timestamppb.Timestamp)(nil), // 5: google.protobuf.Timestamp
-	(*Ref)(nil),                   // 6: api.Ref
+	(*ExpireMachineRequest)(nil),  // 4: api.ExpireMachineRequest
+	(*ExpireMachineResponse)(nil), // 5: api.ExpireMachineResponse
+	(*Machine)(nil),               // 6: api.Machine
+	(*timestamppb.Timestamp)(nil), // 7: google.protobuf.Timestamp
+	(*Ref)(nil),                   // 8: api.Ref
 }
 var file_api_machines_proto_depIdxs = []int32{
-	4, // 0: api.ListMachinesResponse.machines:type_name -> api.Machine
-	5, // 1: api.Machine.last_seen:type_name -> google.protobuf.Timestamp
-	6, // 2: api.Machine.tailnet:type_name -> api.Ref
-	6, // 3: api.Machine.user:type_name -> api.Ref
+	6, // 0: api.ListMachinesResponse.machines:type_name -> api.Machine
+	7, // 1: api.Machine.last_seen:type_name -> google.protobuf.Timestamp
+	8, // 2: api.Machine.tailnet:type_name -> api.Ref
+	8, // 3: api.Machine.user:type_name -> api.Ref
 	4, // [4:4] is the sub-list for method output_type
 	4, // [4:4] is the sub-list for method input_type
 	4, // [4:4] is the sub-list for extension type_name
@@ -456,6 +548,30 @@ func file_api_machines_proto_init() {
 			}
 		}
 		file_api_machines_proto_msgTypes[4].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*ExpireMachineRequest); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_api_machines_proto_msgTypes[5].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*ExpireMachineResponse); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_api_machines_proto_msgTypes[6].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*Machine); i {
 			case 0:
 				return &v.state
@@ -474,7 +590,7 @@ func file_api_machines_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_api_machines_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   5,
+			NumMessages:   7,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

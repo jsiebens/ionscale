@@ -139,10 +139,8 @@ func (h *PollNetMapHandler) handleUpdate(c echo.Context, binder bind.Binder, m *
 
 	for {
 		select {
-		case s := <-updateChan:
-			if s.PeerUpdated == nil || *s.PeerUpdated != machineID {
-				latestUpdate = time.Now()
-			}
+		case <-updateChan:
+			latestUpdate = time.Now()
 		case <-keepAliveTicker.C:
 			if mapRequest.KeepAlive {
 				if _, err := c.Response().Write(keepAliveResponse); err != nil {
@@ -247,6 +245,9 @@ func (h *PollNetMapHandler) createMapResponse(m *domain.Machine, binder bind.Bin
 	syncedPeerIDs := map[uint64]bool{}
 
 	for _, peer := range candidatePeers {
+		if peer.IsExpired() {
+			continue
+		}
 		if domain.IsValidPeer(policies, m, &peer) || domain.IsValidPeer(policies, &peer, m) {
 			n, err := mapping.ToNode(&peer, h.brokers(peer.TailnetID).IsConnected(peer.ID))
 			if err != nil {
@@ -291,6 +292,7 @@ func (h *PollNetMapHandler) createMapResponse(m *domain.Machine, binder bind.Bin
 		}
 	} else {
 		mapResponse = &tailcfg.MapResponse{
+			Node:         node,
 			PacketFilter: rules,
 			DERPMap:      derpMap,
 			PeersChanged: changedPeers,

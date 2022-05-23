@@ -81,7 +81,7 @@ func Start(config *config.Config) error {
 	}
 
 	createPeerHandler := func(p key.MachinePublic) http.Handler {
-		registrationHandlers := handlers.NewRegistrationHandlers(bind.DefaultBinder(p), config, repository, pendingMachineRegistrationRequests)
+		registrationHandlers := handlers.NewRegistrationHandlers(bind.DefaultBinder(p), config, brokers, repository, pendingMachineRegistrationRequests)
 		pollNetMapHandler := handlers.NewPollNetMapHandler(bind.DefaultBinder(p), brokers, repository, offlineTimers)
 
 		e := echo.New()
@@ -94,7 +94,7 @@ func Start(config *config.Config) error {
 	}
 
 	noiseHandlers := handlers.NewNoiseHandlers(controlKeys.ControlKey, createPeerHandler)
-	registrationHandlers := handlers.NewRegistrationHandlers(bind.BoxBinder(controlKeys.LegacyControlKey), config, repository, pendingMachineRegistrationRequests)
+	registrationHandlers := handlers.NewRegistrationHandlers(bind.BoxBinder(controlKeys.LegacyControlKey), config, brokers, repository, pendingMachineRegistrationRequests)
 	pollNetMapHandler := handlers.NewPollNetMapHandler(bind.BoxBinder(controlKeys.LegacyControlKey), brokers, repository, offlineTimers)
 	authenticationHandlers := handlers.NewAuthenticationHandlers(
 		config,

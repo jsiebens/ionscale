@@ -8,6 +8,7 @@ import (
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/timestamppb"
 	"inet.af/netaddr"
+	"time"
 )
 
 func (s *Service) ListMachines(ctx context.Context, req *api.ListMachinesRequest) (*api.ListMachinesResponse, error) {
@@ -75,6 +76,28 @@ func (s *Service) DeleteMachine(ctx context.Context, req *api.DeleteMachineReque
 	s.brokers(m.TailnetID).SignalPeersRemoved([]uint64{m.ID})
 
 	return &api.DeleteMachineResponse{}, nil
+}
+
+func (s *Service) ExpireMachine(ctx context.Context, req *api.ExpireMachineRequest) (*api.ExpireMachineResponse, error) {
+	m, err := s.repository.GetMachine(ctx, req.MachineId)
+	if err != nil {
+		return nil, err
+	}
+
+	if m == nil {
+		return nil, status.Error(codes.NotFound, "machine does not exist")
+	}
+
+	timestamp := time.Unix(123, 0)
+	m.ExpiresAt = &timestamp
+
+	if err := s.repository.SaveMachine(ctx, m); err != nil {
+		return nil, err
+	}
+
+	s.brokers(m.TailnetID).SignalPeerUpdated(m.ID)
+
+	return &api.ExpireMachineResponse{}, nil
 }
 
 func (s *Service) GetMachineRoutes(ctx context.Context, req *api.GetMachineRoutesRequest) (*api.GetMachineRoutesResponse, error) {

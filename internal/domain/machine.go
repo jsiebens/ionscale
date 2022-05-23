@@ -44,6 +44,10 @@ type Machine struct {
 
 type Machines []Machine
 
+func (m *Machine) IsExpired() bool {
+	return m.ExpiresAt != nil && !m.ExpiresAt.IsZero() && m.ExpiresAt.Before(time.Now())
+}
+
 func (m *Machine) HasIP(v netaddr.IP) bool {
 	return v.Compare(*m.IPv4.IP) == 0 || v.Compare(*m.IPv6.IP) == 0
 }

@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/jsiebens/ionscale/internal/addr"
 	"github.com/jsiebens/ionscale/internal/bind"
+	"github.com/jsiebens/ionscale/internal/broker"
 	"github.com/jsiebens/ionscale/internal/config"
 	"github.com/jsiebens/ionscale/internal/domain"
 	"github.com/jsiebens/ionscale/internal/util"
@@ -19,10 +20,12 @@ import (
 func NewRegistrationHandlers(
 	createBinder bind.Factory,
 	config *config.Config,
+	brokers *broker.BrokerPool,
 	repository domain.Repository,
 	pendingMachineRegistrationRequests *cache.Cache) *RegistrationHandlers {
 	return &RegistrationHandlers{
 		createBinder:                       createBinder,
+		brokers:                            brokers.Get,
 		repository:                         repository,
 		config:                             config,
 		pendingMachineRegistrationRequests: pendingMachineRegistrationRequests,
@@ -37,6 +40,7 @@ type pendingMachineRegistrationRequest struct {
 type RegistrationHandlers struct {
 	createBinder                       bind.Factory
 	repository                         domain.Repository
+	brokers                            func(uint64) broker.Broker
 	config                             *config.Config
 	pendingMachineRegistrationRequests *cache.Cache
 }
@@ -76,6 +80,8 @@ func (h *RegistrationHandlers) Register(c echo.Context) error {
 			if err := h.repository.SaveMachine(ctx, m); err != nil {
 				return err
 			}
+
+			h.brokers(m.TailnetID).SignalPeerUpdated(m.ID)
 
 			response := tailcfg.RegisterResponse{NodeKeyExpired: true}
 			return binder.WriteResponse(c, http.StatusOK, response)

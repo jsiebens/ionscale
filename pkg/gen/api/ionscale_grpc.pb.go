@@ -34,6 +34,7 @@ type IonscaleClient interface {
 	DeleteAuthKey(ctx context.Context, in *DeleteAuthKeyRequest, opts ...grpc.CallOption) (*DeleteAuthKeyResponse, error)
 	ListAuthKeys(ctx context.Context, in *ListAuthKeysRequest, opts ...grpc.CallOption) (*ListAuthKeysResponse, error)
 	ListMachines(ctx context.Context, in *ListMachinesRequest, opts ...grpc.CallOption) (*ListMachinesResponse, error)
+	ExpireMachine(ctx context.Context, in *ExpireMachineRequest, opts ...grpc.CallOption) (*ExpireMachineResponse, error)
 	DeleteMachine(ctx context.Context, in *DeleteMachineRequest, opts ...grpc.CallOption) (*DeleteMachineResponse, error)
 	GetMachineRoutes(ctx context.Context, in *GetMachineRoutesRequest, opts ...grpc.CallOption) (*GetMachineRoutesResponse, error)
 	SetMachineRoutes(ctx context.Context, in *SetMachineRoutesRequest, opts ...grpc.CallOption) (*GetMachineRoutesResponse, error)
@@ -191,6 +192,15 @@ func (c *ionscaleClient) ListMachines(ctx context.Context, in *ListMachinesReque
 	return out, nil
 }
 
+func (c *ionscaleClient) ExpireMachine(ctx context.Context, in *ExpireMachineRequest, opts ...grpc.CallOption) (*ExpireMachineResponse, error) {
+	out := new(ExpireMachineResponse)
+	err := c.cc.Invoke(ctx, "/api.Ionscale/ExpireMachine", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *ionscaleClient) DeleteMachine(ctx context.Context, in *DeleteMachineRequest, opts ...grpc.CallOption) (*DeleteMachineResponse, error) {
 	out := new(DeleteMachineResponse)
 	err := c.cc.Invoke(ctx, "/api.Ionscale/DeleteMachine", in, out, opts...)
@@ -238,6 +248,7 @@ type IonscaleServer interface {
 	DeleteAuthKey(context.Context, *DeleteAuthKeyRequest) (*DeleteAuthKeyResponse, error)
 	ListAuthKeys(context.Context, *ListAuthKeysRequest) (*ListAuthKeysResponse, error)
 	ListMachines(context.Context, *ListMachinesRequest) (*ListMachinesResponse, error)
+	ExpireMachine(context.Context, *ExpireMachineRequest) (*ExpireMachineResponse, error)
 	DeleteMachine(context.Context, *DeleteMachineRequest) (*DeleteMachineResponse, error)
 	GetMachineRoutes(context.Context, *GetMachineRoutesRequest) (*GetMachineRoutesResponse, error)
 	SetMachineRoutes(context.Context, *SetMachineRoutesRequest) (*GetMachineRoutesResponse, error)
@@ -294,6 +305,9 @@ func (UnimplementedIonscaleServer) ListAuthKeys(context.Context, *ListAuthKeysRe
 }
 func (UnimplementedIonscaleServer) ListMachines(context.Context, *ListMachinesRequest) (*ListMachinesResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListMachines not implemented")
+}
+func (UnimplementedIonscaleServer) ExpireMachine(context.Context, *ExpireMachineRequest) (*ExpireMachineResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ExpireMachine not implemented")
 }
 func (UnimplementedIonscaleServer) DeleteMachine(context.Context, *DeleteMachineRequest) (*DeleteMachineResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteMachine not implemented")
@@ -604,6 +618,24 @@ func _Ionscale_ListMachines_Handler(srv interface{}, ctx context.Context, dec fu
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Ionscale_ExpireMachine_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ExpireMachineRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(IonscaleServer).ExpireMachine(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/api.Ionscale/ExpireMachine",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(IonscaleServer).ExpireMachine(ctx, req.(*ExpireMachineRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Ionscale_DeleteMachine_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(DeleteMachineRequest)
 	if err := dec(in); err != nil {
@@ -728,6 +760,10 @@ var Ionscale_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ListMachines",
 			Handler:    _Ionscale_ListMachines_Handler,
+		},
+		{
+			MethodName: "ExpireMachine",
+			Handler:    _Ionscale_ExpireMachine_Handler,
 		},
 		{
 			MethodName: "DeleteMachine",

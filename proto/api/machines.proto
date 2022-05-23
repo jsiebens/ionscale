@@ -21,6 +21,12 @@ message DeleteMachineRequest {
 
 message DeleteMachineResponse {}
 
+message ExpireMachineRequest {
+  uint64 machine_id = 1;
+}
+
+message ExpireMachineResponse {}
+
 message Machine {
   uint64 id = 1;
   string name = 2;

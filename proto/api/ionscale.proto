@@ -37,6 +37,7 @@ service Ionscale {
   rpc ListAuthKeys (ListAuthKeysRequest) returns (ListAuthKeysResponse) {}
 
   rpc ListMachines (ListMachinesRequest) returns (ListMachinesResponse) {}
+  rpc ExpireMachine(ExpireMachineRequest) returns (ExpireMachineResponse) {}
   rpc DeleteMachine(DeleteMachineRequest) returns (DeleteMachineResponse) {}
 
   rpc GetMachineRoutes (GetMachineRoutesRequest) returns (GetMachineRoutesResponse) {}

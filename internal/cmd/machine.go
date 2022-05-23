@@ -19,6 +19,7 @@ func machineCommands() *coral.Command {
 	}
 
 	command.AddCommand(deleteMachineCommand())
+	command.AddCommand(expireMachineCommand())
 	command.AddCommand(listMachinesCommand())
 	command.AddCommand(getMachineRoutesCommand())
 	command.AddCommand(setMachineRoutesCommand())
@@ -51,6 +52,38 @@ func deleteMachineCommand() *coral.Command {
 		}
 
 		fmt.Println("Machine deleted.")
+
+		return nil
+	}
+
+	return command
+}
+
+func expireMachineCommand() *coral.Command {
+	command := &coral.Command{
+		Use:          "expire",
+		Short:        "Expires a machine",
+		SilenceUsage: true,
+	}
+
+	var machineID uint64
+	var target = Target{}
+	target.prepareCommand(command)
+	command.Flags().Uint64Var(&machineID, "machine-id", 0, "")
+
+	command.RunE = func(command *coral.Command, args []string) error {
+		client, c, err := target.createGRPCClient()
+		if err != nil {
+			return err
+		}
+		defer safeClose(c)
+
+		req := api.ExpireMachineRequest{MachineId: machineID}
+		if _, err := client.ExpireMachine(context.Background(), &req); err != nil {
+			return err
+		}
+
+		fmt.Println("Machine key expired.")
 
 		return nil
 	}
