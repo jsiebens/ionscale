@@ -61,6 +61,10 @@ func (m *Machine) HasTag(tag string) bool {
 	return false
 }
 
+func (m *Machine) HasTags() bool {
+	return len(m.Tags) != 0
+}
+
 func (m *Machine) IsAllowedIP(i netaddr.IP) bool {
 	if m.HasIP(i) {
 		return true

@@ -219,7 +219,7 @@ func (h *PollNetMapHandler) createKeepAliveResponse(binder bind.Binder, request 
 func (h *PollNetMapHandler) createMapResponse(m *domain.Machine, binder bind.Binder, request *tailcfg.MapRequest, delta bool, prevSyncedPeerIDs map[uint64]bool) ([]byte, map[uint64]bool, error) {
 	ctx := context.TODO()
 
-	node, err := mapping.ToNode(m, true)
+	node, user, err := mapping.ToNode(m, true)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -229,11 +229,7 @@ func (h *PollNetMapHandler) createMapResponse(m *domain.Machine, binder bind.Bin
 		return nil, nil, err
 	}
 
-	users, err := h.repository.ListUsers(ctx, m.TailnetID)
-	if err != nil {
-		return nil, nil, err
-	}
-
+	var users = []tailcfg.UserProfile{*user}
 	var changedPeers []*tailcfg.Node
 	var removedPeers []tailcfg.NodeID
 
@@ -243,19 +239,25 @@ func (h *PollNetMapHandler) createMapResponse(m *domain.Machine, binder bind.Bin
 	}
 
 	syncedPeerIDs := map[uint64]bool{}
+	syncedUserIDs := map[tailcfg.UserID]bool{}
 
 	for _, peer := range candidatePeers {
 		if peer.IsExpired() {
 			continue
 		}
 		if domain.IsValidPeer(policies, m, &peer) || domain.IsValidPeer(policies, &peer, m) {
-			n, err := mapping.ToNode(&peer, h.brokers(peer.TailnetID).IsConnected(peer.ID))
+			n, u, err := mapping.ToNode(&peer, h.brokers(peer.TailnetID).IsConnected(peer.ID))
 			if err != nil {
 				return nil, nil, err
 			}
 			changedPeers = append(changedPeers, n)
 			syncedPeerIDs[peer.ID] = true
 			delete(prevSyncedPeerIDs, peer.ID)
+
+			if _, ok := syncedUserIDs[u.ID]; !ok {
+				users = append(users, *u)
+				syncedUserIDs[u.ID] = true
+			}
 		}
 	}
 
@@ -287,7 +289,7 @@ func (h *PollNetMapHandler) createMapResponse(m *domain.Machine, binder bind.Bin
 			DERPMap:      derpMap,
 			Domain:       dnsname.SanitizeHostname(m.Tailnet.Name),
 			Peers:        changedPeers,
-			UserProfiles: mapping.ToUserProfiles(users),
+			UserProfiles: users,
 			ControlTime:  &controlTime,
 		}
 	} else {
@@ -297,7 +299,7 @@ func (h *PollNetMapHandler) createMapResponse(m *domain.Machine, binder bind.Bin
 			DERPMap:      derpMap,
 			PeersChanged: changedPeers,
 			PeersRemoved: removedPeers,
-			UserProfiles: mapping.ToUserProfiles(users),
+			UserProfiles: users,
 			ControlTime:  &controlTime,
 		}
 	}

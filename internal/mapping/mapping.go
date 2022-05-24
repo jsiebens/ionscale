@@ -72,22 +72,22 @@ func ToDNSConfig(tailnet *domain.Tailnet, c *domain.DNSConfig) *tailcfg.DNSConfi
 	return config
 }
 
-func ToNode(m *domain.Machine, connected bool) (*tailcfg.Node, error) {
+func ToNode(m *domain.Machine, connected bool) (*tailcfg.Node, *tailcfg.UserProfile, error) {
 	nKey, err := util.ParseNodePublicKey(m.NodeKey)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	mKey, err := util.ParseMachinePublicKey(m.MachineKey)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	var discoKey key.DiscoPublic
 	if m.DiscoKey != "" {
 		dKey, err := util.ParseDiscoPublicKey(m.DiscoKey)
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 		discoKey = *dKey
 	}
@@ -101,7 +101,7 @@ func ToNode(m *domain.Machine, connected bool) (*tailcfg.Node, error) {
 	if !m.IPv4.IsZero() {
 		ipv4, err := m.IPv4.Prefix(32)
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 		addrs = append(addrs, ipv4)
 		allowedIPs = append(allowedIPs, ipv4)
@@ -110,7 +110,7 @@ func ToNode(m *domain.Machine, connected bool) (*tailcfg.Node, error) {
 	if !m.IPv6.IsZero() {
 		ipv6, err := m.IPv6.Prefix(128)
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 		addrs = append(addrs, ipv6)
 		allowedIPs = append(allowedIPs, ipv6)
@@ -169,7 +169,18 @@ func ToNode(m *domain.Machine, connected bool) (*tailcfg.Node, error) {
 		n.LastSeen = &l
 	}
 
-	return &n, nil
+	var user = ToUserProfile(m.User)
+
+	if m.HasTags() {
+		n.User = tailcfg.UserID(m.ID)
+		user = tailcfg.UserProfile{
+			ID:          tailcfg.UserID(m.ID),
+			LoginName:   "tagged-devices",
+			DisplayName: "Tagged Devices",
+		}
+	}
+
+	return &n, &user, nil
 }
 
 func ToUserProfile(u domain.User) tailcfg.UserProfile {
