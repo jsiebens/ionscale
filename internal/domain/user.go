@@ -9,6 +9,7 @@ type TailnetRole string
 
 const (
 	TailnetRoleService TailnetRole = "service"
+	TailnetRoleMember  TailnetRole = "member"
 )
 
 type User struct {
@@ -18,6 +19,9 @@ type User struct {
 	TailnetRole TailnetRole
 	TailnetID   uint64
 	Tailnet     Tailnet
+
+	AccountID *uint64
+	Account   *Account
 }
 
 type Users []User
@@ -53,4 +57,20 @@ func (r *repository) ListUsers(ctx context.Context, tailnetID uint64) (Users, er
 func (r *repository) DeleteUsersByTailnet(ctx context.Context, tailnetID uint64) error {
 	tx := r.withContext(ctx).Where("tailnet_id = ?", tailnetID).Delete(&User{})
 	return tx.Error
+}
+
+func (r *repository) GetOrCreateUserWithAccount(ctx context.Context, tailnet *Tailnet, account *Account) (*User, bool, error) {
+	user := &User{}
+	id := util.NextID()
+
+	query := User{AccountID: &account.ID, TailnetID: tailnet.ID}
+	attrs := User{ID: id, Name: account.LoginName, TailnetID: tailnet.ID, AccountID: &account.ID, TailnetRole: TailnetRoleMember}
+
+	tx := r.withContext(ctx).Where(query).Attrs(attrs).FirstOrCreate(user)
+
+	if tx.Error != nil {
+		return nil, false, tx.Error
+	}
+
+	return user, user.ID == id, nil
 }

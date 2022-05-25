@@ -14,6 +14,13 @@ type Repository interface {
 	GetDERPMap(ctx context.Context) (*tailcfg.DERPMap, error)
 	SetDERPMap(ctx context.Context, v *tailcfg.DERPMap) error
 
+	SaveAuthMethod(ctx context.Context, m *AuthMethod) error
+	ListAuthMethods(ctx context.Context) ([]AuthMethod, error)
+	GetAuthMethod(ctx context.Context, id uint64) (*AuthMethod, error)
+
+	GetAccount(ctx context.Context, accountID uint64) (*Account, error)
+	GetOrCreateAccount(ctx context.Context, authMethodID uint64, externalID, loginName string) (*Account, bool, error)
+
 	GetOrCreateTailnet(ctx context.Context, name string) (*Tailnet, bool, error)
 	GetTailnet(ctx context.Context, id uint64) (*Tailnet, error)
 	ListTailnets(ctx context.Context) ([]Tailnet, error)
@@ -35,6 +42,7 @@ type Repository interface {
 
 	GetOrCreateServiceUser(ctx context.Context, tailnet *Tailnet) (*User, bool, error)
 	ListUsers(ctx context.Context, tailnetID uint64) (Users, error)
+	GetOrCreateUserWithAccount(ctx context.Context, tailnet *Tailnet, account *Account) (*User, bool, error)
 	DeleteUsersByTailnet(ctx context.Context, tailnetID uint64) error
 
 	SaveMachine(ctx context.Context, m *Machine) error

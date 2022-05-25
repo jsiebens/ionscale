@@ -9,8 +9,9 @@ import (
 )
 
 type ACLPolicy struct {
-	Hosts map[string]string `json:"hosts,omitempty"`
-	ACLs  []ACL             `json:"acls"`
+	Groups map[string][]string `json:"groups,omitempty"`
+	Hosts  map[string]string   `json:"hosts,omitempty"`
+	ACLs   []ACL               `json:"acls"`
 }
 
 type ACL struct {
@@ -155,6 +156,26 @@ func (a *aclEngine) expandMachineAlias(m *Machine, alias string, src bool) []str
 		if alias == "*" {
 			return []string{"*"}
 		}
+	}
+
+	if strings.Contains(alias, "@") && !m.HasTags() && m.HasUser(alias) {
+		return []string{m.IPv4.String(), m.IPv6.String()}
+	}
+
+	if strings.HasPrefix(alias, "group:") && !m.HasTags() {
+		users, ok := a.policy.Groups[alias]
+
+		if !ok {
+			return []string{}
+		}
+
+		for _, u := range users {
+			if m.HasUser(u) {
+				return []string{m.IPv4.String(), m.IPv6.String()}
+			}
+		}
+
+		return []string{}
 	}
 
 	if strings.HasPrefix(alias, "tag:") && m.HasTag(alias[4:]) {

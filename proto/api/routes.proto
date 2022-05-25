@@ -12,7 +12,7 @@ message GetMachineRoutesResponse {
 
 message SetMachineRoutesRequest {
   uint64 machine_id = 1;
-  repeated string allowedIps = 2;
+  repeated string allowed_ips = 2;
 }
 
 message RoutableIP {

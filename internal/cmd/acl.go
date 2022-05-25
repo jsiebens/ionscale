@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/jsiebens/ionscale/internal/domain"
 	"github.com/jsiebens/ionscale/pkg/gen/api"
 	"github.com/muesli/coral"
 	"gopkg.in/yaml.v2"
@@ -44,8 +45,14 @@ func getACLConfig() *coral.Command {
 			return err
 		}
 
+		var p domain.ACLPolicy
+
+		if err := json.Unmarshal(resp.Value, &p); err != nil {
+			return err
+		}
+
 		if asJson {
-			marshal, err := json.MarshalIndent(resp.Policy, "", "  ")
+			marshal, err := json.MarshalIndent(&p, "", "  ")
 			if err != nil {
 				return err
 			}
@@ -53,7 +60,7 @@ func getACLConfig() *coral.Command {
 			fmt.Println()
 			fmt.Println(string(marshal))
 		} else {
-			marshal, err := yaml.Marshal(resp.Policy)
+			marshal, err := yaml.Marshal(&p)
 			if err != nil {
 				return err
 			}
@@ -91,12 +98,6 @@ func setACLConfig() *coral.Command {
 			return err
 		}
 
-		var policy api.Policy
-
-		if err := json.Unmarshal(rawJson, &policy); err != nil {
-			return err
-		}
-
 		client, c, err := target.createGRPCClient()
 		if err != nil {
 			return err
@@ -108,7 +109,7 @@ func setACLConfig() *coral.Command {
 			return err
 		}
 
-		_, err = client.SetACLPolicy(context.Background(), &api.SetACLPolicyRequest{TailnetId: tailnet.Id, Policy: &policy})
+		_, err = client.SetACLPolicy(context.Background(), &api.SetACLPolicyRequest{TailnetId: tailnet.Id, Value: rawJson})
 		if err != nil {
 			return err
 		}
