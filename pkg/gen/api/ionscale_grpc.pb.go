@@ -21,6 +21,8 @@ type IonscaleClient interface {
 	GetVersion(ctx context.Context, in *GetVersionRequest, opts ...grpc.CallOption) (*GetVersionResponse, error)
 	GetDERPMap(ctx context.Context, in *GetDERPMapRequest, opts ...grpc.CallOption) (*GetDERPMapResponse, error)
 	SetDERPMap(ctx context.Context, in *SetDERPMapRequest, opts ...grpc.CallOption) (*SetDERPMapResponse, error)
+	CreateAuthMethod(ctx context.Context, in *CreateAuthMethodRequest, opts ...grpc.CallOption) (*CreateAuthMethodResponse, error)
+	ListAuthMethods(ctx context.Context, in *ListAuthMethodsRequest, opts ...grpc.CallOption) (*ListAuthMethodsResponse, error)
 	CreateTailnet(ctx context.Context, in *CreateTailnetRequest, opts ...grpc.CallOption) (*CreateTailnetResponse, error)
 	GetTailnet(ctx context.Context, in *GetTailnetRequest, opts ...grpc.CallOption) (*GetTailnetResponse, error)
 	ListTailnets(ctx context.Context, in *ListTailnetRequest, opts ...grpc.CallOption) (*ListTailnetResponse, error)
@@ -69,6 +71,24 @@ func (c *ionscaleClient) GetDERPMap(ctx context.Context, in *GetDERPMapRequest, 
 func (c *ionscaleClient) SetDERPMap(ctx context.Context, in *SetDERPMapRequest, opts ...grpc.CallOption) (*SetDERPMapResponse, error) {
 	out := new(SetDERPMapResponse)
 	err := c.cc.Invoke(ctx, "/api.Ionscale/SetDERPMap", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *ionscaleClient) CreateAuthMethod(ctx context.Context, in *CreateAuthMethodRequest, opts ...grpc.CallOption) (*CreateAuthMethodResponse, error) {
+	out := new(CreateAuthMethodResponse)
+	err := c.cc.Invoke(ctx, "/api.Ionscale/CreateAuthMethod", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *ionscaleClient) ListAuthMethods(ctx context.Context, in *ListAuthMethodsRequest, opts ...grpc.CallOption) (*ListAuthMethodsResponse, error) {
+	out := new(ListAuthMethodsResponse)
+	err := c.cc.Invoke(ctx, "/api.Ionscale/ListAuthMethods", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -235,6 +255,8 @@ type IonscaleServer interface {
 	GetVersion(context.Context, *GetVersionRequest) (*GetVersionResponse, error)
 	GetDERPMap(context.Context, *GetDERPMapRequest) (*GetDERPMapResponse, error)
 	SetDERPMap(context.Context, *SetDERPMapRequest) (*SetDERPMapResponse, error)
+	CreateAuthMethod(context.Context, *CreateAuthMethodRequest) (*CreateAuthMethodResponse, error)
+	ListAuthMethods(context.Context, *ListAuthMethodsRequest) (*ListAuthMethodsResponse, error)
 	CreateTailnet(context.Context, *CreateTailnetRequest) (*CreateTailnetResponse, error)
 	GetTailnet(context.Context, *GetTailnetRequest) (*GetTailnetResponse, error)
 	ListTailnets(context.Context, *ListTailnetRequest) (*ListTailnetResponse, error)
@@ -266,6 +288,12 @@ func (UnimplementedIonscaleServer) GetDERPMap(context.Context, *GetDERPMapReques
 }
 func (UnimplementedIonscaleServer) SetDERPMap(context.Context, *SetDERPMapRequest) (*SetDERPMapResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SetDERPMap not implemented")
+}
+func (UnimplementedIonscaleServer) CreateAuthMethod(context.Context, *CreateAuthMethodRequest) (*CreateAuthMethodResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateAuthMethod not implemented")
+}
+func (UnimplementedIonscaleServer) ListAuthMethods(context.Context, *ListAuthMethodsRequest) (*ListAuthMethodsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListAuthMethods not implemented")
 }
 func (UnimplementedIonscaleServer) CreateTailnet(context.Context, *CreateTailnetRequest) (*CreateTailnetResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateTailnet not implemented")
@@ -380,6 +408,42 @@ func _Ionscale_SetDERPMap_Handler(srv interface{}, ctx context.Context, dec func
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(IonscaleServer).SetDERPMap(ctx, req.(*SetDERPMapRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Ionscale_CreateAuthMethod_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateAuthMethodRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(IonscaleServer).CreateAuthMethod(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/api.Ionscale/CreateAuthMethod",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(IonscaleServer).CreateAuthMethod(ctx, req.(*CreateAuthMethodRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Ionscale_ListAuthMethods_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListAuthMethodsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(IonscaleServer).ListAuthMethods(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/api.Ionscale/ListAuthMethods",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(IonscaleServer).ListAuthMethods(ctx, req.(*ListAuthMethodsRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -708,6 +772,14 @@ var Ionscale_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "SetDERPMap",
 			Handler:    _Ionscale_SetDERPMap_Handler,
+		},
+		{
+			MethodName: "CreateAuthMethod",
+			Handler:    _Ionscale_CreateAuthMethod_Handler,
+		},
+		{
+			MethodName: "ListAuthMethods",
+			Handler:    _Ionscale_ListAuthMethods_Handler,
 		},
 		{
 			MethodName: "CreateTailnet",

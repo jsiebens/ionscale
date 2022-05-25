@@ -10,6 +10,7 @@ func Command() *coral.Command {
 	rootCmd.AddCommand(derpMapCommand())
 	rootCmd.AddCommand(serverCommand())
 	rootCmd.AddCommand(versionCommand())
+	rootCmd.AddCommand(authMethodsCommand())
 	rootCmd.AddCommand(tailnetCommand())
 	rootCmd.AddCommand(authkeysCommand())
 	rootCmd.AddCommand(machineCommands())

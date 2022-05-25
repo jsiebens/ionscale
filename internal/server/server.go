@@ -130,7 +130,9 @@ func Start(config *config.Config) error {
 
 	auth := tlsAppHandler.Group("/a")
 	auth.GET("/:key", authenticationHandlers.StartAuth)
-	auth.POST("/:key", authenticationHandlers.StartAuth)
+	auth.POST("/:key", authenticationHandlers.ProcessAuth)
+	auth.GET("/callback", authenticationHandlers.Callback)
+	auth.POST("/callback", authenticationHandlers.EndOAuth)
 	auth.GET("/success", authenticationHandlers.Success)
 	auth.GET("/error", authenticationHandlers.Error)
 

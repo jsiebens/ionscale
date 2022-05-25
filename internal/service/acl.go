@@ -2,8 +2,8 @@ package service
 
 import (
 	"context"
+	"encoding/json"
 	"github.com/jsiebens/ionscale/internal/domain"
-	"github.com/jsiebens/ionscale/internal/mapping"
 	"github.com/jsiebens/ionscale/pkg/gen/api"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -15,12 +15,12 @@ func (s *Service) GetACLPolicy(ctx context.Context, req *api.GetACLPolicyRequest
 		return nil, err
 	}
 
-	var p api.Policy
-	if err := mapping.CopyViaJson(policy, &p); err != nil {
+	marshal, err := json.Marshal(policy)
+	if err != nil {
 		return nil, err
 	}
 
-	return &api.GetACLPolicyResponse{Policy: &p}, nil
+	return &api.GetACLPolicyResponse{Value: marshal}, nil
 }
 
 func (s *Service) SetACLPolicy(ctx context.Context, req *api.SetACLPolicyRequest) (*api.SetACLPolicyResponse, error) {
@@ -33,7 +33,7 @@ func (s *Service) SetACLPolicy(ctx context.Context, req *api.SetACLPolicyRequest
 	}
 
 	var policy domain.ACLPolicy
-	if err := mapping.CopyViaJson(req.Policy, &policy); err != nil {
+	if err := json.Unmarshal(req.Value, &policy); err != nil {
 		return nil, err
 	}
 

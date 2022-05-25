@@ -61,6 +61,10 @@ func (m *Machine) HasTag(tag string) bool {
 	return false
 }
 
+func (m *Machine) HasUser(loginName string) bool {
+	return m.User.Name == loginName
+}
+
 func (m *Machine) HasTags() bool {
 	return len(m.Tags) != 0
 }

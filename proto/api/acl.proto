@@ -12,17 +12,18 @@ message GetACLPolicyRequest {
 }
 
 message GetACLPolicyResponse {
-  Policy policy = 1;
+  bytes value = 1;
 }
 
 message SetACLPolicyRequest {
   uint64 tailnet_id = 1;
-  Policy policy = 2;
+  bytes value = 2;
 }
 
 message SetACLPolicyResponse {
 }
 
+/*
 message Policy {
   map<string, string> hosts = 1;
   repeated ACL acls = 2;
@@ -33,3 +34,4 @@ message ACL {
   repeated string src = 2;
   repeated string dst = 3;
 }
+ */

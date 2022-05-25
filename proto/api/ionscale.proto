@@ -7,6 +7,7 @@ import "google/protobuf/duration.proto";
 
 import "api/version.proto";
 import "api/tailnets.proto";
+import "api/auth_methods.proto";
 import "api/auth_keys.proto";
 import "api/machines.proto";
 import "api/routes.proto";
@@ -19,6 +20,9 @@ service Ionscale {
 
   rpc GetDERPMap (GetDERPMapRequest) returns (GetDERPMapResponse) {}
   rpc SetDERPMap (SetDERPMapRequest) returns (SetDERPMapResponse) {}
+
+  rpc CreateAuthMethod (CreateAuthMethodRequest) returns (CreateAuthMethodResponse) {}
+  rpc ListAuthMethods (ListAuthMethodsRequest) returns (ListAuthMethodsResponse) {}
 
   rpc CreateTailnet (CreateTailnetRequest) returns (CreateTailnetResponse) {}
   rpc GetTailnet (GetTailnetRequest) returns (GetTailnetResponse) {}
