@@ -8,6 +8,7 @@ import "google/protobuf/duration.proto";
 import "api/version.proto";
 import "api/tailnets.proto";
 import "api/auth_methods.proto";
+import "api/auth_filter.proto";
 import "api/auth_keys.proto";
 import "api/machines.proto";
 import "api/routes.proto";
@@ -23,6 +24,9 @@ service Ionscale {
 
   rpc CreateAuthMethod (CreateAuthMethodRequest) returns (CreateAuthMethodResponse) {}
   rpc ListAuthMethods (ListAuthMethodsRequest) returns (ListAuthMethodsResponse) {}
+
+  rpc CreateAuthFilter (CreateAuthFilterRequest) returns (CreateAuthFilterResponse) {}
+  rpc ListAuthFilters (ListAuthFiltersRequest) returns (ListAuthFiltersResponse) {}
 
   rpc CreateTailnet (CreateTailnetRequest) returns (CreateTailnetResponse) {}
   rpc GetTailnet (GetTailnetRequest) returns (GetTailnetResponse) {}

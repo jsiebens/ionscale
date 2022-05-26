@@ -9,6 +9,7 @@ require (
 	github.com/glebarez/sqlite v1.4.3
 	github.com/grpc-ecosystem/go-grpc-middleware/v2 v2.0.0-rc.2
 	github.com/grpc-ecosystem/go-grpc-prometheus v1.2.0
+	github.com/hashicorp/go-bexpr v0.1.11
 	github.com/hashicorp/go-hclog v1.1.0
 	github.com/improbable-eng/grpc-web v0.15.0
 	github.com/klauspost/compress v1.15.3
@@ -64,6 +65,8 @@ require (
 	github.com/mdlayher/socket v0.2.3 // indirect
 	github.com/mholt/acmez v1.0.2 // indirect
 	github.com/miekg/dns v1.1.46 // indirect
+	github.com/mitchellh/mapstructure v1.4.3 // indirect
+	github.com/mitchellh/pointerstructure v1.2.1 // indirect
 	github.com/prometheus/client_golang v1.11.0 // indirect
 	github.com/prometheus/client_model v0.2.0 // indirect
 	github.com/prometheus/common v0.32.1 // indirect

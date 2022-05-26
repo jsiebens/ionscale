@@ -26,6 +26,25 @@ func findTailnet(client api.IonscaleClient, tailnet string, tailnetID uint64) (*
 	return nil, fmt.Errorf("requested tailnet not found or you are not authorized for this tailnet")
 }
 
+func findAuthMethod(client api.IonscaleClient, authMethod string, authMethodID uint64) (*api.AuthMethod, error) {
+	if authMethodID == 0 && authMethod == "" {
+		return nil, fmt.Errorf("requested auth method not found or you are not authorized for this tailnet")
+	}
+
+	resp, err := client.ListAuthMethods(context.Background(), &api.ListAuthMethodsRequest{})
+	if err != nil {
+		return nil, err
+	}
+
+	for _, t := range resp.AuthMethods {
+		if t.Id == authMethodID || t.Name == authMethod {
+			return t, nil
+		}
+	}
+
+	return nil, fmt.Errorf("requested auth method not found or you are not authorized for this tailnet")
+}
+
 func safeClose(c io.Closer) {
 	if c != nil {
 		_ = c.Close()
