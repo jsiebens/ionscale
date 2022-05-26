@@ -124,9 +124,15 @@ func (h *AuthenticationHandlers) Callback(c echo.Context) error {
 		return err
 	}
 
-	tailnets, err := h.repository.ListTailnets(ctx)
+	filters, err := h.repository.ListAuthFiltersByAuthMethod(ctx, state.AuthMethod)
 	if err != nil {
 		return err
+	}
+
+	tailnets := filters.Evaluate(user.Attr)
+
+	if len(tailnets) == 0 {
+		return c.Redirect(http.StatusFound, "/a/error?e=ua")
 	}
 
 	account, _, err := h.repository.GetOrCreateAccount(ctx, state.AuthMethod, user.ID, user.Name)
@@ -157,6 +163,8 @@ func (h *AuthenticationHandlers) Error(c echo.Context) error {
 	switch e {
 	case "iak":
 		return c.Render(http.StatusForbidden, "invalidauthkey.html", nil)
+	case "ua":
+		return c.Render(http.StatusForbidden, "unauthorized.html", nil)
 	}
 	return c.Render(http.StatusOK, "error.html", nil)
 }

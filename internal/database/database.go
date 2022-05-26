@@ -46,6 +46,7 @@ func migrate(db *gorm.DB, repository domain.Repository) error {
 		&domain.Tailnet{},
 		&domain.TailnetConfig{},
 		&domain.AuthMethod{},
+		&domain.AuthFilter{},
 		&domain.Account{},
 		&domain.User{},
 		&domain.AuthKey{},

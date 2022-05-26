@@ -1,0 +1,30 @@
+syntax = "proto3";
+package api;
+option go_package = "github.com/jsiebens/ionscale/pkg/gen;api";
+
+import "api/ref.proto";
+
+message AuthFilter {
+  uint64 id = 1;
+  Ref auth_method = 2;
+  Ref tailnet = 3;
+  string expr = 4;
+}
+
+message CreateAuthFilterRequest {
+  uint64 auth_method_id = 1;
+  uint64 tailnet_id = 2;
+  string expr = 3;
+}
+
+message CreateAuthFilterResponse {
+  AuthFilter auth_filter = 1;
+}
+
+message ListAuthFiltersRequest {
+  optional uint64 auth_method_id = 1;
+}
+
+message ListAuthFiltersResponse {
+  repeated AuthFilter auth_filters = 1;
+}

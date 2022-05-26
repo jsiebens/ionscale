@@ -18,6 +18,10 @@ type Repository interface {
 	ListAuthMethods(ctx context.Context) ([]AuthMethod, error)
 	GetAuthMethod(ctx context.Context, id uint64) (*AuthMethod, error)
 
+	SaveAuthFilter(ctx context.Context, m *AuthFilter) error
+	ListAuthFilters(ctx context.Context) (AuthFilters, error)
+	ListAuthFiltersByAuthMethod(ctx context.Context, authMethodID uint64) (AuthFilters, error)
+
 	GetAccount(ctx context.Context, accountID uint64) (*Account, error)
 	GetOrCreateAccount(ctx context.Context, authMethodID uint64, externalID, loginName string) (*Account, bool, error)
 
