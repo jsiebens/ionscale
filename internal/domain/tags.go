@@ -24,6 +24,9 @@ func (i *Tags) Scan(destination interface{}) error {
 }
 
 func (i Tags) Value() (driver.Value, error) {
+	if len(i) == 0 {
+		return "", nil
+	}
 	v := "|" + strings.Join(i, "|") + "|"
 	return v, nil
 }

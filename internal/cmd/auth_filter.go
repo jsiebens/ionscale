@@ -20,6 +20,7 @@ func authFilterCommand() *coral.Command {
 
 	command.AddCommand(createAuthFilterCommand())
 	command.AddCommand(listAuthFilterCommand())
+	command.AddCommand(deleteAuthFilterCommand())
 
 	return command
 }
@@ -135,6 +136,42 @@ func createAuthFilterCommand() *coral.Command {
 			tbl.AddRow(resp.AuthFilter.Id, resp.AuthFilter.AuthMethod.Name, "", resp.AuthFilter.Expr)
 		}
 		tbl.Print()
+
+		return nil
+	}
+
+	return command
+}
+
+func deleteAuthFilterCommand() *coral.Command {
+	command := &coral.Command{
+		Use:          "delete",
+		SilenceUsage: true,
+	}
+
+	var authFilterID uint64
+
+	var target = Target{}
+	target.prepareCommand(command)
+
+	command.Flags().Uint64Var(&authFilterID, "auth-filter-id", 0, "")
+
+	command.RunE = func(command *coral.Command, args []string) error {
+		client, c, err := target.createGRPCClient()
+		if err != nil {
+			return err
+		}
+		defer safeClose(c)
+
+		req := &api.DeleteAuthFilterRequest{
+			AuthFilterId: authFilterID,
+		}
+
+		_, err = client.DeleteAuthFilter(context.Background(), req)
+
+		if err != nil {
+			return err
+		}
 
 		return nil
 	}

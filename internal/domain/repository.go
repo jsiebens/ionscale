@@ -18,9 +18,12 @@ type Repository interface {
 	ListAuthMethods(ctx context.Context) ([]AuthMethod, error)
 	GetAuthMethod(ctx context.Context, id uint64) (*AuthMethod, error)
 
+	GetAuthFilter(ctx context.Context, id uint64) (*AuthFilter, error)
 	SaveAuthFilter(ctx context.Context, m *AuthFilter) error
 	ListAuthFilters(ctx context.Context) (AuthFilters, error)
 	ListAuthFiltersByAuthMethod(ctx context.Context, authMethodID uint64) (AuthFilters, error)
+	DeleteAuthFilter(ctx context.Context, id uint64) error
+	DeleteAuthFiltersByTailnet(ctx context.Context, tailnetID uint64) error
 
 	GetAccount(ctx context.Context, accountID uint64) (*Account, error)
 	GetOrCreateAccount(ctx context.Context, authMethodID uint64, externalID, loginName string) (*Account, bool, error)
@@ -62,6 +65,7 @@ type Repository interface {
 	ListMachinePeers(ctx context.Context, tailnetID uint64, key string) (Machines, error)
 	ListInactiveEphemeralMachines(ctx context.Context, checkpoint time.Time) (Machines, error)
 	SetMachineLastSeen(ctx context.Context, machineID uint64) error
+	ExpireMachineByAuthMethod(ctx context.Context, authMethodID uint64) (int64, error)
 
 	Transaction(func(rp Repository) error) error
 }
