@@ -83,6 +83,44 @@ func (s *Service) CreateAuthFilter(ctx context.Context, req *api.CreateAuthFilte
 	return &response, nil
 }
 
+func (s *Service) DeleteAuthFilter(ctx context.Context, req *api.DeleteAuthFilterRequest) (*api.DeleteAuthFilterResponse, error) {
+
+	err := s.repository.Transaction(func(rp domain.Repository) error {
+
+		filter, err := rp.GetAuthFilter(ctx, req.AuthFilterId)
+		if err != nil {
+			return err
+		}
+
+		if filter == nil {
+			return status.Error(codes.NotFound, "auth filter not found")
+		}
+
+		c, err := rp.ExpireMachineByAuthMethod(ctx, filter.AuthMethodID)
+		if err != nil {
+			return err
+		}
+
+		if err := rp.DeleteAuthFilter(ctx, filter.ID); err != nil {
+			return err
+		}
+
+		if c != 0 {
+			s.brokers(*filter.TailnetID).SignalUpdate()
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	response := api.DeleteAuthFilterResponse{}
+
+	return &response, nil
+}
+
 func (s *Service) mapToApi(authMethod *domain.AuthMethod, filter domain.AuthFilter) *api.AuthFilter {
 	result := api.AuthFilter{
 		Id:   filter.ID,

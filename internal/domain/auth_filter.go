@@ -5,6 +5,7 @@ import (
 	"errors"
 	"github.com/hashicorp/go-bexpr"
 	"github.com/mitchellh/pointerstructure"
+	"gorm.io/gorm"
 )
 
 type AuthFilter struct {
@@ -56,6 +57,21 @@ func (fs AuthFilters) Evaluate(v interface{}) []Tailnet {
 	return tailnets
 }
 
+func (r *repository) GetAuthFilter(ctx context.Context, id uint64) (*AuthFilter, error) {
+	var t AuthFilter
+	tx := r.withContext(ctx).Take(&t, "id = ?", id)
+
+	if errors.Is(tx.Error, gorm.ErrRecordNotFound) {
+		return nil, nil
+	}
+
+	if tx.Error != nil {
+		return nil, tx.Error
+	}
+
+	return &t, nil
+}
+
 func (r *repository) SaveAuthFilter(ctx context.Context, m *AuthFilter) error {
 	tx := r.withContext(ctx).Save(m)
 
@@ -94,4 +110,14 @@ func (r *repository) ListAuthFiltersByAuthMethod(ctx context.Context, authMethod
 	}
 
 	return filters, nil
+}
+
+func (r *repository) DeleteAuthFilter(ctx context.Context, id uint64) error {
+	tx := r.withContext(ctx).Delete(&AuthFilter{ID: id})
+	return tx.Error
+}
+
+func (r *repository) DeleteAuthFiltersByTailnet(ctx context.Context, tailnetID uint64) error {
+	tx := r.withContext(ctx).Where("tailnet_id = ?", tailnetID).Delete(&AuthFilter{})
+	return tx.Error
 }

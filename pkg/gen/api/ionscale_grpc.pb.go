@@ -24,6 +24,7 @@ type IonscaleClient interface {
 	CreateAuthMethod(ctx context.Context, in *CreateAuthMethodRequest, opts ...grpc.CallOption) (*CreateAuthMethodResponse, error)
 	ListAuthMethods(ctx context.Context, in *ListAuthMethodsRequest, opts ...grpc.CallOption) (*ListAuthMethodsResponse, error)
 	CreateAuthFilter(ctx context.Context, in *CreateAuthFilterRequest, opts ...grpc.CallOption) (*CreateAuthFilterResponse, error)
+	DeleteAuthFilter(ctx context.Context, in *DeleteAuthFilterRequest, opts ...grpc.CallOption) (*DeleteAuthFilterResponse, error)
 	ListAuthFilters(ctx context.Context, in *ListAuthFiltersRequest, opts ...grpc.CallOption) (*ListAuthFiltersResponse, error)
 	CreateTailnet(ctx context.Context, in *CreateTailnetRequest, opts ...grpc.CallOption) (*CreateTailnetResponse, error)
 	GetTailnet(ctx context.Context, in *GetTailnetRequest, opts ...grpc.CallOption) (*GetTailnetResponse, error)
@@ -100,6 +101,15 @@ func (c *ionscaleClient) ListAuthMethods(ctx context.Context, in *ListAuthMethod
 func (c *ionscaleClient) CreateAuthFilter(ctx context.Context, in *CreateAuthFilterRequest, opts ...grpc.CallOption) (*CreateAuthFilterResponse, error) {
 	out := new(CreateAuthFilterResponse)
 	err := c.cc.Invoke(ctx, "/api.Ionscale/CreateAuthFilter", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *ionscaleClient) DeleteAuthFilter(ctx context.Context, in *DeleteAuthFilterRequest, opts ...grpc.CallOption) (*DeleteAuthFilterResponse, error) {
+	out := new(DeleteAuthFilterResponse)
+	err := c.cc.Invoke(ctx, "/api.Ionscale/DeleteAuthFilter", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -234,7 +244,7 @@ func (c *ionscaleClient) ListMachines(ctx context.Context, in *ListMachinesReque
 
 func (c *ionscaleClient) ExpireMachine(ctx context.Context, in *ExpireMachineRequest, opts ...grpc.CallOption) (*ExpireMachineResponse, error) {
 	out := new(ExpireMachineResponse)
-	err := c.cc.Invoke(ctx, "/api.Ionscale/ExpireMachine", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/api.Ionscale/ExpireMachineByAuthMethod", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -278,6 +288,7 @@ type IonscaleServer interface {
 	CreateAuthMethod(context.Context, *CreateAuthMethodRequest) (*CreateAuthMethodResponse, error)
 	ListAuthMethods(context.Context, *ListAuthMethodsRequest) (*ListAuthMethodsResponse, error)
 	CreateAuthFilter(context.Context, *CreateAuthFilterRequest) (*CreateAuthFilterResponse, error)
+	DeleteAuthFilter(context.Context, *DeleteAuthFilterRequest) (*DeleteAuthFilterResponse, error)
 	ListAuthFilters(context.Context, *ListAuthFiltersRequest) (*ListAuthFiltersResponse, error)
 	CreateTailnet(context.Context, *CreateTailnetRequest) (*CreateTailnetResponse, error)
 	GetTailnet(context.Context, *GetTailnetRequest) (*GetTailnetResponse, error)
@@ -319,6 +330,9 @@ func (UnimplementedIonscaleServer) ListAuthMethods(context.Context, *ListAuthMet
 }
 func (UnimplementedIonscaleServer) CreateAuthFilter(context.Context, *CreateAuthFilterRequest) (*CreateAuthFilterResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateAuthFilter not implemented")
+}
+func (UnimplementedIonscaleServer) DeleteAuthFilter(context.Context, *DeleteAuthFilterRequest) (*DeleteAuthFilterResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteAuthFilter not implemented")
 }
 func (UnimplementedIonscaleServer) ListAuthFilters(context.Context, *ListAuthFiltersRequest) (*ListAuthFiltersResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListAuthFilters not implemented")
@@ -363,7 +377,7 @@ func (UnimplementedIonscaleServer) ListMachines(context.Context, *ListMachinesRe
 	return nil, status.Errorf(codes.Unimplemented, "method ListMachines not implemented")
 }
 func (UnimplementedIonscaleServer) ExpireMachine(context.Context, *ExpireMachineRequest) (*ExpireMachineResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method ExpireMachine not implemented")
+	return nil, status.Errorf(codes.Unimplemented, "method ExpireMachineByAuthMethod not implemented")
 }
 func (UnimplementedIonscaleServer) DeleteMachine(context.Context, *DeleteMachineRequest) (*DeleteMachineResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteMachine not implemented")
@@ -490,6 +504,24 @@ func _Ionscale_CreateAuthFilter_Handler(srv interface{}, ctx context.Context, de
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(IonscaleServer).CreateAuthFilter(ctx, req.(*CreateAuthFilterRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Ionscale_DeleteAuthFilter_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteAuthFilterRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(IonscaleServer).DeleteAuthFilter(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/api.Ionscale/DeleteAuthFilter",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(IonscaleServer).DeleteAuthFilter(ctx, req.(*DeleteAuthFilterRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -756,7 +788,7 @@ func _Ionscale_ExpireMachine_Handler(srv interface{}, ctx context.Context, dec f
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/api.Ionscale/ExpireMachine",
+		FullMethod: "/api.Ionscale/ExpireMachineByAuthMethod",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(IonscaleServer).ExpireMachine(ctx, req.(*ExpireMachineRequest))
@@ -850,6 +882,10 @@ var Ionscale_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Ionscale_CreateAuthFilter_Handler,
 		},
 		{
+			MethodName: "DeleteAuthFilter",
+			Handler:    _Ionscale_DeleteAuthFilter_Handler,
+		},
+		{
 			MethodName: "ListAuthFilters",
 			Handler:    _Ionscale_ListAuthFilters_Handler,
 		},
@@ -906,7 +942,7 @@ var Ionscale_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Ionscale_ListMachines_Handler,
 		},
 		{
-			MethodName: "ExpireMachine",
+			MethodName: "ExpireMachineByAuthMethod",
 			Handler:    _Ionscale_ExpireMachine_Handler,
 		},
 		{

@@ -81,6 +81,10 @@ func (s *Service) DeleteTailnet(ctx context.Context, req *api.DeleteTailnetReque
 			return err
 		}
 
+		if err := tx.DeleteAuthFiltersByTailnet(ctx, req.TailnetId); err != nil {
+			return err
+		}
+
 		if err := tx.DeleteACLPolicy(ctx, req.TailnetId); err != nil {
 			return err
 		}
@@ -100,7 +104,7 @@ func (s *Service) DeleteTailnet(ctx context.Context, req *api.DeleteTailnetReque
 		return nil, err
 	}
 
-	s.brokers(req.TailnetId).SignalTailnedDeleted()
+	s.brokers(req.TailnetId).SignalUpdate()
 
 	return &api.DeleteTailnetResponse{}, nil
 }

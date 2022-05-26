@@ -26,6 +26,7 @@ service Ionscale {
   rpc ListAuthMethods (ListAuthMethodsRequest) returns (ListAuthMethodsResponse) {}
 
   rpc CreateAuthFilter (CreateAuthFilterRequest) returns (CreateAuthFilterResponse) {}
+  rpc DeleteAuthFilter (DeleteAuthFilterRequest) returns (DeleteAuthFilterResponse) {}
   rpc ListAuthFilters (ListAuthFiltersRequest) returns (ListAuthFiltersResponse) {}
 
   rpc CreateTailnet (CreateTailnetRequest) returns (CreateTailnetResponse) {}

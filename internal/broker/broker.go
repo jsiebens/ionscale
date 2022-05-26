@@ -23,7 +23,7 @@ type Broker interface {
 	AddClient(*Client)
 	RemoveClient(uint64)
 
-	SignalTailnedDeleted()
+	SignalUpdate()
 	SignalPeerUpdated(id uint64)
 	SignalPeersRemoved([]uint64)
 	SignalDNSUpdated()
@@ -94,7 +94,7 @@ func (h *broker) RemoveClient(id uint64) {
 	h.closingClients <- id
 }
 
-func (h *broker) SignalTailnedDeleted() {
+func (h *broker) SignalUpdate() {
 	h.signalChannel <- &Signal{}
 }
 
