@@ -189,6 +189,7 @@ func (h *AuthenticationHandlers) endMachineRegistrationFlow(c echo.Context, regi
 	var user *domain.User
 	var ephemeral bool
 	var tags = []string{}
+	var expiresAt *time.Time
 
 	if authKeyParam != "" {
 		authKey, err := h.repository.LoadAuthKey(ctx, authKeyParam)
@@ -235,6 +236,8 @@ func (h *AuthenticationHandlers) endMachineRegistrationFlow(c echo.Context, regi
 		}
 
 		ephemeral = false
+		keyExpiry := time.Now().Add(180 * 24 * time.Hour).UTC()
+		expiresAt = &keyExpiry
 	}
 
 	var m *domain.Machine
@@ -274,13 +277,10 @@ func (h *AuthenticationHandlers) endMachineRegistrationFlow(c echo.Context, regi
 			RegisteredTags: registeredTags,
 			Tags:           domain.SanitizeTags(tags),
 			CreatedAt:      now,
+			ExpiresAt:      expiresAt,
 
 			User:    *user,
 			Tailnet: *tailnet,
-		}
-
-		if !req.Expiry.IsZero() {
-			m.ExpiresAt = &req.Expiry
 		}
 
 		ipv4, ipv6, err := addr.SelectIP(checkIP(ctx, h.repository.CountMachinesWithIPv4))
@@ -299,6 +299,7 @@ func (h *AuthenticationHandlers) endMachineRegistrationFlow(c echo.Context, regi
 			if err != nil {
 				return err
 			}
+			expiresAt = nil
 		}
 
 		sanitizeHostname := dnsname.SanitizeHostname(req.Hostinfo.Hostname)
@@ -318,7 +319,7 @@ func (h *AuthenticationHandlers) endMachineRegistrationFlow(c echo.Context, regi
 		m.User = *user
 		m.TailnetID = tailnet.ID
 		m.Tailnet = *tailnet
-		m.ExpiresAt = nil
+		m.ExpiresAt = expiresAt
 	}
 
 	err = h.repository.Transaction(func(rp domain.Repository) error {
