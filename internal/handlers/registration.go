@@ -112,10 +112,9 @@ func (h *RegistrationHandlers) Register(c echo.Context) error {
 	return h.authenticateMachine(c, binder, machineKey, req)
 }
 
-func (h *RegistrationHandlers) authenticateMachine(c echo.Context, binder bind.Binder, id string, req *tailcfg.RegisterRequest) error {
+func (h *RegistrationHandlers) authenticateMachine(c echo.Context, binder bind.Binder, machineKey string, req *tailcfg.RegisterRequest) error {
 	if req.Followup != "" {
-		response := tailcfg.RegisterResponse{AuthURL: req.Followup}
-		return binder.WriteResponse(c, http.StatusOK, response)
+		return h.followup(c, binder, req)
 	}
 
 	if req.Auth.AuthKey == "" {
@@ -123,14 +122,14 @@ func (h *RegistrationHandlers) authenticateMachine(c echo.Context, binder bind.B
 		authUrl := h.config.CreateUrl("/a/%s", key)
 
 		h.pendingMachineRegistrationRequests.Set(key, &pendingMachineRegistrationRequest{
-			machineKey: id,
+			machineKey: machineKey,
 			request:    req,
 		}, cache.DefaultExpiration)
 
 		response := tailcfg.RegisterResponse{AuthURL: authUrl}
 		return binder.WriteResponse(c, http.StatusOK, response)
 	} else {
-		return h.authenticateMachineWithAuthKey(c, binder, id, req)
+		return h.authenticateMachineWithAuthKey(c, binder, machineKey, req)
 	}
 }
 
@@ -226,6 +225,36 @@ func (h *RegistrationHandlers) authenticateMachineWithAuthKey(c echo.Context, bi
 
 	response := tailcfg.RegisterResponse{MachineAuthorized: true}
 	return binder.WriteResponse(c, http.StatusOK, response)
+}
+
+func (h *RegistrationHandlers) followup(c echo.Context, binder bind.Binder, req *tailcfg.RegisterRequest) error {
+	// Listen to connection close
+	ctx := c.Request().Context()
+	notify := ctx.Done()
+	tick := time.NewTicker(5 * time.Second)
+
+	defer func() { tick.Stop() }()
+
+	machineKey := binder.Peer().String()
+	nodeKey := req.NodeKey.String()
+
+	for {
+		select {
+		case <-tick.C:
+			m, err := h.repository.GetMachineByKeys(ctx, machineKey, nodeKey)
+
+			if err != nil {
+				return err
+			}
+
+			if m != nil {
+				response := tailcfg.RegisterResponse{MachineAuthorized: true}
+				return binder.WriteResponse(c, http.StatusOK, response)
+			}
+		case <-notify:
+			return nil
+		}
+	}
 }
 
 func checkIP(cxt context.Context, s Selector) addr.Predicate {

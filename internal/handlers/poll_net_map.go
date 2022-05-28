@@ -109,7 +109,7 @@ func (h *PollNetMapHandler) handleUpdate(c echo.Context, binder bind.Binder, m *
 	tailnetBroker.AddClient(&client)
 	h.cancelOfflineMessage(machineID)
 
-	// Listen to connection close and un-register messageChan
+	// Listen to connection close
 	notify := c.Request().Context().Done()
 
 	keepAliveResponse, err := h.createKeepAliveResponse(binder, mapRequest)
