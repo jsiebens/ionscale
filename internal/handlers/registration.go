@@ -143,7 +143,8 @@ func (h *RegistrationHandlers) authenticateMachineWithAuthKey(c echo.Context, bi
 	}
 
 	if authKey == nil {
-		return c.String(http.StatusBadRequest, "invalid auth key")
+		response := tailcfg.RegisterResponse{MachineAuthorized: false, Error: "invalid auth key"}
+		return binder.WriteResponse(c, http.StatusOK, response)
 	}
 
 	tailnet := authKey.Tailnet
