@@ -67,6 +67,10 @@ type Repository interface {
 	SetMachineLastSeen(ctx context.Context, machineID uint64) error
 	ExpireMachineByAuthMethod(ctx context.Context, authMethodID uint64) (int64, error)
 
+	SaveRegistrationRequest(ctx context.Context, request *RegistrationRequest) error
+	GetRegistrationRequestByKey(ctx context.Context, key string) (*RegistrationRequest, error)
+	GetRegistrationRequestByMachineKey(ctx context.Context, key string) (*RegistrationRequest, error)
+
 	Transaction(func(rp Repository) error) error
 }
 

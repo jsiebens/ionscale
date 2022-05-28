@@ -9,7 +9,6 @@ import (
 	"github.com/jsiebens/ionscale/internal/domain"
 	"github.com/jsiebens/ionscale/internal/util"
 	"github.com/labstack/echo/v4"
-	"github.com/patrickmn/go-cache"
 	"inet.af/netaddr"
 	"net/http"
 	"tailscale.com/tailcfg"
@@ -21,28 +20,20 @@ func NewRegistrationHandlers(
 	createBinder bind.Factory,
 	config *config.Config,
 	brokers *broker.BrokerPool,
-	repository domain.Repository,
-	pendingMachineRegistrationRequests *cache.Cache) *RegistrationHandlers {
+	repository domain.Repository) *RegistrationHandlers {
 	return &RegistrationHandlers{
-		createBinder:                       createBinder,
-		brokers:                            brokers.Get,
-		repository:                         repository,
-		config:                             config,
-		pendingMachineRegistrationRequests: pendingMachineRegistrationRequests,
+		createBinder: createBinder,
+		brokers:      brokers.Get,
+		repository:   repository,
+		config:       config,
 	}
 }
 
-type pendingMachineRegistrationRequest struct {
-	machineKey string
-	request    *tailcfg.RegisterRequest
-}
-
 type RegistrationHandlers struct {
-	createBinder                       bind.Factory
-	repository                         domain.Repository
-	brokers                            func(uint64) broker.Broker
-	config                             *config.Config
-	pendingMachineRegistrationRequests *cache.Cache
+	createBinder bind.Factory
+	repository   domain.Repository
+	brokers      func(uint64) broker.Broker
+	config       *config.Config
 }
 
 func (h *RegistrationHandlers) Register(c echo.Context) error {
@@ -113,6 +104,8 @@ func (h *RegistrationHandlers) Register(c echo.Context) error {
 }
 
 func (h *RegistrationHandlers) authenticateMachine(c echo.Context, binder bind.Binder, machineKey string, req *tailcfg.RegisterRequest) error {
+	ctx := c.Request().Context()
+
 	if req.Followup != "" {
 		return h.followup(c, binder, req)
 	}
@@ -121,10 +114,18 @@ func (h *RegistrationHandlers) authenticateMachine(c echo.Context, binder bind.B
 		key := util.RandStringBytes(8)
 		authUrl := h.config.CreateUrl("/a/%s", key)
 
-		h.pendingMachineRegistrationRequests.Set(key, &pendingMachineRegistrationRequest{
-			machineKey: machineKey,
-			request:    req,
-		}, cache.DefaultExpiration)
+		request := domain.RegistrationRequest{
+			MachineKey: machineKey,
+			Key:        key,
+			CreatedAt:  time.Now().UTC(),
+			Data:       domain.RegistrationRequestData(*req),
+		}
+
+		err := h.repository.SaveRegistrationRequest(ctx, &request)
+		if err != nil {
+			response := tailcfg.RegisterResponse{MachineAuthorized: false, Error: "something went wrong"}
+			return binder.WriteResponse(c, http.StatusOK, response)
+		}
 
 		response := tailcfg.RegisterResponse{AuthURL: authUrl}
 		return binder.WriteResponse(c, http.StatusOK, response)
@@ -232,24 +233,24 @@ func (h *RegistrationHandlers) followup(c echo.Context, binder bind.Binder, req 
 	// Listen to connection close
 	ctx := c.Request().Context()
 	notify := ctx.Done()
-	tick := time.NewTicker(5 * time.Second)
+	tick := time.NewTicker(2 * time.Second)
 
 	defer func() { tick.Stop() }()
 
 	machineKey := binder.Peer().String()
-	nodeKey := req.NodeKey.String()
 
 	for {
 		select {
 		case <-tick.C:
-			m, err := h.repository.GetMachineByKeys(ctx, machineKey, nodeKey)
+			m, err := h.repository.GetRegistrationRequestByMachineKey(ctx, machineKey)
 
-			if err != nil {
-				return err
+			if err != nil || m == nil {
+				response := tailcfg.RegisterResponse{MachineAuthorized: false, Error: "something went wrong"}
+				return binder.WriteResponse(c, http.StatusOK, response)
 			}
 
-			if m != nil {
-				response := tailcfg.RegisterResponse{MachineAuthorized: true}
+			if m != nil && m.IsFinished() {
+				response := tailcfg.RegisterResponse{MachineAuthorized: len(m.Error) != 0, Error: m.Error}
 				return binder.WriteResponse(c, http.StatusOK, response)
 			}
 		case <-notify:

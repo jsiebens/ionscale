@@ -8,6 +8,7 @@ import (
 	"github.com/mr-tron/base58"
 	"net/http"
 	"strconv"
+	"tailscale.com/tailcfg"
 	"time"
 
 	"github.com/jsiebens/ionscale/internal/config"
@@ -20,21 +21,18 @@ import (
 
 func NewAuthenticationHandlers(
 	config *config.Config,
-	repository domain.Repository,
-	pendingMachineRegistrationRequests *cache.Cache) *AuthenticationHandlers {
+	repository domain.Repository) *AuthenticationHandlers {
 	return &AuthenticationHandlers{
-		config:                             config,
-		repository:                         repository,
-		pendingMachineRegistrationRequests: pendingMachineRegistrationRequests,
-		pendingOAuthUsers:                  cache.New(5*time.Minute, 10*time.Minute),
+		config:            config,
+		repository:        repository,
+		pendingOAuthUsers: cache.New(5*time.Minute, 10*time.Minute),
 	}
 }
 
 type AuthenticationHandlers struct {
-	repository                         domain.Repository
-	config                             *config.Config
-	pendingMachineRegistrationRequests *cache.Cache
-	pendingOAuthUsers                  *cache.Cache
+	repository        domain.Repository
+	config            *config.Config
+	pendingOAuthUsers *cache.Cache
 }
 
 type AuthFormData struct {
@@ -54,7 +52,7 @@ func (h *AuthenticationHandlers) StartAuth(c echo.Context) error {
 	ctx := c.Request().Context()
 	key := c.Param("key")
 
-	if _, ok := h.pendingMachineRegistrationRequests.Get(key); !ok {
+	if req, err := h.repository.GetRegistrationRequestByKey(ctx, key); err != nil || req == nil {
 		return c.Redirect(http.StatusFound, "/a/error")
 	}
 
@@ -73,12 +71,13 @@ func (h *AuthenticationHandlers) ProcessAuth(c echo.Context) error {
 	authKey := c.FormValue("ak")
 	authMethodId := c.FormValue("s")
 
-	if _, ok := h.pendingMachineRegistrationRequests.Get(key); !ok {
+	req, err := h.repository.GetRegistrationRequestByKey(ctx, key)
+	if err != nil || req == nil {
 		return c.Redirect(http.StatusFound, "/a/error")
 	}
 
 	if authKey != "" {
-		return h.endMachineRegistrationFlow(c, &oauthState{Key: key})
+		return h.endMachineRegistrationFlow(c, req, &oauthState{Key: key})
 	}
 
 	if authMethodId != "" {
@@ -146,12 +145,19 @@ func (h *AuthenticationHandlers) Callback(c echo.Context) error {
 }
 
 func (h *AuthenticationHandlers) EndOAuth(c echo.Context) error {
+	ctx := c.Request().Context()
+
 	state, err := h.readState(c.QueryParam("state"))
 	if err != nil {
-		return err
+		return c.Redirect(http.StatusFound, "/a/error")
 	}
 
-	return h.endMachineRegistrationFlow(c, state)
+	req, err := h.repository.GetRegistrationRequestByKey(ctx, state.Key)
+	if err != nil || req == nil {
+		return c.Redirect(http.StatusFound, "/a/error")
+	}
+
+	return h.endMachineRegistrationFlow(c, req, state)
 }
 
 func (h *AuthenticationHandlers) Success(c echo.Context) error {
@@ -169,22 +175,14 @@ func (h *AuthenticationHandlers) Error(c echo.Context) error {
 	return c.Render(http.StatusOK, "error.html", nil)
 }
 
-func (h *AuthenticationHandlers) endMachineRegistrationFlow(c echo.Context, state *oauthState) error {
+func (h *AuthenticationHandlers) endMachineRegistrationFlow(c echo.Context, registrationRequest *domain.RegistrationRequest, state *oauthState) error {
 	ctx := c.Request().Context()
-
-	defer h.pendingMachineRegistrationRequests.Delete(state.Key)
-
-	preqItem, preqOK := h.pendingMachineRegistrationRequests.Get(state.Key)
-	if !preqOK {
-		return c.Redirect(http.StatusFound, "/a/error")
-	}
 
 	authKeyParam := c.FormValue("ak")
 	tailnetIDParam := c.FormValue("s")
 
-	preq := preqItem.(*pendingMachineRegistrationRequest)
-	req := preq.request
-	machineKey := preq.machineKey
+	req := tailcfg.RegisterRequest(registrationRequest.Data)
+	machineKey := registrationRequest.MachineKey
 	nodeKey := req.NodeKey.String()
 
 	var tailnet *domain.Tailnet
@@ -199,6 +197,14 @@ func (h *AuthenticationHandlers) endMachineRegistrationFlow(c echo.Context, stat
 		}
 
 		if authKey == nil {
+
+			registrationRequest.Authenticated = false
+			registrationRequest.Error = "invalid auth key"
+
+			if err := h.repository.SaveRegistrationRequest(ctx, registrationRequest); err != nil {
+				return c.Redirect(http.StatusFound, "/a/error")
+			}
+
 			return c.Redirect(http.StatusFound, "/a/error?e=iak")
 		}
 
@@ -315,7 +321,22 @@ func (h *AuthenticationHandlers) endMachineRegistrationFlow(c echo.Context, stat
 		m.ExpiresAt = nil
 	}
 
-	if err := h.repository.SaveMachine(ctx, m); err != nil {
+	err = h.repository.Transaction(func(rp domain.Repository) error {
+		registrationRequest.Authenticated = true
+		registrationRequest.Error = ""
+
+		if err := rp.SaveMachine(ctx, m); err != nil {
+			return err
+		}
+
+		if err := rp.SaveRegistrationRequest(ctx, registrationRequest); err != nil {
+			return err
+		}
+
+		return nil
+	})
+
+	if err != nil {
 		return err
 	}
 

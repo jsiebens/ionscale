@@ -51,6 +51,7 @@ func migrate(db *gorm.DB, repository domain.Repository) error {
 		&domain.User{},
 		&domain.AuthKey{},
 		&domain.Machine{},
+		&domain.RegistrationRequest{},
 	)
 
 	if err != nil {

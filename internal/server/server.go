@@ -17,7 +17,6 @@ import (
 	"github.com/jsiebens/ionscale/pkg/gen/api"
 	echo_prometheus "github.com/labstack/echo-contrib/prometheus"
 	"github.com/labstack/echo/v4"
-	"github.com/patrickmn/go-cache"
 	"github.com/soheilhy/cmux"
 	"golang.org/x/net/http2"
 	"golang.org/x/net/http2/h2c"
@@ -28,7 +27,6 @@ import (
 	"os"
 	"strings"
 	"tailscale.com/types/key"
-	"time"
 )
 
 func Start(config *config.Config) error {
@@ -54,7 +52,6 @@ func Start(config *config.Config) error {
 		return err
 	}
 
-	pendingMachineRegistrationRequests := cache.New(5*time.Minute, 10*time.Minute)
 	brokers := broker.NewBrokerPool()
 	offlineTimers := handlers.NewOfflineTimers(repository, brokers)
 	reaper := handlers.NewReaper(brokers, repository)
@@ -81,7 +78,7 @@ func Start(config *config.Config) error {
 	}
 
 	createPeerHandler := func(p key.MachinePublic) http.Handler {
-		registrationHandlers := handlers.NewRegistrationHandlers(bind.DefaultBinder(p), config, brokers, repository, pendingMachineRegistrationRequests)
+		registrationHandlers := handlers.NewRegistrationHandlers(bind.DefaultBinder(p), config, brokers, repository)
 		pollNetMapHandler := handlers.NewPollNetMapHandler(bind.DefaultBinder(p), brokers, repository, offlineTimers)
 
 		e := echo.New()
@@ -94,12 +91,11 @@ func Start(config *config.Config) error {
 	}
 
 	noiseHandlers := handlers.NewNoiseHandlers(controlKeys.ControlKey, createPeerHandler)
-	registrationHandlers := handlers.NewRegistrationHandlers(bind.BoxBinder(controlKeys.LegacyControlKey), config, brokers, repository, pendingMachineRegistrationRequests)
+	registrationHandlers := handlers.NewRegistrationHandlers(bind.BoxBinder(controlKeys.LegacyControlKey), config, brokers, repository)
 	pollNetMapHandler := handlers.NewPollNetMapHandler(bind.BoxBinder(controlKeys.LegacyControlKey), brokers, repository, offlineTimers)
 	authenticationHandlers := handlers.NewAuthenticationHandlers(
 		config,
 		repository,
-		pendingMachineRegistrationRequests,
 	)
 
 	p := echo_prometheus.NewPrometheus("http", nil)
