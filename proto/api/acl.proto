@@ -22,16 +22,3 @@ message SetACLPolicyRequest {
 
 message SetACLPolicyResponse {
 }
-
-/*
-message Policy {
-  map<string, string> hosts = 1;
-  repeated ACL acls = 2;
-}
-
-message ACL {
-  string action = 1;
-  repeated string src = 2;
-  repeated string dst = 3;
-}
- */
