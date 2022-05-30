@@ -16,6 +16,7 @@ require (
 	github.com/labstack/echo-contrib v0.12.0
 	github.com/labstack/echo/v4 v4.6.3
 	github.com/mitchellh/go-homedir v1.1.0
+	github.com/mitchellh/pointerstructure v1.2.1
 	github.com/mr-tron/base58 v1.2.0
 	github.com/muesli/coral v1.0.0
 	github.com/nleeper/goment v1.4.4
@@ -66,7 +67,6 @@ require (
 	github.com/mholt/acmez v1.0.2 // indirect
 	github.com/miekg/dns v1.1.46 // indirect
 	github.com/mitchellh/mapstructure v1.4.3 // indirect
-	github.com/mitchellh/pointerstructure v1.2.1 // indirect
 	github.com/prometheus/client_golang v1.11.0 // indirect
 	github.com/prometheus/client_model v0.2.0 // indirect
 	github.com/prometheus/common v0.32.1 // indirect
@@ -94,9 +94,9 @@ require (
 	google.golang.org/genproto v0.0.0-20210126160654-44e461bb6506 // indirect
 	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c // indirect
 	gopkg.in/square/go-jose.v2 v2.5.1 // indirect
-	modernc.org/libc v1.14.12 // indirect
+	modernc.org/libc v1.16.7 // indirect
 	modernc.org/mathutil v1.4.1 // indirect
-	modernc.org/memory v1.0.7 // indirect
-	modernc.org/sqlite v1.16.0 // indirect
+	modernc.org/memory v1.1.1 // indirect
+	modernc.org/sqlite v1.17.3 // indirect
 	nhooyr.io/websocket v1.8.7 // indirect
 )
