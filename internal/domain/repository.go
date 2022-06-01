@@ -65,7 +65,7 @@ type Repository interface {
 	ListMachinePeers(ctx context.Context, tailnetID uint64, key string) (Machines, error)
 	ListInactiveEphemeralMachines(ctx context.Context, checkpoint time.Time) (Machines, error)
 	SetMachineLastSeen(ctx context.Context, machineID uint64) error
-	ExpireMachineByAuthMethod(ctx context.Context, authMethodID uint64) (int64, error)
+	ExpireMachineByAuthMethod(ctx context.Context, tailnetID, authMethodID uint64) (int64, error)
 
 	SaveRegistrationRequest(ctx context.Context, request *RegistrationRequest) error
 	GetRegistrationRequestByKey(ctx context.Context, key string) (*RegistrationRequest, error)

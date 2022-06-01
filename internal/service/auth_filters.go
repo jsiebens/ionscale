@@ -96,7 +96,7 @@ func (s *Service) DeleteAuthFilter(ctx context.Context, req *api.DeleteAuthFilte
 			return status.Error(codes.NotFound, "auth filter not found")
 		}
 
-		c, err := rp.ExpireMachineByAuthMethod(ctx, filter.AuthMethodID)
+		c, err := rp.ExpireMachineByAuthMethod(ctx, *filter.TailnetID, filter.AuthMethodID)
 		if err != nil {
 			return err
 		}

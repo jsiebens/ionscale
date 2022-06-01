@@ -372,14 +372,14 @@ func (r *repository) SetMachineLastSeen(ctx context.Context, machineID uint64) e
 	return nil
 }
 
-func (r *repository) ExpireMachineByAuthMethod(ctx context.Context, authMethodID uint64) (int64, error) {
+func (r *repository) ExpireMachineByAuthMethod(ctx context.Context, tailnetID, authMethodID uint64) (int64, error) {
 	now := time.Now().UTC()
 
 	subQuery := r.withContext(ctx).
 		Select("machines.id").
 		Table("machines").
 		Joins("JOIN users u on u.id = machines.user_id JOIN accounts a on a.id = u.account_id").
-		Where("a.auth_method_id = ?", authMethodID)
+		Where("machines.tailnet_id = ? AND a.auth_method_id = ?", tailnetID, authMethodID)
 
 	tx := r.withContext(ctx).
 		Table("machines").
