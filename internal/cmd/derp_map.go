@@ -4,7 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/jsiebens/ionscale/pkg/gen/api"
+	"github.com/bufbuild/connect-go"
+	api "github.com/jsiebens/ionscale/pkg/gen/ionscale/v1"
 	"github.com/muesli/coral"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
@@ -43,7 +44,7 @@ func getDERPMap() *coral.Command {
 		}
 		defer safeClose(c)
 
-		resp, err := client.GetDERPMap(context.Background(), &api.GetDERPMapRequest{})
+		resp, err := client.GetDERPMap(context.Background(), connect.NewRequest(&api.GetDERPMapRequest{}))
 
 		if err != nil {
 			return err
@@ -53,7 +54,7 @@ func getDERPMap() *coral.Command {
 			Regions map[int]*tailcfg.DERPRegion
 		}
 
-		if err := json.Unmarshal(resp.Value, &derpMap); err != nil {
+		if err := json.Unmarshal(resp.Msg.Value, &derpMap); err != nil {
 			return err
 		}
 
@@ -105,13 +106,13 @@ func setDERPMap() *coral.Command {
 			return err
 		}
 
-		resp, err := grpcClient.SetDERPMap(context.Background(), &api.SetDERPMapRequest{Value: rawJson})
+		resp, err := grpcClient.SetDERPMap(context.Background(), connect.NewRequest(&api.SetDERPMapRequest{Value: rawJson}))
 		if err != nil {
 			return err
 		}
 
 		var derpMap tailcfg.DERPMap
-		if err := json.Unmarshal(resp.Value, &derpMap); err != nil {
+		if err := json.Unmarshal(resp.Msg.Value, &derpMap); err != nil {
 			return err
 		}
 

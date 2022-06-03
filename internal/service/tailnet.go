@@ -2,21 +2,21 @@ package service
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"github.com/bufbuild/connect-go"
 	"github.com/jsiebens/ionscale/internal/domain"
-	"github.com/jsiebens/ionscale/pkg/gen/api"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
+	api "github.com/jsiebens/ionscale/pkg/gen/ionscale/v1"
 )
 
-func (s *Service) CreateTailnet(ctx context.Context, req *api.CreateTailnetRequest) (*api.CreateTailnetResponse, error) {
-	tailnet, created, err := s.repository.GetOrCreateTailnet(ctx, req.Name)
+func (s *Service) CreateTailnet(ctx context.Context, req *connect.Request[api.CreateTailnetRequest]) (*connect.Response[api.CreateTailnetResponse], error) {
+	tailnet, created, err := s.repository.GetOrCreateTailnet(ctx, req.Msg.Name)
 	if err != nil {
 		return nil, err
 	}
 
 	if !created {
-		return nil, fmt.Errorf("tailnet already exists")
+		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("tailnet already exists"))
 	}
 
 	resp := &api.CreateTailnetResponse{Tailnet: &api.Tailnet{
@@ -24,26 +24,26 @@ func (s *Service) CreateTailnet(ctx context.Context, req *api.CreateTailnetReque
 		Name: tailnet.Name,
 	}}
 
-	return resp, nil
+	return connect.NewResponse(resp), nil
 }
 
-func (s *Service) GetTailnet(ctx context.Context, req *api.GetTailnetRequest) (*api.GetTailnetResponse, error) {
-	tailnet, err := s.repository.GetTailnet(ctx, req.Id)
+func (s *Service) GetTailnet(ctx context.Context, req *connect.Request[api.GetTailnetRequest]) (*connect.Response[api.GetTailnetResponse], error) {
+	tailnet, err := s.repository.GetTailnet(ctx, req.Msg.Id)
 	if err != nil {
 		return nil, err
 	}
 
 	if tailnet == nil {
-		return nil, status.Error(codes.NotFound, "")
+		return nil, connect.NewError(connect.CodeNotFound, errors.New("tailnet not found"))
 	}
 
-	return &api.GetTailnetResponse{Tailnet: &api.Tailnet{
+	return connect.NewResponse(&api.GetTailnetResponse{Tailnet: &api.Tailnet{
 		Id:   tailnet.ID,
 		Name: tailnet.Name,
-	}}, nil
+	}}), nil
 }
 
-func (s *Service) ListTailnets(ctx context.Context, _ *api.ListTailnetRequest) (*api.ListTailnetResponse, error) {
+func (s *Service) ListTailnets(ctx context.Context, _ *connect.Request[api.ListTailnetRequest]) (*connect.Response[api.ListTailnetResponse], error) {
 	resp := &api.ListTailnetResponse{}
 
 	tailnets, err := s.repository.ListTailnets(ctx)
@@ -54,46 +54,46 @@ func (s *Service) ListTailnets(ctx context.Context, _ *api.ListTailnetRequest) (
 		gt := api.Tailnet{Id: t.ID, Name: t.Name}
 		resp.Tailnet = append(resp.Tailnet, &gt)
 	}
-	return resp, nil
+	return connect.NewResponse(resp), nil
 }
 
-func (s *Service) DeleteTailnet(ctx context.Context, req *api.DeleteTailnetRequest) (*api.DeleteTailnetResponse, error) {
+func (s *Service) DeleteTailnet(ctx context.Context, req *connect.Request[api.DeleteTailnetRequest]) (*connect.Response[api.DeleteTailnetResponse], error) {
 
-	count, err := s.repository.CountMachineByTailnet(ctx, req.TailnetId)
+	count, err := s.repository.CountMachineByTailnet(ctx, req.Msg.TailnetId)
 	if err != nil {
 		return nil, err
 	}
 
-	if !req.Force && count > 0 {
-		return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("tailnet is not empty, number of machines: %d", count))
+	if !req.Msg.Force && count > 0 {
+		return nil, connect.NewError(connect.CodeInvalidArgument, fmt.Errorf("tailnet is not empty, number of machines: %d", count))
 	}
 
 	err = s.repository.Transaction(func(tx domain.Repository) error {
-		if err := tx.DeleteMachineByTailnet(ctx, req.TailnetId); err != nil {
+		if err := tx.DeleteMachineByTailnet(ctx, req.Msg.TailnetId); err != nil {
 			return err
 		}
 
-		if err := tx.DeleteAuthKeysByTailnet(ctx, req.TailnetId); err != nil {
+		if err := tx.DeleteAuthKeysByTailnet(ctx, req.Msg.TailnetId); err != nil {
 			return err
 		}
 
-		if err := tx.DeleteUsersByTailnet(ctx, req.TailnetId); err != nil {
+		if err := tx.DeleteUsersByTailnet(ctx, req.Msg.TailnetId); err != nil {
 			return err
 		}
 
-		if err := tx.DeleteAuthFiltersByTailnet(ctx, req.TailnetId); err != nil {
+		if err := tx.DeleteAuthFiltersByTailnet(ctx, req.Msg.TailnetId); err != nil {
 			return err
 		}
 
-		if err := tx.DeleteACLPolicy(ctx, req.TailnetId); err != nil {
+		if err := tx.DeleteACLPolicy(ctx, req.Msg.TailnetId); err != nil {
 			return err
 		}
 
-		if err := tx.DeleteDNSConfig(ctx, req.TailnetId); err != nil {
+		if err := tx.DeleteDNSConfig(ctx, req.Msg.TailnetId); err != nil {
 			return err
 		}
 
-		if err := tx.DeleteTailnet(ctx, req.TailnetId); err != nil {
+		if err := tx.DeleteTailnet(ctx, req.Msg.TailnetId); err != nil {
 			return err
 		}
 
@@ -104,7 +104,7 @@ func (s *Service) DeleteTailnet(ctx context.Context, req *api.DeleteTailnetReque
 		return nil, err
 	}
 
-	s.brokers(req.TailnetId).SignalUpdate()
+	s.brokers(req.Msg.TailnetId).SignalUpdate()
 
-	return &api.DeleteTailnetResponse{}, nil
+	return connect.NewResponse(&api.DeleteTailnetResponse{}), nil
 }

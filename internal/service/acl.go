@@ -3,14 +3,14 @@ package service
 import (
 	"context"
 	"encoding/json"
+	"fmt"
+	"github.com/bufbuild/connect-go"
 	"github.com/jsiebens/ionscale/internal/domain"
-	"github.com/jsiebens/ionscale/pkg/gen/api"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
+	api "github.com/jsiebens/ionscale/pkg/gen/ionscale/v1"
 )
 
-func (s *Service) GetACLPolicy(ctx context.Context, req *api.GetACLPolicyRequest) (*api.GetACLPolicyResponse, error) {
-	policy, err := s.repository.GetACLPolicy(ctx, req.TailnetId)
+func (s *Service) GetACLPolicy(ctx context.Context, req *connect.Request[api.GetACLPolicyRequest]) (*connect.Response[api.GetACLPolicyResponse], error) {
+	policy, err := s.repository.GetACLPolicy(ctx, req.Msg.TailnetId)
 	if err != nil {
 		return nil, err
 	}
@@ -20,20 +20,20 @@ func (s *Service) GetACLPolicy(ctx context.Context, req *api.GetACLPolicyRequest
 		return nil, err
 	}
 
-	return &api.GetACLPolicyResponse{Value: marshal}, nil
+	return connect.NewResponse(&api.GetACLPolicyResponse{Value: marshal}), nil
 }
 
-func (s *Service) SetACLPolicy(ctx context.Context, req *api.SetACLPolicyRequest) (*api.SetACLPolicyResponse, error) {
-	tailnet, err := s.repository.GetTailnet(ctx, req.TailnetId)
+func (s *Service) SetACLPolicy(ctx context.Context, req *connect.Request[api.SetACLPolicyRequest]) (*connect.Response[api.SetACLPolicyResponse], error) {
+	tailnet, err := s.repository.GetTailnet(ctx, req.Msg.TailnetId)
 	if err != nil {
 		return nil, err
 	}
 	if tailnet == nil {
-		return nil, status.Error(codes.NotFound, "tailnet does not exist")
+		return nil, connect.NewError(connect.CodeNotFound, fmt.Errorf("tailnet does not exist"))
 	}
 
 	var policy domain.ACLPolicy
-	if err := json.Unmarshal(req.Value, &policy); err != nil {
+	if err := json.Unmarshal(req.Msg.Value, &policy); err != nil {
 		return nil, err
 	}
 
@@ -43,5 +43,5 @@ func (s *Service) SetACLPolicy(ctx context.Context, req *api.SetACLPolicyRequest
 
 	s.brokers(tailnet.ID).SignalACLUpdated()
 
-	return &api.SetACLPolicyResponse{}, nil
+	return connect.NewResponse(&api.SetACLPolicyResponse{}), nil
 }

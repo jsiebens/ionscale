@@ -3,8 +3,9 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"github.com/bufbuild/connect-go"
 	"github.com/jsiebens/ionscale/internal/version"
-	"github.com/jsiebens/ionscale/pkg/gen/api"
+	api "github.com/jsiebens/ionscale/pkg/gen/ionscale/v1"
 	"github.com/muesli/coral"
 )
 
@@ -36,7 +37,7 @@ Server:
 		}
 		defer safeClose(c)
 
-		resp, err := client.GetVersion(context.Background(), &api.GetVersionRequest{})
+		resp, err := client.GetVersion(context.Background(), connect.NewRequest(&api.GetVersionRequest{}))
 		if err != nil {
 			fmt.Printf(`
 Server:
@@ -50,7 +51,7 @@ Server:
  Addr:          %s
  Version:       %s 
  Git Revision:  %s
-`, target.getAddr(), resp.Version, resp.Revision)
+`, target.getAddr(), resp.Msg.Version, resp.Msg.Revision)
 
 	}
 

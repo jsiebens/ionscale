@@ -2,19 +2,19 @@ package service
 
 import (
 	"context"
+	"errors"
+	"github.com/bufbuild/connect-go"
 	"github.com/jsiebens/ionscale/internal/domain"
-	"github.com/jsiebens/ionscale/pkg/gen/api"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
+	api "github.com/jsiebens/ionscale/pkg/gen/ionscale/v1"
 )
 
-func (s *Service) GetDNSConfig(ctx context.Context, req *api.GetDNSConfigRequest) (*api.GetDNSConfigResponse, error) {
-	tailnet, err := s.repository.GetTailnet(ctx, req.TailnetId)
+func (s *Service) GetDNSConfig(ctx context.Context, req *connect.Request[api.GetDNSConfigRequest]) (*connect.Response[api.GetDNSConfigResponse], error) {
+	tailnet, err := s.repository.GetTailnet(ctx, req.Msg.TailnetId)
 	if err != nil {
 		return nil, err
 	}
 	if tailnet == nil {
-		return nil, status.Error(codes.NotFound, "tailnet does not exist")
+		return nil, connect.NewError(connect.CodeNotFound, errors.New("tailnet not found"))
 	}
 
 	config, err := s.repository.GetDNSConfig(ctx, tailnet.ID)
@@ -31,22 +31,22 @@ func (s *Service) GetDNSConfig(ctx context.Context, req *api.GetDNSConfigRequest
 		},
 	}
 
-	return resp, nil
+	return connect.NewResponse(resp), nil
 }
 
-func (s *Service) SetDNSConfig(ctx context.Context, req *api.SetDNSConfigRequest) (*api.SetDNSConfigResponse, error) {
-	dnsConfig := req.Config
+func (s *Service) SetDNSConfig(ctx context.Context, req *connect.Request[api.SetDNSConfigRequest]) (*connect.Response[api.SetDNSConfigResponse], error) {
+	dnsConfig := req.Msg.Config
 
 	if dnsConfig.MagicDns && len(dnsConfig.Nameservers) == 0 {
-		return nil, status.Error(codes.InvalidArgument, "at least one global nameserver is required when enabling magic dns")
+		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("at least one global nameserver is required when enabling magic dns"))
 	}
 
-	tailnet, err := s.repository.GetTailnet(ctx, req.TailnetId)
+	tailnet, err := s.repository.GetTailnet(ctx, req.Msg.TailnetId)
 	if err != nil {
 		return nil, err
 	}
 	if tailnet == nil {
-		return nil, status.Error(codes.NotFound, "tailnet does not exist")
+		return nil, connect.NewError(connect.CodeNotFound, errors.New("tailnet not found"))
 	}
 
 	config := domain.DNSConfig{
@@ -64,7 +64,7 @@ func (s *Service) SetDNSConfig(ctx context.Context, req *api.SetDNSConfigRequest
 
 	resp := &api.SetDNSConfigResponse{Config: dnsConfig}
 
-	return resp, nil
+	return connect.NewResponse(resp), nil
 }
 
 func domainRoutesToApiRoutes(routes map[string][]string) map[string]*api.Routes {

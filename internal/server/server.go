@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"github.com/caddyserver/certmagic"
 	"github.com/hashicorp/go-hclog"
-	"github.com/improbable-eng/grpc-web/go/grpcweb"
 	"github.com/jsiebens/ionscale/internal/bind"
 	"github.com/jsiebens/ionscale/internal/broker"
 	"github.com/jsiebens/ionscale/internal/config"
@@ -14,10 +13,8 @@ import (
 	"github.com/jsiebens/ionscale/internal/handlers"
 	"github.com/jsiebens/ionscale/internal/service"
 	"github.com/jsiebens/ionscale/internal/templates"
-	"github.com/jsiebens/ionscale/pkg/gen/api"
 	echo_prometheus "github.com/labstack/echo-contrib/prometheus"
 	"github.com/labstack/echo/v4"
-	"github.com/soheilhy/cmux"
 	"golang.org/x/net/http2"
 	"golang.org/x/net/http2/h2c"
 	"golang.org/x/sync/errgroup"
@@ -98,6 +95,9 @@ func Start(config *config.Config) error {
 		repository,
 	)
 
+	rpcService := service.NewService(repository, brokers)
+	rpcPath, rpcHandler := NewRpcHandler(serverKey.SystemAdminKey, rpcService)
+
 	p := echo_prometheus.NewPrometheus("http", nil)
 
 	metricsHandler := echo.New()
@@ -118,6 +118,7 @@ func Start(config *config.Config) error {
 
 	tlsAppHandler.Any("/*", handlers.IndexHandler(http.StatusNotFound))
 	tlsAppHandler.Any("/", handlers.IndexHandler(http.StatusOK))
+	tlsAppHandler.POST(rpcPath+"*", echo.WrapHandler(rpcHandler))
 	tlsAppHandler.GET("/version", handlers.Version)
 	tlsAppHandler.GET("/key", handlers.KeyHandler(controlKeys))
 	tlsAppHandler.POST("/ts2021", noiseHandlers.Upgrade)
@@ -131,10 +132,6 @@ func Start(config *config.Config) error {
 	auth.POST("/callback", authenticationHandlers.EndOAuth)
 	auth.GET("/success", authenticationHandlers.Success)
 	auth.GET("/error", authenticationHandlers.Error)
-
-	grpcService := service.NewService(repository, brokers)
-	grpcServer := NewGrpcServer(logger, serverKey.SystemAdminKey)
-	api.RegisterIonscaleServer(grpcServer, grpcService)
 
 	tlsL, err := tlsListener(config)
 	if err != nil {
@@ -151,23 +148,12 @@ func Start(config *config.Config) error {
 		return err
 	}
 
-	mux := cmux.New(selectListener(tlsL, nonTlsL))
-	grpcL := mux.MatchWithWriters(
-		cmux.HTTP2MatchHeaderFieldPrefixSendSettings("content-type", "application/grpc"),
-		cmux.HTTP2MatchHeaderFieldPrefixSendSettings("content-type", "application/grpc+proto"),
-	)
-	grpcWebL := mux.Match(cmux.HTTP1HeaderFieldPrefix("content-type", "application/grpc-web"))
-	httpL := mux.Match(cmux.Any())
-
-	grpcWebHandler := grpcweb.WrapServer(grpcServer)
+	httpL := selectListener(tlsL, nonTlsL)
 	http2Server := &http2.Server{}
 	g := new(errgroup.Group)
 
-	g.Go(func() error { return grpcServer.Serve(grpcL) })
-	g.Go(func() error { return http.Serve(grpcWebL, h2c.NewHandler(grpcWebHandler, http2Server)) })
 	g.Go(func() error { return http.Serve(httpL, h2c.NewHandler(tlsAppHandler, http2Server)) })
 	g.Go(func() error { return http.Serve(metricsL, metricsHandler) })
-	g.Go(func() error { return mux.Serve() })
 
 	if tlsL != nil {
 		g.Go(func() error { return http.Serve(nonTlsL, nonTlsAppHandler) })

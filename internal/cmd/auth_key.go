@@ -3,7 +3,8 @@ package cmd
 import (
 	"context"
 	"fmt"
-	"github.com/jsiebens/ionscale/pkg/gen/api"
+	"github.com/bufbuild/connect-go"
+	api "github.com/jsiebens/ionscale/pkg/gen/ionscale/v1"
 	"github.com/muesli/coral"
 	"github.com/rodaine/table"
 	str2dur "github.com/xhit/go-str2duration/v2"
@@ -72,7 +73,7 @@ func createAuthkeysCommand() *coral.Command {
 			Tags:      tags,
 			Expiry:    expiryDur,
 		}
-		resp, err := client.CreateAuthKey(context.Background(), req)
+		resp, err := client.CreateAuthKey(context.Background(), connect.NewRequest(req))
 
 		if err != nil {
 			return err
@@ -82,7 +83,7 @@ func createAuthkeysCommand() *coral.Command {
 		fmt.Println("Generated new auth key")
 		fmt.Println("Be sure to copy your new key below. It won't be shown in full again.")
 		fmt.Println("")
-		fmt.Printf("  %s\n", resp.Value)
+		fmt.Printf("  %s\n", resp.Msg.Value)
 		fmt.Println("")
 
 		return nil
@@ -110,7 +111,7 @@ func deleteAuthKeyCommand() *coral.Command {
 		defer safeClose(c)
 
 		req := api.DeleteAuthKeyRequest{AuthKeyId: authKeyId}
-		if _, err := grpcClient.DeleteAuthKey(context.Background(), &req); err != nil {
+		if _, err := grpcClient.DeleteAuthKey(context.Background(), connect.NewRequest(&req)); err != nil {
 			return err
 		}
 
@@ -149,13 +150,13 @@ func listAuthkeysCommand() *coral.Command {
 		}
 
 		req := &api.ListAuthKeysRequest{TailnetId: tailnet.Id}
-		resp, err := client.ListAuthKeys(context.Background(), req)
+		resp, err := client.ListAuthKeys(context.Background(), connect.NewRequest(req))
 
 		if err != nil {
 			return err
 		}
 
-		printAuthKeyTable(resp.AuthKeys...)
+		printAuthKeyTable(resp.Msg.AuthKeys...)
 
 		return nil
 	}

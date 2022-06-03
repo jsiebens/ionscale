@@ -1,11 +1,12 @@
 syntax = "proto3";
-package api;
-option go_package = "github.com/jsiebens/ionscale/pkg/gen;api";
+
+package ionscale.v1;
+option go_package = "github.com/jsiebens/ionscale/pkg/gen/ionscale/v1;ionscalev1";
 
 import "google/protobuf/timestamp.proto";
 import "google/protobuf/duration.proto";
 
-import "api/ref.proto";
+import "ionscale/v1/ref.proto";
 
 message ListMachinesRequest {
   uint64 tailnet_id = 1;

@@ -1,11 +1,9 @@
 package ionscale
 
 import (
-	"context"
 	"fmt"
 	"github.com/jsiebens/ionscale/internal/key"
 	"github.com/jsiebens/ionscale/internal/token"
-	"google.golang.org/grpc/credentials"
 )
 
 func LoadClientAuth(systemAdminKey string) (ClientAuth, error) {
@@ -21,34 +19,20 @@ func LoadClientAuth(systemAdminKey string) (ClientAuth, error) {
 }
 
 type ClientAuth interface {
-	credentials.PerRPCCredentials
+	GetToken() (string, error)
 }
 
 type anonymous struct {
 }
 
-func (m *anonymous) GetRequestMetadata(ctx context.Context, uri ...string) (map[string]string, error) {
-	return nil, nil
-}
-
-func (m *anonymous) RequireTransportSecurity() bool {
-	return false
+func (m *anonymous) GetToken() (string, error) {
+	return "", nil
 }
 
 type systemAdminTokenAuth struct {
 	key key.ServerPrivate
 }
 
-func (m *systemAdminTokenAuth) GetRequestMetadata(ctx context.Context, uri ...string) (map[string]string, error) {
-	t, err := token.GenerateSystemAdminToken(m.key)
-	if err != nil {
-		return nil, err
-	}
-	return map[string]string{
-		"authorization": "Bearer " + t,
-	}, nil
-}
-
-func (m *systemAdminTokenAuth) RequireTransportSecurity() bool {
-	return false
+func (m *systemAdminTokenAuth) GetToken() (string, error) {
+	return token.GenerateSystemAdminToken(m.key)
 }

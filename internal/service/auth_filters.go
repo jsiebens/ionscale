@@ -3,18 +3,17 @@ package service
 import (
 	"context"
 	"fmt"
+	"github.com/bufbuild/connect-go"
 	"github.com/hashicorp/go-bexpr"
 	"github.com/jsiebens/ionscale/internal/domain"
 	"github.com/jsiebens/ionscale/internal/util"
-	"github.com/jsiebens/ionscale/pkg/gen/api"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
+	api "github.com/jsiebens/ionscale/pkg/gen/ionscale/v1"
 )
 
-func (s *Service) ListAuthFilters(ctx context.Context, req *api.ListAuthFiltersRequest) (*api.ListAuthFiltersResponse, error) {
+func (s *Service) ListAuthFilters(ctx context.Context, req *connect.Request[api.ListAuthFiltersRequest]) (*connect.Response[api.ListAuthFiltersResponse], error) {
 	response := &api.ListAuthFiltersResponse{AuthFilters: []*api.AuthFilter{}}
 
-	if req.AuthMethodId == nil {
+	if req.Msg.AuthMethodId == nil {
 		filters, err := s.repository.ListAuthFilters(ctx)
 		if err != nil {
 			return nil, err
@@ -23,12 +22,12 @@ func (s *Service) ListAuthFilters(ctx context.Context, req *api.ListAuthFiltersR
 			response.AuthFilters = append(response.AuthFilters, s.mapToApi(&filter.AuthMethod, filter))
 		}
 	} else {
-		authMethod, err := s.repository.GetAuthMethod(ctx, *req.AuthMethodId)
+		authMethod, err := s.repository.GetAuthMethod(ctx, *req.Msg.AuthMethodId)
 		if err != nil {
 			return nil, err
 		}
 		if authMethod == nil {
-			return nil, status.Error(codes.NotFound, "invalid auth method id")
+			return nil, connect.NewError(connect.CodeNotFound, fmt.Errorf("invalid auth method id"))
 		}
 
 		filters, err := s.repository.ListAuthFiltersByAuthMethod(ctx, authMethod.ID)
@@ -40,36 +39,36 @@ func (s *Service) ListAuthFilters(ctx context.Context, req *api.ListAuthFiltersR
 		}
 	}
 
-	return response, nil
+	return connect.NewResponse[api.ListAuthFiltersResponse](response), nil
 }
 
-func (s *Service) CreateAuthFilter(ctx context.Context, req *api.CreateAuthFilterRequest) (*api.CreateAuthFilterResponse, error) {
-	authMethod, err := s.repository.GetAuthMethod(ctx, req.AuthMethodId)
+func (s *Service) CreateAuthFilter(ctx context.Context, req *connect.Request[api.CreateAuthFilterRequest]) (*connect.Response[api.CreateAuthFilterResponse], error) {
+	authMethod, err := s.repository.GetAuthMethod(ctx, req.Msg.AuthMethodId)
 	if err != nil {
 		return nil, err
 	}
 	if authMethod == nil {
-		return nil, status.Error(codes.NotFound, "invalid auth method id")
+		return nil, connect.NewError(connect.CodeNotFound, fmt.Errorf("invalid auth method id"))
 	}
 
-	tailnet, err := s.repository.GetTailnet(ctx, req.TailnetId)
+	tailnet, err := s.repository.GetTailnet(ctx, req.Msg.TailnetId)
 	if err != nil {
 		return nil, err
 	}
 
 	if tailnet == nil {
-		return nil, status.Error(codes.NotFound, "invalid tailnet id")
+		return nil, connect.NewError(connect.CodeNotFound, fmt.Errorf("invalid tailnet id"))
 	}
 
-	if req.Expr != "*" {
-		if _, err := bexpr.CreateEvaluator(req.Expr); err != nil {
-			return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("invalid expression: %v", err))
+	if req.Msg.Expr != "*" {
+		if _, err := bexpr.CreateEvaluator(req.Msg.Expr); err != nil {
+			return nil, connect.NewError(connect.CodeInvalidArgument, fmt.Errorf("invalid expression: %v", err))
 		}
 	}
 
 	authFilter := &domain.AuthFilter{
 		ID:         util.NextID(),
-		Expr:       req.Expr,
+		Expr:       req.Msg.Expr,
 		AuthMethod: *authMethod,
 		Tailnet:    tailnet,
 	}
@@ -80,20 +79,20 @@ func (s *Service) CreateAuthFilter(ctx context.Context, req *api.CreateAuthFilte
 
 	response := api.CreateAuthFilterResponse{AuthFilter: s.mapToApi(authMethod, *authFilter)}
 
-	return &response, nil
+	return connect.NewResponse[api.CreateAuthFilterResponse](&response), nil
 }
 
-func (s *Service) DeleteAuthFilter(ctx context.Context, req *api.DeleteAuthFilterRequest) (*api.DeleteAuthFilterResponse, error) {
+func (s *Service) DeleteAuthFilter(ctx context.Context, req *connect.Request[api.DeleteAuthFilterRequest]) (*connect.Response[api.DeleteAuthFilterResponse], error) {
 
 	err := s.repository.Transaction(func(rp domain.Repository) error {
 
-		filter, err := rp.GetAuthFilter(ctx, req.AuthFilterId)
+		filter, err := rp.GetAuthFilter(ctx, req.Msg.AuthFilterId)
 		if err != nil {
 			return err
 		}
 
 		if filter == nil {
-			return status.Error(codes.NotFound, "auth filter not found")
+			return connect.NewError(connect.CodeNotFound, fmt.Errorf("auth filter not found"))
 		}
 
 		c, err := rp.ExpireMachineByAuthMethod(ctx, *filter.TailnetID, filter.AuthMethodID)
@@ -118,7 +117,7 @@ func (s *Service) DeleteAuthFilter(ctx context.Context, req *api.DeleteAuthFilte
 
 	response := api.DeleteAuthFilterResponse{}
 
-	return &response, nil
+	return connect.NewResponse[api.DeleteAuthFilterResponse](&response), nil
 }
 
 func (s *Service) mapToApi(authMethod *domain.AuthMethod, filter domain.AuthFilter) *api.AuthFilter {

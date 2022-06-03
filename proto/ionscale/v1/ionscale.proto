@@ -1,22 +1,23 @@
 syntax = "proto3";
-package api;
-option go_package = "github.com/jsiebens/ionscale/pkg/gen;api";
+
+package ionscale.v1;
+option go_package = "github.com/jsiebens/ionscale/pkg/gen/ionscale/v1;ionscalev1";
 
 import "google/protobuf/timestamp.proto";
 import "google/protobuf/duration.proto";
 
-import "api/version.proto";
-import "api/tailnets.proto";
-import "api/auth_methods.proto";
-import "api/auth_filter.proto";
-import "api/auth_keys.proto";
-import "api/machines.proto";
-import "api/routes.proto";
-import "api/dns.proto";
-import "api/acl.proto";
-import "api/derp.proto";
+import "ionscale/v1/version.proto";
+import "ionscale/v1/tailnets.proto";
+import "ionscale/v1/auth_methods.proto";
+import "ionscale/v1/auth_filter.proto";
+import "ionscale/v1/auth_keys.proto";
+import "ionscale/v1/machines.proto";
+import "ionscale/v1/routes.proto";
+import "ionscale/v1/dns.proto";
+import "ionscale/v1/acl.proto";
+import "ionscale/v1/derp.proto";
 
-service Ionscale {
+service IonscaleService {
   rpc GetVersion (GetVersionRequest) returns (GetVersionResponse) {}
 
   rpc GetDERPMap (GetDERPMapRequest) returns (GetDERPMapResponse) {}

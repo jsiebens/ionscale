@@ -3,7 +3,8 @@ package cmd
 import (
 	"context"
 	"fmt"
-	"github.com/jsiebens/ionscale/pkg/gen/api"
+	"github.com/bufbuild/connect-go"
+	api "github.com/jsiebens/ionscale/pkg/gen/ionscale/v1"
 	"github.com/muesli/coral"
 	"strings"
 )
@@ -36,12 +37,12 @@ func getDNSConfig() *coral.Command {
 		}
 
 		req := api.GetDNSConfigRequest{TailnetId: tailnet.Id}
-		resp, err := client.GetDNSConfig(context.Background(), &req)
+		resp, err := client.GetDNSConfig(context.Background(), connect.NewRequest(&req))
 
 		if err != nil {
 			return err
 		}
-		config := resp.Config
+		config := resp.Msg.Config
 
 		var allNameservers = config.Nameservers
 
@@ -120,13 +121,13 @@ func setDNSConfig() *coral.Command {
 				Routes:           routes,
 			},
 		}
-		resp, err := client.SetDNSConfig(context.Background(), &req)
+		resp, err := client.SetDNSConfig(context.Background(), connect.NewRequest(&req))
 
 		if err != nil {
 			return err
 		}
 
-		config := resp.Config
+		config := resp.Msg.Config
 
 		var allNameservers = config.Nameservers
 

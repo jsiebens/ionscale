@@ -4,8 +4,9 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/bufbuild/connect-go"
 	"github.com/jsiebens/ionscale/internal/domain"
-	"github.com/jsiebens/ionscale/pkg/gen/api"
+	api "github.com/jsiebens/ionscale/pkg/gen/ionscale/v1"
 	"github.com/muesli/coral"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
@@ -40,14 +41,14 @@ func getACLConfig() *coral.Command {
 			return err
 		}
 
-		resp, err := client.GetACLPolicy(context.Background(), &api.GetACLPolicyRequest{TailnetId: tailnet.Id})
+		resp, err := client.GetACLPolicy(context.Background(), connect.NewRequest(&api.GetACLPolicyRequest{TailnetId: tailnet.Id}))
 		if err != nil {
 			return err
 		}
 
 		var p domain.ACLPolicy
 
-		if err := json.Unmarshal(resp.Value, &p); err != nil {
+		if err := json.Unmarshal(resp.Msg.Value, &p); err != nil {
 			return err
 		}
 
@@ -109,7 +110,7 @@ func setACLConfig() *coral.Command {
 			return err
 		}
 
-		_, err = client.SetACLPolicy(context.Background(), &api.SetACLPolicyRequest{TailnetId: tailnet.Id, Value: rawJson})
+		_, err = client.SetACLPolicy(context.Background(), connect.NewRequest(&api.SetACLPolicyRequest{TailnetId: tailnet.Id, Value: rawJson}))
 		if err != nil {
 			return err
 		}
