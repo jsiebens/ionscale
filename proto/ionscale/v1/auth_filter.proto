@@ -1,8 +1,9 @@
 syntax = "proto3";
-package api;
-option go_package = "github.com/jsiebens/ionscale/pkg/gen;api";
 
-import "api/ref.proto";
+package ionscale.v1;
+option go_package = "github.com/jsiebens/ionscale/pkg/gen/ionscale/v1;ionscalev1";
+
+import "ionscale/v1/ref.proto";
 
 message AuthFilter {
   uint64 id = 1;

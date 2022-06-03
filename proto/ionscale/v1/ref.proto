@@ -1,0 +1,9 @@
+syntax = "proto3";
+
+package ionscale.v1;
+option go_package = "github.com/jsiebens/ionscale/pkg/gen/ionscale/v1;ionscalev1";
+
+message Ref {
+  uint64 id = 1;
+  string name = 2;
+}

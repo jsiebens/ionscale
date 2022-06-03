@@ -1,49 +1,36 @@
 package ionscale
 
 import (
+	"context"
 	"crypto/tls"
-	"github.com/jsiebens/ionscale/pkg/gen/api"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials"
-	"google.golang.org/grpc/credentials/insecure"
+	"fmt"
+	"github.com/bufbuild/connect-go"
+	api "github.com/jsiebens/ionscale/pkg/gen/ionscale/v1/ionscalev1connect"
 	"io"
-	"net/url"
+	"net/http"
 )
 
-func NewClient(clientAuth ClientAuth, serverURL string, insecureSkipVerify bool, useGrpcWebProxy bool) (api.IonscaleClient, io.Closer, error) {
-	parsedUrl, err := url.Parse(serverURL)
-	if err != nil {
-		return nil, nil, err
+func NewClient(clientAuth ClientAuth, serverURL string, insecureSkipVerify bool) (api.IonscaleServiceClient, io.Closer, error) {
+	tlsConfig := &tls.Config{
+		InsecureSkipVerify: insecureSkipVerify,
 	}
 
-	if parsedUrl.Scheme == "" {
-		parsedUrl.Scheme = "https"
+	client := &http.Client{
+		Transport: &http.Transport{
+			TLSClientConfig: tlsConfig,
+		},
 	}
 
-	if useGrpcWebProxy {
-		conn, err := NewGrpcWebProxy(*parsedUrl, insecureSkipVerify).Dial(grpc.WithPerRPCCredentials(clientAuth))
-		if err != nil {
-			return nil, nil, err
+	interceptors := connect.WithInterceptors(NewAuthenticationInterceptor(clientAuth))
+	return api.NewIonscaleServiceClient(client, serverURL, interceptors), nil, nil
+}
+
+func NewAuthenticationInterceptor(clientAuth ClientAuth) connect.UnaryInterceptorFunc {
+	return func(next connect.UnaryFunc) connect.UnaryFunc {
+		return func(ctx context.Context, req connect.AnyRequest) (connect.AnyResponse, error) {
+			token, _ := clientAuth.GetToken()
+			req.Header().Set("Authorization", fmt.Sprintf("Bearer %s", token))
+			return next(ctx, req)
 		}
-
-		return api.NewIonscaleClient(conn), conn, nil
 	}
-
-	var targetAddr = parsedUrl.Host
-	if parsedUrl.Port() == "" {
-		targetAddr = targetAddr + ":443"
-	}
-
-	var transportCreds = credentials.NewTLS(&tls.Config{InsecureSkipVerify: insecureSkipVerify})
-
-	if parsedUrl.Scheme != "https" {
-		transportCreds = insecure.NewCredentials()
-	}
-
-	conn, err := grpc.Dial(targetAddr, grpc.WithPerRPCCredentials(clientAuth), grpc.WithTransportCredentials(transportCreds))
-	if err != nil {
-		return nil, nil, err
-	}
-
-	return api.NewIonscaleClient(conn), conn, nil
 }

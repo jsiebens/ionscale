@@ -3,7 +3,8 @@ package cmd
 import (
 	"context"
 	"fmt"
-	"github.com/jsiebens/ionscale/pkg/gen/api"
+	"github.com/bufbuild/connect-go"
+	api "github.com/jsiebens/ionscale/pkg/gen/ionscale/v1"
 	"github.com/muesli/coral"
 	"github.com/rodaine/table"
 )
@@ -45,14 +46,14 @@ func listTailnetsCommand() *coral.Command {
 		}
 		defer safeClose(c)
 
-		resp, err := client.ListTailnets(context.Background(), &api.ListTailnetRequest{})
+		resp, err := client.ListTailnets(context.Background(), connect.NewRequest(&api.ListTailnetRequest{}))
 
 		if err != nil {
 			return err
 		}
 
 		tbl := table.New("ID", "NAME")
-		for _, tailnet := range resp.Tailnet {
+		for _, tailnet := range resp.Msg.Tailnet {
 			tbl.AddRow(tailnet.Id, tailnet.Name)
 		}
 		tbl.Print()
@@ -85,14 +86,14 @@ func createTailnetsCommand() *coral.Command {
 		}
 		defer safeClose(c)
 
-		resp, err := client.CreateTailnet(context.Background(), &api.CreateTailnetRequest{Name: name})
+		resp, err := client.CreateTailnet(context.Background(), connect.NewRequest(&api.CreateTailnetRequest{Name: name}))
 
 		if err != nil {
 			return err
 		}
 
 		tbl := table.New("ID", "NAME")
-		tbl.AddRow(resp.Tailnet.Id, resp.Tailnet.Name)
+		tbl.AddRow(resp.Msg.Tailnet.Id, resp.Msg.Tailnet.Name)
 		tbl.Print()
 
 		return nil
@@ -131,7 +132,7 @@ func deleteTailnetCommand() *coral.Command {
 			return err
 		}
 
-		_, err = client.DeleteTailnet(context.Background(), &api.DeleteTailnetRequest{TailnetId: tailnet.Id, Force: force})
+		_, err = client.DeleteTailnet(context.Background(), connect.NewRequest(&api.DeleteTailnetRequest{TailnetId: tailnet.Id, Force: force}))
 
 		if err != nil {
 			return err

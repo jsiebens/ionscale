@@ -3,7 +3,8 @@ package cmd
 import (
 	"context"
 	"fmt"
-	"github.com/jsiebens/ionscale/pkg/gen/api"
+	"github.com/bufbuild/connect-go"
+	api "github.com/jsiebens/ionscale/pkg/gen/ionscale/v1"
 	"github.com/muesli/coral"
 	"github.com/nleeper/goment"
 	"github.com/rodaine/table"
@@ -47,7 +48,7 @@ func deleteMachineCommand() *coral.Command {
 		defer safeClose(c)
 
 		req := api.DeleteMachineRequest{MachineId: machineID}
-		if _, err := client.DeleteMachine(context.Background(), &req); err != nil {
+		if _, err := client.DeleteMachine(context.Background(), connect.NewRequest(&req)); err != nil {
 			return err
 		}
 
@@ -79,7 +80,7 @@ func expireMachineCommand() *coral.Command {
 		defer safeClose(c)
 
 		req := api.ExpireMachineRequest{MachineId: machineID}
-		if _, err := client.ExpireMachine(context.Background(), &req); err != nil {
+		if _, err := client.ExpireMachine(context.Background(), connect.NewRequest(&req)); err != nil {
 			return err
 		}
 
@@ -119,14 +120,14 @@ func listMachinesCommand() *coral.Command {
 		}
 
 		req := api.ListMachinesRequest{TailnetId: tailnet.Id}
-		resp, err := client.ListMachines(context.Background(), &req)
+		resp, err := client.ListMachines(context.Background(), connect.NewRequest(&req))
 
 		if err != nil {
 			return err
 		}
 
 		tbl := table.New("ID", "TAILNET", "NAME", "IPv4", "IPv6", "EPHEMERAL", "LAST_SEEN", "TAGS")
-		for _, m := range resp.Machines {
+		for _, m := range resp.Msg.Machines {
 			var lastSeen = "N/A"
 			if m.Connected {
 				lastSeen = "Connected"
@@ -166,13 +167,13 @@ func getMachineRoutesCommand() *coral.Command {
 		defer safeClose(c)
 
 		req := api.GetMachineRoutesRequest{MachineId: machineID}
-		resp, err := grpcClient.GetMachineRoutes(context.Background(), &req)
+		resp, err := grpcClient.GetMachineRoutes(context.Background(), connect.NewRequest(&req))
 		if err != nil {
 			return err
 		}
 
 		tbl := table.New("ROUTE", "ALLOWED")
-		for _, r := range resp.Routes {
+		for _, r := range resp.Msg.Routes {
 			tbl.AddRow(r.Advertised, r.Allowed)
 		}
 		tbl.Print()
@@ -214,13 +215,13 @@ func setMachineRoutesCommand() *coral.Command {
 		}
 
 		req := api.SetMachineRoutesRequest{MachineId: machineID, AllowedIps: allowedIps}
-		resp, err := client.SetMachineRoutes(context.Background(), &req)
+		resp, err := client.SetMachineRoutes(context.Background(), connect.NewRequest(&req))
 		if err != nil {
 			return err
 		}
 
 		tbl := table.New("ROUTE", "ALLOWED")
-		for _, r := range resp.Routes {
+		for _, r := range resp.Msg.Routes {
 			tbl.AddRow(r.Advertised, r.Allowed)
 		}
 		tbl.Print()

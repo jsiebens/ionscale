@@ -2,22 +2,22 @@ package service
 
 import (
 	"context"
+	"errors"
+	"github.com/bufbuild/connect-go"
 	"github.com/jsiebens/ionscale/internal/domain"
-	"github.com/jsiebens/ionscale/pkg/gen/api"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
+	api "github.com/jsiebens/ionscale/pkg/gen/ionscale/v1"
 	"google.golang.org/protobuf/types/known/timestamppb"
 	"time"
 )
 
-func (s *Service) GetAuthKey(ctx context.Context, req *api.GetAuthKeyRequest) (*api.GetAuthKeyResponse, error) {
-	key, err := s.repository.GetAuthKey(ctx, req.AuthKeyId)
+func (s *Service) GetAuthKey(ctx context.Context, req *connect.Request[api.GetAuthKeyRequest]) (*connect.Response[api.GetAuthKeyResponse], error) {
+	key, err := s.repository.GetAuthKey(ctx, req.Msg.AuthKeyId)
 	if err != nil {
 		return nil, err
 	}
 
 	if key == nil {
-		return nil, status.Error(codes.NotFound, "")
+		return nil, connect.NewError(connect.CodeNotFound, errors.New("auth key not found"))
 	}
 
 	var expiresAt *timestamppb.Timestamp
@@ -25,7 +25,7 @@ func (s *Service) GetAuthKey(ctx context.Context, req *api.GetAuthKeyRequest) (*
 		expiresAt = timestamppb.New(*key.ExpiresAt)
 	}
 
-	return &api.GetAuthKeyResponse{AuthKey: &api.AuthKey{
+	return connect.NewResponse(&api.GetAuthKeyResponse{AuthKey: &api.AuthKey{
 		Id:        key.ID,
 		Key:       key.Key,
 		Ephemeral: key.Ephemeral,
@@ -36,20 +36,20 @@ func (s *Service) GetAuthKey(ctx context.Context, req *api.GetAuthKeyRequest) (*
 			Id:   key.Tailnet.ID,
 			Name: key.Tailnet.Name,
 		},
-	}}, nil
+	}}), nil
 }
 
-func (s *Service) ListAuthKeys(ctx context.Context, req *api.ListAuthKeysRequest) (*api.ListAuthKeysResponse, error) {
-	tailnet, err := s.repository.GetTailnet(ctx, req.TailnetId)
+func (s *Service) ListAuthKeys(ctx context.Context, req *connect.Request[api.ListAuthKeysRequest]) (*connect.Response[api.ListAuthKeysResponse], error) {
+	tailnet, err := s.repository.GetTailnet(ctx, req.Msg.TailnetId)
 	if err != nil {
 		return nil, err
 	}
 
 	if tailnet == nil {
-		return nil, status.Error(codes.NotFound, "")
+		return nil, connect.NewError(connect.CodeNotFound, errors.New("tailnet not found"))
 	}
 
-	authKeys, err := s.repository.ListAuthKeys(ctx, req.TailnetId)
+	authKeys, err := s.repository.ListAuthKeys(ctx, req.Msg.TailnetId)
 	if err != nil {
 		return nil, err
 	}
@@ -76,28 +76,28 @@ func (s *Service) ListAuthKeys(ctx context.Context, req *api.ListAuthKeysRequest
 		})
 	}
 
-	return &response, nil
+	return connect.NewResponse(&response), nil
 }
 
-func (s *Service) CreateAuthKey(ctx context.Context, req *api.CreateAuthKeyRequest) (*api.CreateAuthKeyResponse, error) {
-	if len(req.Tags) == 0 {
-		return nil, status.Errorf(codes.InvalidArgument, "at least one tag is required when creating an auth key")
+func (s *Service) CreateAuthKey(ctx context.Context, req *connect.Request[api.CreateAuthKeyRequest]) (*connect.Response[api.CreateAuthKeyResponse], error) {
+	if len(req.Msg.Tags) == 0 {
+		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("at least one tag is required when creating an auth key"))
 	}
 
-	tailnet, err := s.repository.GetTailnet(ctx, req.TailnetId)
+	tailnet, err := s.repository.GetTailnet(ctx, req.Msg.TailnetId)
 	if err != nil {
 		return nil, err
 	}
 
 	if tailnet == nil {
-		return nil, status.Error(codes.NotFound, "")
+		return nil, connect.NewError(connect.CodeNotFound, errors.New("tailnet not found"))
 	}
 
 	var expiresAt *time.Time
 	var expiresAtPb *timestamppb.Timestamp
 
-	if req.Expiry != nil {
-		duration := req.Expiry.AsDuration()
+	if req.Msg.Expiry != nil {
+		duration := req.Msg.Expiry.AsDuration()
 		e := time.Now().UTC().Add(duration)
 		expiresAt = &e
 		expiresAtPb = timestamppb.New(*expiresAt)
@@ -108,9 +108,9 @@ func (s *Service) CreateAuthKey(ctx context.Context, req *api.CreateAuthKeyReque
 		return nil, err
 	}
 
-	tags := domain.SanitizeTags(req.Tags)
+	tags := domain.SanitizeTags(req.Msg.Tags)
 
-	v, authKey := domain.CreateAuthKey(tailnet, user, req.Ephemeral, tags, expiresAt)
+	v, authKey := domain.CreateAuthKey(tailnet, user, req.Msg.Ephemeral, tags, expiresAt)
 
 	if err := s.repository.SaveAuthKey(ctx, authKey); err != nil {
 		return nil, err
@@ -131,12 +131,12 @@ func (s *Service) CreateAuthKey(ctx context.Context, req *api.CreateAuthKeyReque
 			},
 		}}
 
-	return &response, nil
+	return connect.NewResponse(&response), nil
 }
 
-func (s *Service) DeleteAuthKey(ctx context.Context, req *api.DeleteAuthKeyRequest) (*api.DeleteAuthKeyResponse, error) {
-	if _, err := s.repository.DeleteAuthKey(ctx, req.AuthKeyId); err != nil {
+func (s *Service) DeleteAuthKey(ctx context.Context, req *connect.Request[api.DeleteAuthKeyRequest]) (*connect.Response[api.DeleteAuthKeyResponse], error) {
+	if _, err := s.repository.DeleteAuthKey(ctx, req.Msg.AuthKeyId); err != nil {
 		return nil, err
 	}
-	return &api.DeleteAuthKeyResponse{}, nil
+	return connect.NewResponse(&api.DeleteAuthKeyResponse{}), nil
 }

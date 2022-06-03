@@ -2,22 +2,22 @@ package service
 
 import (
 	"context"
+	"errors"
 	"fmt"
-	"github.com/jsiebens/ionscale/pkg/gen/api"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
+	"github.com/bufbuild/connect-go"
+	api "github.com/jsiebens/ionscale/pkg/gen/ionscale/v1"
 	"google.golang.org/protobuf/types/known/timestamppb"
 	"inet.af/netaddr"
 	"time"
 )
 
-func (s *Service) ListMachines(ctx context.Context, req *api.ListMachinesRequest) (*api.ListMachinesResponse, error) {
-	tailnet, err := s.repository.GetTailnet(ctx, req.TailnetId)
+func (s *Service) ListMachines(ctx context.Context, req *connect.Request[api.ListMachinesRequest]) (*connect.Response[api.ListMachinesResponse], error) {
+	tailnet, err := s.repository.GetTailnet(ctx, req.Msg.TailnetId)
 	if err != nil {
 		return nil, err
 	}
 	if tailnet == nil {
-		return nil, status.Error(codes.NotFound, "tailnet does not exist")
+		return nil, connect.NewError(connect.CodeNotFound, errors.New("tailnet not found"))
 	}
 
 	machines, err := s.repository.ListMachineByTailnet(ctx, tailnet.ID)
@@ -56,36 +56,36 @@ func (s *Service) ListMachines(ctx context.Context, req *api.ListMachinesRequest
 		})
 	}
 
-	return response, nil
+	return connect.NewResponse(response), nil
 }
 
-func (s *Service) DeleteMachine(ctx context.Context, req *api.DeleteMachineRequest) (*api.DeleteMachineResponse, error) {
-	m, err := s.repository.GetMachine(ctx, req.MachineId)
+func (s *Service) DeleteMachine(ctx context.Context, req *connect.Request[api.DeleteMachineRequest]) (*connect.Response[api.DeleteMachineResponse], error) {
+	m, err := s.repository.GetMachine(ctx, req.Msg.MachineId)
 	if err != nil {
 		return nil, err
 	}
 
 	if m == nil {
-		return nil, status.Error(codes.NotFound, "machine does not exist")
+		return nil, connect.NewError(connect.CodeNotFound, errors.New("machine not found"))
 	}
 
-	if _, err := s.repository.DeleteMachine(ctx, req.MachineId); err != nil {
+	if _, err := s.repository.DeleteMachine(ctx, req.Msg.MachineId); err != nil {
 		return nil, err
 	}
 
 	s.brokers(m.TailnetID).SignalPeersRemoved([]uint64{m.ID})
 
-	return &api.DeleteMachineResponse{}, nil
+	return connect.NewResponse(&api.DeleteMachineResponse{}), nil
 }
 
-func (s *Service) ExpireMachine(ctx context.Context, req *api.ExpireMachineRequest) (*api.ExpireMachineResponse, error) {
-	m, err := s.repository.GetMachine(ctx, req.MachineId)
+func (s *Service) ExpireMachine(ctx context.Context, req *connect.Request[api.ExpireMachineRequest]) (*connect.Response[api.ExpireMachineResponse], error) {
+	m, err := s.repository.GetMachine(ctx, req.Msg.MachineId)
 	if err != nil {
 		return nil, err
 	}
 
 	if m == nil {
-		return nil, status.Error(codes.NotFound, "machine does not exist")
+		return nil, connect.NewError(connect.CodeNotFound, errors.New("machine not found"))
 	}
 
 	timestamp := time.Unix(123, 0)
@@ -97,18 +97,18 @@ func (s *Service) ExpireMachine(ctx context.Context, req *api.ExpireMachineReque
 
 	s.brokers(m.TailnetID).SignalPeerUpdated(m.ID)
 
-	return &api.ExpireMachineResponse{}, nil
+	return connect.NewResponse(&api.ExpireMachineResponse{}), nil
 }
 
-func (s *Service) GetMachineRoutes(ctx context.Context, req *api.GetMachineRoutesRequest) (*api.GetMachineRoutesResponse, error) {
+func (s *Service) GetMachineRoutes(ctx context.Context, req *connect.Request[api.GetMachineRoutesRequest]) (*connect.Response[api.GetMachineRoutesResponse], error) {
 
-	m, err := s.repository.GetMachine(ctx, req.MachineId)
+	m, err := s.repository.GetMachine(ctx, req.Msg.MachineId)
 	if err != nil {
 		return nil, err
 	}
 
 	if m == nil {
-		return nil, status.Error(codes.NotFound, "machine does not exist")
+		return nil, connect.NewError(connect.CodeNotFound, errors.New("machine not found"))
 	}
 
 	var routes []*api.RoutableIP
@@ -123,21 +123,21 @@ func (s *Service) GetMachineRoutes(ctx context.Context, req *api.GetMachineRoute
 		Routes: routes,
 	}
 
-	return &response, nil
+	return connect.NewResponse(&response), nil
 }
 
-func (s *Service) SetMachineRoutes(ctx context.Context, req *api.SetMachineRoutesRequest) (*api.GetMachineRoutesResponse, error) {
-	m, err := s.repository.GetMachine(ctx, req.MachineId)
+func (s *Service) SetMachineRoutes(ctx context.Context, req *connect.Request[api.SetMachineRoutesRequest]) (*connect.Response[api.GetMachineRoutesResponse], error) {
+	m, err := s.repository.GetMachine(ctx, req.Msg.MachineId)
 	if err != nil {
 		return nil, err
 	}
 
 	if m == nil {
-		return nil, status.Error(codes.NotFound, "machine does not exist")
+		return nil, connect.NewError(connect.CodeNotFound, errors.New("machine not found"))
 	}
 
 	var allowedIps []netaddr.IPPrefix
-	for _, r := range req.AllowedIps {
+	for _, r := range req.Msg.AllowedIps {
 		prefix, err := netaddr.ParseIPPrefix(r)
 		if err != nil {
 			return nil, err
@@ -164,13 +164,5 @@ func (s *Service) SetMachineRoutes(ctx context.Context, req *api.SetMachineRoute
 		Routes: routes,
 	}
 
-	return &response, nil
-}
-
-func mapIp(ip []netaddr.IPPrefix) []string {
-	var x = []string{}
-	for _, i := range ip {
-		x = append(x, i.String())
-	}
-	return x
+	return connect.NewResponse(&response), nil
 }

@@ -3,8 +3,9 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"github.com/bufbuild/connect-go"
 	"github.com/hashicorp/go-bexpr"
-	"github.com/jsiebens/ionscale/pkg/gen/api"
+	api "github.com/jsiebens/ionscale/pkg/gen/ionscale/v1"
 	"github.com/muesli/coral"
 	"github.com/rodaine/table"
 )
@@ -51,14 +52,14 @@ func listAuthFilterCommand() *coral.Command {
 			req.AuthMethodId = &authMethodID
 		}
 
-		resp, err := client.ListAuthFilters(context.Background(), req)
+		resp, err := client.ListAuthFilters(context.Background(), connect.NewRequest(req))
 
 		if err != nil {
 			return err
 		}
 
 		tbl := table.New("ID", "AUTH_METHOD", "TAILNET", "EXPR")
-		for _, filter := range resp.AuthFilters {
+		for _, filter := range resp.Msg.AuthFilters {
 			if filter.Tailnet != nil {
 				tbl.AddRow(filter.Id, filter.AuthMethod.Name, filter.Tailnet.Name, filter.Expr)
 			} else {
@@ -123,17 +124,17 @@ func createAuthFilterCommand() *coral.Command {
 			Expr:         expr,
 		}
 
-		resp, err := client.CreateAuthFilter(context.Background(), req)
+		resp, err := client.CreateAuthFilter(context.Background(), connect.NewRequest(req))
 
 		if err != nil {
 			return err
 		}
 
 		tbl := table.New("ID", "AUTH_METHOD", "TAILNET", "EXPR")
-		if resp.AuthFilter.Tailnet != nil {
-			tbl.AddRow(resp.AuthFilter.Id, resp.AuthFilter.AuthMethod.Name, resp.AuthFilter.Tailnet.Name, resp.AuthFilter.Expr)
+		if resp.Msg.AuthFilter.Tailnet != nil {
+			tbl.AddRow(resp.Msg.AuthFilter.Id, resp.Msg.AuthFilter.AuthMethod.Name, resp.Msg.AuthFilter.Tailnet.Name, resp.Msg.AuthFilter.Expr)
 		} else {
-			tbl.AddRow(resp.AuthFilter.Id, resp.AuthFilter.AuthMethod.Name, "", resp.AuthFilter.Expr)
+			tbl.AddRow(resp.Msg.AuthFilter.Id, resp.Msg.AuthFilter.AuthMethod.Name, "", resp.Msg.AuthFilter.Expr)
 		}
 		tbl.Print()
 
@@ -167,7 +168,7 @@ func deleteAuthFilterCommand() *coral.Command {
 			AuthFilterId: authFilterID,
 		}
 
-		_, err = client.DeleteAuthFilter(context.Background(), req)
+		_, err = client.DeleteAuthFilter(context.Background(), connect.NewRequest(req))
 
 		if err != nil {
 			return err

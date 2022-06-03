@@ -3,11 +3,12 @@ package service
 import (
 	"context"
 	"encoding/json"
-	"github.com/jsiebens/ionscale/pkg/gen/api"
+	"github.com/bufbuild/connect-go"
+	api "github.com/jsiebens/ionscale/pkg/gen/ionscale/v1"
 	"tailscale.com/tailcfg"
 )
 
-func (s *Service) GetDERPMap(ctx context.Context, req *api.GetDERPMapRequest) (*api.GetDERPMapResponse, error) {
+func (s *Service) GetDERPMap(ctx context.Context, req *connect.Request[api.GetDERPMapRequest]) (*connect.Response[api.GetDERPMapResponse], error) {
 	derpMap, err := s.repository.GetDERPMap(ctx)
 	if err != nil {
 		return nil, err
@@ -18,12 +19,12 @@ func (s *Service) GetDERPMap(ctx context.Context, req *api.GetDERPMapRequest) (*
 		return nil, err
 	}
 
-	return &api.GetDERPMapResponse{Value: raw}, nil
+	return connect.NewResponse(&api.GetDERPMapResponse{Value: raw}), nil
 }
 
-func (s *Service) SetDERPMap(ctx context.Context, req *api.SetDERPMapRequest) (*api.SetDERPMapResponse, error) {
+func (s *Service) SetDERPMap(ctx context.Context, req *connect.Request[api.SetDERPMapRequest]) (*connect.Response[api.SetDERPMapResponse], error) {
 	var derpMap tailcfg.DERPMap
-	err := json.Unmarshal(req.Value, &derpMap)
+	err := json.Unmarshal(req.Msg.Value, &derpMap)
 	if err != nil {
 		return nil, err
 	}
@@ -34,5 +35,5 @@ func (s *Service) SetDERPMap(ctx context.Context, req *api.SetDERPMapRequest) (*
 
 	s.brokerPool.SignalDERPMapUpdated(&derpMap)
 
-	return &api.SetDERPMapResponse{Value: req.Value}, nil
+	return connect.NewResponse(&api.SetDERPMapResponse{Value: req.Msg.Value}), nil
 }
