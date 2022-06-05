@@ -106,6 +106,19 @@ func (r *repository) ListAuthKeys(ctx context.Context, tailnetID uint64) ([]Auth
 	return authKeys, nil
 }
 
+func (r *repository) ListAuthKeysByTailnetAndUser(ctx context.Context, tailnetID, userID uint64) ([]AuthKey, error) {
+	var authKeys = []AuthKey{}
+	tx := (r.withContext(ctx).
+		Preload("User").
+		Preload("Tailnet")).
+		Where("tailnet_id = ? and user_id = ?", tailnetID, userID).
+		Find(&authKeys)
+	if tx.Error != nil {
+		return nil, tx.Error
+	}
+	return authKeys, nil
+}
+
 func (r *repository) LoadAuthKey(ctx context.Context, key string) (*AuthKey, error) {
 	split := strings.Split(key, "_")
 	if len(split) != 2 {

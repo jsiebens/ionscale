@@ -95,8 +95,8 @@ func Start(config *config.Config) error {
 		repository,
 	)
 
-	rpcService := service.NewService(repository, brokers)
-	rpcPath, rpcHandler := NewRpcHandler(serverKey.SystemAdminKey, rpcService)
+	rpcService := service.NewService(config, repository, brokers)
+	rpcPath, rpcHandler := NewRpcHandler(serverKey.SystemAdminKey, repository, rpcService)
 
 	p := echo_prometheus.NewPrometheus("http", nil)
 
@@ -128,6 +128,8 @@ func Start(config *config.Config) error {
 	auth := tlsAppHandler.Group("/a")
 	auth.GET("/:key", authenticationHandlers.StartAuth)
 	auth.POST("/:key", authenticationHandlers.ProcessAuth)
+	auth.GET("/c/:key", authenticationHandlers.StartCliAuth)
+	auth.POST("/c/:key", authenticationHandlers.ProcessCliAuth)
 	auth.GET("/callback", authenticationHandlers.Callback)
 	auth.POST("/callback", authenticationHandlers.EndOAuth)
 	auth.GET("/success", authenticationHandlers.Success)

@@ -45,7 +45,64 @@ type TailnetSelectionData struct {
 
 type oauthState struct {
 	Key        string
+	Flow       string
 	AuthMethod uint64
+}
+
+func (h *AuthenticationHandlers) StartCliAuth(c echo.Context) error {
+	ctx := c.Request().Context()
+	key := c.Param("key")
+
+	if s, err := h.repository.GetAuthenticationRequest(ctx, key); err != nil || s == nil {
+		return c.Redirect(http.StatusFound, "/a/error")
+	}
+
+	methods, err := h.repository.ListAuthMethods(ctx)
+	if err != nil {
+		return err
+	}
+
+	return c.Render(http.StatusOK, "auth.html", &AuthFormData{AuthMethods: methods})
+}
+
+func (h *AuthenticationHandlers) ProcessCliAuth(c echo.Context) error {
+	ctx := c.Request().Context()
+
+	key := c.Param("key")
+	authMethodId := c.FormValue("s")
+
+	session, err := h.repository.GetAuthenticationRequest(ctx, key)
+	if err != nil || session == nil {
+		return c.Redirect(http.StatusFound, "/a/error")
+	}
+
+	if authMethodId != "" {
+		id, err := strconv.ParseUint(authMethodId, 10, 64)
+		if err != nil {
+			return err
+		}
+
+		method, err := h.repository.GetAuthMethod(ctx, id)
+		if err != nil {
+			return err
+		}
+
+		state, err := h.createState("c", key, method.ID)
+		if err != nil {
+			return err
+		}
+
+		authProvider, err := provider.NewProvider(method)
+		if err != nil {
+			return err
+		}
+
+		redirectUrl := authProvider.GetLoginURL(h.config.CreateUrl("/a/callback"), state)
+
+		return c.Redirect(http.StatusFound, redirectUrl)
+	}
+
+	return c.Redirect(http.StatusFound, "/a/c/"+key)
 }
 
 func (h *AuthenticationHandlers) StartAuth(c echo.Context) error {
@@ -91,7 +148,7 @@ func (h *AuthenticationHandlers) ProcessAuth(c echo.Context) error {
 			return err
 		}
 
-		state, err := h.createState(key, method.ID)
+		state, err := h.createState("r", key, method.ID)
 		if err != nil {
 			return err
 		}
@@ -152,12 +209,21 @@ func (h *AuthenticationHandlers) EndOAuth(c echo.Context) error {
 		return c.Redirect(http.StatusFound, "/a/error")
 	}
 
-	req, err := h.repository.GetRegistrationRequestByKey(ctx, state.Key)
-	if err != nil || req == nil {
+	if state.Flow == "r" {
+		req, err := h.repository.GetRegistrationRequestByKey(ctx, state.Key)
+		if err != nil || req == nil {
+			return c.Redirect(http.StatusFound, "/a/error")
+		}
+
+		return h.endMachineRegistrationFlow(c, req, state)
+	}
+
+	session, err := h.repository.GetAuthenticationRequest(ctx, state.Key)
+	if err != nil || session == nil {
 		return c.Redirect(http.StatusFound, "/a/error")
 	}
 
-	return h.endMachineRegistrationFlow(c, req, state)
+	return h.endCliAuthenticationFlow(c, session, state)
 }
 
 func (h *AuthenticationHandlers) Success(c echo.Context) error {
@@ -173,6 +239,52 @@ func (h *AuthenticationHandlers) Error(c echo.Context) error {
 		return c.Render(http.StatusForbidden, "unauthorized.html", nil)
 	}
 	return c.Render(http.StatusOK, "error.html", nil)
+}
+
+func (h *AuthenticationHandlers) endCliAuthenticationFlow(c echo.Context, session *domain.AuthenticationRequest, state *oauthState) error {
+	ctx := c.Request().Context()
+
+	tailnetIDParam := c.FormValue("s")
+
+	parseUint, err := strconv.ParseUint(tailnetIDParam, 10, 64)
+	if err != nil {
+		return err
+	}
+	tailnet, err := h.repository.GetTailnet(ctx, parseUint)
+	if err != nil {
+		return err
+	}
+
+	item, ok := h.pendingOAuthUsers.Get(state.Key)
+	if !ok {
+		return c.Redirect(http.StatusFound, "/a/error")
+	}
+
+	oa := item.(*domain.Account)
+
+	user, _, err := h.repository.GetOrCreateUserWithAccount(ctx, tailnet, oa)
+	if err != nil {
+		return err
+	}
+
+	expiresAt := time.Now().Add(24 * time.Hour)
+	token, apiKey := domain.CreateApiKey(tailnet, user, &expiresAt)
+	session.Token = token
+
+	err = h.repository.Transaction(func(rp domain.Repository) error {
+		if err := rp.SaveApiKey(ctx, apiKey); err != nil {
+			return err
+		}
+		if err := rp.SaveAuthenticationRequest(ctx, session); err != nil {
+			return err
+		}
+		return nil
+	})
+	if err != nil {
+		return err
+	}
+
+	return c.Redirect(http.StatusFound, "/a/success")
 }
 
 func (h *AuthenticationHandlers) endMachineRegistrationFlow(c echo.Context, registrationRequest *domain.RegistrationRequest, state *oauthState) error {
@@ -368,7 +480,7 @@ func (h *AuthenticationHandlers) exchangeUser(ctx context.Context, code string, 
 	return user, nil
 }
 
-func (h *AuthenticationHandlers) createState(key string, authMethodId uint64) (string, error) {
+func (h *AuthenticationHandlers) createState(flow string, key string, authMethodId uint64) (string, error) {
 	stateMap := oauthState{Key: key, AuthMethod: authMethodId}
 	marshal, err := json.Marshal(&stateMap)
 	if err != nil {

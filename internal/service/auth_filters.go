@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"github.com/bufbuild/connect-go"
 	"github.com/hashicorp/go-bexpr"
@@ -11,6 +12,11 @@ import (
 )
 
 func (s *Service) ListAuthFilters(ctx context.Context, req *connect.Request[api.ListAuthFiltersRequest]) (*connect.Response[api.ListAuthFiltersResponse], error) {
+	principal := CurrentPrincipal(ctx)
+	if !principal.IsSystemAdmin() {
+		return nil, connect.NewError(connect.CodePermissionDenied, errors.New("permission denied"))
+	}
+
 	response := &api.ListAuthFiltersResponse{AuthFilters: []*api.AuthFilter{}}
 
 	if req.Msg.AuthMethodId == nil {
@@ -43,6 +49,11 @@ func (s *Service) ListAuthFilters(ctx context.Context, req *connect.Request[api.
 }
 
 func (s *Service) CreateAuthFilter(ctx context.Context, req *connect.Request[api.CreateAuthFilterRequest]) (*connect.Response[api.CreateAuthFilterResponse], error) {
+	principal := CurrentPrincipal(ctx)
+	if !principal.IsSystemAdmin() {
+		return nil, connect.NewError(connect.CodePermissionDenied, errors.New("permission denied"))
+	}
+
 	authMethod, err := s.repository.GetAuthMethod(ctx, req.Msg.AuthMethodId)
 	if err != nil {
 		return nil, err
@@ -83,7 +94,11 @@ func (s *Service) CreateAuthFilter(ctx context.Context, req *connect.Request[api
 }
 
 func (s *Service) DeleteAuthFilter(ctx context.Context, req *connect.Request[api.DeleteAuthFilterRequest]) (*connect.Response[api.DeleteAuthFilterResponse], error) {
-
+	principal := CurrentPrincipal(ctx)
+	if !principal.IsSystemAdmin() {
+		return nil, connect.NewError(connect.CodePermissionDenied, errors.New("permission denied"))
+	}
+	
 	err := s.repository.Transaction(func(rp domain.Repository) error {
 
 		filter, err := rp.GetAuthFilter(ctx, req.Msg.AuthFilterId)

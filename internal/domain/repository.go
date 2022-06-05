@@ -40,11 +40,15 @@ type Repository interface {
 	SetACLPolicy(ctx context.Context, tailnetID uint64, policy *ACLPolicy) error
 	DeleteACLPolicy(ctx context.Context, tailnetID uint64) error
 
+	SaveApiKey(ctx context.Context, key *ApiKey) error
+	LoadApiKey(ctx context.Context, key string) (*ApiKey, error)
+
 	GetAuthKey(ctx context.Context, id uint64) (*AuthKey, error)
 	SaveAuthKey(ctx context.Context, key *AuthKey) error
 	DeleteAuthKey(ctx context.Context, id uint64) (bool, error)
 	DeleteAuthKeysByTailnet(ctx context.Context, tailnetID uint64) error
 	ListAuthKeys(ctx context.Context, tailnetID uint64) ([]AuthKey, error)
+	ListAuthKeysByTailnetAndUser(ctx context.Context, tailnetID, userID uint64) ([]AuthKey, error)
 	LoadAuthKey(ctx context.Context, key string) (*AuthKey, error)
 
 	GetOrCreateServiceUser(ctx context.Context, tailnet *Tailnet) (*User, bool, error)
@@ -70,6 +74,10 @@ type Repository interface {
 	SaveRegistrationRequest(ctx context.Context, request *RegistrationRequest) error
 	GetRegistrationRequestByKey(ctx context.Context, key string) (*RegistrationRequest, error)
 	GetRegistrationRequestByMachineKey(ctx context.Context, key string) (*RegistrationRequest, error)
+
+	SaveAuthenticationRequest(ctx context.Context, session *AuthenticationRequest) error
+	GetAuthenticationRequest(ctx context.Context, key string) (*AuthenticationRequest, error)
+	DeleteAuthenticationRequest(ctx context.Context, key string) error
 
 	Transaction(func(rp Repository) error) error
 }

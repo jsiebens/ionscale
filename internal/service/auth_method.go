@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"errors"
 	"github.com/bufbuild/connect-go"
 	"github.com/jsiebens/ionscale/internal/domain"
 	"github.com/jsiebens/ionscale/internal/util"
@@ -9,6 +10,10 @@ import (
 )
 
 func (s *Service) CreateAuthMethod(ctx context.Context, req *connect.Request[api.CreateAuthMethodRequest]) (*connect.Response[api.CreateAuthMethodResponse], error) {
+	principal := CurrentPrincipal(ctx)
+	if !principal.IsSystemAdmin() {
+		return nil, connect.NewError(connect.CodePermissionDenied, errors.New("permission denied"))
+	}
 
 	authMethod := &domain.AuthMethod{
 		ID:           util.NextID(),
@@ -34,6 +39,11 @@ func (s *Service) CreateAuthMethod(ctx context.Context, req *connect.Request[api
 }
 
 func (s *Service) ListAuthMethods(ctx context.Context, _ *connect.Request[api.ListAuthMethodsRequest]) (*connect.Response[api.ListAuthMethodsResponse], error) {
+	principal := CurrentPrincipal(ctx)
+	if !principal.IsSystemAdmin() {
+		return nil, connect.NewError(connect.CodePermissionDenied, errors.New("permission denied"))
+	}
+	
 	methods, err := s.repository.ListAuthMethods(ctx)
 	if err != nil {
 		return nil, err
