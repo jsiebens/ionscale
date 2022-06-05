@@ -38,11 +38,10 @@ func getDERPMap() *coral.Command {
 	command.Flags().BoolVar(&asJson, "json", false, "")
 
 	command.RunE = func(command *coral.Command, args []string) error {
-		client, c, err := target.createGRPCClient()
+		client, err := target.createGRPCClient()
 		if err != nil {
 			return err
 		}
-		defer safeClose(c)
 
 		resp, err := client.GetDERPMap(context.Background(), connect.NewRequest(&api.GetDERPMapRequest{}))
 
@@ -95,11 +94,10 @@ func setDERPMap() *coral.Command {
 	command.Flags().StringVar(&file, "file", "", "")
 
 	command.RunE = func(command *coral.Command, args []string) error {
-		grpcClient, c, err := target.createGRPCClient()
+		grpcClient, err := target.createGRPCClient()
 		if err != nil {
 			return err
 		}
-		defer safeClose(c)
 
 		rawJson, err := ioutil.ReadFile(file)
 		if err != nil {

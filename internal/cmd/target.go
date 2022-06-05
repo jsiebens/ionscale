@@ -5,7 +5,6 @@ import (
 	"github.com/jsiebens/ionscale/pkg/client/ionscale"
 	api "github.com/jsiebens/ionscale/pkg/gen/ionscale/v1/ionscalev1connect"
 	"github.com/muesli/coral"
-	"io"
 )
 
 const (
@@ -26,14 +25,14 @@ func (t *Target) prepareCommand(cmd *coral.Command) {
 	cmd.Flags().StringVar(&t.systemAdminKey, "admin-key", "", "If specified, the given value will be used as the key to generate a Bearer token for the call. This can also be specified via the IONSCALE_ADMIN_KEY environment variable.")
 }
 
-func (t *Target) createGRPCClient() (api.IonscaleServiceClient, io.Closer, error) {
+func (t *Target) createGRPCClient() (api.IonscaleServiceClient, error) {
 	addr := t.getAddr()
 	skipVerify := t.getInsecureSkipVerify()
 	systemAdminKey := t.getSystemAdminKey()
 
 	auth, err := ionscale.LoadClientAuth(systemAdminKey)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
 	return ionscale.NewClient(auth, addr, skipVerify)

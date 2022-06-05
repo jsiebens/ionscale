@@ -27,7 +27,7 @@ Client:
  Git Revision:  %s
 `, clientVersion, clientRevision)
 
-		client, c, err := target.createGRPCClient()
+		client, err := target.createGRPCClient()
 		if err != nil {
 			fmt.Printf(`
 Server:
@@ -35,7 +35,6 @@ Server:
 `, err)
 			return
 		}
-		defer safeClose(c)
 
 		resp, err := client.GetVersion(context.Background(), connect.NewRequest(&api.GetVersionRequest{}))
 		if err != nil {

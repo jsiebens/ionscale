@@ -34,11 +34,10 @@ func listAuthMethods() *coral.Command {
 
 	command.RunE = func(command *coral.Command, args []string) error {
 
-		client, c, err := target.createGRPCClient()
+		client, err := target.createGRPCClient()
 		if err != nil {
 			return err
 		}
-		defer safeClose(c)
 
 		resp, err := client.ListAuthMethods(context.Background(), connect.NewRequest(&api.ListAuthMethodsRequest{}))
 
@@ -97,11 +96,10 @@ func createOIDCAuthMethodCommand() *coral.Command {
 
 	command.RunE = func(command *coral.Command, args []string) error {
 
-		client, c, err := target.createGRPCClient()
+		client, err := target.createGRPCClient()
 		if err != nil {
 			return err
 		}
-		defer safeClose(c)
 
 		req := &api.CreateAuthMethodRequest{
 			Type:         "oidc",

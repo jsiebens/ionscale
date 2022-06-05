@@ -25,11 +25,10 @@ func getDNSConfig() *coral.Command {
 	command.Flags().Uint64Var(&tailnetID, "tailnet-id", 0, "")
 
 	command.RunE = func(command *coral.Command, args []string) error {
-		client, c, err := target.createGRPCClient()
+		client, err := target.createGRPCClient()
 		if err != nil {
 			return err
 		}
-		defer safeClose(c)
 
 		tailnet, err := findTailnet(client, tailnetName, tailnetID)
 		if err != nil {
@@ -84,11 +83,10 @@ func setDNSConfig() *coral.Command {
 	command.Flags().BoolVarP(&overrideLocalDNS, "override-local-dns", "", false, "")
 
 	command.RunE = func(command *coral.Command, args []string) error {
-		client, c, err := target.createGRPCClient()
+		client, err := target.createGRPCClient()
 		if err != nil {
 			return err
 		}
-		defer safeClose(c)
 
 		tailnet, err := findTailnet(client, tailnetName, tailnetID)
 		if err != nil {

@@ -41,11 +41,10 @@ func deleteMachineCommand() *coral.Command {
 	command.Flags().Uint64Var(&machineID, "machine-id", 0, "")
 
 	command.RunE = func(command *coral.Command, args []string) error {
-		client, c, err := target.createGRPCClient()
+		client, err := target.createGRPCClient()
 		if err != nil {
 			return err
 		}
-		defer safeClose(c)
 
 		req := api.DeleteMachineRequest{MachineId: machineID}
 		if _, err := client.DeleteMachine(context.Background(), connect.NewRequest(&req)); err != nil {
@@ -73,11 +72,10 @@ func expireMachineCommand() *coral.Command {
 	command.Flags().Uint64Var(&machineID, "machine-id", 0, "")
 
 	command.RunE = func(command *coral.Command, args []string) error {
-		client, c, err := target.createGRPCClient()
+		client, err := target.createGRPCClient()
 		if err != nil {
 			return err
 		}
-		defer safeClose(c)
 
 		req := api.ExpireMachineRequest{MachineId: machineID}
 		if _, err := client.ExpireMachine(context.Background(), connect.NewRequest(&req)); err != nil {
@@ -108,11 +106,10 @@ func listMachinesCommand() *coral.Command {
 	command.Flags().Uint64Var(&tailnetID, "tailnet-id", 0, "")
 
 	command.RunE = func(command *coral.Command, args []string) error {
-		client, c, err := target.createGRPCClient()
+		client, err := target.createGRPCClient()
 		if err != nil {
 			return err
 		}
-		defer safeClose(c)
 
 		tailnet, err := findTailnet(client, tailnetName, tailnetID)
 		if err != nil {
@@ -160,11 +157,10 @@ func getMachineRoutesCommand() *coral.Command {
 	command.Flags().Uint64Var(&machineID, "machine-id", 0, "")
 
 	command.RunE = func(command *coral.Command, args []string) error {
-		grpcClient, c, err := target.createGRPCClient()
+		grpcClient, err := target.createGRPCClient()
 		if err != nil {
 			return err
 		}
-		defer safeClose(c)
 
 		req := api.GetMachineRoutesRequest{MachineId: machineID}
 		resp, err := grpcClient.GetMachineRoutes(context.Background(), connect.NewRequest(&req))
@@ -199,11 +195,10 @@ func setMachineRoutesCommand() *coral.Command {
 	command.Flags().StringSliceVar(&allowedIps, "allowed-ips", []string{}, "")
 
 	command.RunE = func(command *coral.Command, args []string) error {
-		client, c, err := target.createGRPCClient()
+		client, err := target.createGRPCClient()
 		if err != nil {
 			return err
 		}
-		defer safeClose(c)
 
 		var prefixes []netaddr.IPPrefix
 		for _, r := range allowedIps {

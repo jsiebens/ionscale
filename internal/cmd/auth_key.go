@@ -46,11 +46,10 @@ func createAuthkeysCommand() *coral.Command {
 	command.Flags().StringVar(&expiry, "expiry", "180d", "")
 
 	command.RunE = func(command *coral.Command, args []string) error {
-		client, c, err := target.createGRPCClient()
+		client, err := target.createGRPCClient()
 		if err != nil {
 			return err
 		}
-		defer safeClose(c)
 
 		tailnet, err := findTailnet(client, tailnetName, tailnetID)
 		if err != nil {
@@ -104,11 +103,10 @@ func deleteAuthKeyCommand() *coral.Command {
 	command.Flags().Uint64Var(&authKeyId, "id", 0, "")
 
 	command.RunE = func(command *coral.Command, args []string) error {
-		grpcClient, c, err := target.createGRPCClient()
+		grpcClient, err := target.createGRPCClient()
 		if err != nil {
 			return err
 		}
-		defer safeClose(c)
 
 		req := api.DeleteAuthKeyRequest{AuthKeyId: authKeyId}
 		if _, err := grpcClient.DeleteAuthKey(context.Background(), connect.NewRequest(&req)); err != nil {
@@ -138,11 +136,10 @@ func listAuthkeysCommand() *coral.Command {
 	command.Flags().Uint64Var(&tailnetID, "tailnet-id", 0, "")
 
 	command.RunE = func(command *coral.Command, args []string) error {
-		client, c, err := target.createGRPCClient()
+		client, err := target.createGRPCClient()
 		if err != nil {
 			return err
 		}
-		defer safeClose(c)
 
 		tailnet, err := findTailnet(client, tailnetName, tailnetID)
 		if err != nil {

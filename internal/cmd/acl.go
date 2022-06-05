@@ -30,11 +30,10 @@ func getACLConfig() *coral.Command {
 	command.Flags().BoolVar(&asJson, "json", false, "")
 
 	command.RunE = func(command *coral.Command, args []string) error {
-		client, c, err := target.createGRPCClient()
+		client, err := target.createGRPCClient()
 		if err != nil {
 			return err
 		}
-		defer safeClose(c)
 
 		tailnet, err := findTailnet(client, tailnetName, tailnetID)
 		if err != nil {
@@ -99,11 +98,10 @@ func setACLConfig() *coral.Command {
 			return err
 		}
 
-		client, c, err := target.createGRPCClient()
+		client, err := target.createGRPCClient()
 		if err != nil {
 			return err
 		}
-		defer safeClose(c)
 
 		tailnet, err := findTailnet(client, tailnetName, tailnetID)
 		if err != nil {

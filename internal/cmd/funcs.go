@@ -6,7 +6,6 @@ import (
 	"github.com/bufbuild/connect-go"
 	api "github.com/jsiebens/ionscale/pkg/gen/ionscale/v1"
 	apiconnect "github.com/jsiebens/ionscale/pkg/gen/ionscale/v1/ionscalev1connect"
-	"io"
 )
 
 func findTailnet(client apiconnect.IonscaleServiceClient, tailnet string, tailnetID uint64) (*api.Tailnet, error) {
@@ -45,10 +44,4 @@ func findAuthMethod(client apiconnect.IonscaleServiceClient, authMethod string, 
 	}
 
 	return nil, fmt.Errorf("requested auth method not found or you are not authorized for this tailnet")
-}
-
-func safeClose(c io.Closer) {
-	if c != nil {
-		_ = c.Close()
-	}
 }

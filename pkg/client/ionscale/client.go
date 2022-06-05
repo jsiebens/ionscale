@@ -6,11 +6,10 @@ import (
 	"fmt"
 	"github.com/bufbuild/connect-go"
 	api "github.com/jsiebens/ionscale/pkg/gen/ionscale/v1/ionscalev1connect"
-	"io"
 	"net/http"
 )
 
-func NewClient(clientAuth ClientAuth, serverURL string, insecureSkipVerify bool) (api.IonscaleServiceClient, io.Closer, error) {
+func NewClient(clientAuth ClientAuth, serverURL string, insecureSkipVerify bool) (api.IonscaleServiceClient, error) {
 	tlsConfig := &tls.Config{
 		InsecureSkipVerify: insecureSkipVerify,
 	}
@@ -22,7 +21,7 @@ func NewClient(clientAuth ClientAuth, serverURL string, insecureSkipVerify bool)
 	}
 
 	interceptors := connect.WithInterceptors(NewAuthenticationInterceptor(clientAuth))
-	return api.NewIonscaleServiceClient(client, serverURL, interceptors), nil, nil
+	return api.NewIonscaleServiceClient(client, serverURL, interceptors), nil
 }
 
 func NewAuthenticationInterceptor(clientAuth ClientAuth) connect.UnaryInterceptorFunc {

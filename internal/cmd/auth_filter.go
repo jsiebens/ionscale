@@ -40,11 +40,10 @@ func listAuthFilterCommand() *coral.Command {
 	command.Flags().Uint64Var(&authMethodID, "auth-method-id", 0, "")
 
 	command.RunE = func(command *coral.Command, args []string) error {
-		client, c, err := target.createGRPCClient()
+		client, err := target.createGRPCClient()
 		if err != nil {
 			return err
 		}
-		defer safeClose(c)
 
 		req := &api.ListAuthFiltersRequest{}
 
@@ -102,11 +101,10 @@ func createAuthFilterCommand() *coral.Command {
 			}
 		}
 
-		client, c, err := target.createGRPCClient()
+		client, err := target.createGRPCClient()
 		if err != nil {
 			return err
 		}
-		defer safeClose(c)
 
 		tailnet, err := findTailnet(client, tailnetName, tailnetID)
 		if err != nil {
@@ -158,11 +156,10 @@ func deleteAuthFilterCommand() *coral.Command {
 	command.Flags().Uint64Var(&authFilterID, "auth-filter-id", 0, "")
 
 	command.RunE = func(command *coral.Command, args []string) error {
-		client, c, err := target.createGRPCClient()
+		client, err := target.createGRPCClient()
 		if err != nil {
 			return err
 		}
-		defer safeClose(c)
 
 		req := &api.DeleteAuthFilterRequest{
 			AuthFilterId: authFilterID,

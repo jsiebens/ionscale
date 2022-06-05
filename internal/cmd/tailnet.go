@@ -40,11 +40,10 @@ func listTailnetsCommand() *coral.Command {
 
 	command.RunE = func(command *coral.Command, args []string) error {
 
-		client, c, err := target.createGRPCClient()
+		client, err := target.createGRPCClient()
 		if err != nil {
 			return err
 		}
-		defer safeClose(c)
 
 		resp, err := client.ListTailnets(context.Background(), connect.NewRequest(&api.ListTailnetRequest{}))
 
@@ -80,11 +79,10 @@ func createTailnetsCommand() *coral.Command {
 
 	command.RunE = func(command *coral.Command, args []string) error {
 
-		client, c, err := target.createGRPCClient()
+		client, err := target.createGRPCClient()
 		if err != nil {
 			return err
 		}
-		defer safeClose(c)
 
 		resp, err := client.CreateTailnet(context.Background(), connect.NewRequest(&api.CreateTailnetRequest{Name: name}))
 
@@ -121,11 +119,10 @@ func deleteTailnetCommand() *coral.Command {
 
 	command.RunE = func(command *coral.Command, args []string) error {
 
-		client, c, err := target.createGRPCClient()
+		client, err := target.createGRPCClient()
 		if err != nil {
 			return err
 		}
-		defer safeClose(c)
 
 		tailnet, err := findTailnet(client, tailnetName, tailnetID)
 		if err != nil {
