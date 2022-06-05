@@ -10,8 +10,9 @@ import (
 
 func authMethodsCommand() *coral.Command {
 	command := &coral.Command{
-		Use:   "auth-methods",
-		Short: "Manage ionscale auth methods",
+		Use:          "auth-methods",
+		Short:        "Manage ionscale auth methods",
+		SilenceUsage: true,
 	}
 
 	command.AddCommand(listAuthMethods())
@@ -22,11 +23,9 @@ func authMethodsCommand() *coral.Command {
 
 func listAuthMethods() *coral.Command {
 	command := &coral.Command{
-		Use:   "list",
-		Short: "List auth methods",
-		Long: `List auth methods in this ionscale instance. Example:
-
-      $ ionscale auth-methods list`,
+		Use:          "list",
+		Short:        "List auth methods",
+		SilenceUsage: true,
 	}
 
 	var target = Target{}
@@ -59,8 +58,9 @@ func listAuthMethods() *coral.Command {
 
 func createAuthMethodCommand() *coral.Command {
 	command := &coral.Command{
-		Use:   "create",
-		Short: "Create a new auth method",
+		Use:          "create",
+		Short:        "Create a new auth method",
+		SilenceUsage: true,
 	}
 
 	command.AddCommand(createOIDCAuthMethodCommand())

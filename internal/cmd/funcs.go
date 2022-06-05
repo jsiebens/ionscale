@@ -29,7 +29,7 @@ func findTailnet(client apiconnect.IonscaleServiceClient, tailnet string, tailne
 
 func findAuthMethod(client apiconnect.IonscaleServiceClient, authMethod string, authMethodID uint64) (*api.AuthMethod, error) {
 	if authMethodID == 0 && authMethod == "" {
-		return nil, fmt.Errorf("requested auth method not found or you are not authorized for this tailnet")
+		return nil, fmt.Errorf("requested auth method not found or you are not authorized for this auth method")
 	}
 
 	resp, err := client.ListAuthMethods(context.Background(), connect.NewRequest(&api.ListAuthMethodsRequest{}))

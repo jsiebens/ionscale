@@ -12,6 +12,11 @@ import (
 )
 
 func (s *Service) ListMachines(ctx context.Context, req *connect.Request[api.ListMachinesRequest]) (*connect.Response[api.ListMachinesResponse], error) {
+	principal := CurrentPrincipal(ctx)
+	if !principal.IsSystemAdmin() && !principal.TailnetMatches(req.Msg.TailnetId) {
+		return nil, connect.NewError(connect.CodePermissionDenied, errors.New("permission denied"))
+	}
+
 	tailnet, err := s.repository.GetTailnet(ctx, req.Msg.TailnetId)
 	if err != nil {
 		return nil, err
@@ -60,6 +65,8 @@ func (s *Service) ListMachines(ctx context.Context, req *connect.Request[api.Lis
 }
 
 func (s *Service) DeleteMachine(ctx context.Context, req *connect.Request[api.DeleteMachineRequest]) (*connect.Response[api.DeleteMachineResponse], error) {
+	principal := CurrentPrincipal(ctx)
+
 	m, err := s.repository.GetMachine(ctx, req.Msg.MachineId)
 	if err != nil {
 		return nil, err
@@ -67,6 +74,10 @@ func (s *Service) DeleteMachine(ctx context.Context, req *connect.Request[api.De
 
 	if m == nil {
 		return nil, connect.NewError(connect.CodeNotFound, errors.New("machine not found"))
+	}
+
+	if !principal.IsSystemAdmin() && !principal.UserMatches(m.UserID) {
+		return nil, connect.NewError(connect.CodePermissionDenied, errors.New("permission denied"))
 	}
 
 	if _, err := s.repository.DeleteMachine(ctx, req.Msg.MachineId); err != nil {
@@ -79,6 +90,8 @@ func (s *Service) DeleteMachine(ctx context.Context, req *connect.Request[api.De
 }
 
 func (s *Service) ExpireMachine(ctx context.Context, req *connect.Request[api.ExpireMachineRequest]) (*connect.Response[api.ExpireMachineResponse], error) {
+	principal := CurrentPrincipal(ctx)
+
 	m, err := s.repository.GetMachine(ctx, req.Msg.MachineId)
 	if err != nil {
 		return nil, err
@@ -86,6 +99,10 @@ func (s *Service) ExpireMachine(ctx context.Context, req *connect.Request[api.Ex
 
 	if m == nil {
 		return nil, connect.NewError(connect.CodeNotFound, errors.New("machine not found"))
+	}
+
+	if !principal.IsSystemAdmin() && !principal.UserMatches(m.UserID) {
+		return nil, connect.NewError(connect.CodePermissionDenied, errors.New("permission denied"))
 	}
 
 	timestamp := time.Unix(123, 0)
@@ -101,6 +118,7 @@ func (s *Service) ExpireMachine(ctx context.Context, req *connect.Request[api.Ex
 }
 
 func (s *Service) GetMachineRoutes(ctx context.Context, req *connect.Request[api.GetMachineRoutesRequest]) (*connect.Response[api.GetMachineRoutesResponse], error) {
+	principal := CurrentPrincipal(ctx)
 
 	m, err := s.repository.GetMachine(ctx, req.Msg.MachineId)
 	if err != nil {
@@ -109,6 +127,10 @@ func (s *Service) GetMachineRoutes(ctx context.Context, req *connect.Request[api
 
 	if m == nil {
 		return nil, connect.NewError(connect.CodeNotFound, errors.New("machine not found"))
+	}
+
+	if !principal.IsSystemAdmin() && !principal.TailnetMatches(m.TailnetID) {
+		return nil, connect.NewError(connect.CodePermissionDenied, errors.New("permission denied"))
 	}
 
 	var routes []*api.RoutableIP
@@ -127,6 +149,8 @@ func (s *Service) GetMachineRoutes(ctx context.Context, req *connect.Request[api
 }
 
 func (s *Service) SetMachineRoutes(ctx context.Context, req *connect.Request[api.SetMachineRoutesRequest]) (*connect.Response[api.GetMachineRoutesResponse], error) {
+	principal := CurrentPrincipal(ctx)
+
 	m, err := s.repository.GetMachine(ctx, req.Msg.MachineId)
 	if err != nil {
 		return nil, err
@@ -134,6 +158,10 @@ func (s *Service) SetMachineRoutes(ctx context.Context, req *connect.Request[api
 
 	if m == nil {
 		return nil, connect.NewError(connect.CodeNotFound, errors.New("machine not found"))
+	}
+
+	if !principal.IsSystemAdmin() {
+		return nil, connect.NewError(connect.CodePermissionDenied, errors.New("permission denied"))
 	}
 
 	var allowedIps []netaddr.IPPrefix

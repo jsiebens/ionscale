@@ -15,6 +15,15 @@ func LoadClientAuth(systemAdminKey string) (ClientAuth, error) {
 		return &systemAdminTokenAuth{key: *k}, nil
 	}
 
+	apiToken, err := TokenFromFile()
+	if err != nil {
+		return nil, err
+	}
+
+	if len(apiToken) != 0 {
+		return &apiTokenAuth{token: apiToken}, nil
+	}
+
 	return &anonymous{}, nil
 }
 
@@ -35,4 +44,12 @@ type systemAdminTokenAuth struct {
 
 func (m *systemAdminTokenAuth) GetToken() (string, error) {
 	return token.GenerateSystemAdminToken(m.key)
+}
+
+type apiTokenAuth struct {
+	token string
+}
+
+func (m *apiTokenAuth) GetToken() (string, error) {
+	return m.token, nil
 }

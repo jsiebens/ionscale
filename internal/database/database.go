@@ -49,9 +49,11 @@ func migrate(db *gorm.DB, repository domain.Repository) error {
 		&domain.AuthFilter{},
 		&domain.Account{},
 		&domain.User{},
+		&domain.ApiKey{},
 		&domain.AuthKey{},
 		&domain.Machine{},
 		&domain.RegistrationRequest{},
+		&domain.AuthenticationRequest{},
 	)
 
 	if err != nil {

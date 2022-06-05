@@ -28,6 +28,7 @@ const (
 // IonscaleServiceClient is a client for the ionscale.v1.IonscaleService service.
 type IonscaleServiceClient interface {
 	GetVersion(context.Context, *connect_go.Request[v1.GetVersionRequest]) (*connect_go.Response[v1.GetVersionResponse], error)
+	Authenticate(context.Context, *connect_go.Request[v1.AuthenticationRequest]) (*connect_go.ServerStreamForClient[v1.AuthenticationResponse], error)
 	GetDERPMap(context.Context, *connect_go.Request[v1.GetDERPMapRequest]) (*connect_go.Response[v1.GetDERPMapResponse], error)
 	SetDERPMap(context.Context, *connect_go.Request[v1.SetDERPMapRequest]) (*connect_go.Response[v1.SetDERPMapResponse], error)
 	CreateAuthMethod(context.Context, *connect_go.Request[v1.CreateAuthMethodRequest]) (*connect_go.Response[v1.CreateAuthMethodResponse], error)
@@ -67,6 +68,11 @@ func NewIonscaleServiceClient(httpClient connect_go.HTTPClient, baseURL string, 
 		getVersion: connect_go.NewClient[v1.GetVersionRequest, v1.GetVersionResponse](
 			httpClient,
 			baseURL+"/ionscale.v1.IonscaleService/GetVersion",
+			opts...,
+		),
+		authenticate: connect_go.NewClient[v1.AuthenticationRequest, v1.AuthenticationResponse](
+			httpClient,
+			baseURL+"/ionscale.v1.IonscaleService/Authenticate",
 			opts...,
 		),
 		getDERPMap: connect_go.NewClient[v1.GetDERPMapRequest, v1.GetDERPMapResponse](
@@ -195,6 +201,7 @@ func NewIonscaleServiceClient(httpClient connect_go.HTTPClient, baseURL string, 
 // ionscaleServiceClient implements IonscaleServiceClient.
 type ionscaleServiceClient struct {
 	getVersion       *connect_go.Client[v1.GetVersionRequest, v1.GetVersionResponse]
+	authenticate     *connect_go.Client[v1.AuthenticationRequest, v1.AuthenticationResponse]
 	getDERPMap       *connect_go.Client[v1.GetDERPMapRequest, v1.GetDERPMapResponse]
 	setDERPMap       *connect_go.Client[v1.SetDERPMapRequest, v1.SetDERPMapResponse]
 	createAuthMethod *connect_go.Client[v1.CreateAuthMethodRequest, v1.CreateAuthMethodResponse]
@@ -224,6 +231,11 @@ type ionscaleServiceClient struct {
 // GetVersion calls ionscale.v1.IonscaleService.GetVersion.
 func (c *ionscaleServiceClient) GetVersion(ctx context.Context, req *connect_go.Request[v1.GetVersionRequest]) (*connect_go.Response[v1.GetVersionResponse], error) {
 	return c.getVersion.CallUnary(ctx, req)
+}
+
+// Authenticate calls ionscale.v1.IonscaleService.Authenticate.
+func (c *ionscaleServiceClient) Authenticate(ctx context.Context, req *connect_go.Request[v1.AuthenticationRequest]) (*connect_go.ServerStreamForClient[v1.AuthenticationResponse], error) {
+	return c.authenticate.CallServerStream(ctx, req)
 }
 
 // GetDERPMap calls ionscale.v1.IonscaleService.GetDERPMap.
@@ -349,6 +361,7 @@ func (c *ionscaleServiceClient) SetMachineRoutes(ctx context.Context, req *conne
 // IonscaleServiceHandler is an implementation of the ionscale.v1.IonscaleService service.
 type IonscaleServiceHandler interface {
 	GetVersion(context.Context, *connect_go.Request[v1.GetVersionRequest]) (*connect_go.Response[v1.GetVersionResponse], error)
+	Authenticate(context.Context, *connect_go.Request[v1.AuthenticationRequest], *connect_go.ServerStream[v1.AuthenticationResponse]) error
 	GetDERPMap(context.Context, *connect_go.Request[v1.GetDERPMapRequest]) (*connect_go.Response[v1.GetDERPMapResponse], error)
 	SetDERPMap(context.Context, *connect_go.Request[v1.SetDERPMapRequest]) (*connect_go.Response[v1.SetDERPMapResponse], error)
 	CreateAuthMethod(context.Context, *connect_go.Request[v1.CreateAuthMethodRequest]) (*connect_go.Response[v1.CreateAuthMethodResponse], error)
@@ -385,6 +398,11 @@ func NewIonscaleServiceHandler(svc IonscaleServiceHandler, opts ...connect_go.Ha
 	mux.Handle("/ionscale.v1.IonscaleService/GetVersion", connect_go.NewUnaryHandler(
 		"/ionscale.v1.IonscaleService/GetVersion",
 		svc.GetVersion,
+		opts...,
+	))
+	mux.Handle("/ionscale.v1.IonscaleService/Authenticate", connect_go.NewServerStreamHandler(
+		"/ionscale.v1.IonscaleService/Authenticate",
+		svc.Authenticate,
 		opts...,
 	))
 	mux.Handle("/ionscale.v1.IonscaleService/GetDERPMap", connect_go.NewUnaryHandler(
@@ -515,6 +533,10 @@ type UnimplementedIonscaleServiceHandler struct{}
 
 func (UnimplementedIonscaleServiceHandler) GetVersion(context.Context, *connect_go.Request[v1.GetVersionRequest]) (*connect_go.Response[v1.GetVersionResponse], error) {
 	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("ionscale.v1.IonscaleService.GetVersion is not implemented"))
+}
+
+func (UnimplementedIonscaleServiceHandler) Authenticate(context.Context, *connect_go.Request[v1.AuthenticationRequest], *connect_go.ServerStream[v1.AuthenticationResponse]) error {
+	return connect_go.NewError(connect_go.CodeUnimplemented, errors.New("ionscale.v1.IonscaleService.Authenticate is not implemented"))
 }
 
 func (UnimplementedIonscaleServiceHandler) GetDERPMap(context.Context, *connect_go.Request[v1.GetDERPMapRequest]) (*connect_go.Response[v1.GetDERPMapResponse], error) {

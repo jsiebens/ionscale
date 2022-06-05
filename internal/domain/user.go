@@ -5,6 +5,17 @@ import (
 	"github.com/jsiebens/ionscale/internal/util"
 )
 
+type SystemRole string
+
+const (
+	SystemRoleNone  SystemRole = ""
+	SystemRoleAdmin SystemRole = "admin"
+)
+
+func (s SystemRole) IsAdmin() bool {
+	return s == SystemRoleAdmin
+}
+
 type TailnetRole string
 
 const (

@@ -7,6 +7,7 @@ import "google/protobuf/timestamp.proto";
 import "google/protobuf/duration.proto";
 
 import "ionscale/v1/version.proto";
+import "ionscale/v1/auth.proto";
 import "ionscale/v1/tailnets.proto";
 import "ionscale/v1/auth_methods.proto";
 import "ionscale/v1/auth_filter.proto";
@@ -19,6 +20,8 @@ import "ionscale/v1/derp.proto";
 
 service IonscaleService {
   rpc GetVersion (GetVersionRequest) returns (GetVersionResponse) {}
+
+  rpc Authenticate (AuthenticationRequest) returns (stream AuthenticationResponse) {}
 
   rpc GetDERPMap (GetDERPMapRequest) returns (GetDERPMapResponse) {}
   rpc SetDERPMap (SetDERPMapRequest) returns (SetDERPMapResponse) {}
