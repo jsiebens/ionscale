@@ -62,7 +62,7 @@ func (h *AuthenticationHandlers) StartCliAuth(c echo.Context) error {
 		return err
 	}
 
-	return c.Render(http.StatusOK, "auth.html", &AuthFormData{AuthMethods: methods})
+	return c.Render(http.StatusOK, "cli_auth.html", &AuthFormData{AuthMethods: methods})
 }
 
 func (h *AuthenticationHandlers) ProcessCliAuth(c echo.Context) error {
