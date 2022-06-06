@@ -21,9 +21,10 @@ func getDNSConfig() *coral.Command {
 	var target = Target{}
 
 	target.prepareCommand(command)
-	command.Flags().StringVar(&tailnetName, "tailnet", "", "")
-	command.Flags().Uint64Var(&tailnetID, "tailnet-id", 0, "")
+	command.Flags().StringVar(&tailnetName, "tailnet", "", "Tailnet name. Mutually exclusive with --tailnet-id.")
+	command.Flags().Uint64Var(&tailnetID, "tailnet-id", 0, "Tailnet ID. Mutually exclusive with --tailnet.")
 
+	command.PreRunE = checkRequiredTailnetAndTailnetIdFlags
 	command.RunE = func(command *coral.Command, args []string) error {
 		client, err := target.createGRPCClient()
 		if err != nil {
@@ -76,12 +77,13 @@ func setDNSConfig() *coral.Command {
 	var target = Target{}
 
 	target.prepareCommand(command)
-	command.Flags().StringVar(&tailnetName, "tailnet", "", "")
-	command.Flags().Uint64Var(&tailnetID, "tailnet-id", 0, "")
-	command.Flags().StringSliceVarP(&nameservers, "nameserver", "", []string{}, "")
-	command.Flags().BoolVarP(&magicDNS, "magic-dns", "", false, "")
-	command.Flags().BoolVarP(&overrideLocalDNS, "override-local-dns", "", false, "")
+	command.Flags().StringVar(&tailnetName, "tailnet", "", "Tailnet name. Mutually exclusive with --tailnet-id.")
+	command.Flags().Uint64Var(&tailnetID, "tailnet-id", 0, "Tailnet ID. Mutually exclusive with --tailnet.")
+	command.Flags().StringSliceVarP(&nameservers, "nameserver", "", []string{}, "Machines on your network will use these nameservers to resolve DNS queries.")
+	command.Flags().BoolVarP(&magicDNS, "magic-dns", "", false, "Enable MagicDNS for the specified Tailnet")
+	command.Flags().BoolVarP(&overrideLocalDNS, "override-local-dns", "", false, "When enabled, connected clients ignore local DNS settings and always use the nameservers specified for this Tailnet")
 
+	command.PreRunE = checkRequiredTailnetAndTailnetIdFlags
 	command.RunE = func(command *coral.Command, args []string) error {
 		client, err := target.createGRPCClient()
 		if err != nil {

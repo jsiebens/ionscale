@@ -24,9 +24,6 @@ func listAuthMethods() *coral.Command {
 	command := &coral.Command{
 		Use:   "list",
 		Short: "List auth methods",
-		Long: `List auth methods in this ionscale instance. Example:
-
-      $ ionscale auth-methods list`,
 	}
 
 	var target = Target{}

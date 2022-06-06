@@ -35,7 +35,7 @@ func getDERPMap() *coral.Command {
 
 	var target = Target{}
 	target.prepareCommand(command)
-	command.Flags().BoolVar(&asJson, "json", false, "")
+	command.Flags().BoolVar(&asJson, "json", false, "When enabled, render output as json otherwise yaml")
 
 	command.RunE = func(command *coral.Command, args []string) error {
 		client, err := target.createGRPCClient()
@@ -91,7 +91,7 @@ func setDERPMap() *coral.Command {
 	var file string
 	var target = Target{}
 	target.prepareCommand(command)
-	command.Flags().StringVar(&file, "file", "", "")
+	command.Flags().StringVar(&file, "file", "", "Path to json file with the DERP Map configuration")
 
 	command.RunE = func(command *coral.Command, args []string) error {
 		grpcClient, err := target.createGRPCClient()

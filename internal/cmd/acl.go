@@ -25,11 +25,12 @@ func getACLConfig() *coral.Command {
 	var target = Target{}
 
 	target.prepareCommand(command)
-	command.Flags().StringVar(&tailnetName, "tailnet", "", "")
-	command.Flags().Uint64Var(&tailnetID, "tailnet-id", 0, "")
-	command.Flags().BoolVar(&asJson, "json", false, "")
+	command.Flags().StringVar(&tailnetName, "tailnet", "", "Tailnet name. Mutually exclusive with --tailnet-id.")
+	command.Flags().Uint64Var(&tailnetID, "tailnet-id", 0, "Tailnet ID. Mutually exclusive with --tailnet.")
+	command.Flags().BoolVar(&asJson, "json", false, "When enabled, render output as json otherwise yaml")
 
-	command.RunE = func(command *coral.Command, args []string) error {
+	command.PreRunE = checkRequiredTailnetAndTailnetIdFlags
+	command.RunE = func(cmd *coral.Command, args []string) error {
 		client, err := target.createGRPCClient()
 		if err != nil {
 			return err
@@ -88,11 +89,12 @@ func setACLConfig() *coral.Command {
 	var target = Target{}
 
 	target.prepareCommand(command)
-	command.Flags().StringVar(&tailnetName, "tailnet", "", "")
-	command.Flags().Uint64Var(&tailnetID, "tailnet-id", 0, "")
-	command.Flags().StringVar(&file, "file", "", "")
+	command.Flags().StringVar(&tailnetName, "tailnet", "", "Tailnet name. Mutually exclusive with --tailnet-id.")
+	command.Flags().Uint64Var(&tailnetID, "tailnet-id", 0, "Tailnet ID. Mutually exclusive with --tailnet.")
+	command.Flags().StringVar(&file, "file", "", "Path to json file with the acl configuration")
 
-	command.RunE = func(command *coral.Command, args []string) error {
+	command.PreRunE = checkRequiredTailnetAndTailnetIdFlags
+	command.RunE = func(cmd *coral.Command, args []string) error {
 		rawJson, err := ioutil.ReadFile(file)
 		if err != nil {
 			return err

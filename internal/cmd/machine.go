@@ -38,8 +38,10 @@ func deleteMachineCommand() *coral.Command {
 	var machineID uint64
 	var target = Target{}
 	target.prepareCommand(command)
-	command.Flags().Uint64Var(&machineID, "machine-id", 0, "")
+	command.Flags().Uint64Var(&machineID, "machine-id", 0, "Machine ID.")
 
+	_ = command.MarkFlagRequired("machine-id")
+	
 	command.RunE = func(command *coral.Command, args []string) error {
 		client, err := target.createGRPCClient()
 		if err != nil {
@@ -69,7 +71,9 @@ func expireMachineCommand() *coral.Command {
 	var machineID uint64
 	var target = Target{}
 	target.prepareCommand(command)
-	command.Flags().Uint64Var(&machineID, "machine-id", 0, "")
+	command.Flags().Uint64Var(&machineID, "machine-id", 0, "Machine ID.")
+
+	_ = command.MarkFlagRequired("machine-id")
 
 	command.RunE = func(command *coral.Command, args []string) error {
 		client, err := target.createGRPCClient()
@@ -102,9 +106,10 @@ func listMachinesCommand() *coral.Command {
 
 	var target = Target{}
 	target.prepareCommand(command)
-	command.Flags().StringVar(&tailnetName, "tailnet", "", "")
-	command.Flags().Uint64Var(&tailnetID, "tailnet-id", 0, "")
+	command.Flags().StringVar(&tailnetName, "tailnet", "", "Tailnet name. Mutually exclusive with --tailnet-id.")
+	command.Flags().Uint64Var(&tailnetID, "tailnet-id", 0, "Tailnet ID. Mutually exclusive with --tailnet.")
 
+	command.PreRunE = checkRequiredTailnetAndTailnetIdFlags
 	command.RunE = func(command *coral.Command, args []string) error {
 		client, err := target.createGRPCClient()
 		if err != nil {
@@ -147,14 +152,16 @@ func listMachinesCommand() *coral.Command {
 func getMachineRoutesCommand() *coral.Command {
 	command := &coral.Command{
 		Use:          "get-routes",
-		Short:        "Show the routes of a machine",
+		Short:        "Show routes advertised and enabled by a given machine",
 		SilenceUsage: true,
 	}
 
 	var machineID uint64
 	var target = Target{}
 	target.prepareCommand(command)
-	command.Flags().Uint64Var(&machineID, "machine-id", 0, "")
+	command.Flags().Uint64Var(&machineID, "machine-id", 0, "Machine ID.")
+
+	_ = command.MarkFlagRequired("machine-id")
 
 	command.RunE = func(command *coral.Command, args []string) error {
 		grpcClient, err := target.createGRPCClient()
@@ -183,7 +190,7 @@ func getMachineRoutesCommand() *coral.Command {
 func setMachineRoutesCommand() *coral.Command {
 	command := &coral.Command{
 		Use:          "set-routes",
-		Short:        "Enable routes of a machine",
+		Short:        "Set the enabled routes for a given machine",
 		SilenceUsage: true,
 	}
 
@@ -191,8 +198,10 @@ func setMachineRoutesCommand() *coral.Command {
 	var allowedIps []string
 	var target = Target{}
 	target.prepareCommand(command)
-	command.Flags().Uint64Var(&machineID, "machine-id", 0, "")
-	command.Flags().StringSliceVar(&allowedIps, "allowed-ips", []string{}, "")
+	command.Flags().Uint64Var(&machineID, "machine-id", 0, "Machine ID")
+	command.Flags().StringSliceVar(&allowedIps, "allowed-ips", []string{}, "List of routes to enable")
+
+	_ = command.MarkFlagRequired("machine-id")
 
 	command.RunE = func(command *coral.Command, args []string) error {
 		client, err := target.createGRPCClient()

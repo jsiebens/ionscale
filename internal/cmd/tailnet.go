@@ -13,7 +13,6 @@ func tailnetCommand() *coral.Command {
 	command := &coral.Command{
 		Use:   "tailnets",
 		Short: "Manage ionscale tailnets",
-		Long:  "This command allows operations on ionscale tailnet resources.",
 	}
 
 	command.AddCommand(listTailnetsCommand())
@@ -30,8 +29,7 @@ func tailnetCommand() *coral.Command {
 func listTailnetsCommand() *coral.Command {
 	command := &coral.Command{
 		Use:          "list",
-		Short:        "List tailnets",
-		Long:         `List tailnets in this ionscale instance.`,
+		Short:        "List available Tailnets",
 		SilenceUsage: true,
 	}
 
@@ -66,7 +64,7 @@ func listTailnetsCommand() *coral.Command {
 func createTailnetsCommand() *coral.Command {
 	command := &coral.Command{
 		Use:          "create",
-		Short:        "Create a new tailnet",
+		Short:        "Create a new Tailnet",
 		SilenceUsage: true,
 	}
 
@@ -113,10 +111,11 @@ func deleteTailnetCommand() *coral.Command {
 	var target = Target{}
 	target.prepareCommand(command)
 
-	command.Flags().StringVar(&tailnetName, "tailnet", "", "")
-	command.Flags().Uint64Var(&tailnetID, "tailnet-id", 0, "")
-	command.Flags().BoolVar(&force, "force", false, "")
+	command.Flags().StringVar(&tailnetName, "tailnet", "", "Tailnet name. Mutually exclusive with --tailnet-id.")
+	command.Flags().Uint64Var(&tailnetID, "tailnet-id", 0, "Tailnet ID. Mutually exclusive with --tailnet.")
+	command.Flags().BoolVar(&force, "force", false, "When enabled, force delete the specified Tailnet even when machines are still available.")
 
+	command.PreRunE = checkRequiredTailnetAndTailnetIdFlags
 	command.RunE = func(command *coral.Command, args []string) error {
 
 		client, err := target.createGRPCClient()

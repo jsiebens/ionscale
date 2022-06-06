@@ -15,7 +15,8 @@ import (
 
 func authkeysCommand() *coral.Command {
 	command := &coral.Command{
-		Use: "auth-keys",
+		Use:   "auth-keys",
+		Short: "Manage ionscale auth keys",
 	}
 
 	command.AddCommand(createAuthkeysCommand())
@@ -28,6 +29,7 @@ func authkeysCommand() *coral.Command {
 func createAuthkeysCommand() *coral.Command {
 	command := &coral.Command{
 		Use:          "create",
+		Short:        "Creates a new auth key in the specified tailnet",
 		SilenceUsage: true,
 	}
 
@@ -39,12 +41,13 @@ func createAuthkeysCommand() *coral.Command {
 	var target = Target{}
 
 	target.prepareCommand(command)
-	command.Flags().StringVar(&tailnetName, "tailnet", "", "")
-	command.Flags().Uint64Var(&tailnetID, "tailnet-id", 0, "")
-	command.Flags().BoolVar(&ephemeral, "ephemeral", false, "")
-	command.Flags().StringSliceVar(&tags, "tag", []string{}, "")
-	command.Flags().StringVar(&expiry, "expiry", "180d", "")
+	command.Flags().StringVar(&tailnetName, "tailnet", "", "Tailnet name. Mutually exclusive with --tailnet-id.")
+	command.Flags().Uint64Var(&tailnetID, "tailnet-id", 0, "Tailnet ID. Mutually exclusive with --tailnet.")
+	command.Flags().BoolVar(&ephemeral, "ephemeral", false, "When enabled, machines authenticated by this key will be automatically removed after going offline.")
+	command.Flags().StringSliceVar(&tags, "tag", []string{}, "Machines authenticated by this key will be automatically tagged with these tags")
+	command.Flags().StringVar(&expiry, "expiry", "180d", "Human-readable expiration of the key")
 
+	command.PreRunE = checkRequiredTailnetAndTailnetIdFlags
 	command.RunE = func(command *coral.Command, args []string) error {
 		client, err := target.createGRPCClient()
 		if err != nil {
@@ -94,13 +97,14 @@ func createAuthkeysCommand() *coral.Command {
 func deleteAuthKeyCommand() *coral.Command {
 	command := &coral.Command{
 		Use:          "delete",
+		Short:        "Delete a specified auth key",
 		SilenceUsage: true,
 	}
 
 	var authKeyId uint64
 	var target = Target{}
 	target.prepareCommand(command)
-	command.Flags().Uint64Var(&authKeyId, "id", 0, "")
+	command.Flags().Uint64Var(&authKeyId, "id", 0, "Auth Key ID")
 
 	command.RunE = func(command *coral.Command, args []string) error {
 		grpcClient, err := target.createGRPCClient()
@@ -124,6 +128,7 @@ func deleteAuthKeyCommand() *coral.Command {
 func listAuthkeysCommand() *coral.Command {
 	command := &coral.Command{
 		Use:          "list",
+		Short:        "List all auth keys for a given tailnet",
 		SilenceUsage: true,
 	}
 
@@ -132,9 +137,10 @@ func listAuthkeysCommand() *coral.Command {
 	var target = Target{}
 
 	target.prepareCommand(command)
-	command.Flags().StringVar(&tailnetName, "tailnet", "", "")
-	command.Flags().Uint64Var(&tailnetID, "tailnet-id", 0, "")
+	command.Flags().StringVar(&tailnetName, "tailnet", "", "Tailnet name. Mutually exclusive with --tailnet-id.")
+	command.Flags().Uint64Var(&tailnetID, "tailnet-id", 0, "Tailnet ID. Mutually exclusive with --tailnet.")
 
+	command.PreRunE = checkRequiredTailnetAndTailnetIdFlags
 	command.RunE = func(command *coral.Command, args []string) error {
 		client, err := target.createGRPCClient()
 		if err != nil {

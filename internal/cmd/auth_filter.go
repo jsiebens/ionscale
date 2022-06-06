@@ -14,9 +14,6 @@ func authFilterCommand() *coral.Command {
 	command := &coral.Command{
 		Use:   "auth-filters",
 		Short: "Manage ionscale auth filters",
-		Long: `This command allows operations on ionscale auth filter resources. Example:
-
-      $ ionscale auth-filter create`,
 	}
 
 	command.AddCommand(createAuthFilterCommand())
@@ -33,13 +30,16 @@ func listAuthFilterCommand() *coral.Command {
 	}
 
 	var authMethodID uint64
+	var authMethodName string
 
 	var target = Target{}
 	target.prepareCommand(command)
 
-	command.Flags().Uint64Var(&authMethodID, "auth-method-id", 0, "")
+	command.Flags().StringVar(&authMethodName, "auth-method", "", "Auth Method name. Mutually exclusive with --auth-method-id")
+	command.Flags().Uint64Var(&authMethodID, "auth-method-id", 0, "Auth Method ID. Mutually exclusive with --auth-method")
 
-	command.RunE = func(command *coral.Command, args []string) error {
+	command.PreRunE = checkOptionalAuthMethodAndAuthMethodIdFlags
+	command.RunE = func(cmd *coral.Command, args []string) error {
 		client, err := target.createGRPCClient()
 		if err != nil {
 			return err
@@ -47,8 +47,12 @@ func listAuthFilterCommand() *coral.Command {
 
 		req := &api.ListAuthFiltersRequest{}
 
-		if authMethodID != 0 {
-			req.AuthMethodId = &authMethodID
+		if cmd.Flags().Changed("auth-method") || cmd.Flags().Changed("auth-method-id") {
+			method, err := findAuthMethod(client, authMethodName, authMethodID)
+			if err != nil {
+				return err
+			}
+			req.AuthMethodId = &method.Id
 		}
 
 		resp, err := client.ListAuthFilters(context.Background(), connect.NewRequest(req))
@@ -89,11 +93,15 @@ func createAuthFilterCommand() *coral.Command {
 	target.prepareCommand(command)
 
 	command.Flags().StringVar(&expr, "expr", "*", "")
-	command.Flags().StringVar(&tailnetName, "tailnet", "", "")
-	command.Flags().Uint64Var(&tailnetID, "tailnet-id", 0, "")
-	command.Flags().StringVar(&authMethodName, "auth-method", "", "")
-	command.Flags().Uint64Var(&authMethodID, "auth-method-id", 0, "")
+	command.Flags().StringVar(&tailnetName, "tailnet", "", "Tailnet name. Mutually exclusive with --tailnet-id.")
+	command.Flags().Uint64Var(&tailnetID, "tailnet-id", 0, "Tailnet ID. Mutually exclusive with --tailnet.")
+	command.Flags().StringVar(&authMethodName, "auth-method", "", "Auth Method name. Mutually exclusive with --auth-method-id")
+	command.Flags().Uint64Var(&authMethodID, "auth-method-id", 0, "Auth Method ID. Mutually exclusive with --auth-method")
 
+	command.PreRunE = checkAll(
+		checkRequiredTailnetAndTailnetIdFlags,
+		checkRequiredAuthMethodAndAuthMethodIdFlags,
+	)
 	command.RunE = func(command *coral.Command, args []string) error {
 		if expr != "*" {
 			if _, err := bexpr.CreateEvaluator(expr); err != nil {
