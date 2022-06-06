@@ -14,11 +14,7 @@ func keyCommand() *coral.Command {
 
 	command.RunE = func(command *coral.Command, args []string) error {
 		serverKey := key.NewServerKey()
-
-		fmt.Println()
-		fmt.Printf("    %s\n", serverKey.String())
-		fmt.Println()
-
+		fmt.Println(serverKey.String())
 		return nil
 	}
 
