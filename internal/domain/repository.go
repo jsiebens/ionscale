@@ -27,15 +27,6 @@ type Repository interface {
 	ListTailnets(ctx context.Context) ([]Tailnet, error)
 	DeleteTailnet(ctx context.Context, id uint64) error
 
-	GetDNSConfig(ctx context.Context, tailnetID uint64) (*DNSConfig, error)
-	SetDNSConfig(ctx context.Context, tailnetID uint64, config *DNSConfig) error
-	DeleteDNSConfig(ctx context.Context, tailnetID uint64) error
-	/*
-		GetACLPolicy(ctx context.Context, tailnetID uint64) (*ACLPolicy, error)
-		SetACLPolicy(ctx context.Context, tailnetID uint64, policy *ACLPolicy) error
-		DeleteACLPolicy(ctx context.Context, tailnetID uint64) error
-	*/
-
 	SaveApiKey(ctx context.Context, key *ApiKey) error
 	LoadApiKey(ctx context.Context, key string) (*ApiKey, error)
 

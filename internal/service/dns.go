@@ -22,10 +22,7 @@ func (s *Service) GetDNSConfig(ctx context.Context, req *connect.Request[api.Get
 		return nil, connect.NewError(connect.CodeNotFound, errors.New("tailnet not found"))
 	}
 
-	config, err := s.repository.GetDNSConfig(ctx, tailnet.ID)
-	if err != nil {
-		return nil, err
-	}
+	config := tailnet.DNSConfig
 
 	resp := &api.GetDNSConfigResponse{
 		Config: &api.DNSConfig{
@@ -59,14 +56,14 @@ func (s *Service) SetDNSConfig(ctx context.Context, req *connect.Request[api.Set
 		return nil, connect.NewError(connect.CodeNotFound, errors.New("tailnet not found"))
 	}
 
-	config := domain.DNSConfig{
+	tailnet.DNSConfig = domain.DNSConfig{
 		MagicDNS:         dnsConfig.MagicDns,
 		OverrideLocalDNS: dnsConfig.OverrideLocalDns,
 		Nameservers:      dnsConfig.Nameservers,
 		Routes:           apiRoutesToDomainRoutes(dnsConfig.Routes),
 	}
 
-	if err := s.repository.SetDNSConfig(ctx, tailnet.ID, &config); err != nil {
+	if err := s.repository.SaveTailnet(ctx, tailnet); err != nil {
 		return nil, err
 	}
 

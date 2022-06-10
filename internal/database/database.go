@@ -44,7 +44,6 @@ func migrate(db *gorm.DB, repository domain.Repository) error {
 	err := db.AutoMigrate(
 		&domain.ServerConfig{},
 		&domain.Tailnet{},
-		&domain.TailnetConfig{},
 		&domain.AuthMethod{},
 		&domain.Account{},
 		&domain.User{},
