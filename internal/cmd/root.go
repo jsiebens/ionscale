@@ -12,7 +12,6 @@ func Command() *coral.Command {
 	rootCmd.AddCommand(serverCommand())
 	rootCmd.AddCommand(versionCommand())
 	rootCmd.AddCommand(authMethodsCommand())
-	rootCmd.AddCommand(authFilterCommand())
 	rootCmd.AddCommand(tailnetCommand())
 	rootCmd.AddCommand(authkeysCommand())
 	rootCmd.AddCommand(machineCommands())

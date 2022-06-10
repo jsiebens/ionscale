@@ -10,11 +10,11 @@ import "ionscale/v1/version.proto";
 import "ionscale/v1/auth.proto";
 import "ionscale/v1/tailnets.proto";
 import "ionscale/v1/auth_methods.proto";
-import "ionscale/v1/auth_filter.proto";
 import "ionscale/v1/auth_keys.proto";
 import "ionscale/v1/machines.proto";
 import "ionscale/v1/routes.proto";
 import "ionscale/v1/dns.proto";
+import "ionscale/v1/iam.proto";
 import "ionscale/v1/acl.proto";
 import "ionscale/v1/derp.proto";
 
@@ -29,10 +29,6 @@ service IonscaleService {
   rpc CreateAuthMethod (CreateAuthMethodRequest) returns (CreateAuthMethodResponse) {}
   rpc ListAuthMethods (ListAuthMethodsRequest) returns (ListAuthMethodsResponse) {}
 
-  rpc CreateAuthFilter (CreateAuthFilterRequest) returns (CreateAuthFilterResponse) {}
-  rpc DeleteAuthFilter (DeleteAuthFilterRequest) returns (DeleteAuthFilterResponse) {}
-  rpc ListAuthFilters (ListAuthFiltersRequest) returns (ListAuthFiltersResponse) {}
-
   rpc CreateTailnet (CreateTailnetRequest) returns (CreateTailnetResponse) {}
   rpc GetTailnet (GetTailnetRequest) returns (GetTailnetResponse) {}
   rpc ListTailnets (ListTailnetRequest) returns (ListTailnetResponse) {}
@@ -40,6 +36,9 @@ service IonscaleService {
 
   rpc GetDNSConfig (GetDNSConfigRequest) returns (GetDNSConfigResponse) {}
   rpc SetDNSConfig (SetDNSConfigRequest) returns (SetDNSConfigResponse) {}
+
+  rpc GetIAMPolicy (GetIAMPolicyRequest) returns (GetIAMPolicyResponse) {}
+  rpc SetIAMPolicy (SetIAMPolicyRequest) returns (SetIAMPolicyResponse) {}
 
   rpc GetACLPolicy (GetACLPolicyRequest) returns (GetACLPolicyResponse) {}
   rpc SetACLPolicy (SetACLPolicyRequest) returns (SetACLPolicyResponse) {}

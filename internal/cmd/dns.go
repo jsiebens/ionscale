@@ -9,7 +9,7 @@ import (
 	"strings"
 )
 
-func getDNSConfig() *coral.Command {
+func getDNSConfigCommand() *coral.Command {
 	command := &coral.Command{
 		Use:          "get-dns",
 		Short:        "Get DNS configuration",
@@ -62,7 +62,7 @@ func getDNSConfig() *coral.Command {
 	return command
 }
 
-func setDNSConfig() *coral.Command {
+func setDNSConfigCommand() *coral.Command {
 	command := &coral.Command{
 		Use:          "set-dns",
 		Short:        "Set DNS config",

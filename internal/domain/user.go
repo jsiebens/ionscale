@@ -16,21 +16,19 @@ func (s SystemRole) IsAdmin() bool {
 	return s == SystemRoleAdmin
 }
 
-type TailnetRole string
+type UserType string
 
 const (
-	TailnetRoleService TailnetRole = "service"
-	TailnetRoleMember  TailnetRole = "member"
+	UserTypeService UserType = "service"
+	UserTypePerson  UserType = "person"
 )
 
 type User struct {
-	ID   uint64 `gorm:"primary_key;autoIncrement:false"`
-	Name string
-
-	TailnetRole TailnetRole
-	TailnetID   uint64
-	Tailnet     Tailnet
-
+	ID        uint64 `gorm:"primary_key;autoIncrement:false"`
+	Name      string
+	UserType  UserType
+	TailnetID uint64
+	Tailnet   Tailnet
 	AccountID *uint64
 	Account   *Account
 }
@@ -41,8 +39,8 @@ func (r *repository) GetOrCreateServiceUser(ctx context.Context, tailnet *Tailne
 	user := &User{}
 	id := util.NextID()
 
-	query := User{Name: tailnet.Name, TailnetID: tailnet.ID, TailnetRole: TailnetRoleService}
-	attrs := User{ID: id, Name: tailnet.Name, TailnetID: tailnet.ID, TailnetRole: TailnetRoleService}
+	query := User{Name: tailnet.Name, TailnetID: tailnet.ID, UserType: UserTypeService}
+	attrs := User{ID: id, Name: tailnet.Name, TailnetID: tailnet.ID, UserType: UserTypeService}
 
 	tx := r.withContext(ctx).Where(query).Attrs(attrs).FirstOrCreate(user)
 
@@ -75,7 +73,7 @@ func (r *repository) GetOrCreateUserWithAccount(ctx context.Context, tailnet *Ta
 	id := util.NextID()
 
 	query := User{AccountID: &account.ID, TailnetID: tailnet.ID}
-	attrs := User{ID: id, Name: account.LoginName, TailnetID: tailnet.ID, AccountID: &account.ID, TailnetRole: TailnetRoleMember}
+	attrs := User{ID: id, Name: account.LoginName, TailnetID: tailnet.ID, AccountID: &account.ID, UserType: UserTypePerson}
 
 	tx := r.withContext(ctx).Where(query).Attrs(attrs).FirstOrCreate(user)
 

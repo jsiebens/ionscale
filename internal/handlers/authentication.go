@@ -71,8 +71,8 @@ func (h *AuthenticationHandlers) ProcessCliAuth(c echo.Context) error {
 	key := c.Param("key")
 	authMethodId := c.FormValue("s")
 
-	session, err := h.repository.GetAuthenticationRequest(ctx, key)
-	if err != nil || session == nil {
+	req, err := h.repository.GetAuthenticationRequest(ctx, key)
+	if err != nil || req == nil {
 		return c.Redirect(http.StatusFound, "/a/error")
 	}
 
@@ -180,14 +180,25 @@ func (h *AuthenticationHandlers) Callback(c echo.Context) error {
 		return err
 	}
 
-	filters, err := h.repository.ListAuthFiltersByAuthMethod(ctx, state.AuthMethod)
+	tailnets, err := h.listAvailableTailnets(ctx, user)
 	if err != nil {
 		return err
 	}
 
-	tailnets := filters.Evaluate(user.Attr)
-
 	if len(tailnets) == 0 {
+		if state.Flow == "r" {
+			req, err := h.repository.GetRegistrationRequestByKey(ctx, state.Key)
+			if err == nil && req != nil {
+				req.Error = "unauthorized"
+				_ = h.repository.SaveRegistrationRequest(ctx, req)
+			}
+		} else {
+			req, err := h.repository.GetAuthenticationRequest(ctx, state.Key)
+			if err == nil && req != nil {
+				req.Error = "unauthorized"
+				_ = h.repository.SaveAuthenticationRequest(ctx, req)
+			}
+		}
 		return c.Redirect(http.StatusFound, "/a/error?e=ua")
 	}
 
@@ -199,6 +210,24 @@ func (h *AuthenticationHandlers) Callback(c echo.Context) error {
 	h.pendingOAuthUsers.Set(state.Key, account, cache.DefaultExpiration)
 
 	return c.Render(http.StatusOK, "tailnets.html", &TailnetSelectionData{Tailnets: tailnets})
+}
+
+func (h *AuthenticationHandlers) listAvailableTailnets(ctx context.Context, u *provider.User) ([]domain.Tailnet, error) {
+	var result = []domain.Tailnet{}
+	tailnets, err := h.repository.ListTailnets(ctx)
+	if err != nil {
+		return nil, err
+	}
+	for _, t := range tailnets {
+		approved, err := t.IAMPolicy.EvaluatePolicy(&domain.Identity{UserID: u.ID, Email: u.Name, Attr: u.Attr})
+		if err != nil {
+			return nil, err
+		}
+		if approved {
+			result = append(result, t)
+		}
+	}
+	return result, nil
 }
 
 func (h *AuthenticationHandlers) EndOAuth(c echo.Context) error {
@@ -218,12 +247,12 @@ func (h *AuthenticationHandlers) EndOAuth(c echo.Context) error {
 		return h.endMachineRegistrationFlow(c, req, state)
 	}
 
-	session, err := h.repository.GetAuthenticationRequest(ctx, state.Key)
-	if err != nil || session == nil {
+	req, err := h.repository.GetAuthenticationRequest(ctx, state.Key)
+	if err != nil || req == nil {
 		return c.Redirect(http.StatusFound, "/a/error")
 	}
 
-	return h.endCliAuthenticationFlow(c, session, state)
+	return h.endCliAuthenticationFlow(c, req, state)
 }
 
 func (h *AuthenticationHandlers) Success(c echo.Context) error {
@@ -241,7 +270,7 @@ func (h *AuthenticationHandlers) Error(c echo.Context) error {
 	return c.Render(http.StatusOK, "error.html", nil)
 }
 
-func (h *AuthenticationHandlers) endCliAuthenticationFlow(c echo.Context, session *domain.AuthenticationRequest, state *oauthState) error {
+func (h *AuthenticationHandlers) endCliAuthenticationFlow(c echo.Context, req *domain.AuthenticationRequest, state *oauthState) error {
 	ctx := c.Request().Context()
 
 	tailnetIDParam := c.FormValue("s")
@@ -269,13 +298,13 @@ func (h *AuthenticationHandlers) endCliAuthenticationFlow(c echo.Context, sessio
 
 	expiresAt := time.Now().Add(24 * time.Hour)
 	token, apiKey := domain.CreateApiKey(tailnet, user, &expiresAt)
-	session.Token = token
+	req.Token = token
 
 	err = h.repository.Transaction(func(rp domain.Repository) error {
 		if err := rp.SaveApiKey(ctx, apiKey); err != nil {
 			return err
 		}
-		if err := rp.SaveAuthenticationRequest(ctx, session); err != nil {
+		if err := rp.SaveAuthenticationRequest(ctx, req); err != nil {
 			return err
 		}
 		return nil
@@ -481,7 +510,7 @@ func (h *AuthenticationHandlers) exchangeUser(ctx context.Context, code string, 
 }
 
 func (h *AuthenticationHandlers) createState(flow string, key string, authMethodId uint64) (string, error) {
-	stateMap := oauthState{Key: key, AuthMethod: authMethodId}
+	stateMap := oauthState{Key: key, AuthMethod: authMethodId, Flow: flow}
 	marshal, err := json.Marshal(&stateMap)
 	if err != nil {
 		return "", err

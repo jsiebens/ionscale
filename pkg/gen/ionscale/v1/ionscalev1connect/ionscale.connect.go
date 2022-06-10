@@ -33,15 +33,14 @@ type IonscaleServiceClient interface {
 	SetDERPMap(context.Context, *connect_go.Request[v1.SetDERPMapRequest]) (*connect_go.Response[v1.SetDERPMapResponse], error)
 	CreateAuthMethod(context.Context, *connect_go.Request[v1.CreateAuthMethodRequest]) (*connect_go.Response[v1.CreateAuthMethodResponse], error)
 	ListAuthMethods(context.Context, *connect_go.Request[v1.ListAuthMethodsRequest]) (*connect_go.Response[v1.ListAuthMethodsResponse], error)
-	CreateAuthFilter(context.Context, *connect_go.Request[v1.CreateAuthFilterRequest]) (*connect_go.Response[v1.CreateAuthFilterResponse], error)
-	DeleteAuthFilter(context.Context, *connect_go.Request[v1.DeleteAuthFilterRequest]) (*connect_go.Response[v1.DeleteAuthFilterResponse], error)
-	ListAuthFilters(context.Context, *connect_go.Request[v1.ListAuthFiltersRequest]) (*connect_go.Response[v1.ListAuthFiltersResponse], error)
 	CreateTailnet(context.Context, *connect_go.Request[v1.CreateTailnetRequest]) (*connect_go.Response[v1.CreateTailnetResponse], error)
 	GetTailnet(context.Context, *connect_go.Request[v1.GetTailnetRequest]) (*connect_go.Response[v1.GetTailnetResponse], error)
 	ListTailnets(context.Context, *connect_go.Request[v1.ListTailnetRequest]) (*connect_go.Response[v1.ListTailnetResponse], error)
 	DeleteTailnet(context.Context, *connect_go.Request[v1.DeleteTailnetRequest]) (*connect_go.Response[v1.DeleteTailnetResponse], error)
 	GetDNSConfig(context.Context, *connect_go.Request[v1.GetDNSConfigRequest]) (*connect_go.Response[v1.GetDNSConfigResponse], error)
 	SetDNSConfig(context.Context, *connect_go.Request[v1.SetDNSConfigRequest]) (*connect_go.Response[v1.SetDNSConfigResponse], error)
+	GetIAMPolicy(context.Context, *connect_go.Request[v1.GetIAMPolicyRequest]) (*connect_go.Response[v1.GetIAMPolicyResponse], error)
+	SetIAMPolicy(context.Context, *connect_go.Request[v1.SetIAMPolicyRequest]) (*connect_go.Response[v1.SetIAMPolicyResponse], error)
 	GetACLPolicy(context.Context, *connect_go.Request[v1.GetACLPolicyRequest]) (*connect_go.Response[v1.GetACLPolicyResponse], error)
 	SetACLPolicy(context.Context, *connect_go.Request[v1.SetACLPolicyRequest]) (*connect_go.Response[v1.SetACLPolicyResponse], error)
 	GetAuthKey(context.Context, *connect_go.Request[v1.GetAuthKeyRequest]) (*connect_go.Response[v1.GetAuthKeyResponse], error)
@@ -95,21 +94,6 @@ func NewIonscaleServiceClient(httpClient connect_go.HTTPClient, baseURL string, 
 			baseURL+"/ionscale.v1.IonscaleService/ListAuthMethods",
 			opts...,
 		),
-		createAuthFilter: connect_go.NewClient[v1.CreateAuthFilterRequest, v1.CreateAuthFilterResponse](
-			httpClient,
-			baseURL+"/ionscale.v1.IonscaleService/CreateAuthFilter",
-			opts...,
-		),
-		deleteAuthFilter: connect_go.NewClient[v1.DeleteAuthFilterRequest, v1.DeleteAuthFilterResponse](
-			httpClient,
-			baseURL+"/ionscale.v1.IonscaleService/DeleteAuthFilter",
-			opts...,
-		),
-		listAuthFilters: connect_go.NewClient[v1.ListAuthFiltersRequest, v1.ListAuthFiltersResponse](
-			httpClient,
-			baseURL+"/ionscale.v1.IonscaleService/ListAuthFilters",
-			opts...,
-		),
 		createTailnet: connect_go.NewClient[v1.CreateTailnetRequest, v1.CreateTailnetResponse](
 			httpClient,
 			baseURL+"/ionscale.v1.IonscaleService/CreateTailnet",
@@ -138,6 +122,16 @@ func NewIonscaleServiceClient(httpClient connect_go.HTTPClient, baseURL string, 
 		setDNSConfig: connect_go.NewClient[v1.SetDNSConfigRequest, v1.SetDNSConfigResponse](
 			httpClient,
 			baseURL+"/ionscale.v1.IonscaleService/SetDNSConfig",
+			opts...,
+		),
+		getIAMPolicy: connect_go.NewClient[v1.GetIAMPolicyRequest, v1.GetIAMPolicyResponse](
+			httpClient,
+			baseURL+"/ionscale.v1.IonscaleService/GetIAMPolicy",
+			opts...,
+		),
+		setIAMPolicy: connect_go.NewClient[v1.SetIAMPolicyRequest, v1.SetIAMPolicyResponse](
+			httpClient,
+			baseURL+"/ionscale.v1.IonscaleService/SetIAMPolicy",
 			opts...,
 		),
 		getACLPolicy: connect_go.NewClient[v1.GetACLPolicyRequest, v1.GetACLPolicyResponse](
@@ -206,15 +200,14 @@ type ionscaleServiceClient struct {
 	setDERPMap       *connect_go.Client[v1.SetDERPMapRequest, v1.SetDERPMapResponse]
 	createAuthMethod *connect_go.Client[v1.CreateAuthMethodRequest, v1.CreateAuthMethodResponse]
 	listAuthMethods  *connect_go.Client[v1.ListAuthMethodsRequest, v1.ListAuthMethodsResponse]
-	createAuthFilter *connect_go.Client[v1.CreateAuthFilterRequest, v1.CreateAuthFilterResponse]
-	deleteAuthFilter *connect_go.Client[v1.DeleteAuthFilterRequest, v1.DeleteAuthFilterResponse]
-	listAuthFilters  *connect_go.Client[v1.ListAuthFiltersRequest, v1.ListAuthFiltersResponse]
 	createTailnet    *connect_go.Client[v1.CreateTailnetRequest, v1.CreateTailnetResponse]
 	getTailnet       *connect_go.Client[v1.GetTailnetRequest, v1.GetTailnetResponse]
 	listTailnets     *connect_go.Client[v1.ListTailnetRequest, v1.ListTailnetResponse]
 	deleteTailnet    *connect_go.Client[v1.DeleteTailnetRequest, v1.DeleteTailnetResponse]
 	getDNSConfig     *connect_go.Client[v1.GetDNSConfigRequest, v1.GetDNSConfigResponse]
 	setDNSConfig     *connect_go.Client[v1.SetDNSConfigRequest, v1.SetDNSConfigResponse]
+	getIAMPolicy     *connect_go.Client[v1.GetIAMPolicyRequest, v1.GetIAMPolicyResponse]
+	setIAMPolicy     *connect_go.Client[v1.SetIAMPolicyRequest, v1.SetIAMPolicyResponse]
 	getACLPolicy     *connect_go.Client[v1.GetACLPolicyRequest, v1.GetACLPolicyResponse]
 	setACLPolicy     *connect_go.Client[v1.SetACLPolicyRequest, v1.SetACLPolicyResponse]
 	getAuthKey       *connect_go.Client[v1.GetAuthKeyRequest, v1.GetAuthKeyResponse]
@@ -258,21 +251,6 @@ func (c *ionscaleServiceClient) ListAuthMethods(ctx context.Context, req *connec
 	return c.listAuthMethods.CallUnary(ctx, req)
 }
 
-// CreateAuthFilter calls ionscale.v1.IonscaleService.CreateAuthFilter.
-func (c *ionscaleServiceClient) CreateAuthFilter(ctx context.Context, req *connect_go.Request[v1.CreateAuthFilterRequest]) (*connect_go.Response[v1.CreateAuthFilterResponse], error) {
-	return c.createAuthFilter.CallUnary(ctx, req)
-}
-
-// DeleteAuthFilter calls ionscale.v1.IonscaleService.DeleteAuthFilter.
-func (c *ionscaleServiceClient) DeleteAuthFilter(ctx context.Context, req *connect_go.Request[v1.DeleteAuthFilterRequest]) (*connect_go.Response[v1.DeleteAuthFilterResponse], error) {
-	return c.deleteAuthFilter.CallUnary(ctx, req)
-}
-
-// ListAuthFilters calls ionscale.v1.IonscaleService.ListAuthFilters.
-func (c *ionscaleServiceClient) ListAuthFilters(ctx context.Context, req *connect_go.Request[v1.ListAuthFiltersRequest]) (*connect_go.Response[v1.ListAuthFiltersResponse], error) {
-	return c.listAuthFilters.CallUnary(ctx, req)
-}
-
 // CreateTailnet calls ionscale.v1.IonscaleService.CreateTailnet.
 func (c *ionscaleServiceClient) CreateTailnet(ctx context.Context, req *connect_go.Request[v1.CreateTailnetRequest]) (*connect_go.Response[v1.CreateTailnetResponse], error) {
 	return c.createTailnet.CallUnary(ctx, req)
@@ -301,6 +279,16 @@ func (c *ionscaleServiceClient) GetDNSConfig(ctx context.Context, req *connect_g
 // SetDNSConfig calls ionscale.v1.IonscaleService.SetDNSConfig.
 func (c *ionscaleServiceClient) SetDNSConfig(ctx context.Context, req *connect_go.Request[v1.SetDNSConfigRequest]) (*connect_go.Response[v1.SetDNSConfigResponse], error) {
 	return c.setDNSConfig.CallUnary(ctx, req)
+}
+
+// GetIAMPolicy calls ionscale.v1.IonscaleService.GetIAMPolicy.
+func (c *ionscaleServiceClient) GetIAMPolicy(ctx context.Context, req *connect_go.Request[v1.GetIAMPolicyRequest]) (*connect_go.Response[v1.GetIAMPolicyResponse], error) {
+	return c.getIAMPolicy.CallUnary(ctx, req)
+}
+
+// SetIAMPolicy calls ionscale.v1.IonscaleService.SetIAMPolicy.
+func (c *ionscaleServiceClient) SetIAMPolicy(ctx context.Context, req *connect_go.Request[v1.SetIAMPolicyRequest]) (*connect_go.Response[v1.SetIAMPolicyResponse], error) {
+	return c.setIAMPolicy.CallUnary(ctx, req)
 }
 
 // GetACLPolicy calls ionscale.v1.IonscaleService.GetACLPolicy.
@@ -366,15 +354,14 @@ type IonscaleServiceHandler interface {
 	SetDERPMap(context.Context, *connect_go.Request[v1.SetDERPMapRequest]) (*connect_go.Response[v1.SetDERPMapResponse], error)
 	CreateAuthMethod(context.Context, *connect_go.Request[v1.CreateAuthMethodRequest]) (*connect_go.Response[v1.CreateAuthMethodResponse], error)
 	ListAuthMethods(context.Context, *connect_go.Request[v1.ListAuthMethodsRequest]) (*connect_go.Response[v1.ListAuthMethodsResponse], error)
-	CreateAuthFilter(context.Context, *connect_go.Request[v1.CreateAuthFilterRequest]) (*connect_go.Response[v1.CreateAuthFilterResponse], error)
-	DeleteAuthFilter(context.Context, *connect_go.Request[v1.DeleteAuthFilterRequest]) (*connect_go.Response[v1.DeleteAuthFilterResponse], error)
-	ListAuthFilters(context.Context, *connect_go.Request[v1.ListAuthFiltersRequest]) (*connect_go.Response[v1.ListAuthFiltersResponse], error)
 	CreateTailnet(context.Context, *connect_go.Request[v1.CreateTailnetRequest]) (*connect_go.Response[v1.CreateTailnetResponse], error)
 	GetTailnet(context.Context, *connect_go.Request[v1.GetTailnetRequest]) (*connect_go.Response[v1.GetTailnetResponse], error)
 	ListTailnets(context.Context, *connect_go.Request[v1.ListTailnetRequest]) (*connect_go.Response[v1.ListTailnetResponse], error)
 	DeleteTailnet(context.Context, *connect_go.Request[v1.DeleteTailnetRequest]) (*connect_go.Response[v1.DeleteTailnetResponse], error)
 	GetDNSConfig(context.Context, *connect_go.Request[v1.GetDNSConfigRequest]) (*connect_go.Response[v1.GetDNSConfigResponse], error)
 	SetDNSConfig(context.Context, *connect_go.Request[v1.SetDNSConfigRequest]) (*connect_go.Response[v1.SetDNSConfigResponse], error)
+	GetIAMPolicy(context.Context, *connect_go.Request[v1.GetIAMPolicyRequest]) (*connect_go.Response[v1.GetIAMPolicyResponse], error)
+	SetIAMPolicy(context.Context, *connect_go.Request[v1.SetIAMPolicyRequest]) (*connect_go.Response[v1.SetIAMPolicyResponse], error)
 	GetACLPolicy(context.Context, *connect_go.Request[v1.GetACLPolicyRequest]) (*connect_go.Response[v1.GetACLPolicyResponse], error)
 	SetACLPolicy(context.Context, *connect_go.Request[v1.SetACLPolicyRequest]) (*connect_go.Response[v1.SetACLPolicyResponse], error)
 	GetAuthKey(context.Context, *connect_go.Request[v1.GetAuthKeyRequest]) (*connect_go.Response[v1.GetAuthKeyResponse], error)
@@ -425,21 +412,6 @@ func NewIonscaleServiceHandler(svc IonscaleServiceHandler, opts ...connect_go.Ha
 		svc.ListAuthMethods,
 		opts...,
 	))
-	mux.Handle("/ionscale.v1.IonscaleService/CreateAuthFilter", connect_go.NewUnaryHandler(
-		"/ionscale.v1.IonscaleService/CreateAuthFilter",
-		svc.CreateAuthFilter,
-		opts...,
-	))
-	mux.Handle("/ionscale.v1.IonscaleService/DeleteAuthFilter", connect_go.NewUnaryHandler(
-		"/ionscale.v1.IonscaleService/DeleteAuthFilter",
-		svc.DeleteAuthFilter,
-		opts...,
-	))
-	mux.Handle("/ionscale.v1.IonscaleService/ListAuthFilters", connect_go.NewUnaryHandler(
-		"/ionscale.v1.IonscaleService/ListAuthFilters",
-		svc.ListAuthFilters,
-		opts...,
-	))
 	mux.Handle("/ionscale.v1.IonscaleService/CreateTailnet", connect_go.NewUnaryHandler(
 		"/ionscale.v1.IonscaleService/CreateTailnet",
 		svc.CreateTailnet,
@@ -468,6 +440,16 @@ func NewIonscaleServiceHandler(svc IonscaleServiceHandler, opts ...connect_go.Ha
 	mux.Handle("/ionscale.v1.IonscaleService/SetDNSConfig", connect_go.NewUnaryHandler(
 		"/ionscale.v1.IonscaleService/SetDNSConfig",
 		svc.SetDNSConfig,
+		opts...,
+	))
+	mux.Handle("/ionscale.v1.IonscaleService/GetIAMPolicy", connect_go.NewUnaryHandler(
+		"/ionscale.v1.IonscaleService/GetIAMPolicy",
+		svc.GetIAMPolicy,
+		opts...,
+	))
+	mux.Handle("/ionscale.v1.IonscaleService/SetIAMPolicy", connect_go.NewUnaryHandler(
+		"/ionscale.v1.IonscaleService/SetIAMPolicy",
+		svc.SetIAMPolicy,
 		opts...,
 	))
 	mux.Handle("/ionscale.v1.IonscaleService/GetACLPolicy", connect_go.NewUnaryHandler(
@@ -555,18 +537,6 @@ func (UnimplementedIonscaleServiceHandler) ListAuthMethods(context.Context, *con
 	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("ionscale.v1.IonscaleService.ListAuthMethods is not implemented"))
 }
 
-func (UnimplementedIonscaleServiceHandler) CreateAuthFilter(context.Context, *connect_go.Request[v1.CreateAuthFilterRequest]) (*connect_go.Response[v1.CreateAuthFilterResponse], error) {
-	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("ionscale.v1.IonscaleService.CreateAuthFilter is not implemented"))
-}
-
-func (UnimplementedIonscaleServiceHandler) DeleteAuthFilter(context.Context, *connect_go.Request[v1.DeleteAuthFilterRequest]) (*connect_go.Response[v1.DeleteAuthFilterResponse], error) {
-	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("ionscale.v1.IonscaleService.DeleteAuthFilter is not implemented"))
-}
-
-func (UnimplementedIonscaleServiceHandler) ListAuthFilters(context.Context, *connect_go.Request[v1.ListAuthFiltersRequest]) (*connect_go.Response[v1.ListAuthFiltersResponse], error) {
-	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("ionscale.v1.IonscaleService.ListAuthFilters is not implemented"))
-}
-
 func (UnimplementedIonscaleServiceHandler) CreateTailnet(context.Context, *connect_go.Request[v1.CreateTailnetRequest]) (*connect_go.Response[v1.CreateTailnetResponse], error) {
 	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("ionscale.v1.IonscaleService.CreateTailnet is not implemented"))
 }
@@ -589,6 +559,14 @@ func (UnimplementedIonscaleServiceHandler) GetDNSConfig(context.Context, *connec
 
 func (UnimplementedIonscaleServiceHandler) SetDNSConfig(context.Context, *connect_go.Request[v1.SetDNSConfigRequest]) (*connect_go.Response[v1.SetDNSConfigResponse], error) {
 	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("ionscale.v1.IonscaleService.SetDNSConfig is not implemented"))
+}
+
+func (UnimplementedIonscaleServiceHandler) GetIAMPolicy(context.Context, *connect_go.Request[v1.GetIAMPolicyRequest]) (*connect_go.Response[v1.GetIAMPolicyResponse], error) {
+	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("ionscale.v1.IonscaleService.GetIAMPolicy is not implemented"))
+}
+
+func (UnimplementedIonscaleServiceHandler) SetIAMPolicy(context.Context, *connect_go.Request[v1.SetIAMPolicyRequest]) (*connect_go.Response[v1.SetIAMPolicyResponse], error) {
+	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("ionscale.v1.IonscaleService.SetIAMPolicy is not implemented"))
 }
 
 func (UnimplementedIonscaleServiceHandler) GetACLPolicy(context.Context, *connect_go.Request[v1.GetACLPolicyRequest]) (*connect_go.Response[v1.GetACLPolicyResponse], error) {

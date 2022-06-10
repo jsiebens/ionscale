@@ -18,16 +18,10 @@ type Repository interface {
 	ListAuthMethods(ctx context.Context) ([]AuthMethod, error)
 	GetAuthMethod(ctx context.Context, id uint64) (*AuthMethod, error)
 
-	GetAuthFilter(ctx context.Context, id uint64) (*AuthFilter, error)
-	SaveAuthFilter(ctx context.Context, m *AuthFilter) error
-	ListAuthFilters(ctx context.Context) (AuthFilters, error)
-	ListAuthFiltersByAuthMethod(ctx context.Context, authMethodID uint64) (AuthFilters, error)
-	DeleteAuthFilter(ctx context.Context, id uint64) error
-	DeleteAuthFiltersByTailnet(ctx context.Context, tailnetID uint64) error
-
 	GetAccount(ctx context.Context, accountID uint64) (*Account, error)
 	GetOrCreateAccount(ctx context.Context, authMethodID uint64, externalID, loginName string) (*Account, bool, error)
 
+	SaveTailnet(ctx context.Context, tailnet *Tailnet) error
 	GetOrCreateTailnet(ctx context.Context, name string) (*Tailnet, bool, error)
 	GetTailnet(ctx context.Context, id uint64) (*Tailnet, error)
 	ListTailnets(ctx context.Context) ([]Tailnet, error)

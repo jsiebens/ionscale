@@ -18,10 +18,12 @@ func tailnetCommand() *coral.Command {
 	command.AddCommand(listTailnetsCommand())
 	command.AddCommand(createTailnetsCommand())
 	command.AddCommand(deleteTailnetCommand())
-	command.AddCommand(getDNSConfig())
-	command.AddCommand(setDNSConfig())
-	command.AddCommand(getACLConfig())
-	command.AddCommand(setACLConfig())
+	command.AddCommand(getDNSConfigCommand())
+	command.AddCommand(setDNSConfigCommand())
+	command.AddCommand(getACLConfigCommand())
+	command.AddCommand(setACLConfigCommand())
+	command.AddCommand(getIAMPolicyCommand())
+	command.AddCommand(setIAMPolicyCommand())
 
 	return command
 }

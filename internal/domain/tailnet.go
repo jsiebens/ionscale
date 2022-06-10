@@ -8,8 +8,19 @@ import (
 )
 
 type Tailnet struct {
-	ID   uint64 `gorm:"primary_key;autoIncrement:false"`
-	Name string `gorm:"type:varchar(64);unique_index"`
+	ID        uint64 `gorm:"primary_key;autoIncrement:false"`
+	Name      string `gorm:"type:varchar(64);unique_index"`
+	IAMPolicy IAMPolicy
+}
+
+func (r *repository) SaveTailnet(ctx context.Context, tailnet *Tailnet) error {
+	tx := r.withContext(ctx).Save(tailnet)
+
+	if tx.Error != nil {
+		return tx.Error
+	}
+
+	return nil
 }
 
 func (r *repository) GetOrCreateTailnet(ctx context.Context, name string) (*Tailnet, bool, error) {

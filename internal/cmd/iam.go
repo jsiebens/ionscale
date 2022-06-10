@@ -5,21 +5,18 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/bufbuild/connect-go"
-	"github.com/jsiebens/ionscale/internal/domain"
 	api "github.com/jsiebens/ionscale/pkg/gen/ionscale/v1"
 	"github.com/muesli/coral"
-	"gopkg.in/yaml.v2"
 	"io/ioutil"
 )
 
-func getACLConfigCommand() *coral.Command {
+func getIAMPolicyCommand() *coral.Command {
 	command := &coral.Command{
-		Use:          "get-acl",
-		Short:        "Get the ACL policy",
+		Use:          "get-iam-policy",
+		Short:        "Get the IAM policy",
 		SilenceUsage: true,
 	}
 
-	var asJson bool
 	var tailnetID uint64
 	var tailnetName string
 	var target = Target{}
@@ -27,7 +24,6 @@ func getACLConfigCommand() *coral.Command {
 	target.prepareCommand(command)
 	command.Flags().StringVar(&tailnetName, "tailnet", "", "Tailnet name. Mutually exclusive with --tailnet-id.")
 	command.Flags().Uint64Var(&tailnetID, "tailnet-id", 0, "Tailnet ID. Mutually exclusive with --tailnet.")
-	command.Flags().BoolVar(&asJson, "json", false, "When enabled, render output as json otherwise yaml")
 
 	command.PreRunE = checkRequiredTailnetAndTailnetIdFlags
 	command.RunE = func(cmd *coral.Command, args []string) error {
@@ -41,34 +37,17 @@ func getACLConfigCommand() *coral.Command {
 			return err
 		}
 
-		resp, err := client.GetACLPolicy(context.Background(), connect.NewRequest(&api.GetACLPolicyRequest{TailnetId: tailnet.Id}))
+		resp, err := client.GetIAMPolicy(context.Background(), connect.NewRequest(&api.GetIAMPolicyRequest{TailnetId: tailnet.Id}))
 		if err != nil {
 			return err
 		}
 
-		var p domain.ACLPolicy
-
-		if err := json.Unmarshal(resp.Msg.Value, &p); err != nil {
+		marshal, err := json.MarshalIndent(resp.Msg.Policy, "", "  ")
+		if err != nil {
 			return err
 		}
 
-		if asJson {
-			marshal, err := json.MarshalIndent(&p, "", "  ")
-			if err != nil {
-				return err
-			}
-
-			fmt.Println()
-			fmt.Println(string(marshal))
-		} else {
-			marshal, err := yaml.Marshal(&p)
-			if err != nil {
-				return err
-			}
-
-			fmt.Println()
-			fmt.Println(string(marshal))
-		}
+		fmt.Println(string(marshal))
 
 		return nil
 	}
@@ -76,10 +55,10 @@ func getACLConfigCommand() *coral.Command {
 	return command
 }
 
-func setACLConfigCommand() *coral.Command {
+func setIAMPolicyCommand() *coral.Command {
 	command := &coral.Command{
-		Use:          "set-acl",
-		Short:        "Set ACL policy",
+		Use:          "set-iam-policy",
+		Short:        "Set IAM policy",
 		SilenceUsage: true,
 	}
 
@@ -100,6 +79,11 @@ func setACLConfigCommand() *coral.Command {
 			return err
 		}
 
+		var policy = &api.IAMPolicy{}
+		if err := json.Unmarshal(rawJson, policy); err != nil {
+			return err
+		}
+
 		client, err := target.createGRPCClient()
 		if err != nil {
 			return err
@@ -110,13 +94,13 @@ func setACLConfigCommand() *coral.Command {
 			return err
 		}
 
-		_, err = client.SetACLPolicy(context.Background(), connect.NewRequest(&api.SetACLPolicyRequest{TailnetId: tailnet.Id, Value: rawJson}))
+		_, err = client.SetIAMPolicy(context.Background(), connect.NewRequest(&api.SetIAMPolicyRequest{TailnetId: tailnet.Id, Policy: policy}))
 		if err != nil {
 			return err
 		}
 
 		fmt.Println()
-		fmt.Println("ACL policy updated successfully")
+		fmt.Println("IAM policy updated successfully")
 
 		return nil
 	}

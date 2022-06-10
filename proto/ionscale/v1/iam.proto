@@ -1,0 +1,26 @@
+syntax = "proto3";
+
+package ionscale.v1;
+option go_package = "github.com/jsiebens/ionscale/pkg/gen/ionscale/v1;ionscalev1";
+
+message GetIAMPolicyRequest {
+  uint64 tailnet_id = 1;
+}
+
+message GetIAMPolicyResponse {
+  IAMPolicy policy = 1;
+}
+
+message SetIAMPolicyRequest {
+  uint64 tailnet_id = 1;
+  IAMPolicy policy = 2;
+}
+
+message SetIAMPolicyResponse {
+}
+
+message IAMPolicy {
+  repeated string subs = 1;
+  repeated string emails = 2;
+  repeated string filters = 3;
+}
