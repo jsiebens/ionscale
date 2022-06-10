@@ -24,10 +24,7 @@ func (s *Service) GetACLPolicy(ctx context.Context, req *connect.Request[api.Get
 		return nil, connect.NewError(connect.CodeNotFound, fmt.Errorf("tailnet does not exist"))
 	}
 
-	policy, err := s.repository.GetACLPolicy(ctx, req.Msg.TailnetId)
-	if err != nil {
-		return nil, err
-	}
+	policy := tailnet.ACLPolicy
 
 	marshal, err := json.Marshal(policy)
 	if err != nil {
@@ -56,7 +53,8 @@ func (s *Service) SetACLPolicy(ctx context.Context, req *connect.Request[api.Set
 		return nil, err
 	}
 
-	if err := s.repository.SetACLPolicy(ctx, tailnet.ID, &policy); err != nil {
+	tailnet.ACLPolicy = policy
+	if err := s.repository.SaveTailnet(ctx, tailnet); err != nil {
 		return nil, err
 	}
 

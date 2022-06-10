@@ -1,7 +1,11 @@
 package domain
 
 import (
+	"database/sql/driver"
+	"encoding/json"
 	"fmt"
+	"gorm.io/gorm"
+	"gorm.io/gorm/schema"
 	"inet.af/netaddr"
 	"strconv"
 	"strings"
@@ -20,7 +24,35 @@ type ACL struct {
 	Dst    []string `json:"dst"`
 }
 
-func defaultPolicy() ACLPolicy {
+func (i *ACLPolicy) Scan(destination interface{}) error {
+	switch value := destination.(type) {
+	case []byte:
+		return json.Unmarshal(value, i)
+	default:
+		return fmt.Errorf("unexpected data type %T", destination)
+	}
+}
+
+func (i ACLPolicy) Value() (driver.Value, error) {
+	bytes, err := json.Marshal(i)
+	return bytes, err
+}
+
+// GormDataType gorm common data type
+func (ACLPolicy) GormDataType() string {
+	return "json"
+}
+
+// GormDBDataType gorm db data type
+func (ACLPolicy) GormDBDataType(db *gorm.DB, field *schema.Field) string {
+	switch db.Dialector.Name() {
+	case "sqlite":
+		return "JSON"
+	}
+	return ""
+}
+
+func DefaultPolicy() ACLPolicy {
 	return ACLPolicy{
 		ACLs: []ACL{
 			{
@@ -37,17 +69,13 @@ type aclEngine struct {
 	expandedTags map[string][]string
 }
 
-func IsValidPeer(policy *ACLPolicy, src *Machine, dest *Machine) bool {
-	f := &aclEngine{
-		policy: policy,
-	}
+func (p ACLPolicy) IsValidPeer(src *Machine, dest *Machine) bool {
+	f := &aclEngine{policy: &p}
 	return f.isValidPeer(src, dest)
 }
 
-func BuildFilterRules(policy *ACLPolicy, dst *Machine, peers []Machine) []tailcfg.FilterRule {
-	f := &aclEngine{
-		policy: policy,
-	}
+func (p ACLPolicy) BuildFilterRules(dst *Machine, peers []Machine) []tailcfg.FilterRule {
+	f := &aclEngine{policy: &p}
 	return f.build(dst, peers)
 }
 

@@ -37,26 +37,6 @@ func (r *repository) DeleteDNSConfig(ctx context.Context, tailnetID uint64) erro
 	return r.deleteConfig(ctx, "dns_config", tailnetID)
 }
 
-func (r *repository) SetACLPolicy(ctx context.Context, tailnetID uint64, policy *ACLPolicy) error {
-	if err := r.setConfig(ctx, "acl_policy", tailnetID, policy); err != nil {
-		return err
-	}
-	return nil
-}
-
-func (r *repository) GetACLPolicy(ctx context.Context, tailnetID uint64) (*ACLPolicy, error) {
-	var p = defaultPolicy()
-	err := r.getConfig(ctx, "acl_policy", tailnetID, &p)
-	if err != nil {
-		return nil, err
-	}
-	return &p, nil
-}
-
-func (r *repository) DeleteACLPolicy(ctx context.Context, tailnetID uint64) error {
-	return r.deleteConfig(ctx, "acl_policy", tailnetID)
-}
-
 func (r *repository) getConfig(ctx context.Context, s string, tailnetID uint64, v interface{}) error {
 	var m TailnetConfig
 	tx := r.withContext(ctx).Take(&m, "key = ? AND tailnet_id = ?", s, tailnetID)

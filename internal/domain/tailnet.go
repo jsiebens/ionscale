@@ -11,6 +11,7 @@ type Tailnet struct {
 	ID        uint64 `gorm:"primary_key;autoIncrement:false"`
 	Name      string `gorm:"type:varchar(64);unique_index"`
 	IAMPolicy IAMPolicy
+	ACLPolicy ACLPolicy
 }
 
 func (r *repository) SaveTailnet(ctx context.Context, tailnet *Tailnet) error {
@@ -27,7 +28,10 @@ func (r *repository) GetOrCreateTailnet(ctx context.Context, name string) (*Tail
 	tailnet := &Tailnet{}
 	id := util.NextID()
 
-	tx := r.withContext(ctx).Where(Tailnet{Name: name}).Attrs(Tailnet{ID: id}).FirstOrCreate(tailnet)
+	tx := r.withContext(ctx).
+		Where(Tailnet{Name: name}).
+		Attrs(Tailnet{ID: id, ACLPolicy: DefaultPolicy()}).
+		FirstOrCreate(tailnet)
 
 	if tx.Error != nil {
 		return nil, false, tx.Error

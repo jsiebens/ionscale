@@ -224,11 +224,12 @@ func (h *PollNetMapHandler) createMapResponse(m *domain.Machine, binder bind.Bin
 		return nil, nil, err
 	}
 
-	policies, err := h.repository.GetACLPolicy(ctx, m.TailnetID)
+	tailnet, err := h.repository.GetTailnet(ctx, m.TailnetID)
 	if err != nil {
 		return nil, nil, err
 	}
 
+	policies := tailnet.ACLPolicy
 	var users = []tailcfg.UserProfile{*user}
 	var changedPeers []*tailcfg.Node
 	var removedPeers []tailcfg.NodeID
@@ -245,7 +246,7 @@ func (h *PollNetMapHandler) createMapResponse(m *domain.Machine, binder bind.Bin
 		if peer.IsExpired() {
 			continue
 		}
-		if domain.IsValidPeer(policies, m, &peer) || domain.IsValidPeer(policies, &peer, m) {
+		if policies.IsValidPeer(m, &peer) || policies.IsValidPeer(&peer, m) {
 			n, u, err := mapping.ToNode(&peer, h.brokers(peer.TailnetID).IsConnected(peer.ID))
 			if err != nil {
 				return nil, nil, err
@@ -275,7 +276,7 @@ func (h *PollNetMapHandler) createMapResponse(m *domain.Machine, binder bind.Bin
 		return nil, nil, err
 	}
 
-	rules := domain.BuildFilterRules(policies, m, candidatePeers)
+	rules := policies.BuildFilterRules(m, candidatePeers)
 
 	controlTime := time.Now().UTC()
 	var mapResponse *tailcfg.MapResponse
