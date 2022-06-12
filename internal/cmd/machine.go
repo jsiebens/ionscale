@@ -24,6 +24,8 @@ func machineCommands() *coral.Command {
 	command.AddCommand(listMachinesCommand())
 	command.AddCommand(getMachineRoutesCommand())
 	command.AddCommand(setMachineRoutesCommand())
+	command.AddCommand(enableMachineKeyExpiryCommand())
+	command.AddCommand(disableMachineKeyExpiryCommand())
 
 	return command
 }
@@ -41,7 +43,7 @@ func deleteMachineCommand() *coral.Command {
 	command.Flags().Uint64Var(&machineID, "machine-id", 0, "Machine ID.")
 
 	_ = command.MarkFlagRequired("machine-id")
-	
+
 	command.RunE = func(command *coral.Command, args []string) error {
 		client, err := target.createGRPCClient()
 		if err != nil {
@@ -229,6 +231,52 @@ func setMachineRoutesCommand() *coral.Command {
 			tbl.AddRow(r.Advertised, r.Allowed)
 		}
 		tbl.Print()
+
+		return nil
+	}
+
+	return command
+}
+
+func enableMachineKeyExpiryCommand() *coral.Command {
+	command := &coral.Command{
+		Use:          "enable-key-expiry",
+		Short:        "Enable machine key expiry",
+		SilenceUsage: true,
+	}
+
+	return configureSetMachineKeyExpiryCommand(command, false)
+}
+
+func disableMachineKeyExpiryCommand() *coral.Command {
+	command := &coral.Command{
+		Use:          "disable-key-expiry",
+		Short:        "Disable machine key expiry",
+		SilenceUsage: true,
+	}
+
+	return configureSetMachineKeyExpiryCommand(command, true)
+}
+
+func configureSetMachineKeyExpiryCommand(command *coral.Command, v bool) *coral.Command {
+	var machineID uint64
+	var target = Target{}
+	target.prepareCommand(command)
+	command.Flags().Uint64Var(&machineID, "machine-id", 0, "Machine ID")
+
+	_ = command.MarkFlagRequired("machine-id")
+
+	command.RunE = func(command *coral.Command, args []string) error {
+		client, err := target.createGRPCClient()
+		if err != nil {
+			return err
+		}
+
+		req := api.SetMachineKeyExpiryRequest{MachineId: machineID, Disabled: v}
+		_, err = client.SetMachineKeyExpiry(context.Background(), connect.NewRequest(&req))
+		if err != nil {
+			return err
+		}
 
 		return nil
 	}

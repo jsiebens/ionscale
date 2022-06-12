@@ -60,13 +60,13 @@ func (h *RegistrationHandlers) Register(c echo.Context) error {
 	}
 
 	if m != nil {
-		if m.ExpiresAt != nil && !m.ExpiresAt.IsZero() && m.ExpiresAt.Before(time.Now()) {
+		if m.IsExpired() {
 			response := tailcfg.RegisterResponse{NodeKeyExpired: true}
 			return binder.WriteResponse(c, http.StatusOK, response)
 		}
 
 		if !req.Expiry.IsZero() && req.Expiry.Before(time.Now()) {
-			m.ExpiresAt = &req.Expiry
+			m.ExpiresAt = req.Expiry
 
 			if err := h.repository.SaveMachine(ctx, m); err != nil {
 				return err
@@ -187,7 +187,7 @@ func (h *RegistrationHandlers) authenticateMachineWithAuthKey(c echo.Context, bi
 		}
 
 		if !req.Expiry.IsZero() {
-			m.ExpiresAt = &req.Expiry
+			m.ExpiresAt = req.Expiry
 		}
 
 		ipv4, ipv6, err := addr.SelectIP(checkIP(ctx, h.repository.CountMachinesWithIPv4))
@@ -218,7 +218,7 @@ func (h *RegistrationHandlers) authenticateMachineWithAuthKey(c echo.Context, bi
 		m.User = user
 		m.TailnetID = tailnet.ID
 		m.Tailnet = tailnet
-		m.ExpiresAt = nil
+		m.ExpiresAt = time.Time{}
 	}
 
 	if err := h.repository.SaveMachine(ctx, m); err != nil {

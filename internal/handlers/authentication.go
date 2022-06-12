@@ -330,7 +330,8 @@ func (h *AuthenticationHandlers) endMachineRegistrationFlow(c echo.Context, regi
 	var user *domain.User
 	var ephemeral bool
 	var tags = []string{}
-	var expiresAt *time.Time
+	var expiresAt time.Time
+	var expiryDisabled bool
 
 	if authKeyParam != "" {
 		authKey, err := h.repository.LoadAuthKey(ctx, authKeyParam)
@@ -378,7 +379,8 @@ func (h *AuthenticationHandlers) endMachineRegistrationFlow(c echo.Context, regi
 
 		ephemeral = false
 		keyExpiry := time.Now().Add(180 * 24 * time.Hour).UTC()
-		expiresAt = &keyExpiry
+		expiresAt = keyExpiry
+		expiryDisabled = false
 	}
 
 	var m *domain.Machine
@@ -396,6 +398,7 @@ func (h *AuthenticationHandlers) endMachineRegistrationFlow(c echo.Context, regi
 		tags := append(registeredTags, advertisedTags...)
 
 		if len(tags) != 0 {
+			expiryDisabled = true
 			user, _, err = h.repository.GetOrCreateServiceUser(ctx, tailnet)
 			if err != nil {
 				return err
@@ -409,16 +412,17 @@ func (h *AuthenticationHandlers) endMachineRegistrationFlow(c echo.Context, regi
 		}
 
 		m = &domain.Machine{
-			ID:             util.NextID(),
-			Name:           sanitizeHostname,
-			NameIdx:        nameIdx,
-			MachineKey:     machineKey,
-			NodeKey:        nodeKey,
-			Ephemeral:      ephemeral,
-			RegisteredTags: registeredTags,
-			Tags:           domain.SanitizeTags(tags),
-			CreatedAt:      now,
-			ExpiresAt:      expiresAt,
+			ID:                util.NextID(),
+			Name:              sanitizeHostname,
+			NameIdx:           nameIdx,
+			MachineKey:        machineKey,
+			NodeKey:           nodeKey,
+			Ephemeral:         ephemeral,
+			RegisteredTags:    registeredTags,
+			Tags:              domain.SanitizeTags(tags),
+			CreatedAt:         now,
+			ExpiresAt:         expiresAt,
+			KeyExpiryDisabled: expiryDisabled,
 
 			User:    *user,
 			Tailnet: *tailnet,
@@ -436,11 +440,11 @@ func (h *AuthenticationHandlers) endMachineRegistrationFlow(c echo.Context, regi
 		tags := append(registeredTags, advertisedTags...)
 
 		if len(tags) != 0 {
+			expiryDisabled = true
 			user, _, err = h.repository.GetOrCreateServiceUser(ctx, tailnet)
 			if err != nil {
 				return err
 			}
-			expiresAt = nil
 		}
 
 		sanitizeHostname := dnsname.SanitizeHostname(req.Hostinfo.Hostname)
@@ -461,6 +465,7 @@ func (h *AuthenticationHandlers) endMachineRegistrationFlow(c echo.Context, regi
 		m.TailnetID = tailnet.ID
 		m.Tailnet = *tailnet
 		m.ExpiresAt = expiresAt
+		m.KeyExpiryDisabled = expiryDisabled
 	}
 
 	err = h.repository.Transaction(func(rp domain.Repository) error {

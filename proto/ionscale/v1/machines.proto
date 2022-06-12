@@ -28,6 +28,13 @@ message ExpireMachineRequest {
 
 message ExpireMachineResponse {}
 
+message SetMachineKeyExpiryRequest {
+  uint64 machine_id = 1;
+  bool disabled = 2;
+}
+
+message SetMachineKeyExpiryResponse {}
+
 message Machine {
   uint64 id = 1;
   string name = 2;

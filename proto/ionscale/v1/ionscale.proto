@@ -51,7 +51,7 @@ service IonscaleService {
   rpc ListMachines (ListMachinesRequest) returns (ListMachinesResponse) {}
   rpc ExpireMachine(ExpireMachineRequest) returns (ExpireMachineResponse) {}
   rpc DeleteMachine(DeleteMachineRequest) returns (DeleteMachineResponse) {}
-
+  rpc SetMachineKeyExpiry(SetMachineKeyExpiryRequest) returns (SetMachineKeyExpiryResponse) {}
   rpc GetMachineRoutes (GetMachineRoutesRequest) returns (GetMachineRoutesResponse) {}
   rpc SetMachineRoutes (SetMachineRoutesRequest) returns (GetMachineRoutesResponse) {}
 }

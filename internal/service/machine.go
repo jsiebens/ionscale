@@ -106,7 +106,8 @@ func (s *Service) ExpireMachine(ctx context.Context, req *connect.Request[api.Ex
 	}
 
 	timestamp := time.Unix(123, 0)
-	m.ExpiresAt = &timestamp
+	m.ExpiresAt = timestamp
+	m.KeyExpiryDisabled = false
 
 	if err := s.repository.SaveMachine(ctx, m); err != nil {
 		return nil, err
@@ -193,4 +194,31 @@ func (s *Service) SetMachineRoutes(ctx context.Context, req *connect.Request[api
 	}
 
 	return connect.NewResponse(&response), nil
+}
+
+func (s *Service) SetMachineKeyExpiry(ctx context.Context, req *connect.Request[api.SetMachineKeyExpiryRequest]) (*connect.Response[api.SetMachineKeyExpiryResponse], error) {
+	principal := CurrentPrincipal(ctx)
+
+	m, err := s.repository.GetMachine(ctx, req.Msg.MachineId)
+	if err != nil {
+		return nil, err
+	}
+
+	if m == nil {
+		return nil, connect.NewError(connect.CodeNotFound, errors.New("machine not found"))
+	}
+
+	if !principal.IsSystemAdmin() {
+		return nil, connect.NewError(connect.CodePermissionDenied, errors.New("permission denied"))
+	}
+
+	m.KeyExpiryDisabled = req.Msg.Disabled
+
+	if err := s.repository.SaveMachine(ctx, m); err != nil {
+		return nil, err
+	}
+
+	s.brokers(m.TailnetID).SignalPeerUpdated(m.ID)
+
+	return connect.NewResponse(&api.SetMachineKeyExpiryResponse{}), nil
 }

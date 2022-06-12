@@ -11,6 +11,7 @@ import (
 	"tailscale.com/types/dnstype"
 	"tailscale.com/types/key"
 	"tailscale.com/util/dnsname"
+	"time"
 )
 
 const NetworkMagicDNSSuffix = "ionscale.net"
@@ -158,9 +159,13 @@ func ToNode(m *domain.Machine, connected bool) (*tailcfg.Node, *tailcfg.UserProf
 		User:              tailcfg.UserID(m.UserID),
 	}
 
-	if m.ExpiresAt != nil {
+	if !m.ExpiresAt.IsZero() {
 		e := m.ExpiresAt.UTC()
 		n.KeyExpiry = e
+	}
+
+	if m.KeyExpiryDisabled {
+		n.KeyExpiry = time.Time{}
 	}
 
 	n.Online = &connected

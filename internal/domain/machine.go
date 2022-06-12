@@ -14,15 +14,16 @@ import (
 )
 
 type Machine struct {
-	ID             uint64 `gorm:"primary_key;autoIncrement:false"`
-	Name           string
-	NameIdx        uint64
-	MachineKey     string
-	NodeKey        string
-	DiscoKey       string
-	Ephemeral      bool
-	RegisteredTags Tags
-	Tags           Tags
+	ID                uint64 `gorm:"primary_key;autoIncrement:false"`
+	Name              string
+	NameIdx           uint64
+	MachineKey        string
+	NodeKey           string
+	DiscoKey          string
+	Ephemeral         bool
+	RegisteredTags    Tags
+	Tags              Tags
+	KeyExpiryDisabled bool
 
 	HostInfo  HostInfo
 	Endpoints Endpoints
@@ -32,7 +33,7 @@ type Machine struct {
 	IPv6 IP
 
 	CreatedAt time.Time
-	ExpiresAt *time.Time
+	ExpiresAt time.Time
 	LastSeen  *time.Time
 
 	UserID uint64
@@ -45,7 +46,7 @@ type Machine struct {
 type Machines []Machine
 
 func (m *Machine) IsExpired() bool {
-	return m.ExpiresAt != nil && !m.ExpiresAt.IsZero() && m.ExpiresAt.Before(time.Now())
+	return !m.KeyExpiryDisabled && !m.ExpiresAt.IsZero() && m.ExpiresAt.Before(time.Now())
 }
 
 func (m *Machine) HasIP(v netaddr.IP) bool {
@@ -363,7 +364,10 @@ func (r *repository) ListInactiveEphemeralMachines(ctx context.Context, t time.T
 
 func (r *repository) SetMachineLastSeen(ctx context.Context, machineID uint64) error {
 	now := time.Now().UTC()
-	tx := r.withContext(ctx).Model(Machine{}).Where("id = ?", machineID).Updates(map[string]interface{}{"last_seen": &now})
+	tx := r.withContext(ctx).
+		Model(Machine{}).
+		Where("id = ?", machineID).
+		Updates(map[string]interface{}{"last_seen": &now})
 
 	if tx.Error != nil {
 		return tx.Error
