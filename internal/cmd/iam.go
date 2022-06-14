@@ -99,7 +99,6 @@ func setIAMPolicyCommand() *coral.Command {
 			return err
 		}
 
-		fmt.Println()
 		fmt.Println("IAM policy updated successfully")
 
 		return nil
