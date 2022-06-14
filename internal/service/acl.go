@@ -2,11 +2,11 @@ package service
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/bufbuild/connect-go"
 	"github.com/jsiebens/ionscale/internal/domain"
+	"github.com/jsiebens/ionscale/internal/mapping"
 	api "github.com/jsiebens/ionscale/pkg/gen/ionscale/v1"
 )
 
@@ -24,14 +24,12 @@ func (s *Service) GetACLPolicy(ctx context.Context, req *connect.Request[api.Get
 		return nil, connect.NewError(connect.CodeNotFound, fmt.Errorf("tailnet does not exist"))
 	}
 
-	policy := tailnet.ACLPolicy
-
-	marshal, err := json.Marshal(policy)
-	if err != nil {
+	var policy api.ACLPolicy
+	if err := mapping.CopyViaJson(&tailnet.ACLPolicy, &policy); err != nil {
 		return nil, err
 	}
 
-	return connect.NewResponse(&api.GetACLPolicyResponse{Value: marshal}), nil
+	return connect.NewResponse(&api.GetACLPolicyResponse{Policy: &policy}), nil
 }
 
 func (s *Service) SetACLPolicy(ctx context.Context, req *connect.Request[api.SetACLPolicyRequest]) (*connect.Response[api.SetACLPolicyResponse], error) {
@@ -49,7 +47,7 @@ func (s *Service) SetACLPolicy(ctx context.Context, req *connect.Request[api.Set
 	}
 
 	var policy domain.ACLPolicy
-	if err := json.Unmarshal(req.Msg.Value, &policy); err != nil {
+	if err := mapping.CopyViaJson(req.Msg.Policy, &policy); err != nil {
 		return nil, err
 	}
 

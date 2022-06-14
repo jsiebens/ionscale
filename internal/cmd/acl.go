@@ -5,16 +5,14 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/bufbuild/connect-go"
-	"github.com/jsiebens/ionscale/internal/domain"
 	api "github.com/jsiebens/ionscale/pkg/gen/ionscale/v1"
 	"github.com/muesli/coral"
-	"gopkg.in/yaml.v2"
 	"io/ioutil"
 )
 
 func getACLConfigCommand() *coral.Command {
 	command := &coral.Command{
-		Use:          "get-acl",
+		Use:          "get-acl-policy",
 		Short:        "Get the ACL policy",
 		SilenceUsage: true,
 	}
@@ -46,29 +44,12 @@ func getACLConfigCommand() *coral.Command {
 			return err
 		}
 
-		var p domain.ACLPolicy
-
-		if err := json.Unmarshal(resp.Msg.Value, &p); err != nil {
+		marshal, err := json.MarshalIndent(resp.Msg.Policy, "", "  ")
+		if err != nil {
 			return err
 		}
 
-		if asJson {
-			marshal, err := json.MarshalIndent(&p, "", "  ")
-			if err != nil {
-				return err
-			}
-
-			fmt.Println()
-			fmt.Println(string(marshal))
-		} else {
-			marshal, err := yaml.Marshal(&p)
-			if err != nil {
-				return err
-			}
-
-			fmt.Println()
-			fmt.Println(string(marshal))
-		}
+		fmt.Println(string(marshal))
 
 		return nil
 	}
@@ -78,7 +59,7 @@ func getACLConfigCommand() *coral.Command {
 
 func setACLConfigCommand() *coral.Command {
 	command := &coral.Command{
-		Use:          "set-acl",
+		Use:          "set-acl-policy",
 		Short:        "Set ACL policy",
 		SilenceUsage: true,
 	}
@@ -100,6 +81,11 @@ func setACLConfigCommand() *coral.Command {
 			return err
 		}
 
+		var policy = &api.ACLPolicy{}
+		if err := json.Unmarshal(rawJson, policy); err != nil {
+			return err
+		}
+
 		client, err := target.createGRPCClient()
 		if err != nil {
 			return err
@@ -110,12 +96,11 @@ func setACLConfigCommand() *coral.Command {
 			return err
 		}
 
-		_, err = client.SetACLPolicy(context.Background(), connect.NewRequest(&api.SetACLPolicyRequest{TailnetId: tailnet.Id, Value: rawJson}))
+		_, err = client.SetACLPolicy(context.Background(), connect.NewRequest(&api.SetACLPolicyRequest{TailnetId: tailnet.Id, Policy: policy}))
 		if err != nil {
 			return err
 		}
 
-		fmt.Println()
 		fmt.Println("ACL policy updated successfully")
 
 		return nil

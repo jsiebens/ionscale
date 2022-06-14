@@ -49,8 +49,8 @@ type IonscaleServiceClient interface {
 	ListAuthKeys(context.Context, *connect_go.Request[v1.ListAuthKeysRequest]) (*connect_go.Response[v1.ListAuthKeysResponse], error)
 	ListMachines(context.Context, *connect_go.Request[v1.ListMachinesRequest]) (*connect_go.Response[v1.ListMachinesResponse], error)
 	ExpireMachine(context.Context, *connect_go.Request[v1.ExpireMachineRequest]) (*connect_go.Response[v1.ExpireMachineResponse], error)
-	SetMachineKeyExpiry(context.Context, *connect_go.Request[v1.SetMachineKeyExpiryRequest]) (*connect_go.Response[v1.SetMachineKeyExpiryResponse], error)
 	DeleteMachine(context.Context, *connect_go.Request[v1.DeleteMachineRequest]) (*connect_go.Response[v1.DeleteMachineResponse], error)
+	SetMachineKeyExpiry(context.Context, *connect_go.Request[v1.SetMachineKeyExpiryRequest]) (*connect_go.Response[v1.SetMachineKeyExpiryResponse], error)
 	GetMachineRoutes(context.Context, *connect_go.Request[v1.GetMachineRoutesRequest]) (*connect_go.Response[v1.GetMachineRoutesResponse], error)
 	SetMachineRoutes(context.Context, *connect_go.Request[v1.SetMachineRoutesRequest]) (*connect_go.Response[v1.GetMachineRoutesResponse], error)
 }
@@ -175,14 +175,14 @@ func NewIonscaleServiceClient(httpClient connect_go.HTTPClient, baseURL string, 
 			baseURL+"/ionscale.v1.IonscaleService/ExpireMachine",
 			opts...,
 		),
-		setMachineKeyExpiry: connect_go.NewClient[v1.SetMachineKeyExpiryRequest, v1.SetMachineKeyExpiryResponse](
-			httpClient,
-			baseURL+"/ionscale.v1.IonscaleService/SetMachineKeyExpiry",
-			opts...,
-		),
 		deleteMachine: connect_go.NewClient[v1.DeleteMachineRequest, v1.DeleteMachineResponse](
 			httpClient,
 			baseURL+"/ionscale.v1.IonscaleService/DeleteMachine",
+			opts...,
+		),
+		setMachineKeyExpiry: connect_go.NewClient[v1.SetMachineKeyExpiryRequest, v1.SetMachineKeyExpiryResponse](
+			httpClient,
+			baseURL+"/ionscale.v1.IonscaleService/SetMachineKeyExpiry",
 			opts...,
 		),
 		getMachineRoutes: connect_go.NewClient[v1.GetMachineRoutesRequest, v1.GetMachineRoutesResponse](
@@ -222,8 +222,8 @@ type ionscaleServiceClient struct {
 	listAuthKeys        *connect_go.Client[v1.ListAuthKeysRequest, v1.ListAuthKeysResponse]
 	listMachines        *connect_go.Client[v1.ListMachinesRequest, v1.ListMachinesResponse]
 	expireMachine       *connect_go.Client[v1.ExpireMachineRequest, v1.ExpireMachineResponse]
-	setMachineKeyExpiry *connect_go.Client[v1.SetMachineKeyExpiryRequest, v1.SetMachineKeyExpiryResponse]
 	deleteMachine       *connect_go.Client[v1.DeleteMachineRequest, v1.DeleteMachineResponse]
+	setMachineKeyExpiry *connect_go.Client[v1.SetMachineKeyExpiryRequest, v1.SetMachineKeyExpiryResponse]
 	getMachineRoutes    *connect_go.Client[v1.GetMachineRoutesRequest, v1.GetMachineRoutesResponse]
 	setMachineRoutes    *connect_go.Client[v1.SetMachineRoutesRequest, v1.GetMachineRoutesResponse]
 }
@@ -338,14 +338,14 @@ func (c *ionscaleServiceClient) ExpireMachine(ctx context.Context, req *connect_
 	return c.expireMachine.CallUnary(ctx, req)
 }
 
-// SetMachineKeyExpiry calls ionscale.v1.IonscaleService.SetMachineKeyExpiry.
-func (c *ionscaleServiceClient) SetMachineKeyExpiry(ctx context.Context, req *connect_go.Request[v1.SetMachineKeyExpiryRequest]) (*connect_go.Response[v1.SetMachineKeyExpiryResponse], error) {
-	return c.setMachineKeyExpiry.CallUnary(ctx, req)
-}
-
 // DeleteMachine calls ionscale.v1.IonscaleService.DeleteMachine.
 func (c *ionscaleServiceClient) DeleteMachine(ctx context.Context, req *connect_go.Request[v1.DeleteMachineRequest]) (*connect_go.Response[v1.DeleteMachineResponse], error) {
 	return c.deleteMachine.CallUnary(ctx, req)
+}
+
+// SetMachineKeyExpiry calls ionscale.v1.IonscaleService.SetMachineKeyExpiry.
+func (c *ionscaleServiceClient) SetMachineKeyExpiry(ctx context.Context, req *connect_go.Request[v1.SetMachineKeyExpiryRequest]) (*connect_go.Response[v1.SetMachineKeyExpiryResponse], error) {
+	return c.setMachineKeyExpiry.CallUnary(ctx, req)
 }
 
 // GetMachineRoutes calls ionscale.v1.IonscaleService.GetMachineRoutes.
@@ -382,8 +382,8 @@ type IonscaleServiceHandler interface {
 	ListAuthKeys(context.Context, *connect_go.Request[v1.ListAuthKeysRequest]) (*connect_go.Response[v1.ListAuthKeysResponse], error)
 	ListMachines(context.Context, *connect_go.Request[v1.ListMachinesRequest]) (*connect_go.Response[v1.ListMachinesResponse], error)
 	ExpireMachine(context.Context, *connect_go.Request[v1.ExpireMachineRequest]) (*connect_go.Response[v1.ExpireMachineResponse], error)
-	SetMachineKeyExpiry(context.Context, *connect_go.Request[v1.SetMachineKeyExpiryRequest]) (*connect_go.Response[v1.SetMachineKeyExpiryResponse], error)
 	DeleteMachine(context.Context, *connect_go.Request[v1.DeleteMachineRequest]) (*connect_go.Response[v1.DeleteMachineResponse], error)
+	SetMachineKeyExpiry(context.Context, *connect_go.Request[v1.SetMachineKeyExpiryRequest]) (*connect_go.Response[v1.SetMachineKeyExpiryResponse], error)
 	GetMachineRoutes(context.Context, *connect_go.Request[v1.GetMachineRoutesRequest]) (*connect_go.Response[v1.GetMachineRoutesResponse], error)
 	SetMachineRoutes(context.Context, *connect_go.Request[v1.SetMachineRoutesRequest]) (*connect_go.Response[v1.GetMachineRoutesResponse], error)
 }
@@ -505,14 +505,14 @@ func NewIonscaleServiceHandler(svc IonscaleServiceHandler, opts ...connect_go.Ha
 		svc.ExpireMachine,
 		opts...,
 	))
-	mux.Handle("/ionscale.v1.IonscaleService/SetMachineKeyExpiry", connect_go.NewUnaryHandler(
-		"/ionscale.v1.IonscaleService/SetMachineKeyExpiry",
-		svc.SetMachineKeyExpiry,
-		opts...,
-	))
 	mux.Handle("/ionscale.v1.IonscaleService/DeleteMachine", connect_go.NewUnaryHandler(
 		"/ionscale.v1.IonscaleService/DeleteMachine",
 		svc.DeleteMachine,
+		opts...,
+	))
+	mux.Handle("/ionscale.v1.IonscaleService/SetMachineKeyExpiry", connect_go.NewUnaryHandler(
+		"/ionscale.v1.IonscaleService/SetMachineKeyExpiry",
+		svc.SetMachineKeyExpiry,
 		opts...,
 	))
 	mux.Handle("/ionscale.v1.IonscaleService/GetMachineRoutes", connect_go.NewUnaryHandler(
@@ -619,12 +619,12 @@ func (UnimplementedIonscaleServiceHandler) ExpireMachine(context.Context, *conne
 	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("ionscale.v1.IonscaleService.ExpireMachine is not implemented"))
 }
 
-func (UnimplementedIonscaleServiceHandler) SetMachineKeyExpiry(context.Context, *connect_go.Request[v1.SetMachineKeyExpiryRequest]) (*connect_go.Response[v1.SetMachineKeyExpiryResponse], error) {
-	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("ionscale.v1.IonscaleService.SetMachineKeyExpiry is not implemented"))
-}
-
 func (UnimplementedIonscaleServiceHandler) DeleteMachine(context.Context, *connect_go.Request[v1.DeleteMachineRequest]) (*connect_go.Response[v1.DeleteMachineResponse], error) {
 	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("ionscale.v1.IonscaleService.DeleteMachine is not implemented"))
+}
+
+func (UnimplementedIonscaleServiceHandler) SetMachineKeyExpiry(context.Context, *connect_go.Request[v1.SetMachineKeyExpiryRequest]) (*connect_go.Response[v1.SetMachineKeyExpiryResponse], error) {
+	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("ionscale.v1.IonscaleService.SetMachineKeyExpiry is not implemented"))
 }
 
 func (UnimplementedIonscaleServiceHandler) GetMachineRoutes(context.Context, *connect_go.Request[v1.GetMachineRoutesRequest]) (*connect_go.Response[v1.GetMachineRoutesResponse], error) {

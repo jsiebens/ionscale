@@ -3,8 +3,7 @@ syntax = "proto3";
 package ionscale.v1;
 option go_package = "github.com/jsiebens/ionscale/pkg/gen/ionscale/v1;ionscalev1";
 
-import "google/protobuf/timestamp.proto";
-import "google/protobuf/duration.proto";
+import "google/protobuf/struct.proto";
 
 import "ionscale/v1/ref.proto";
 
@@ -13,13 +12,25 @@ message GetACLPolicyRequest {
 }
 
 message GetACLPolicyResponse {
-  bytes value = 1;
+  ACLPolicy policy = 1;
 }
 
 message SetACLPolicyRequest {
   uint64 tailnet_id = 1;
-  bytes value = 2;
+  ACLPolicy policy = 2;
 }
 
 message SetACLPolicyResponse {
+}
+
+message ACLPolicy {
+  map<string, string> hosts = 1;
+  map<string, google.protobuf.ListValue> groups = 2;
+  repeated ACL acls = 3;
+}
+
+message ACL {
+  string action = 1;
+  repeated string src = 2;
+  repeated string dst = 3;
 }
