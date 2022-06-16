@@ -19,7 +19,7 @@ type Identity struct {
 }
 
 type IAMPolicy struct {
-	Subs    []string `json:"groups,omitempty"`
+	Subs    []string `json:"subs,omitempty"`
 	Emails  []string `json:"emails,omitempty"`
 	Filters []string `json:"filters,omitempty"`
 }
