@@ -9,6 +9,15 @@ message AuthMethod  {
   string name = 3;
   string issuer = 4;
   string client_id = 5;
+  string client_secret = 6;
+}
+
+message GetAuthMethodRequest {
+  uint64 auth_method_id = 1;
+}
+
+message GetAuthMethodResponse {
+  AuthMethod auth_method = 1;
 }
 
 message CreateAuthMethodRequest {

@@ -26,6 +26,7 @@ service IonscaleService {
   rpc GetDERPMap (GetDERPMapRequest) returns (GetDERPMapResponse) {}
   rpc SetDERPMap (SetDERPMapRequest) returns (SetDERPMapResponse) {}
 
+  rpc GetAuthMethod (GetAuthMethodRequest) returns (GetAuthMethodResponse) {}
   rpc CreateAuthMethod (CreateAuthMethodRequest) returns (CreateAuthMethodResponse) {}
   rpc ListAuthMethods (ListAuthMethodsRequest) returns (ListAuthMethodsResponse) {}
 
