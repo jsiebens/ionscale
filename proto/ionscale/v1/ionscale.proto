@@ -9,6 +9,7 @@ import "google/protobuf/duration.proto";
 import "ionscale/v1/version.proto";
 import "ionscale/v1/auth.proto";
 import "ionscale/v1/tailnets.proto";
+import "ionscale/v1/users.proto";
 import "ionscale/v1/auth_methods.proto";
 import "ionscale/v1/auth_keys.proto";
 import "ionscale/v1/machines.proto";
@@ -48,6 +49,8 @@ service IonscaleService {
   rpc CreateAuthKey (CreateAuthKeyRequest) returns (CreateAuthKeyResponse) {}
   rpc DeleteAuthKey (DeleteAuthKeyRequest) returns (DeleteAuthKeyResponse) {}
   rpc ListAuthKeys (ListAuthKeysRequest) returns (ListAuthKeysResponse) {}
+
+  rpc ListUsers(ListUsersRequest) returns (ListUsersResponse) {}
 
   rpc ListMachines (ListMachinesRequest) returns (ListMachinesResponse) {}
   rpc ExpireMachine(ExpireMachineRequest) returns (ExpireMachineResponse) {}

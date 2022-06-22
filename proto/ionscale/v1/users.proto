@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+package ionscale.v1;
+option go_package = "github.com/jsiebens/ionscale/pkg/gen/ionscale/v1;ionscalev1";
+
+message User {
+  uint64 id = 1;
+  string name = 2;
+  string role = 3;
+}
+
+message ListUsersRequest {
+  uint64 tailnet_id = 1;
+}
+
+message ListUsersResponse {
+  repeated User users = 1;
+}
