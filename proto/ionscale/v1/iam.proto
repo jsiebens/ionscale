@@ -23,4 +23,5 @@ message IAMPolicy {
   repeated string subs = 1;
   repeated string emails = 2;
   repeated string filters = 3;
+  map<string, string> roles = 4;
 }

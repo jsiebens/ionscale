@@ -22,7 +22,7 @@ func (s *Service) GetAuthKey(ctx context.Context, req *connect.Request[api.GetAu
 		return nil, connect.NewError(connect.CodeNotFound, errors.New("auth key not found"))
 	}
 
-	if !principal.IsSystemAdmin() && !principal.UserMatches(key.UserID) {
+	if !principal.IsSystemAdmin() && !principal.IsTailnetAdmin(key.TailnetID) {
 		return nil, connect.NewError(connect.CodePermissionDenied, errors.New("permission denied"))
 	}
 
@@ -73,7 +73,7 @@ func mapAuthKeysToApi(authKeys []domain.AuthKey) []*api.AuthKey {
 
 func (s *Service) ListAuthKeys(ctx context.Context, req *connect.Request[api.ListAuthKeysRequest]) (*connect.Response[api.ListAuthKeysResponse], error) {
 	principal := CurrentPrincipal(ctx)
-	if !principal.IsSystemAdmin() && !principal.TailnetMatches(req.Msg.TailnetId) {
+	if !principal.IsSystemAdmin() && !principal.IsTailnetAdmin(req.Msg.TailnetId) {
 		return nil, connect.NewError(connect.CodePermissionDenied, errors.New("permission denied"))
 	}
 
@@ -113,7 +113,7 @@ func (s *Service) ListAuthKeys(ctx context.Context, req *connect.Request[api.Lis
 
 func (s *Service) CreateAuthKey(ctx context.Context, req *connect.Request[api.CreateAuthKeyRequest]) (*connect.Response[api.CreateAuthKeyResponse], error) {
 	principal := CurrentPrincipal(ctx)
-	if !principal.IsSystemAdmin() && !principal.TailnetMatches(req.Msg.TailnetId) {
+	if !principal.IsSystemAdmin() && !principal.IsTailnetAdmin(req.Msg.TailnetId) {
 		return nil, connect.NewError(connect.CodePermissionDenied, errors.New("permission denied"))
 	}
 
@@ -187,7 +187,7 @@ func (s *Service) DeleteAuthKey(ctx context.Context, req *connect.Request[api.De
 		return nil, connect.NewError(connect.CodeNotFound, errors.New("auth key not found"))
 	}
 
-	if !principal.IsSystemAdmin() && !principal.UserMatches(key.UserID) {
+	if !principal.IsSystemAdmin() && !principal.IsTailnetAdmin(key.UserID) {
 		return nil, connect.NewError(connect.CodePermissionDenied, errors.New("permission denied"))
 	}
 

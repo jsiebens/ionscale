@@ -21,13 +21,18 @@ const (
 type Principal struct {
 	SystemRole domain.SystemRole
 	User       *domain.User
+	UserRole   domain.UserRole
 }
 
 func (p Principal) IsSystemAdmin() bool {
 	return p.SystemRole.IsAdmin()
 }
 
-func (p Principal) TailnetMatches(tailnetID uint64) bool {
+func (p Principal) IsTailnetAdmin(tailnetID uint64) bool {
+	return p.User.TailnetID == tailnetID && p.UserRole.IsAdmin()
+}
+
+func (p Principal) IsTailnetMember(tailnetID uint64) bool {
 	return p.User.TailnetID == tailnetID
 }
 
@@ -38,7 +43,7 @@ func (p Principal) UserMatches(userID uint64) bool {
 func CurrentPrincipal(ctx context.Context) Principal {
 	p := ctx.Value(principalKey)
 	if p == nil {
-		return Principal{SystemRole: domain.SystemRoleNone}
+		return Principal{SystemRole: domain.SystemRoleNone, UserRole: domain.UserRoleNone}
 	}
 	return p.(Principal)
 }
@@ -81,5 +86,9 @@ func exchangeToken(ctx context.Context, systemAdminKey key.ServerPrivate, reposi
 		return nil
 	}
 
-	return &Principal{User: &apiKey.User, SystemRole: domain.SystemRoleNone}
+	user := apiKey.User
+	tailnet := apiKey.Tailnet
+	role := tailnet.IAMPolicy.GetRole(user)
+
+	return &Principal{User: &apiKey.User, SystemRole: domain.SystemRoleNone, UserRole: role}
 }

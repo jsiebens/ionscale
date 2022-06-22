@@ -13,7 +13,7 @@ import (
 
 func (s *Service) ListMachines(ctx context.Context, req *connect.Request[api.ListMachinesRequest]) (*connect.Response[api.ListMachinesResponse], error) {
 	principal := CurrentPrincipal(ctx)
-	if !principal.IsSystemAdmin() && !principal.TailnetMatches(req.Msg.TailnetId) {
+	if !principal.IsSystemAdmin() && !principal.IsTailnetAdmin(req.Msg.TailnetId) {
 		return nil, connect.NewError(connect.CodePermissionDenied, errors.New("permission denied"))
 	}
 
@@ -76,7 +76,7 @@ func (s *Service) DeleteMachine(ctx context.Context, req *connect.Request[api.De
 		return nil, connect.NewError(connect.CodeNotFound, errors.New("machine not found"))
 	}
 
-	if !principal.IsSystemAdmin() && !principal.UserMatches(m.UserID) {
+	if !principal.IsSystemAdmin() && !principal.IsTailnetAdmin(m.TailnetID) {
 		return nil, connect.NewError(connect.CodePermissionDenied, errors.New("permission denied"))
 	}
 
@@ -101,7 +101,7 @@ func (s *Service) ExpireMachine(ctx context.Context, req *connect.Request[api.Ex
 		return nil, connect.NewError(connect.CodeNotFound, errors.New("machine not found"))
 	}
 
-	if !principal.IsSystemAdmin() && !principal.UserMatches(m.UserID) {
+	if !principal.IsSystemAdmin() && !principal.IsTailnetAdmin(m.TailnetID) {
 		return nil, connect.NewError(connect.CodePermissionDenied, errors.New("permission denied"))
 	}
 
@@ -130,7 +130,7 @@ func (s *Service) GetMachineRoutes(ctx context.Context, req *connect.Request[api
 		return nil, connect.NewError(connect.CodeNotFound, errors.New("machine not found"))
 	}
 
-	if !principal.IsSystemAdmin() && !principal.TailnetMatches(m.TailnetID) {
+	if !principal.IsSystemAdmin() && !principal.IsTailnetAdmin(m.TailnetID) {
 		return nil, connect.NewError(connect.CodePermissionDenied, errors.New("permission denied"))
 	}
 
@@ -161,7 +161,7 @@ func (s *Service) SetMachineRoutes(ctx context.Context, req *connect.Request[api
 		return nil, connect.NewError(connect.CodeNotFound, errors.New("machine not found"))
 	}
 
-	if !principal.IsSystemAdmin() {
+	if !principal.IsSystemAdmin() && !principal.IsTailnetAdmin(m.TailnetID) {
 		return nil, connect.NewError(connect.CodePermissionDenied, errors.New("permission denied"))
 	}
 
@@ -208,7 +208,7 @@ func (s *Service) SetMachineKeyExpiry(ctx context.Context, req *connect.Request[
 		return nil, connect.NewError(connect.CodeNotFound, errors.New("machine not found"))
 	}
 
-	if !principal.IsSystemAdmin() {
+	if !principal.IsSystemAdmin() && !principal.IsTailnetAdmin(m.TailnetID) {
 		return nil, connect.NewError(connect.CodePermissionDenied, errors.New("permission denied"))
 	}
 

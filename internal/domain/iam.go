@@ -19,9 +19,17 @@ type Identity struct {
 }
 
 type IAMPolicy struct {
-	Subs    []string `json:"subs,omitempty"`
-	Emails  []string `json:"emails,omitempty"`
-	Filters []string `json:"filters,omitempty"`
+	Subs    []string            `json:"subs,omitempty"`
+	Emails  []string            `json:"emails,omitempty"`
+	Filters []string            `json:"filters,omitempty"`
+	Roles   map[string]UserRole `json:"roles,omitempty"`
+}
+
+func (i *IAMPolicy) GetRole(user User) UserRole {
+	if val, ok := i.Roles[user.Name]; ok {
+		return val
+	}
+	return UserRoleMember
 }
 
 func (i *IAMPolicy) EvaluatePolicy(identity *Identity) (bool, error) {

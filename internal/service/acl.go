@@ -12,7 +12,7 @@ import (
 
 func (s *Service) GetACLPolicy(ctx context.Context, req *connect.Request[api.GetACLPolicyRequest]) (*connect.Response[api.GetACLPolicyResponse], error) {
 	principal := CurrentPrincipal(ctx)
-	if !principal.IsSystemAdmin() && !principal.TailnetMatches(req.Msg.TailnetId) {
+	if !principal.IsSystemAdmin() && !principal.IsTailnetAdmin(req.Msg.TailnetId) {
 		return nil, connect.NewError(connect.CodePermissionDenied, errors.New("permission denied"))
 	}
 
@@ -34,7 +34,7 @@ func (s *Service) GetACLPolicy(ctx context.Context, req *connect.Request[api.Get
 
 func (s *Service) SetACLPolicy(ctx context.Context, req *connect.Request[api.SetACLPolicyRequest]) (*connect.Response[api.SetACLPolicyResponse], error) {
 	principal := CurrentPrincipal(ctx)
-	if !principal.IsSystemAdmin() {
+	if !principal.IsSystemAdmin() && !principal.IsTailnetAdmin(req.Msg.TailnetId) {
 		return nil, connect.NewError(connect.CodePermissionDenied, errors.New("permission denied"))
 	}
 

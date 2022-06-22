@@ -34,7 +34,7 @@ func (s *Service) CreateTailnet(ctx context.Context, req *connect.Request[api.Cr
 
 func (s *Service) GetTailnet(ctx context.Context, req *connect.Request[api.GetTailnetRequest]) (*connect.Response[api.GetTailnetResponse], error) {
 	principal := CurrentPrincipal(ctx)
-	if !principal.IsSystemAdmin() && !principal.TailnetMatches(req.Msg.Id) {
+	if !principal.IsSystemAdmin() && !principal.IsTailnetAdmin(req.Msg.Id) {
 		return nil, connect.NewError(connect.CodePermissionDenied, errors.New("permission denied"))
 	}
 
@@ -83,7 +83,7 @@ func (s *Service) ListTailnets(ctx context.Context, req *connect.Request[api.Lis
 
 func (s *Service) DeleteTailnet(ctx context.Context, req *connect.Request[api.DeleteTailnetRequest]) (*connect.Response[api.DeleteTailnetResponse], error) {
 	principal := CurrentPrincipal(ctx)
-	if !principal.IsSystemAdmin() && !principal.TailnetMatches(req.Msg.TailnetId) {
+	if !principal.IsSystemAdmin() {
 		return nil, connect.NewError(connect.CodePermissionDenied, errors.New("permission denied"))
 	}
 

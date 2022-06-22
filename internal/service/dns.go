@@ -10,7 +10,7 @@ import (
 
 func (s *Service) GetDNSConfig(ctx context.Context, req *connect.Request[api.GetDNSConfigRequest]) (*connect.Response[api.GetDNSConfigResponse], error) {
 	principal := CurrentPrincipal(ctx)
-	if !principal.IsSystemAdmin() && !principal.TailnetMatches(req.Msg.TailnetId) {
+	if !principal.IsSystemAdmin() && !principal.IsTailnetAdmin(req.Msg.TailnetId) {
 		return nil, connect.NewError(connect.CodePermissionDenied, errors.New("permission denied"))
 	}
 
@@ -38,7 +38,7 @@ func (s *Service) GetDNSConfig(ctx context.Context, req *connect.Request[api.Get
 
 func (s *Service) SetDNSConfig(ctx context.Context, req *connect.Request[api.SetDNSConfigRequest]) (*connect.Response[api.SetDNSConfigResponse], error) {
 	principal := CurrentPrincipal(ctx)
-	if !principal.IsSystemAdmin() {
+	if !principal.IsSystemAdmin() && !principal.IsTailnetAdmin(req.Msg.TailnetId) {
 		return nil, connect.NewError(connect.CodePermissionDenied, errors.New("permission denied"))
 	}
 

@@ -23,6 +23,18 @@ const (
 	UserTypePerson  UserType = "person"
 )
 
+type UserRole string
+
+const (
+	UserRoleNone   UserRole = ""
+	UserRoleMember UserRole = "member"
+	UserRoleAdmin  UserRole = "admin"
+)
+
+func (s UserRole) IsAdmin() bool {
+	return s == UserRoleAdmin
+}
+
 type User struct {
 	ID        uint64 `gorm:"primary_key;autoIncrement:false"`
 	Name      string
