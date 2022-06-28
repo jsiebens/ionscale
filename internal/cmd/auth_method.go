@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"context"
+	"fmt"
 	"github.com/bufbuild/connect-go"
 	api "github.com/jsiebens/ionscale/pkg/gen/ionscale/v1"
 	"github.com/muesli/coral"
@@ -17,6 +18,7 @@ func authMethodsCommand() *coral.Command {
 
 	command.AddCommand(listAuthMethods())
 	command.AddCommand(createAuthMethodCommand())
+	command.AddCommand(deleteAuthMethodCommand())
 
 	return command
 }
@@ -49,6 +51,49 @@ func listAuthMethods() *coral.Command {
 			tbl.AddRow(m.Id, m.Name, m.Type)
 		}
 		tbl.Print()
+
+		return nil
+	}
+
+	return command
+}
+
+func deleteAuthMethodCommand() *coral.Command {
+	command := &coral.Command{
+		Use:          "delete",
+		Short:        "Delete auth methods",
+		SilenceUsage: true,
+	}
+
+	var authMethodID uint64
+	var authMethodName string
+	var force bool
+	var target = Target{}
+	target.prepareCommand(command)
+
+	command.Flags().StringVar(&authMethodName, "auth-method", "", "Auth Method name. Mutually exclusive with --auth-method-id.")
+	command.Flags().Uint64Var(&authMethodID, "auth-method-id", 0, "Auth Method ID. Mutually exclusive with --auth-method.")
+	command.Flags().BoolVar(&force, "force", false, "When enabled, force delete the specified Auth Method even when machines are still available.")
+
+	command.PreRunE = checkRequiredAuthMethodAndAuthMethodIdFlags
+	command.RunE = func(command *coral.Command, args []string) error {
+		client, err := target.createGRPCClient()
+		if err != nil {
+			return err
+		}
+
+		method, err := findAuthMethod(client, authMethodName, authMethodID)
+		if err != nil {
+			return err
+		}
+
+		_, err = client.DeleteAuthMethod(context.Background(), connect.NewRequest(&api.DeleteAuthMethodRequest{AuthMethodId: method.Id, Force: force}))
+
+		if err != nil {
+			return err
+		}
+
+		fmt.Println("Auth Method deleted.")
 
 		return nil
 	}

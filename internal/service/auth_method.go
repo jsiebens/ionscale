@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"errors"
+	"fmt"
 	"github.com/bufbuild/connect-go"
 	"github.com/jsiebens/ionscale/internal/domain"
 	"github.com/jsiebens/ionscale/internal/util"
@@ -85,4 +86,57 @@ func (s *Service) ListAuthMethods(ctx context.Context, _ *connect.Request[api.Li
 	}
 
 	return connect.NewResponse(response), nil
+}
+
+func (s *Service) DeleteAuthMethod(ctx context.Context, req *connect.Request[api.DeleteAuthMethodRequest]) (*connect.Response[api.DeleteAuthMethodResponse], error) {
+	principal := CurrentPrincipal(ctx)
+	if !principal.IsSystemAdmin() {
+		return nil, connect.NewError(connect.CodePermissionDenied, errors.New("permission denied"))
+	}
+
+	count, err := s.repository.CountMachinesByAuthMethod(ctx, req.Msg.AuthMethodId)
+	if err != nil {
+		return nil, err
+	}
+
+	if !req.Msg.Force && count > 0 {
+		return nil, connect.NewError(connect.CodeInvalidArgument, fmt.Errorf("there are still machines authenticated using this method, number of machines: %d", count))
+	}
+
+	err = s.repository.Transaction(func(rp domain.Repository) error {
+
+		if _, err := rp.DeleteMachinesByAuthMethod(ctx, req.Msg.AuthMethodId); err != nil {
+			return err
+		}
+
+		if _, err := rp.DeleteAuthKeysByAuthMethod(ctx, req.Msg.AuthMethodId); err != nil {
+			return err
+		}
+
+		if _, err := rp.DeleteApiKeysByAuthMethod(ctx, req.Msg.AuthMethodId); err != nil {
+			return err
+		}
+
+		if _, err := rp.DeleteUsersByAuthMethod(ctx, req.Msg.AuthMethodId); err != nil {
+			return err
+		}
+
+		if _, err := rp.DeleteAccountsByAuthMethod(ctx, req.Msg.AuthMethodId); err != nil {
+			return err
+		}
+
+		if err := rp.DeleteAuthMethod(ctx, req.Msg.AuthMethodId); err != nil {
+			return err
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	s.brokerPool.SignalUpdate()
+
+	return connect.NewResponse(&api.DeleteAuthMethodResponse{}), nil
 }

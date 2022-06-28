@@ -38,3 +38,9 @@ message ListAuthMethodsResponse {
   repeated AuthMethod auth_methods = 1;
 }
 
+message DeleteAuthMethodRequest {
+  uint64 auth_method_id = 1;
+  bool force = 2;
+}
+
+message DeleteAuthMethodResponse {}

@@ -48,3 +48,8 @@ func (r *repository) GetAuthMethod(ctx context.Context, id uint64) (*AuthMethod,
 
 	return &m, nil
 }
+
+func (r *repository) DeleteAuthMethod(ctx context.Context, id uint64) error {
+	tx := r.withContext(ctx).Delete(&AuthMethod{ID: id})
+	return tx.Error
+}

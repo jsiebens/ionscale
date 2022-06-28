@@ -33,6 +33,7 @@ type IonscaleServiceClient interface {
 	SetDERPMap(context.Context, *connect_go.Request[v1.SetDERPMapRequest]) (*connect_go.Response[v1.SetDERPMapResponse], error)
 	GetAuthMethod(context.Context, *connect_go.Request[v1.GetAuthMethodRequest]) (*connect_go.Response[v1.GetAuthMethodResponse], error)
 	CreateAuthMethod(context.Context, *connect_go.Request[v1.CreateAuthMethodRequest]) (*connect_go.Response[v1.CreateAuthMethodResponse], error)
+	DeleteAuthMethod(context.Context, *connect_go.Request[v1.DeleteAuthMethodRequest]) (*connect_go.Response[v1.DeleteAuthMethodResponse], error)
 	ListAuthMethods(context.Context, *connect_go.Request[v1.ListAuthMethodsRequest]) (*connect_go.Response[v1.ListAuthMethodsResponse], error)
 	CreateTailnet(context.Context, *connect_go.Request[v1.CreateTailnetRequest]) (*connect_go.Response[v1.CreateTailnetResponse], error)
 	GetTailnet(context.Context, *connect_go.Request[v1.GetTailnetRequest]) (*connect_go.Response[v1.GetTailnetResponse], error)
@@ -95,6 +96,11 @@ func NewIonscaleServiceClient(httpClient connect_go.HTTPClient, baseURL string, 
 		createAuthMethod: connect_go.NewClient[v1.CreateAuthMethodRequest, v1.CreateAuthMethodResponse](
 			httpClient,
 			baseURL+"/ionscale.v1.IonscaleService/CreateAuthMethod",
+			opts...,
+		),
+		deleteAuthMethod: connect_go.NewClient[v1.DeleteAuthMethodRequest, v1.DeleteAuthMethodResponse](
+			httpClient,
+			baseURL+"/ionscale.v1.IonscaleService/DeleteAuthMethod",
 			opts...,
 		),
 		listAuthMethods: connect_go.NewClient[v1.ListAuthMethodsRequest, v1.ListAuthMethodsResponse](
@@ -218,6 +224,7 @@ type ionscaleServiceClient struct {
 	setDERPMap          *connect_go.Client[v1.SetDERPMapRequest, v1.SetDERPMapResponse]
 	getAuthMethod       *connect_go.Client[v1.GetAuthMethodRequest, v1.GetAuthMethodResponse]
 	createAuthMethod    *connect_go.Client[v1.CreateAuthMethodRequest, v1.CreateAuthMethodResponse]
+	deleteAuthMethod    *connect_go.Client[v1.DeleteAuthMethodRequest, v1.DeleteAuthMethodResponse]
 	listAuthMethods     *connect_go.Client[v1.ListAuthMethodsRequest, v1.ListAuthMethodsResponse]
 	createTailnet       *connect_go.Client[v1.CreateTailnetRequest, v1.CreateTailnetResponse]
 	getTailnet          *connect_go.Client[v1.GetTailnetRequest, v1.GetTailnetResponse]
@@ -270,6 +277,11 @@ func (c *ionscaleServiceClient) GetAuthMethod(ctx context.Context, req *connect_
 // CreateAuthMethod calls ionscale.v1.IonscaleService.CreateAuthMethod.
 func (c *ionscaleServiceClient) CreateAuthMethod(ctx context.Context, req *connect_go.Request[v1.CreateAuthMethodRequest]) (*connect_go.Response[v1.CreateAuthMethodResponse], error) {
 	return c.createAuthMethod.CallUnary(ctx, req)
+}
+
+// DeleteAuthMethod calls ionscale.v1.IonscaleService.DeleteAuthMethod.
+func (c *ionscaleServiceClient) DeleteAuthMethod(ctx context.Context, req *connect_go.Request[v1.DeleteAuthMethodRequest]) (*connect_go.Response[v1.DeleteAuthMethodResponse], error) {
+	return c.deleteAuthMethod.CallUnary(ctx, req)
 }
 
 // ListAuthMethods calls ionscale.v1.IonscaleService.ListAuthMethods.
@@ -390,6 +402,7 @@ type IonscaleServiceHandler interface {
 	SetDERPMap(context.Context, *connect_go.Request[v1.SetDERPMapRequest]) (*connect_go.Response[v1.SetDERPMapResponse], error)
 	GetAuthMethod(context.Context, *connect_go.Request[v1.GetAuthMethodRequest]) (*connect_go.Response[v1.GetAuthMethodResponse], error)
 	CreateAuthMethod(context.Context, *connect_go.Request[v1.CreateAuthMethodRequest]) (*connect_go.Response[v1.CreateAuthMethodResponse], error)
+	DeleteAuthMethod(context.Context, *connect_go.Request[v1.DeleteAuthMethodRequest]) (*connect_go.Response[v1.DeleteAuthMethodResponse], error)
 	ListAuthMethods(context.Context, *connect_go.Request[v1.ListAuthMethodsRequest]) (*connect_go.Response[v1.ListAuthMethodsResponse], error)
 	CreateTailnet(context.Context, *connect_go.Request[v1.CreateTailnetRequest]) (*connect_go.Response[v1.CreateTailnetResponse], error)
 	GetTailnet(context.Context, *connect_go.Request[v1.GetTailnetRequest]) (*connect_go.Response[v1.GetTailnetResponse], error)
@@ -449,6 +462,11 @@ func NewIonscaleServiceHandler(svc IonscaleServiceHandler, opts ...connect_go.Ha
 	mux.Handle("/ionscale.v1.IonscaleService/CreateAuthMethod", connect_go.NewUnaryHandler(
 		"/ionscale.v1.IonscaleService/CreateAuthMethod",
 		svc.CreateAuthMethod,
+		opts...,
+	))
+	mux.Handle("/ionscale.v1.IonscaleService/DeleteAuthMethod", connect_go.NewUnaryHandler(
+		"/ionscale.v1.IonscaleService/DeleteAuthMethod",
+		svc.DeleteAuthMethod,
 		opts...,
 	))
 	mux.Handle("/ionscale.v1.IonscaleService/ListAuthMethods", connect_go.NewUnaryHandler(
@@ -589,6 +607,10 @@ func (UnimplementedIonscaleServiceHandler) GetAuthMethod(context.Context, *conne
 
 func (UnimplementedIonscaleServiceHandler) CreateAuthMethod(context.Context, *connect_go.Request[v1.CreateAuthMethodRequest]) (*connect_go.Response[v1.CreateAuthMethodResponse], error) {
 	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("ionscale.v1.IonscaleService.CreateAuthMethod is not implemented"))
+}
+
+func (UnimplementedIonscaleServiceHandler) DeleteAuthMethod(context.Context, *connect_go.Request[v1.DeleteAuthMethodRequest]) (*connect_go.Response[v1.DeleteAuthMethodResponse], error) {
+	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("ionscale.v1.IonscaleService.DeleteAuthMethod is not implemented"))
 }
 
 func (UnimplementedIonscaleServiceHandler) ListAuthMethods(context.Context, *connect_go.Request[v1.ListAuthMethodsRequest]) (*connect_go.Response[v1.ListAuthMethodsResponse], error) {

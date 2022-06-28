@@ -95,3 +95,20 @@ func (r *repository) GetOrCreateUserWithAccount(ctx context.Context, tailnet *Ta
 
 	return user, user.ID == id, nil
 }
+
+func (r *repository) DeleteUsersByAuthMethod(ctx context.Context, authMethodID uint64) (int64, error) {
+	subQuery := r.withContext(ctx).
+		Select("users.id").
+		Table("users").
+		Joins("JOIN accounts a on a.id = users.account_id").
+		Where("a.auth_method_id = ?", authMethodID)
+
+	tx := r.withContext(ctx).
+		Delete(&User{}, "id in (?)", subQuery)
+
+	if tx.Error != nil {
+		return 0, tx.Error
+	}
+
+	return tx.RowsAffected, nil
+}

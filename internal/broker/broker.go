@@ -58,6 +58,14 @@ func (m *BrokerPool) SignalDERPMapUpdated(c *tailcfg.DERPMap) {
 	}
 }
 
+func (m *BrokerPool) SignalUpdate() {
+	m.lock.Lock()
+	defer m.lock.Unlock()
+	for _, b := range m.store {
+		b.SignalUpdate()
+	}
+}
+
 func newBroker(tailnetID uint64) Broker {
 	b := &broker{
 		tailnetID:      tailnetID,

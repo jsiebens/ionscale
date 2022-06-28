@@ -146,3 +146,20 @@ func (r *repository) LoadAuthKey(ctx context.Context, key string) (*AuthKey, err
 
 	return &m, nil
 }
+
+func (r *repository) DeleteAuthKeysByAuthMethod(ctx context.Context, authMethodID uint64) (int64, error) {
+	subQuery := r.withContext(ctx).
+		Select("auth_keys.id").
+		Table("auth_keys").
+		Joins("JOIN users u on u.id = auth_keys.user_id JOIN accounts a on a.id = u.account_id").
+		Where("a.auth_method_id = ?", authMethodID)
+
+	tx := r.withContext(ctx).
+		Delete(&AuthKey{}, "id in (?)", subQuery)
+
+	if tx.Error != nil {
+		return 0, tx.Error
+	}
+
+	return tx.RowsAffected, nil
+}

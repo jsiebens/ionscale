@@ -29,6 +29,7 @@ service IonscaleService {
 
   rpc GetAuthMethod (GetAuthMethodRequest) returns (GetAuthMethodResponse) {}
   rpc CreateAuthMethod (CreateAuthMethodRequest) returns (CreateAuthMethodResponse) {}
+  rpc DeleteAuthMethod (DeleteAuthMethodRequest) returns (DeleteAuthMethodResponse) {}
   rpc ListAuthMethods (ListAuthMethodsRequest) returns (ListAuthMethodsResponse) {}
 
   rpc CreateTailnet (CreateTailnetRequest) returns (CreateTailnetResponse) {}

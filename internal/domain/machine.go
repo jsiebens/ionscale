@@ -376,6 +376,23 @@ func (r *repository) SetMachineLastSeen(ctx context.Context, machineID uint64) e
 	return nil
 }
 
+func (r *repository) CountMachinesByAuthMethod(ctx context.Context, authMethodID uint64) (int64, error) {
+	var count int64
+
+	tx := r.withContext(ctx).
+		Select("machines.id").
+		Table("machines").
+		Joins("JOIN users u on u.id = machines.user_id JOIN accounts a on a.id = u.account_id").
+		Where("a.auth_method_id = ?", authMethodID).
+		Count(&count)
+
+	if tx.Error != nil {
+		return 0, tx.Error
+	}
+
+	return count, nil
+}
+
 func (r *repository) ExpireMachineByAuthMethod(ctx context.Context, tailnetID, authMethodID uint64) (int64, error) {
 	now := time.Now().UTC()
 
@@ -389,6 +406,23 @@ func (r *repository) ExpireMachineByAuthMethod(ctx context.Context, tailnetID, a
 		Table("machines").
 		Where("tags = '' AND (expires_at is null or expires_at > ?) AND id in (?)", &now, subQuery).
 		Updates(map[string]interface{}{"expires_at": &now})
+
+	if tx.Error != nil {
+		return 0, tx.Error
+	}
+
+	return tx.RowsAffected, nil
+}
+
+func (r *repository) DeleteMachinesByAuthMethod(ctx context.Context, authMethodID uint64) (int64, error) {
+	subQuery := r.withContext(ctx).
+		Select("machines.id").
+		Table("machines").
+		Joins("JOIN users u on u.id = machines.user_id JOIN accounts a on a.id = u.account_id").
+		Where("a.auth_method_id = ?", authMethodID)
+
+	tx := r.withContext(ctx).
+		Delete(&Machine{}, "id in (?)", subQuery)
 
 	if tx.Error != nil {
 		return 0, tx.Error

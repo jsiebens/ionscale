@@ -13,6 +13,7 @@ type Account struct {
 	ExternalID   string
 	LoginName    string
 	AuthMethodID uint64
+	AuthMethod   AuthMethod
 }
 
 func (r *repository) GetOrCreateAccount(ctx context.Context, authMethodID uint64, externalID, loginName string) (*Account, bool, error) {
@@ -44,4 +45,15 @@ func (r *repository) GetAccount(ctx context.Context, id uint64) (*Account, error
 	}
 
 	return &account, nil
+}
+
+func (r *repository) DeleteAccountsByAuthMethod(ctx context.Context, authMethodID uint64) (int64, error) {
+	tx := r.withContext(ctx).
+		Delete(&Account{}, "auth_method_id = ?", authMethodID)
+
+	if tx.Error != nil {
+		return 0, tx.Error
+	}
+
+	return tx.RowsAffected, nil
 }
