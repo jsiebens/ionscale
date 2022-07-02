@@ -293,8 +293,10 @@ func (h *PollNetMapHandler) createMapResponse(m *domain.Machine, binder bind.Bin
 	} else {
 		mapResponse = &tailcfg.MapResponse{
 			Node:         node,
+			DNSConfig:    mapping.ToDNSConfig(&m.Tailnet, &dnsConfig),
 			PacketFilter: rules,
 			DERPMap:      derpMap,
+			Domain:       dnsname.SanitizeHostname(m.Tailnet.Name),
 			PeersChanged: changedPeers,
 			PeersRemoved: removedPeers,
 			UserProfiles: users,
