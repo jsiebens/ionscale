@@ -14,14 +14,8 @@ type Repository interface {
 	GetDERPMap(ctx context.Context) (*tailcfg.DERPMap, error)
 	SetDERPMap(ctx context.Context, v *tailcfg.DERPMap) error
 
-	SaveAuthMethod(ctx context.Context, m *AuthMethod) error
-	ListAuthMethods(ctx context.Context) ([]AuthMethod, error)
-	GetAuthMethod(ctx context.Context, id uint64) (*AuthMethod, error)
-	DeleteAuthMethod(ctx context.Context, id uint64) error
-
 	GetAccount(ctx context.Context, accountID uint64) (*Account, error)
-	GetOrCreateAccount(ctx context.Context, authMethodID uint64, externalID, loginName string) (*Account, bool, error)
-	DeleteAccountsByAuthMethod(ctx context.Context, authMethodID uint64) (int64, error)
+	GetOrCreateAccount(ctx context.Context, externalID, loginName string) (*Account, bool, error)
 
 	SaveTailnet(ctx context.Context, tailnet *Tailnet) error
 	GetOrCreateTailnet(ctx context.Context, name string) (*Tailnet, bool, error)
@@ -31,7 +25,6 @@ type Repository interface {
 
 	SaveApiKey(ctx context.Context, key *ApiKey) error
 	LoadApiKey(ctx context.Context, key string) (*ApiKey, error)
-	DeleteApiKeysByAuthMethod(ctx context.Context, authMethodID uint64) (int64, error)
 
 	GetAuthKey(ctx context.Context, id uint64) (*AuthKey, error)
 	SaveAuthKey(ctx context.Context, key *AuthKey) error
@@ -40,13 +33,11 @@ type Repository interface {
 	ListAuthKeys(ctx context.Context, tailnetID uint64) ([]AuthKey, error)
 	ListAuthKeysByTailnetAndUser(ctx context.Context, tailnetID, userID uint64) ([]AuthKey, error)
 	LoadAuthKey(ctx context.Context, key string) (*AuthKey, error)
-	DeleteAuthKeysByAuthMethod(ctx context.Context, authMethodID uint64) (int64, error)
 
 	GetOrCreateServiceUser(ctx context.Context, tailnet *Tailnet) (*User, bool, error)
 	ListUsers(ctx context.Context, tailnetID uint64) (Users, error)
 	GetOrCreateUserWithAccount(ctx context.Context, tailnet *Tailnet, account *Account) (*User, bool, error)
 	DeleteUsersByTailnet(ctx context.Context, tailnetID uint64) error
-	DeleteUsersByAuthMethod(ctx context.Context, authMethodID uint64) (int64, error)
 
 	SaveMachine(ctx context.Context, m *Machine) error
 	DeleteMachine(ctx context.Context, id uint64) (bool, error)
@@ -61,9 +52,6 @@ type Repository interface {
 	ListMachinePeers(ctx context.Context, tailnetID uint64, key string) (Machines, error)
 	ListInactiveEphemeralMachines(ctx context.Context, checkpoint time.Time) (Machines, error)
 	SetMachineLastSeen(ctx context.Context, machineID uint64) error
-	ExpireMachineByAuthMethod(ctx context.Context, tailnetID, authMethodID uint64) (int64, error)
-	DeleteMachinesByAuthMethod(ctx context.Context, authMethodID uint64) (int64, error)
-	CountMachinesByAuthMethod(ctx context.Context, authMethodID uint64) (int64, error)
 
 	SaveRegistrationRequest(ctx context.Context, request *RegistrationRequest) error
 	GetRegistrationRequestByKey(ctx context.Context, key string) (*RegistrationRequest, error)

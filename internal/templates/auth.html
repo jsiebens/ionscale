@@ -74,23 +74,21 @@
 </head>
 <body>
 <div class="wrapper">
-    {{if .AuthMethods}}
+    {{if .ProviderAvailable}}
     <div style="text-align: left; padding-bottom: 10px">
         <p><b>Authentication required</b></p>
         <small>Login with:</small>
     </div>
     <form method="post">
         <ul class="selectionList">
-            {{range .AuthMethods}}
-            <li><button type="submit" name="s" value="{{.ID}}">{{.Name}}</button></li>
-            {{end}}
+            <li><button type="submit" name="s" value="true">OpenID</button></li>
         </ul>
     </form>
     <div style="text-align: left; padding-bottom: 10px; padding-top: 20px">
         <small>Or enter an <label for="ak">auth key</label> here:</small>
     </div>
     {{end}}
-    {{if not .AuthMethods}}
+    {{if not .ProviderAvailable}}
     <div style="text-align: left; padding-bottom: 10px">
         <p><b>Authentication required</b></p>
         <small>Enter an <label for="ak">auth key</label> here:</small>

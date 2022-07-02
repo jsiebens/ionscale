@@ -6,22 +6,25 @@ import (
 	"github.com/jsiebens/ionscale/internal/broker"
 	"github.com/jsiebens/ionscale/internal/config"
 	"github.com/jsiebens/ionscale/internal/domain"
+	"github.com/jsiebens/ionscale/internal/provider"
 	"github.com/jsiebens/ionscale/internal/version"
 	api "github.com/jsiebens/ionscale/pkg/gen/ionscale/v1"
 )
 
-func NewService(config *config.Config, repository domain.Repository, brokerPool *broker.BrokerPool) *Service {
+func NewService(config *config.Config, authProvider provider.AuthProvider, repository domain.Repository, brokerPool *broker.BrokerPool) *Service {
 	return &Service{
-		config:     config,
-		repository: repository,
-		brokerPool: brokerPool,
+		config:       config,
+		authProvider: authProvider,
+		repository:   repository,
+		brokerPool:   brokerPool,
 	}
 }
 
 type Service struct {
-	config     *config.Config
-	repository domain.Repository
-	brokerPool *broker.BrokerPool
+	config       *config.Config
+	authProvider provider.AuthProvider
+	repository   domain.Repository
+	brokerPool   *broker.BrokerPool
 }
 
 func (s *Service) brokers(tailnetID uint64) broker.Broker {

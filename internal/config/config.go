@@ -36,7 +36,6 @@ const (
 	httpsListenAddrKey      = "IONSCALE_HTTPS_LISTEN_ADDR"
 	serverUrlKey            = "IONSCALE_SERVER_URL"
 	keysSystemAdminKeyKey   = "IONSCALE_SYSTEM_ADMIN_KEY"
-	keysEncryptionKeyKey    = "IONSCALE_ENCRYPTION_KEY"
 	databaseUrlKey          = "IONSCALE_DB_URL"
 	tlsDisableKey           = "IONSCALE_TLS_DISABLE"
 	tlsCertFileKey          = "IONSCALE_TLS_CERT_FILE"
@@ -59,7 +58,6 @@ func defaultConfig() *Config {
 		ServerUrl:         GetString(serverUrlKey, "https://localhost:8443"),
 		Keys: Keys{
 			SystemAdminKey: GetString(keysSystemAdminKeyKey, ""),
-			EncryptionKey:  GetString(keysEncryptionKeyKey, ""),
 		},
 		Database: Database{
 			Url: GetString(databaseUrlKey, "ionscale.db"),
@@ -73,6 +71,7 @@ func defaultConfig() *Config {
 			CertMagicEmail:       GetString(tlsCertMagicEmailKey, ""),
 			CertMagicStoragePath: GetString(tlsCertMagicStoragePath, ""),
 		},
+		Provider: Provider{},
 		Logging: Logging{
 			Level:  GetString(loggingLevelKey, "info"),
 			Format: GetString(loggingFormatKey, ""),
@@ -94,6 +93,7 @@ type Config struct {
 	Logging           Logging  `yaml:"logging,omitempty"`
 	Keys              Keys     `yaml:"keys,omitempty"`
 	Database          Database `yaml:"database,omitempty"`
+	Provider          Provider `yaml:"oidc,omitempty"`
 }
 
 type Tls struct {
@@ -118,7 +118,13 @@ type Database struct {
 
 type Keys struct {
 	SystemAdminKey string `yaml:"system_admin_key,omitempty"`
-	EncryptionKey  string `yaml:"encryption_key,omitempty"`
+}
+
+type Provider struct {
+	Issuer       string   `yaml:"issuer"`
+	ClientID     string   `yaml:"client_id"`
+	ClientSecret string   `yaml:"client_secret"`
+	Scopes       []string `yaml:"additional_scopes"`
 }
 
 func (c *Config) CreateUrl(format string, a ...interface{}) string {

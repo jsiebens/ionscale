@@ -3,31 +3,34 @@ package provider
 import (
 	"context"
 	"fmt"
+	"github.com/jsiebens/ionscale/internal/config"
 	"strings"
 
 	"github.com/coreos/go-oidc/v3/oidc"
-	"github.com/jsiebens/ionscale/internal/domain"
 	"golang.org/x/oauth2"
 )
 
 type OIDCProvider struct {
 	clientID     string
 	clientSecret string
+	scopes       []string
 	provider     *oidc.Provider
 	verifier     *oidc.IDTokenVerifier
 }
 
-func NewOIDCProvider(c *domain.AuthMethod) (*OIDCProvider, error) {
+func NewOIDCProvider(c *config.Provider) (*OIDCProvider, error) {
+	defaultScopes := []string{oidc.ScopeOpenID, "email", "profile"}
 	provider, err := oidc.NewProvider(context.Background(), c.Issuer)
 	if err != nil {
 		return nil, err
 	}
 
-	verifier := provider.Verifier(&oidc.Config{ClientID: c.ClientId})
+	verifier := provider.Verifier(&oidc.Config{ClientID: c.ClientID, SkipClientIDCheck: c.ClientID == ""})
 
 	return &OIDCProvider{
-		clientID:     c.ClientId,
+		clientID:     c.ClientID,
 		clientSecret: c.ClientSecret,
+		scopes:       append(defaultScopes, c.Scopes...),
 		provider:     provider,
 		verifier:     verifier,
 	}, nil

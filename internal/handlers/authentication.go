@@ -21,9 +21,11 @@ import (
 
 func NewAuthenticationHandlers(
 	config *config.Config,
+	authProvider provider.AuthProvider,
 	repository domain.Repository) *AuthenticationHandlers {
 	return &AuthenticationHandlers{
 		config:            config,
+		authProvider:      authProvider,
 		repository:        repository,
 		pendingOAuthUsers: cache.New(5*time.Minute, 10*time.Minute),
 	}
@@ -31,12 +33,13 @@ func NewAuthenticationHandlers(
 
 type AuthenticationHandlers struct {
 	repository        domain.Repository
+	authProvider      provider.AuthProvider
 	config            *config.Config
 	pendingOAuthUsers *cache.Cache
 }
 
 type AuthFormData struct {
-	AuthMethods []domain.AuthMethod
+	ProviderAvailable bool
 }
 
 type TailnetSelectionData struct {
@@ -44,9 +47,8 @@ type TailnetSelectionData struct {
 }
 
 type oauthState struct {
-	Key        string
-	Flow       string
-	AuthMethod uint64
+	Key  string
+	Flow string
 }
 
 func (h *AuthenticationHandlers) StartCliAuth(c echo.Context) error {
@@ -57,52 +59,18 @@ func (h *AuthenticationHandlers) StartCliAuth(c echo.Context) error {
 		return c.Redirect(http.StatusFound, "/a/error")
 	}
 
-	methods, err := h.repository.ListAuthMethods(ctx)
+	if h.authProvider == nil {
+		return c.Redirect(http.StatusFound, "/a/error")
+	}
+
+	state, err := h.createState("c", key)
 	if err != nil {
 		return err
 	}
 
-	return c.Render(http.StatusOK, "cli_auth.html", &AuthFormData{AuthMethods: methods})
-}
+	redirectUrl := h.authProvider.GetLoginURL(h.config.CreateUrl("/a/callback"), state)
 
-func (h *AuthenticationHandlers) ProcessCliAuth(c echo.Context) error {
-	ctx := c.Request().Context()
-
-	key := c.Param("key")
-	authMethodId := c.FormValue("s")
-
-	req, err := h.repository.GetAuthenticationRequest(ctx, key)
-	if err != nil || req == nil {
-		return c.Redirect(http.StatusFound, "/a/error")
-	}
-
-	if authMethodId != "" {
-		id, err := strconv.ParseUint(authMethodId, 10, 64)
-		if err != nil {
-			return err
-		}
-
-		method, err := h.repository.GetAuthMethod(ctx, id)
-		if err != nil {
-			return err
-		}
-
-		state, err := h.createState("c", key, method.ID)
-		if err != nil {
-			return err
-		}
-
-		authProvider, err := provider.NewProvider(method)
-		if err != nil {
-			return err
-		}
-
-		redirectUrl := authProvider.GetLoginURL(h.config.CreateUrl("/a/callback"), state)
-
-		return c.Redirect(http.StatusFound, redirectUrl)
-	}
-
-	return c.Redirect(http.StatusFound, "/a/c/"+key)
+	return c.Redirect(http.StatusFound, redirectUrl)
 }
 
 func (h *AuthenticationHandlers) StartAuth(c echo.Context) error {
@@ -113,12 +81,7 @@ func (h *AuthenticationHandlers) StartAuth(c echo.Context) error {
 		return c.Redirect(http.StatusFound, "/a/error")
 	}
 
-	methods, err := h.repository.ListAuthMethods(ctx)
-	if err != nil {
-		return err
-	}
-
-	return c.Render(http.StatusOK, "auth.html", &AuthFormData{AuthMethods: methods})
+	return c.Render(http.StatusOK, "auth.html", &AuthFormData{ProviderAvailable: h.authProvider != nil})
 }
 
 func (h *AuthenticationHandlers) ProcessAuth(c echo.Context) error {
@@ -126,7 +89,7 @@ func (h *AuthenticationHandlers) ProcessAuth(c echo.Context) error {
 
 	key := c.Param("key")
 	authKey := c.FormValue("ak")
-	authMethodId := c.FormValue("s")
+	interactive := c.FormValue("s")
 
 	req, err := h.repository.GetRegistrationRequestByKey(ctx, key)
 	if err != nil || req == nil {
@@ -137,28 +100,13 @@ func (h *AuthenticationHandlers) ProcessAuth(c echo.Context) error {
 		return h.endMachineRegistrationFlow(c, req, &oauthState{Key: key})
 	}
 
-	if authMethodId != "" {
-		id, err := strconv.ParseUint(authMethodId, 10, 64)
+	if interactive != "" {
+		state, err := h.createState("r", key)
 		if err != nil {
 			return err
 		}
 
-		method, err := h.repository.GetAuthMethod(ctx, id)
-		if err != nil {
-			return err
-		}
-
-		state, err := h.createState("r", key, method.ID)
-		if err != nil {
-			return err
-		}
-
-		authProvider, err := provider.NewProvider(method)
-		if err != nil {
-			return err
-		}
-
-		redirectUrl := authProvider.GetLoginURL(h.config.CreateUrl("/a/callback"), state)
+		redirectUrl := h.authProvider.GetLoginURL(h.config.CreateUrl("/a/callback"), state)
 
 		return c.Redirect(http.StatusFound, redirectUrl)
 	}
@@ -175,7 +123,7 @@ func (h *AuthenticationHandlers) Callback(c echo.Context) error {
 		return err
 	}
 
-	user, err := h.exchangeUser(ctx, code, state)
+	user, err := h.exchangeUser(code)
 	if err != nil {
 		return err
 	}
@@ -202,7 +150,7 @@ func (h *AuthenticationHandlers) Callback(c echo.Context) error {
 		return c.Redirect(http.StatusFound, "/a/error?e=ua")
 	}
 
-	account, _, err := h.repository.GetOrCreateAccount(ctx, state.AuthMethod, user.ID, user.Name)
+	account, _, err := h.repository.GetOrCreateAccount(ctx, user.ID, user.Name)
 	if err != nil {
 		return err
 	}
@@ -490,23 +438,10 @@ func (h *AuthenticationHandlers) endMachineRegistrationFlow(c echo.Context, regi
 	return c.Redirect(http.StatusFound, "/a/success")
 }
 
-func (h *AuthenticationHandlers) getAuthProvider(ctx context.Context, authMethodId uint64) (provider.AuthProvider, error) {
-	authMethod, err := h.repository.GetAuthMethod(ctx, authMethodId)
-	if err != nil {
-		return nil, err
-	}
-	return provider.NewProvider(authMethod)
-}
-
-func (h *AuthenticationHandlers) exchangeUser(ctx context.Context, code string, state *oauthState) (*provider.User, error) {
+func (h *AuthenticationHandlers) exchangeUser(code string) (*provider.User, error) {
 	redirectUrl := h.config.CreateUrl("/a/callback")
 
-	authProvider, err := h.getAuthProvider(ctx, state.AuthMethod)
-	if err != nil {
-		return nil, err
-	}
-
-	user, err := authProvider.Exchange(redirectUrl, code)
+	user, err := h.authProvider.Exchange(redirectUrl, code)
 	if err != nil {
 		return nil, err
 	}
@@ -514,8 +449,8 @@ func (h *AuthenticationHandlers) exchangeUser(ctx context.Context, code string, 
 	return user, nil
 }
 
-func (h *AuthenticationHandlers) createState(flow string, key string, authMethodId uint64) (string, error) {
-	stateMap := oauthState{Key: key, AuthMethod: authMethodId, Flow: flow}
+func (h *AuthenticationHandlers) createState(flow string, key string) (string, error) {
+	stateMap := oauthState{Key: key, Flow: flow}
 	marshal, err := json.Marshal(&stateMap)
 	if err != nil {
 		return "", err

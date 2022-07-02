@@ -8,20 +8,17 @@ import (
 )
 
 type Account struct {
-	ID uint64 `gorm:"primary_key;autoIncrement:false"`
-
-	ExternalID   string
-	LoginName    string
-	AuthMethodID uint64
-	AuthMethod   AuthMethod
+	ID         uint64 `gorm:"primary_key;autoIncrement:false"`
+	ExternalID string
+	LoginName  string
 }
 
-func (r *repository) GetOrCreateAccount(ctx context.Context, authMethodID uint64, externalID, loginName string) (*Account, bool, error) {
+func (r *repository) GetOrCreateAccount(ctx context.Context, externalID, loginName string) (*Account, bool, error) {
 	account := &Account{}
 	id := util.NextID()
 
 	tx := r.withContext(ctx).
-		Where(Account{AuthMethodID: authMethodID, ExternalID: externalID}).
+		Where(Account{ExternalID: externalID}).
 		Attrs(Account{ID: id, LoginName: loginName}).
 		FirstOrCreate(account)
 
@@ -45,15 +42,4 @@ func (r *repository) GetAccount(ctx context.Context, id uint64) (*Account, error
 	}
 
 	return &account, nil
-}
-
-func (r *repository) DeleteAccountsByAuthMethod(ctx context.Context, authMethodID uint64) (int64, error) {
-	tx := r.withContext(ctx).
-		Delete(&Account{}, "auth_method_id = ?", authMethodID)
-
-	if tx.Error != nil {
-		return 0, tx.Error
-	}
-
-	return tx.RowsAffected, nil
 }

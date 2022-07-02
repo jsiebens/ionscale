@@ -85,20 +85,3 @@ func (r *repository) LoadApiKey(ctx context.Context, key string) (*ApiKey, error
 
 	return &m, nil
 }
-
-func (r *repository) DeleteApiKeysByAuthMethod(ctx context.Context, authMethodID uint64) (int64, error) {
-	subQuery := r.withContext(ctx).
-		Select("api_keys.id").
-		Table("api_keys").
-		Joins("JOIN users u on u.id = api_keys.user_id JOIN accounts a on a.id = u.account_id").
-		Where("a.auth_method_id = ?", authMethodID)
-
-	tx := r.withContext(ctx).
-		Delete(&ApiKey{}, "id in (?)", subQuery)
-
-	if tx.Error != nil {
-		return 0, tx.Error
-	}
-
-	return tx.RowsAffected, nil
-}

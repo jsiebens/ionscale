@@ -10,7 +10,6 @@ import "ionscale/v1/version.proto";
 import "ionscale/v1/auth.proto";
 import "ionscale/v1/tailnets.proto";
 import "ionscale/v1/users.proto";
-import "ionscale/v1/auth_methods.proto";
 import "ionscale/v1/auth_keys.proto";
 import "ionscale/v1/machines.proto";
 import "ionscale/v1/routes.proto";
@@ -26,11 +25,6 @@ service IonscaleService {
 
   rpc GetDERPMap (GetDERPMapRequest) returns (GetDERPMapResponse) {}
   rpc SetDERPMap (SetDERPMapRequest) returns (SetDERPMapResponse) {}
-
-  rpc GetAuthMethod (GetAuthMethodRequest) returns (GetAuthMethodResponse) {}
-  rpc CreateAuthMethod (CreateAuthMethodRequest) returns (CreateAuthMethodResponse) {}
-  rpc DeleteAuthMethod (DeleteAuthMethodRequest) returns (DeleteAuthMethodResponse) {}
-  rpc ListAuthMethods (ListAuthMethodsRequest) returns (ListAuthMethodsResponse) {}
 
   rpc CreateTailnet (CreateTailnetRequest) returns (CreateTailnetResponse) {}
   rpc GetTailnet (GetTailnetRequest) returns (GetTailnetResponse) {}

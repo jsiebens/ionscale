@@ -11,14 +11,8 @@ import (
 )
 
 func (s *Service) Authenticate(ctx context.Context, req *connect.Request[api.AuthenticationRequest], stream *connect.ServerStream[api.AuthenticationResponse]) error {
-
-	methods, err := s.repository.ListAuthMethods(ctx)
-	if err != nil {
-		return err
-	}
-
-	if len(methods) == 0 {
-		return connect.NewError(connect.CodeFailedPrecondition, errors.New("no auth methods available, contact your ionscale administrator for more information"))
+	if s.authProvider == nil {
+		return connect.NewError(connect.CodeFailedPrecondition, errors.New("no authentication method available, contact your ionscale administrator for more information"))
 	}
 
 	key := util.RandStringBytes(8)

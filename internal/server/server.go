@@ -11,6 +11,7 @@ import (
 	"github.com/jsiebens/ionscale/internal/config"
 	"github.com/jsiebens/ionscale/internal/database"
 	"github.com/jsiebens/ionscale/internal/handlers"
+	"github.com/jsiebens/ionscale/internal/provider"
 	"github.com/jsiebens/ionscale/internal/service"
 	"github.com/jsiebens/ionscale/internal/templates"
 	echo_prometheus "github.com/labstack/echo-contrib/prometheus"
@@ -26,20 +27,20 @@ import (
 	"tailscale.com/types/key"
 )
 
-func Start(config *config.Config) error {
-	logger, err := setupLogging(config.Logging)
+func Start(c *config.Config) error {
+	logger, err := setupLogging(c.Logging)
 	if err != nil {
 		return err
 	}
 
 	logger.Info("Starting ionscale server")
 
-	serverKey, err := config.ReadServerKeys()
+	serverKey, err := c.ReadServerKeys()
 	if err != nil {
 		return err
 	}
 
-	_, repository, err := database.OpenDB(&config.Database, logger)
+	_, repository, err := database.OpenDB(&c.Database, logger)
 	if err != nil {
 		return err
 	}
@@ -57,25 +58,25 @@ func Start(config *config.Config) error {
 	go reaper.Start()
 
 	// prepare CertMagic
-	if config.Tls.CertMagicDomain != "" {
+	if c.Tls.CertMagicDomain != "" {
 		certmagic.DefaultACME.Agreed = true
-		certmagic.DefaultACME.Email = config.Tls.CertMagicEmail
-		certmagic.DefaultACME.CA = config.Tls.CertMagicCA
-		if config.Tls.CertMagicStoragePath != "" {
-			certmagic.Default.Storage = &certmagic.FileStorage{Path: config.Tls.CertMagicStoragePath}
+		certmagic.DefaultACME.Email = c.Tls.CertMagicEmail
+		certmagic.DefaultACME.CA = c.Tls.CertMagicCA
+		if c.Tls.CertMagicStoragePath != "" {
+			certmagic.Default.Storage = &certmagic.FileStorage{Path: c.Tls.CertMagicStoragePath}
 		}
 
 		cfg := certmagic.NewDefault()
-		if err := cfg.ManageAsync(context.Background(), []string{config.Tls.CertMagicDomain}); err != nil {
+		if err := cfg.ManageAsync(context.Background(), []string{c.Tls.CertMagicDomain}); err != nil {
 			return err
 		}
 
-		config.HttpListenAddr = fmt.Sprintf(":%d", certmagic.HTTPPort)
-		config.HttpsListenAddr = fmt.Sprintf(":%d", certmagic.HTTPSPort)
+		c.HttpListenAddr = fmt.Sprintf(":%d", certmagic.HTTPPort)
+		c.HttpsListenAddr = fmt.Sprintf(":%d", certmagic.HTTPSPort)
 	}
 
 	createPeerHandler := func(p key.MachinePublic) http.Handler {
-		registrationHandlers := handlers.NewRegistrationHandlers(bind.DefaultBinder(p), config, brokers, repository)
+		registrationHandlers := handlers.NewRegistrationHandlers(bind.DefaultBinder(p), c, brokers, repository)
 		pollNetMapHandler := handlers.NewPollNetMapHandler(bind.DefaultBinder(p), brokers, repository, offlineTimers)
 
 		e := echo.New()
@@ -87,15 +88,21 @@ func Start(config *config.Config) error {
 		return e
 	}
 
+	authProvider, err := setupAuthProvider(c.Provider)
+	if err != nil {
+		return err
+	}
+
 	noiseHandlers := handlers.NewNoiseHandlers(controlKeys.ControlKey, createPeerHandler)
-	registrationHandlers := handlers.NewRegistrationHandlers(bind.BoxBinder(controlKeys.LegacyControlKey), config, brokers, repository)
+	registrationHandlers := handlers.NewRegistrationHandlers(bind.BoxBinder(controlKeys.LegacyControlKey), c, brokers, repository)
 	pollNetMapHandler := handlers.NewPollNetMapHandler(bind.BoxBinder(controlKeys.LegacyControlKey), brokers, repository, offlineTimers)
 	authenticationHandlers := handlers.NewAuthenticationHandlers(
-		config,
+		c,
+		authProvider,
 		repository,
 	)
 
-	rpcService := service.NewService(config, repository, brokers)
+	rpcService := service.NewService(c, authProvider, repository, brokers)
 	rpcPath, rpcHandler := NewRpcHandler(serverKey.SystemAdminKey, repository, rpcService)
 
 	p := echo_prometheus.NewPrometheus("http", nil)
@@ -108,7 +115,7 @@ func Start(config *config.Config) error {
 	nonTlsAppHandler.Use(EchoLogger(logger))
 	nonTlsAppHandler.Use(p.HandlerFunc)
 	nonTlsAppHandler.POST("/ts2021", noiseHandlers.Upgrade)
-	nonTlsAppHandler.Any("/*", handlers.HttpRedirectHandler(config.Tls))
+	nonTlsAppHandler.Any("/*", handlers.HttpRedirectHandler(c.Tls))
 
 	tlsAppHandler := echo.New()
 	tlsAppHandler.Renderer = templates.NewTemplates()
@@ -129,23 +136,22 @@ func Start(config *config.Config) error {
 	auth.GET("/:key", authenticationHandlers.StartAuth)
 	auth.POST("/:key", authenticationHandlers.ProcessAuth)
 	auth.GET("/c/:key", authenticationHandlers.StartCliAuth)
-	auth.POST("/c/:key", authenticationHandlers.ProcessCliAuth)
 	auth.GET("/callback", authenticationHandlers.Callback)
 	auth.POST("/callback", authenticationHandlers.EndOAuth)
 	auth.GET("/success", authenticationHandlers.Success)
 	auth.GET("/error", authenticationHandlers.Error)
 
-	tlsL, err := tlsListener(config)
+	tlsL, err := tlsListener(c)
 	if err != nil {
 		return err
 	}
 
-	nonTlsL, err := nonTlsListener(config)
+	nonTlsL, err := nonTlsListener(c)
 	if err != nil {
 		return err
 	}
 
-	metricsL, err := metricsListener(config)
+	metricsL, err := metricsListener(c)
 	if err != nil {
 		return err
 	}
@@ -161,18 +167,25 @@ func Start(config *config.Config) error {
 		g.Go(func() error { return http.Serve(nonTlsL, nonTlsAppHandler) })
 	}
 
-	if config.Tls.CertMagicDomain != "" {
-		logger.Info("TLS is enabled with CertMagic", "domain", config.Tls.CertMagicDomain)
-		logger.Info("Server is running", "http_addr", config.HttpListenAddr, "https_addr", config.HttpsListenAddr, "metrics_addr", config.MetricsListenAddr)
-	} else if !config.Tls.Disable {
-		logger.Info("TLS is enabled", "cert", config.Tls.CertFile)
-		logger.Info("Server is running", "http_addr", config.HttpListenAddr, "https_addr", config.HttpsListenAddr, "metrics_addr", config.MetricsListenAddr)
+	if c.Tls.CertMagicDomain != "" {
+		logger.Info("TLS is enabled with CertMagic", "domain", c.Tls.CertMagicDomain)
+		logger.Info("Server is running", "http_addr", c.HttpListenAddr, "https_addr", c.HttpsListenAddr, "metrics_addr", c.MetricsListenAddr)
+	} else if !c.Tls.Disable {
+		logger.Info("TLS is enabled", "cert", c.Tls.CertFile)
+		logger.Info("Server is running", "http_addr", c.HttpListenAddr, "https_addr", c.HttpsListenAddr, "metrics_addr", c.MetricsListenAddr)
 	} else {
 		logger.Warn("TLS is disabled")
-		logger.Info("Server is running", "http_addr", config.HttpListenAddr, "metrics_addr", config.MetricsListenAddr)
+		logger.Info("Server is running", "http_addr", c.HttpListenAddr, "metrics_addr", c.MetricsListenAddr)
 	}
 
 	return g.Wait()
+}
+
+func setupAuthProvider(config config.Provider) (provider.AuthProvider, error) {
+	if len(config.Issuer) == 0 {
+		return nil, nil
+	}
+	return provider.NewOIDCProvider(&config)
 }
 
 func metricsListener(config *config.Config) (net.Listener, error) {
