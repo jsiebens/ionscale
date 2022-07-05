@@ -16,6 +16,8 @@ import (
 
 const NetworkMagicDNSSuffix = "ionscale.net"
 
+var CertDNSSuffix = ""
+
 func CopyViaJson[F any, T any](f F, t T) error {
 	raw, err := json.Marshal(f)
 	if err != nil {
@@ -29,7 +31,7 @@ func CopyViaJson[F any, T any](f F, t T) error {
 	return nil
 }
 
-func ToDNSConfig(tailnet *domain.Tailnet, c *domain.DNSConfig) *tailcfg.DNSConfig {
+func ToDNSConfig(m *domain.Machine, tailnet *domain.Tailnet, c *domain.DNSConfig) *tailcfg.DNSConfig {
 	tailnetDomain := dnsname.SanitizeHostname(tailnet.Name)
 	resolvers := []dnstype.Resolver{}
 	for _, r := range c.Nameservers {
@@ -42,9 +44,13 @@ func ToDNSConfig(tailnet *domain.Tailnet, c *domain.DNSConfig) *tailcfg.DNSConfi
 	config := &tailcfg.DNSConfig{}
 
 	var domains []string
+	var certDomains []string
 
 	if c.MagicDNS {
 		domains = append(domains, fmt.Sprintf("%s.%s", tailnetDomain, NetworkMagicDNSSuffix))
+		if len(CertDNSSuffix) != 0 {
+			certDomains = append(certDomains, fmt.Sprintf("%s.%s.%s", m.CompleteName(), tailnetDomain, CertDNSSuffix))
+		}
 		config.Proxied = true
 	}
 
@@ -69,6 +75,7 @@ func ToDNSConfig(tailnet *domain.Tailnet, c *domain.DNSConfig) *tailcfg.DNSConfi
 	}
 
 	config.Domains = domains
+	config.CertDomains = certDomains
 
 	return config
 }
@@ -126,10 +133,7 @@ func ToNode(m *domain.Machine, connected bool) (*tailcfg.Node, *tailcfg.UserProf
 		derp = "127.3.3.40:0"
 	}
 
-	var name = m.Name
-	if m.NameIdx != 0 {
-		name = fmt.Sprintf("%s-%d", m.Name, m.NameIdx)
-	}
+	var name = m.CompleteName()
 
 	sanitizedTailnetName := dnsname.SanitizeHostname(m.Tailnet.Name)
 

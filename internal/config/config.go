@@ -71,7 +71,8 @@ func defaultConfig() *Config {
 			CertMagicEmail:       GetString(tlsCertMagicEmailKey, ""),
 			CertMagicStoragePath: GetString(tlsCertMagicStoragePath, ""),
 		},
-		Provider: Provider{},
+		Provider:    Provider{},
+		DNSProvider: DNSProvider{},
 		Logging: Logging{
 			Level:  GetString(loggingLevelKey, "info"),
 			Format: GetString(loggingFormatKey, ""),
@@ -85,15 +86,16 @@ type ServerKeys struct {
 }
 
 type Config struct {
-	HttpListenAddr    string   `yaml:"http_listen_addr,omitempty"`
-	HttpsListenAddr   string   `yaml:"https_listen_addr,omitempty"`
-	MetricsListenAddr string   `yaml:"metrics_listen_addr,omitempty"`
-	ServerUrl         string   `yaml:"server_url,omitempty"`
-	Tls               Tls      `yaml:"tls,omitempty"`
-	Logging           Logging  `yaml:"logging,omitempty"`
-	Keys              Keys     `yaml:"keys,omitempty"`
-	Database          Database `yaml:"database,omitempty"`
-	Provider          Provider `yaml:"oidc,omitempty"`
+	HttpListenAddr    string      `yaml:"http_listen_addr,omitempty"`
+	HttpsListenAddr   string      `yaml:"https_listen_addr,omitempty"`
+	MetricsListenAddr string      `yaml:"metrics_listen_addr,omitempty"`
+	ServerUrl         string      `yaml:"server_url,omitempty"`
+	Tls               Tls         `yaml:"tls,omitempty"`
+	Logging           Logging     `yaml:"logging,omitempty"`
+	Keys              Keys        `yaml:"keys,omitempty"`
+	Database          Database    `yaml:"database,omitempty"`
+	Provider          Provider    `yaml:"oidc,omitempty"`
+	DNSProvider       DNSProvider `yaml:"dns_provider"`
 }
 
 type Tls struct {
@@ -125,6 +127,12 @@ type Provider struct {
 	ClientID     string   `yaml:"client_id"`
 	ClientSecret string   `yaml:"client_secret"`
 	Scopes       []string `yaml:"additional_scopes"`
+}
+
+type DNSProvider struct {
+	Name          string            `yaml:"name"`
+	Zone          string            `yaml:"zone"`
+	Configuration map[string]string `yaml:"config"`
 }
 
 func (c *Config) CreateUrl(format string, a ...interface{}) string {

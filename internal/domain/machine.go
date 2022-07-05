@@ -45,6 +45,13 @@ type Machine struct {
 
 type Machines []Machine
 
+func (m *Machine) CompleteName() string {
+	if m.NameIdx != 0 {
+		return fmt.Sprintf("%s-%d", m.Name, m.NameIdx)
+	}
+	return m.Name
+}
+
 func (m *Machine) IsExpired() bool {
 	return !m.KeyExpiryDisabled && !m.ExpiresAt.IsZero() && m.ExpiresAt.Before(time.Now())
 }

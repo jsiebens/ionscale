@@ -10,6 +10,7 @@ import (
 	"github.com/jsiebens/ionscale/internal/broker"
 	"github.com/jsiebens/ionscale/internal/config"
 	"github.com/jsiebens/ionscale/internal/database"
+	"github.com/jsiebens/ionscale/internal/dns"
 	"github.com/jsiebens/ionscale/internal/handlers"
 	"github.com/jsiebens/ionscale/internal/provider"
 	"github.com/jsiebens/ionscale/internal/service"
@@ -75,15 +76,22 @@ func Start(c *config.Config) error {
 		c.HttpsListenAddr = fmt.Sprintf(":%d", certmagic.HTTPSPort)
 	}
 
+	dnsProvider, err := dns.NewProvider(c.DNSProvider)
+	if err != nil {
+		return err
+	}
+
 	createPeerHandler := func(p key.MachinePublic) http.Handler {
 		registrationHandlers := handlers.NewRegistrationHandlers(bind.DefaultBinder(p), c, brokers, repository)
 		pollNetMapHandler := handlers.NewPollNetMapHandler(bind.DefaultBinder(p), brokers, repository, offlineTimers)
+		dnsHandlers := handlers.NewDNSHandlers(bind.DefaultBinder(p), dnsProvider, c.DNSProvider.Zone)
 
 		e := echo.New()
 		e.Use(EchoLogger(logger))
 		e.Use(EchoRecover(logger))
 		e.POST("/machine/register", registrationHandlers.Register)
 		e.POST("/machine/map", pollNetMapHandler.PollNetMap)
+		e.POST("/machine/set-dns", dnsHandlers.SetDNS)
 
 		return e
 	}
@@ -96,6 +104,7 @@ func Start(c *config.Config) error {
 	noiseHandlers := handlers.NewNoiseHandlers(controlKeys.ControlKey, createPeerHandler)
 	registrationHandlers := handlers.NewRegistrationHandlers(bind.BoxBinder(controlKeys.LegacyControlKey), c, brokers, repository)
 	pollNetMapHandler := handlers.NewPollNetMapHandler(bind.BoxBinder(controlKeys.LegacyControlKey), brokers, repository, offlineTimers)
+	dnsHandlers := handlers.NewDNSHandlers(bind.BoxBinder(controlKeys.LegacyControlKey), dnsProvider, c.DNSProvider.Zone)
 	authenticationHandlers := handlers.NewAuthenticationHandlers(
 		c,
 		authProvider,
@@ -131,6 +140,7 @@ func Start(c *config.Config) error {
 	tlsAppHandler.POST("/ts2021", noiseHandlers.Upgrade)
 	tlsAppHandler.POST("/machine/:id", registrationHandlers.Register)
 	tlsAppHandler.POST("/machine/:id/map", pollNetMapHandler.PollNetMap)
+	tlsAppHandler.POST("/machine/:id/set-dns", dnsHandlers.SetDNS)
 
 	auth := tlsAppHandler.Group("/a")
 	auth.GET("/:key", authenticationHandlers.StartAuth)
