@@ -6,44 +6,17 @@ import (
 	"errors"
 	"gorm.io/gorm"
 	"tailscale.com/tailcfg"
-	"tailscale.com/types/key"
 )
 
 type configKey string
 
 const (
-	controlKeysConfigKey configKey = "control_keys"
-	derpMapConfigKey     configKey = "derp_map"
+	derpMapConfigKey configKey = "derp_map"
 )
-
-type ControlKeys struct {
-	ControlKey       key.MachinePrivate
-	LegacyControlKey key.MachinePrivate
-}
 
 type ServerConfig struct {
 	Key   configKey `gorm:"primary_key"`
 	Value []byte
-}
-
-func (r *repository) GetControlKeys(ctx context.Context) (*ControlKeys, error) {
-
-	var m ControlKeys
-	err := r.getServerConfig(ctx, controlKeysConfigKey, &m)
-
-	if errors.Is(err, gorm.ErrRecordNotFound) {
-		return nil, nil
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	return &m, nil
-}
-
-func (r *repository) SetControlKeys(ctx context.Context, v *ControlKeys) error {
-	return r.setServerConfig(ctx, controlKeysConfigKey, v)
 }
 
 func (r *repository) GetDERPMap(ctx context.Context) (*tailcfg.DERPMap, error) {

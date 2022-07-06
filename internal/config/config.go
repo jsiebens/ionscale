@@ -4,10 +4,12 @@ import (
 	"fmt"
 	"github.com/caddyserver/certmagic"
 	"github.com/jsiebens/ionscale/internal/key"
+	"github.com/jsiebens/ionscale/internal/util"
 	"github.com/mitchellh/go-homedir"
 	"gopkg.in/yaml.v3"
 	"io/ioutil"
 	"strings"
+	tkey "tailscale.com/types/key"
 )
 
 func LoadConfig(path string) (*Config, error) {
@@ -81,7 +83,9 @@ func defaultConfig() *Config {
 }
 
 type ServerKeys struct {
-	SystemAdminKey key.ServerPrivate
+	SystemAdminKey   key.ServerPrivate
+	ControlKey       tkey.MachinePrivate
+	LegacyControlKey tkey.MachinePrivate
 }
 
 type Config struct {
@@ -117,7 +121,9 @@ type Database struct {
 }
 
 type Keys struct {
-	SystemAdminKey string `yaml:"system_admin_key,omitempty"`
+	ControlKey       string `yaml:"control_key,omitempty"`
+	LegacyControlKey string `yaml:"legacy_control_key,omitempty"`
+	SystemAdminKey   string `yaml:"system_admin_key,omitempty"`
 }
 
 type Provider struct {
@@ -138,7 +144,19 @@ func (c *Config) ReadServerKeys() (*ServerKeys, error) {
 		return nil, fmt.Errorf("error reading system admin key: %v", err)
 	}
 
+	controlKey, err := util.ParseMachinePrivateKey(c.Keys.ControlKey)
+	if err != nil {
+		return nil, fmt.Errorf("error reading control key: %v", err)
+	}
+
+	legacyControlKey, err := util.ParseMachinePrivateKey(c.Keys.LegacyControlKey)
+	if err != nil {
+		return nil, fmt.Errorf("error reading legacy control key: %v", err)
+	}
+
 	return &ServerKeys{
-		SystemAdminKey: *systemAdminKey,
+		SystemAdminKey:   *systemAdminKey,
+		ControlKey:       *controlKey,
+		LegacyControlKey: *legacyControlKey,
 	}, nil
 }

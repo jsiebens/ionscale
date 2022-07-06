@@ -45,11 +45,6 @@ func Start(c *config.Config) error {
 		return err
 	}
 
-	controlKeys, err := repository.GetControlKeys(context.Background())
-	if err != nil {
-		return err
-	}
-
 	brokers := broker.NewBrokerPool()
 	offlineTimers := handlers.NewOfflineTimers(repository, brokers)
 	reaper := handlers.NewReaper(brokers, repository)
@@ -93,9 +88,9 @@ func Start(c *config.Config) error {
 		return err
 	}
 
-	noiseHandlers := handlers.NewNoiseHandlers(controlKeys.ControlKey, createPeerHandler)
-	registrationHandlers := handlers.NewRegistrationHandlers(bind.BoxBinder(controlKeys.LegacyControlKey), c, brokers, repository)
-	pollNetMapHandler := handlers.NewPollNetMapHandler(bind.BoxBinder(controlKeys.LegacyControlKey), brokers, repository, offlineTimers)
+	noiseHandlers := handlers.NewNoiseHandlers(serverKey.ControlKey, createPeerHandler)
+	registrationHandlers := handlers.NewRegistrationHandlers(bind.BoxBinder(serverKey.LegacyControlKey), c, brokers, repository)
+	pollNetMapHandler := handlers.NewPollNetMapHandler(bind.BoxBinder(serverKey.LegacyControlKey), brokers, repository, offlineTimers)
 	authenticationHandlers := handlers.NewAuthenticationHandlers(
 		c,
 		authProvider,
@@ -127,7 +122,7 @@ func Start(c *config.Config) error {
 	tlsAppHandler.Any("/", handlers.IndexHandler(http.StatusOK))
 	tlsAppHandler.POST(rpcPath+"*", echo.WrapHandler(rpcHandler))
 	tlsAppHandler.GET("/version", handlers.Version)
-	tlsAppHandler.GET("/key", handlers.KeyHandler(controlKeys))
+	tlsAppHandler.GET("/key", handlers.KeyHandler(serverKey))
 	tlsAppHandler.POST("/ts2021", noiseHandlers.Upgrade)
 	tlsAppHandler.POST("/machine/:id", registrationHandlers.Register)
 	tlsAppHandler.POST("/machine/:id/map", pollNetMapHandler.PollNetMap)

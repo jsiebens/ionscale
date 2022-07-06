@@ -1,7 +1,7 @@
 package handlers
 
 import (
-	"github.com/jsiebens/ionscale/internal/domain"
+	"github.com/jsiebens/ionscale/internal/config"
 	"github.com/labstack/echo/v4"
 	"net/http"
 	"strconv"
@@ -12,7 +12,7 @@ const (
 	NoiseCapabilityVersion = 28
 )
 
-func KeyHandler(keys *domain.ControlKeys) echo.HandlerFunc {
+func KeyHandler(keys *config.ServerKeys) echo.HandlerFunc {
 	legacyPublicKey := keys.LegacyControlKey.Public()
 	publicKey := keys.ControlKey.Public()
 
