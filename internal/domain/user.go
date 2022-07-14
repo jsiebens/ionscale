@@ -66,7 +66,7 @@ func (r *repository) GetOrCreateServiceUser(ctx context.Context, tailnet *Tailne
 func (r *repository) ListUsers(ctx context.Context, tailnetID uint64) (Users, error) {
 	var users = []User{}
 
-	tx := r.withContext(ctx).Where("tailnet_id = ?", tailnetID).Find(&users)
+	tx := r.withContext(ctx).Where("tailnet_id = ? AND user_type = ?", tailnetID, UserTypePerson).Find(&users)
 
 	if tx.Error != nil {
 		return nil, tx.Error
