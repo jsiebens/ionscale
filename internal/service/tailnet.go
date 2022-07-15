@@ -101,6 +101,10 @@ func (s *Service) DeleteTailnet(ctx context.Context, req *connect.Request[api.De
 			return err
 		}
 
+		if err := tx.DeleteApiKeysByTailnet(ctx, req.Msg.TailnetId); err != nil {
+			return err
+		}
+
 		if err := tx.DeleteAuthKeysByTailnet(ctx, req.Msg.TailnetId); err != nil {
 			return err
 		}

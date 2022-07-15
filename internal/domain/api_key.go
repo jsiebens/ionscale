@@ -86,6 +86,14 @@ func (r *repository) LoadApiKey(ctx context.Context, key string) (*ApiKey, error
 	return &m, nil
 }
 
+func (r *repository) DeleteApiKeysByTailnet(ctx context.Context, tailnetID uint64) error {
+	tx := r.withContext(ctx).
+		Where("tailnet_id = ?", tailnetID).
+		Delete(&ApiKey{TailnetID: tailnetID})
+
+	return tx.Error
+}
+
 func (r *repository) DeleteApiKeysByUser(ctx context.Context, userID uint64) error {
 	tx := r.withContext(ctx).
 		Where("user_id = ?", userID).

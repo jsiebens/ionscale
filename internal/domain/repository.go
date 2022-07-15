@@ -22,6 +22,7 @@ type Repository interface {
 
 	SaveApiKey(ctx context.Context, key *ApiKey) error
 	LoadApiKey(ctx context.Context, key string) (*ApiKey, error)
+	DeleteApiKeysByTailnet(ctx context.Context, tailnetID uint64) error
 	DeleteApiKeysByUser(ctx context.Context, userID uint64) error
 
 	GetAuthKey(ctx context.Context, id uint64) (*AuthKey, error)
