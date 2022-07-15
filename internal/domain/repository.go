@@ -22,18 +22,22 @@ type Repository interface {
 
 	SaveApiKey(ctx context.Context, key *ApiKey) error
 	LoadApiKey(ctx context.Context, key string) (*ApiKey, error)
+	DeleteApiKeysByUser(ctx context.Context, userID uint64) error
 
 	GetAuthKey(ctx context.Context, id uint64) (*AuthKey, error)
 	SaveAuthKey(ctx context.Context, key *AuthKey) error
 	DeleteAuthKey(ctx context.Context, id uint64) (bool, error)
 	DeleteAuthKeysByTailnet(ctx context.Context, tailnetID uint64) error
+	DeleteAuthKeysByUser(ctx context.Context, userID uint64) error
 	ListAuthKeys(ctx context.Context, tailnetID uint64) ([]AuthKey, error)
 	ListAuthKeysByTailnetAndUser(ctx context.Context, tailnetID, userID uint64) ([]AuthKey, error)
 	LoadAuthKey(ctx context.Context, key string) (*AuthKey, error)
 
 	GetOrCreateServiceUser(ctx context.Context, tailnet *Tailnet) (*User, bool, error)
-	ListUsers(ctx context.Context, tailnetID uint64) (Users, error)
 	GetOrCreateUserWithAccount(ctx context.Context, tailnet *Tailnet, account *Account) (*User, bool, error)
+	GetUser(ctx context.Context, userID uint64) (*User, error)
+	DeleteUser(ctx context.Context, userID uint64) error
+	ListUsers(ctx context.Context, tailnetID uint64) (Users, error)
 	DeleteUsersByTailnet(ctx context.Context, tailnetID uint64) error
 
 	SaveMachine(ctx context.Context, m *Machine) error
@@ -46,6 +50,7 @@ type Repository interface {
 	ListMachineByTailnet(ctx context.Context, tailnetID uint64) (Machines, error)
 	CountMachineByTailnet(ctx context.Context, tailnetID uint64) (int64, error)
 	DeleteMachineByTailnet(ctx context.Context, tailnetID uint64) error
+	DeleteMachineByUser(ctx context.Context, userID uint64) error
 	ListMachinePeers(ctx context.Context, tailnetID uint64, key string) (Machines, error)
 	ListInactiveEphemeralMachines(ctx context.Context, checkpoint time.Time) (Machines, error)
 	SetMachineLastSeen(ctx context.Context, machineID uint64) error

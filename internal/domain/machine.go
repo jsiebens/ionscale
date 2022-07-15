@@ -314,6 +314,11 @@ func (r *repository) DeleteMachineByTailnet(ctx context.Context, tailnetID uint6
 	return tx.Error
 }
 
+func (r *repository) DeleteMachineByUser(ctx context.Context, userID uint64) error {
+	tx := r.withContext(ctx).Model(&Machine{}).Where("user_id = ?", userID).Delete(&Machine{})
+	return tx.Error
+}
+
 func (r *repository) ListMachineByTailnet(ctx context.Context, tailnetID uint64) (Machines, error) {
 	var machines = []Machine{}
 

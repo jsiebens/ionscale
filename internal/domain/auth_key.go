@@ -93,6 +93,14 @@ func (r *repository) DeleteAuthKeysByTailnet(ctx context.Context, tailnetID uint
 	return tx.Error
 }
 
+func (r *repository) DeleteAuthKeysByUser(ctx context.Context, userID uint64) error {
+	tx := r.withContext(ctx).
+		Where("user_id = ?", userID).
+		Delete(&AuthKey{UserID: userID})
+
+	return tx.Error
+}
+
 func (r *repository) ListAuthKeys(ctx context.Context, tailnetID uint64) ([]AuthKey, error) {
 	var authKeys = []AuthKey{}
 	tx := (r.withContext(ctx).

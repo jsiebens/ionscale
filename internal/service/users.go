@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"github.com/bufbuild/connect-go"
+	"github.com/jsiebens/ionscale/internal/domain"
 	api "github.com/jsiebens/ionscale/pkg/gen/ionscale/v1"
 )
 
@@ -38,4 +39,53 @@ func (s *Service) ListUsers(ctx context.Context, req *connect.Request[api.ListUs
 	}
 
 	return connect.NewResponse(resp), nil
+}
+
+func (s *Service) DeleteUser(ctx context.Context, req *connect.Request[api.DeleteUserRequest]) (*connect.Response[api.DeleteUserResponse], error) {
+	principal := CurrentPrincipal(ctx)
+
+	if !principal.IsSystemAdmin() && principal.UserMatches(req.Msg.UserId) {
+		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("unable delete yourself"))
+	}
+
+	user, err := s.repository.GetUser(ctx, req.Msg.UserId)
+	if err != nil {
+		return nil, err
+	}
+
+	if user == nil {
+		return nil, connect.NewError(connect.CodeNotFound, errors.New("user not found"))
+	}
+
+	if !principal.IsSystemAdmin() && !principal.IsTailnetAdmin(user.TailnetID) {
+		return nil, connect.NewError(connect.CodePermissionDenied, errors.New("permission denied"))
+	}
+
+	err = s.repository.Transaction(func(tx domain.Repository) error {
+		if err := tx.DeleteMachineByUser(ctx, req.Msg.UserId); err != nil {
+			return err
+		}
+
+		if err := tx.DeleteApiKeysByUser(ctx, req.Msg.UserId); err != nil {
+			return err
+		}
+
+		if err := tx.DeleteAuthKeysByUser(ctx, req.Msg.UserId); err != nil {
+			return err
+		}
+
+		if err := tx.DeleteUser(ctx, req.Msg.UserId); err != nil {
+			return err
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	s.brokers(user.TailnetID).SignalUpdate()
+
+	return connect.NewResponse(&api.DeleteUserResponse{}), nil
 }

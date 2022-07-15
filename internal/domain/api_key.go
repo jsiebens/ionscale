@@ -85,3 +85,11 @@ func (r *repository) LoadApiKey(ctx context.Context, key string) (*ApiKey, error
 
 	return &m, nil
 }
+
+func (r *repository) DeleteApiKeysByUser(ctx context.Context, userID uint64) error {
+	tx := r.withContext(ctx).
+		Where("user_id = ?", userID).
+		Delete(&ApiKey{UserID: userID})
+
+	return tx.Error
+}

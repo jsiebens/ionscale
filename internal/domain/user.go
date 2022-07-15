@@ -2,7 +2,9 @@ package domain
 
 import (
 	"context"
+	"errors"
 	"github.com/jsiebens/ionscale/internal/util"
+	"gorm.io/gorm"
 )
 
 type SystemRole string
@@ -94,4 +96,24 @@ func (r *repository) GetOrCreateUserWithAccount(ctx context.Context, tailnet *Ta
 	}
 
 	return user, user.ID == id, nil
+}
+
+func (r *repository) GetUser(ctx context.Context, userID uint64) (*User, error) {
+	var m User
+	tx := r.withContext(ctx).Preload("Tailnet").Preload("Account").First(&m, "id = ? and user_type = ?", userID, UserTypePerson)
+
+	if errors.Is(tx.Error, gorm.ErrRecordNotFound) {
+		return nil, nil
+	}
+
+	if tx.Error != nil {
+		return nil, tx.Error
+	}
+
+	return &m, nil
+}
+
+func (r *repository) DeleteUser(ctx context.Context, userID uint64) error {
+	tx := r.withContext(ctx).Delete(&User{ID: userID})
+	return tx.Error
 }

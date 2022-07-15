@@ -16,3 +16,9 @@ message ListUsersRequest {
 message ListUsersResponse {
   repeated User users = 1;
 }
+
+message DeleteUserRequest {
+  uint64 user_id = 1;
+}
+
+message DeleteUserResponse {}
