@@ -18,7 +18,7 @@ type OIDCProvider struct {
 	verifier     *oidc.IDTokenVerifier
 }
 
-func NewOIDCProvider(c *config.Provider) (*OIDCProvider, error) {
+func NewOIDCProvider(c *config.AuthProvider) (*OIDCProvider, error) {
 	defaultScopes := []string{oidc.ScopeOpenID, "email", "profile"}
 	provider, err := oidc.NewProvider(context.Background(), c.Issuer)
 	if err != nil {

@@ -83,7 +83,7 @@ func Start(c *config.Config) error {
 		return e
 	}
 
-	authProvider, err := setupAuthProvider(c.Provider)
+	authProvider, err := setupAuthProvider(c.AuthProvider)
 	if err != nil {
 		return err
 	}
@@ -176,7 +176,7 @@ func Start(c *config.Config) error {
 	return g.Wait()
 }
 
-func setupAuthProvider(config config.Provider) (provider.AuthProvider, error) {
+func setupAuthProvider(config config.AuthProvider) (provider.AuthProvider, error) {
 	if len(config.Issuer) == 0 {
 		return nil, nil
 	}
