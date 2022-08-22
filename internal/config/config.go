@@ -34,22 +34,26 @@ func LoadConfig(path string) (*Config, error) {
 }
 
 const (
-	httpListenAddrKey       = "IONSCALE_HTTP_LISTEN_ADDR"
-	httpsListenAddrKey      = "IONSCALE_HTTPS_LISTEN_ADDR"
-	serverUrlKey            = "IONSCALE_SERVER_URL"
-	keysSystemAdminKeyKey   = "IONSCALE_SYSTEM_ADMIN_KEY"
-	databaseUrlKey          = "IONSCALE_DB_URL"
-	tlsDisableKey           = "IONSCALE_TLS_DISABLE"
-	tlsCertFileKey          = "IONSCALE_TLS_CERT_FILE"
-	tlsKeyFileKey           = "IONSCALE_TLS_KEY_FILE"
-	tlsCertMagicCAKey       = "IONSCALE_TLS_CERT_MAGIC_CA"
-	tlsCertMagicDomainKey   = "IONSCALE_TLS_CERT_MAGIC_DOMAIN"
-	tlsCertMagicEmailKey    = "IONSCALE_TLS_CERT_MAGIC_EMAIL"
-	tlsCertMagicStoragePath = "IONSCALE_TLS_CERT_MAGIC_STORAGE_PATH"
-	metricsListenAddrKey    = "IONSCALE_METRICS_LISTEN_ADDR"
-	loggingLevelKey         = "IONSCALE_LOGGING_LEVEL"
-	loggingFormatKey        = "IONSCALE_LOGGING_FORMAT"
-	loggingFileKey          = "IONSCALE_LOGGING_FILE"
+	httpListenAddrKey           = "IONSCALE_HTTP_LISTEN_ADDR"
+	httpsListenAddrKey          = "IONSCALE_HTTPS_LISTEN_ADDR"
+	serverUrlKey                = "IONSCALE_SERVER_URL"
+	keysSystemAdminKeyKey       = "IONSCALE_SYSTEM_ADMIN_KEY"
+	databaseUrlKey              = "IONSCALE_DB_URL"
+	tlsDisableKey               = "IONSCALE_TLS_DISABLE"
+	tlsCertFileKey              = "IONSCALE_TLS_CERT_FILE"
+	tlsKeyFileKey               = "IONSCALE_TLS_KEY_FILE"
+	tlsCertMagicCAKey           = "IONSCALE_TLS_CERT_MAGIC_CA"
+	tlsCertMagicDomainKey       = "IONSCALE_TLS_CERT_MAGIC_DOMAIN"
+	tlsCertMagicEmailKey        = "IONSCALE_TLS_CERT_MAGIC_EMAIL"
+	tlsCertMagicStoragePath     = "IONSCALE_TLS_CERT_MAGIC_STORAGE_PATH"
+	metricsListenAddrKey        = "IONSCALE_METRICS_LISTEN_ADDR"
+	loggingLevelKey             = "IONSCALE_LOGGING_LEVEL"
+	loggingFormatKey            = "IONSCALE_LOGGING_FORMAT"
+	loggingFileKey              = "IONSCALE_LOGGING_FILE"
+	authProviderIssuerKey       = "IONSCALE_AUTH_PROVIDER_ISSUER"
+	authProviderClientIdKey     = "IONSCALE_AUTH_PROVIDER_CLIENT_ID"
+	authProviderClientSecretKey = "IONSCALE_AUTH_PROVIDER_CLIENT_SECRET"
+	authProviderScopesKey       = "IONSCALE_AUTH_PROVIDER_SCOPES"
 )
 
 func defaultConfig() *Config {
@@ -73,7 +77,12 @@ func defaultConfig() *Config {
 			CertMagicEmail:       GetString(tlsCertMagicEmailKey, ""),
 			CertMagicStoragePath: GetString(tlsCertMagicStoragePath, ""),
 		},
-		AuthProvider: AuthProvider{},
+		AuthProvider: AuthProvider{
+			Issuer:       GetString(authProviderIssuerKey, ""),
+			ClientID:     GetString(authProviderClientIdKey, ""),
+			ClientSecret: GetString(authProviderClientSecretKey, ""),
+			Scopes:       GetStrings(authProviderScopesKey, nil),
+		},
 		Logging: Logging{
 			Level:  GetString(loggingLevelKey, "info"),
 			Format: GetString(loggingFormatKey, ""),
