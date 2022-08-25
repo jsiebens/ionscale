@@ -278,7 +278,6 @@ func (h *AuthenticationHandlers) endMachineRegistrationFlow(c echo.Context, regi
 	var user *domain.User
 	var ephemeral bool
 	var tags = []string{}
-	var expiresAt time.Time
 	var expiryDisabled bool
 
 	if authKeyParam != "" {
@@ -326,8 +325,6 @@ func (h *AuthenticationHandlers) endMachineRegistrationFlow(c echo.Context, regi
 		}
 
 		ephemeral = false
-		keyExpiry := time.Now().Add(180 * 24 * time.Hour).UTC()
-		expiresAt = keyExpiry
 		expiryDisabled = false
 	}
 
@@ -338,9 +335,9 @@ func (h *AuthenticationHandlers) endMachineRegistrationFlow(c echo.Context, regi
 		return err
 	}
 
-	if m == nil {
-		now := time.Now().UTC()
+	now := time.Now().UTC()
 
+	if m == nil {
 		registeredTags := tags
 		advertisedTags := domain.SanitizeTags(req.Hostinfo.RequestTags)
 		tags := append(registeredTags, advertisedTags...)
@@ -369,7 +366,7 @@ func (h *AuthenticationHandlers) endMachineRegistrationFlow(c echo.Context, regi
 			RegisteredTags:    registeredTags,
 			Tags:              domain.SanitizeTags(tags),
 			CreatedAt:         now,
-			ExpiresAt:         expiresAt,
+			ExpiresAt:         now.Add(180 * 24 * time.Hour).UTC(),
 			KeyExpiryDisabled: expiryDisabled,
 
 			User:    *user,
@@ -412,7 +409,7 @@ func (h *AuthenticationHandlers) endMachineRegistrationFlow(c echo.Context, regi
 		m.User = *user
 		m.TailnetID = tailnet.ID
 		m.Tailnet = *tailnet
-		m.ExpiresAt = expiresAt
+		m.ExpiresAt = now.Add(180 * 24 * time.Hour).UTC()
 		m.KeyExpiryDisabled = expiryDisabled
 	}
 
