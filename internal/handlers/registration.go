@@ -158,9 +158,10 @@ func (h *RegistrationHandlers) authenticateMachineWithAuthKey(c echo.Context, bi
 		return err
 	}
 
-	if m == nil {
-		now := time.Now().UTC()
+	//var expiryDisabled bool
+	now := time.Now().UTC()
 
+	if m == nil {
 		registeredTags := authKey.Tags
 		advertisedTags := domain.SanitizeTags(req.Hostinfo.RequestTags)
 		tags := append(registeredTags, advertisedTags...)
@@ -172,15 +173,17 @@ func (h *RegistrationHandlers) authenticateMachineWithAuthKey(c echo.Context, bi
 		}
 
 		m = &domain.Machine{
-			ID:             util.NextID(),
-			Name:           sanitizeHostname,
-			NameIdx:        nameIdx,
-			MachineKey:     machineKey,
-			NodeKey:        nodeKey,
-			Ephemeral:      authKey.Ephemeral,
-			RegisteredTags: registeredTags,
-			Tags:           domain.SanitizeTags(tags),
-			CreatedAt:      now,
+			ID:                util.NextID(),
+			Name:              sanitizeHostname,
+			NameIdx:           nameIdx,
+			MachineKey:        machineKey,
+			NodeKey:           nodeKey,
+			Ephemeral:         authKey.Ephemeral,
+			RegisteredTags:    registeredTags,
+			Tags:              domain.SanitizeTags(tags),
+			CreatedAt:         now,
+			ExpiresAt:         now.Add(180 * 24 * time.Hour).UTC(),
+			KeyExpiryDisabled: len(tags) != 0,
 
 			User:    user,
 			Tailnet: tailnet,
@@ -218,7 +221,7 @@ func (h *RegistrationHandlers) authenticateMachineWithAuthKey(c echo.Context, bi
 		m.User = user
 		m.TailnetID = tailnet.ID
 		m.Tailnet = tailnet
-		m.ExpiresAt = time.Time{}
+		m.ExpiresAt = now.Add(180 * 24 * time.Hour).UTC()
 	}
 
 	if err := h.repository.SaveMachine(ctx, m); err != nil {

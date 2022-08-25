@@ -278,7 +278,7 @@ func (h *AuthenticationHandlers) endMachineRegistrationFlow(c echo.Context, regi
 	var user *domain.User
 	var ephemeral bool
 	var tags = []string{}
-	var expiryDisabled bool
+	//var expiryDisabled bool
 
 	if authKeyParam != "" {
 		authKey, err := h.repository.LoadAuthKey(ctx, authKeyParam)
@@ -325,7 +325,6 @@ func (h *AuthenticationHandlers) endMachineRegistrationFlow(c echo.Context, regi
 		}
 
 		ephemeral = false
-		expiryDisabled = false
 	}
 
 	var m *domain.Machine
@@ -341,14 +340,6 @@ func (h *AuthenticationHandlers) endMachineRegistrationFlow(c echo.Context, regi
 		registeredTags := tags
 		advertisedTags := domain.SanitizeTags(req.Hostinfo.RequestTags)
 		tags := append(registeredTags, advertisedTags...)
-
-		if len(tags) != 0 {
-			expiryDisabled = true
-			user, _, err = h.repository.GetOrCreateServiceUser(ctx, tailnet)
-			if err != nil {
-				return err
-			}
-		}
 
 		sanitizeHostname := dnsname.SanitizeHostname(req.Hostinfo.Hostname)
 		nameIdx, err := h.repository.GetNextMachineNameIndex(ctx, tailnet.ID, sanitizeHostname)
@@ -367,7 +358,7 @@ func (h *AuthenticationHandlers) endMachineRegistrationFlow(c echo.Context, regi
 			Tags:              domain.SanitizeTags(tags),
 			CreatedAt:         now,
 			ExpiresAt:         now.Add(180 * 24 * time.Hour).UTC(),
-			KeyExpiryDisabled: expiryDisabled,
+			KeyExpiryDisabled: len(tags) != 0,
 
 			User:    *user,
 			Tailnet: *tailnet,
@@ -383,14 +374,6 @@ func (h *AuthenticationHandlers) endMachineRegistrationFlow(c echo.Context, regi
 		registeredTags := tags
 		advertisedTags := domain.SanitizeTags(req.Hostinfo.RequestTags)
 		tags := append(registeredTags, advertisedTags...)
-
-		if len(tags) != 0 {
-			expiryDisabled = true
-			user, _, err = h.repository.GetOrCreateServiceUser(ctx, tailnet)
-			if err != nil {
-				return err
-			}
-		}
 
 		sanitizeHostname := dnsname.SanitizeHostname(req.Hostinfo.Hostname)
 		if m.Name != sanitizeHostname {
@@ -410,7 +393,6 @@ func (h *AuthenticationHandlers) endMachineRegistrationFlow(c echo.Context, regi
 		m.TailnetID = tailnet.ID
 		m.Tailnet = *tailnet
 		m.ExpiresAt = now.Add(180 * 24 * time.Hour).UTC()
-		m.KeyExpiryDisabled = expiryDisabled
 	}
 
 	err = h.repository.Transaction(func(rp domain.Repository) error {
