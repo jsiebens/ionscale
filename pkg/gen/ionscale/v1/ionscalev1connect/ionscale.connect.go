@@ -47,6 +47,7 @@ type IonscaleServiceClient interface {
 	ListAuthKeys(context.Context, *connect_go.Request[v1.ListAuthKeysRequest]) (*connect_go.Response[v1.ListAuthKeysResponse], error)
 	ListUsers(context.Context, *connect_go.Request[v1.ListUsersRequest]) (*connect_go.Response[v1.ListUsersResponse], error)
 	DeleteUser(context.Context, *connect_go.Request[v1.DeleteUserRequest]) (*connect_go.Response[v1.DeleteUserResponse], error)
+	GetMachine(context.Context, *connect_go.Request[v1.GetMachineRequest]) (*connect_go.Response[v1.GetMachineResponse], error)
 	ListMachines(context.Context, *connect_go.Request[v1.ListMachinesRequest]) (*connect_go.Response[v1.ListMachinesResponse], error)
 	ExpireMachine(context.Context, *connect_go.Request[v1.ExpireMachineRequest]) (*connect_go.Response[v1.ExpireMachineResponse], error)
 	DeleteMachine(context.Context, *connect_go.Request[v1.DeleteMachineRequest]) (*connect_go.Response[v1.DeleteMachineResponse], error)
@@ -165,6 +166,11 @@ func NewIonscaleServiceClient(httpClient connect_go.HTTPClient, baseURL string, 
 			baseURL+"/ionscale.v1.IonscaleService/DeleteUser",
 			opts...,
 		),
+		getMachine: connect_go.NewClient[v1.GetMachineRequest, v1.GetMachineResponse](
+			httpClient,
+			baseURL+"/ionscale.v1.IonscaleService/GetMachine",
+			opts...,
+		),
 		listMachines: connect_go.NewClient[v1.ListMachinesRequest, v1.ListMachinesResponse](
 			httpClient,
 			baseURL+"/ionscale.v1.IonscaleService/ListMachines",
@@ -220,6 +226,7 @@ type ionscaleServiceClient struct {
 	listAuthKeys        *connect_go.Client[v1.ListAuthKeysRequest, v1.ListAuthKeysResponse]
 	listUsers           *connect_go.Client[v1.ListUsersRequest, v1.ListUsersResponse]
 	deleteUser          *connect_go.Client[v1.DeleteUserRequest, v1.DeleteUserResponse]
+	getMachine          *connect_go.Client[v1.GetMachineRequest, v1.GetMachineResponse]
 	listMachines        *connect_go.Client[v1.ListMachinesRequest, v1.ListMachinesResponse]
 	expireMachine       *connect_go.Client[v1.ExpireMachineRequest, v1.ExpireMachineResponse]
 	deleteMachine       *connect_go.Client[v1.DeleteMachineRequest, v1.DeleteMachineResponse]
@@ -328,6 +335,11 @@ func (c *ionscaleServiceClient) DeleteUser(ctx context.Context, req *connect_go.
 	return c.deleteUser.CallUnary(ctx, req)
 }
 
+// GetMachine calls ionscale.v1.IonscaleService.GetMachine.
+func (c *ionscaleServiceClient) GetMachine(ctx context.Context, req *connect_go.Request[v1.GetMachineRequest]) (*connect_go.Response[v1.GetMachineResponse], error) {
+	return c.getMachine.CallUnary(ctx, req)
+}
+
 // ListMachines calls ionscale.v1.IonscaleService.ListMachines.
 func (c *ionscaleServiceClient) ListMachines(ctx context.Context, req *connect_go.Request[v1.ListMachinesRequest]) (*connect_go.Response[v1.ListMachinesResponse], error) {
 	return c.listMachines.CallUnary(ctx, req)
@@ -380,6 +392,7 @@ type IonscaleServiceHandler interface {
 	ListAuthKeys(context.Context, *connect_go.Request[v1.ListAuthKeysRequest]) (*connect_go.Response[v1.ListAuthKeysResponse], error)
 	ListUsers(context.Context, *connect_go.Request[v1.ListUsersRequest]) (*connect_go.Response[v1.ListUsersResponse], error)
 	DeleteUser(context.Context, *connect_go.Request[v1.DeleteUserRequest]) (*connect_go.Response[v1.DeleteUserResponse], error)
+	GetMachine(context.Context, *connect_go.Request[v1.GetMachineRequest]) (*connect_go.Response[v1.GetMachineResponse], error)
 	ListMachines(context.Context, *connect_go.Request[v1.ListMachinesRequest]) (*connect_go.Response[v1.ListMachinesResponse], error)
 	ExpireMachine(context.Context, *connect_go.Request[v1.ExpireMachineRequest]) (*connect_go.Response[v1.ExpireMachineResponse], error)
 	DeleteMachine(context.Context, *connect_go.Request[v1.DeleteMachineRequest]) (*connect_go.Response[v1.DeleteMachineResponse], error)
@@ -493,6 +506,11 @@ func NewIonscaleServiceHandler(svc IonscaleServiceHandler, opts ...connect_go.Ha
 	mux.Handle("/ionscale.v1.IonscaleService/DeleteUser", connect_go.NewUnaryHandler(
 		"/ionscale.v1.IonscaleService/DeleteUser",
 		svc.DeleteUser,
+		opts...,
+	))
+	mux.Handle("/ionscale.v1.IonscaleService/GetMachine", connect_go.NewUnaryHandler(
+		"/ionscale.v1.IonscaleService/GetMachine",
+		svc.GetMachine,
 		opts...,
 	))
 	mux.Handle("/ionscale.v1.IonscaleService/ListMachines", connect_go.NewUnaryHandler(
@@ -609,6 +627,10 @@ func (UnimplementedIonscaleServiceHandler) ListUsers(context.Context, *connect_g
 
 func (UnimplementedIonscaleServiceHandler) DeleteUser(context.Context, *connect_go.Request[v1.DeleteUserRequest]) (*connect_go.Response[v1.DeleteUserResponse], error) {
 	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("ionscale.v1.IonscaleService.DeleteUser is not implemented"))
+}
+
+func (UnimplementedIonscaleServiceHandler) GetMachine(context.Context, *connect_go.Request[v1.GetMachineRequest]) (*connect_go.Response[v1.GetMachineResponse], error) {
+	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("ionscale.v1.IonscaleService.GetMachine is not implemented"))
 }
 
 func (UnimplementedIonscaleServiceHandler) ListMachines(context.Context, *connect_go.Request[v1.ListMachinesRequest]) (*connect_go.Response[v1.ListMachinesResponse], error) {

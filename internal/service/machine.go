@@ -5,11 +5,52 @@ import (
 	"errors"
 	"fmt"
 	"github.com/bufbuild/connect-go"
+	"github.com/jsiebens/ionscale/internal/domain"
 	api "github.com/jsiebens/ionscale/pkg/gen/ionscale/v1"
 	"google.golang.org/protobuf/types/known/timestamppb"
 	"inet.af/netaddr"
 	"time"
 )
+
+func (s *Service) machineToApi(m *domain.Machine) *api.Machine {
+	var lastSeen *timestamppb.Timestamp
+
+	var name = m.Name
+	if m.NameIdx != 0 {
+		name = fmt.Sprintf("%s-%d", m.Name, m.NameIdx)
+	}
+	online := s.brokers(m.TailnetID).IsConnected(m.ID)
+	if m.LastSeen != nil {
+		lastSeen = timestamppb.New(*m.LastSeen)
+	}
+
+	return &api.Machine{
+		Id:                m.ID,
+		Name:              name,
+		Ipv4:              m.IPv4.String(),
+		Ipv6:              m.IPv6.String(),
+		Ephemeral:         m.Ephemeral,
+		Tags:              m.Tags,
+		LastSeen:          lastSeen,
+		CreatedAt:         timestamppb.New(m.CreatedAt),
+		ExpiresAt:         timestamppb.New(m.ExpiresAt),
+		KeyExpiryDisabled: m.KeyExpiryDisabled,
+		Connected:         online,
+		Os:                m.HostInfo.OS,
+		ClientVersion:     m.HostInfo.IPNVersion,
+		Tailnet: &api.Ref{
+			Id:   m.Tailnet.ID,
+			Name: m.Tailnet.Name,
+		},
+		User: &api.Ref{
+			Id:   m.User.ID,
+			Name: m.User.Name,
+		},
+		ClientConnectivity: &api.ClientConnectivity{
+			Endpoints: m.Endpoints,
+		},
+	}
+}
 
 func (s *Service) ListMachines(ctx context.Context, req *connect.Request[api.ListMachinesRequest]) (*connect.Response[api.ListMachinesResponse], error) {
 	principal := CurrentPrincipal(ctx)
@@ -32,36 +73,29 @@ func (s *Service) ListMachines(ctx context.Context, req *connect.Request[api.Lis
 
 	response := &api.ListMachinesResponse{}
 	for _, m := range machines {
-		var name = m.Name
-		if m.NameIdx != 0 {
-			name = fmt.Sprintf("%s-%d", m.Name, m.NameIdx)
-		}
-		online := s.brokers(m.TailnetID).IsConnected(m.ID)
-		var lastSeen *timestamppb.Timestamp
-		if m.LastSeen != nil {
-			lastSeen = timestamppb.New(*m.LastSeen)
-		}
-		response.Machines = append(response.Machines, &api.Machine{
-			Id:        m.ID,
-			Name:      name,
-			Ipv4:      m.IPv4.String(),
-			Ipv6:      m.IPv6.String(),
-			Ephemeral: m.Ephemeral,
-			Tags:      m.Tags,
-			LastSeen:  lastSeen,
-			Connected: online,
-			Tailnet: &api.Ref{
-				Id:   m.Tailnet.ID,
-				Name: m.Tailnet.Name,
-			},
-			User: &api.Ref{
-				Id:   m.User.ID,
-				Name: m.User.Name,
-			},
-		})
+		response.Machines = append(response.Machines, s.machineToApi(&m))
 	}
 
 	return connect.NewResponse(response), nil
+}
+
+func (s *Service) GetMachine(ctx context.Context, req *connect.Request[api.GetMachineRequest]) (*connect.Response[api.GetMachineResponse], error) {
+	principal := CurrentPrincipal(ctx)
+
+	m, err := s.repository.GetMachine(ctx, req.Msg.MachineId)
+	if err != nil {
+		return nil, err
+	}
+
+	if m == nil {
+		return nil, connect.NewError(connect.CodeNotFound, errors.New("machine not found"))
+	}
+
+	if !principal.IsSystemAdmin() && !principal.IsTailnetAdmin(m.TailnetID) {
+		return nil, connect.NewError(connect.CodePermissionDenied, errors.New("permission denied"))
+	}
+
+	return connect.NewResponse(&api.GetMachineResponse{Machine: s.machineToApi(m)}), nil
 }
 
 func (s *Service) DeleteMachine(ctx context.Context, req *connect.Request[api.DeleteMachineRequest]) (*connect.Response[api.DeleteMachineResponse], error) {

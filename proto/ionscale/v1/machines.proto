@@ -35,6 +35,14 @@ message SetMachineKeyExpiryRequest {
 
 message SetMachineKeyExpiryResponse {}
 
+message GetMachineRequest {
+  uint64 machine_id = 1;
+}
+
+message GetMachineResponse {
+  Machine machine = 1;
+}
+
 message Machine {
   uint64 id = 1;
   string name = 2;
@@ -46,4 +54,14 @@ message Machine {
   Ref tailnet = 8;
   Ref user = 9;
   repeated string tags = 10;
+  string client_version = 11;
+  string os = 12;
+  ClientConnectivity client_connectivity = 13;
+  google.protobuf.Timestamp created_at = 14;
+  google.protobuf.Timestamp expires_at = 15;
+  bool key_expiry_disabled = 16;
+}
+
+message ClientConnectivity {
+  repeated string endpoints = 1;
 }

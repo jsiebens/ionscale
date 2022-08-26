@@ -48,6 +48,7 @@ service IonscaleService {
   rpc ListUsers(ListUsersRequest) returns (ListUsersResponse) {}
   rpc DeleteUser(DeleteUserRequest) returns (DeleteUserResponse) {}
 
+  rpc GetMachine (GetMachineRequest) returns (GetMachineResponse) {}
   rpc ListMachines (ListMachinesRequest) returns (ListMachinesResponse) {}
   rpc ExpireMachine(ExpireMachineRequest) returns (ExpireMachineResponse) {}
   rpc DeleteMachine(DeleteMachineRequest) returns (DeleteMachineResponse) {}

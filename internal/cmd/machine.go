@@ -9,7 +9,9 @@ import (
 	"github.com/nleeper/goment"
 	"github.com/rodaine/table"
 	"inet.af/netaddr"
+	"os"
 	"strings"
+	"text/tabwriter"
 )
 
 func machineCommands() *coral.Command {
@@ -19,6 +21,7 @@ func machineCommands() *coral.Command {
 		SilenceUsage: true,
 	}
 
+	command.AddCommand(getMachineCommand())
 	command.AddCommand(deleteMachineCommand())
 	command.AddCommand(expireMachineCommand())
 	command.AddCommand(listMachinesCommand())
@@ -26,6 +29,88 @@ func machineCommands() *coral.Command {
 	command.AddCommand(setMachineRoutesCommand())
 	command.AddCommand(enableMachineKeyExpiryCommand())
 	command.AddCommand(disableMachineKeyExpiryCommand())
+
+	return command
+}
+
+func getMachineCommand() *coral.Command {
+	command := &coral.Command{
+		Use:          "get",
+		Short:        "Retrieve detailed information for a machine",
+		SilenceUsage: true,
+	}
+
+	var machineID uint64
+	var target = Target{}
+	target.prepareCommand(command)
+	command.Flags().Uint64Var(&machineID, "machine-id", 0, "Machine ID.")
+
+	_ = command.MarkFlagRequired("machine-id")
+
+	command.RunE = func(command *coral.Command, args []string) error {
+		client, err := target.createGRPCClient()
+		if err != nil {
+			return err
+		}
+
+		req := api.GetMachineRequest{MachineId: machineID}
+		resp, err := client.GetMachine(context.Background(), connect.NewRequest(&req))
+		if err != nil {
+			return err
+		}
+
+		m := resp.Msg.Machine
+		var lastSeen = "N/A"
+		var expiresAt = "No expiry"
+
+		if m.LastSeen != nil && !m.LastSeen.AsTime().IsZero() {
+			if mom, err := goment.New(m.LastSeen.AsTime()); err == nil {
+				lastSeen = mom.FromNow()
+			}
+		}
+
+		if !m.KeyExpiryDisabled && m.ExpiresAt != nil && !m.ExpiresAt.AsTime().IsZero() {
+			if mom, err := goment.New(m.ExpiresAt.AsTime()); !m.ExpiresAt.AsTime().IsZero() && err == nil {
+				expiresAt = mom.FromNow()
+			}
+		}
+
+		// initialize tabwriter
+		w := new(tabwriter.Writer)
+
+		// minwidth, tabwidth, padding, padchar, flags
+		w.Init(os.Stdout, 8, 8, 0, '\t', 0)
+
+		defer w.Flush()
+
+		fmt.Fprintf(w, "%s\t%d\n", "ID", m.Id)
+		fmt.Fprintf(w, "%s\t%s\n", "Machine name", m.Name)
+		fmt.Fprintf(w, "%s\t%s\n", "Creator", m.User.Name)
+		fmt.Fprintf(w, "%s\t%s\n", "OS", m.Os)
+		fmt.Fprintf(w, "%s\t%s\n", "Tailscale version", m.ClientVersion)
+		fmt.Fprintf(w, "%s\t%s\n", "Tailscale IPv4", m.Ipv4)
+		fmt.Fprintf(w, "%s\t%s\n", "Tailscale IPv6", m.Ipv6)
+		fmt.Fprintf(w, "%s\t%s\n", "Last seen", lastSeen)
+		fmt.Fprintf(w, "%s\t%s\n", "Key expiry", expiresAt)
+
+		for i, t := range m.Tags {
+			if i == 0 {
+				fmt.Fprintf(w, "%s\t%s\n", "ACL tags", t)
+			} else {
+				fmt.Fprintf(w, "%s\t%s\n", "", t)
+			}
+		}
+
+		for i, e := range m.ClientConnectivity.Endpoints {
+			if i == 0 {
+				fmt.Fprintf(w, "%s\t%s\n", "Endpoints", e)
+			} else {
+				fmt.Fprintf(w, "%s\t%s\n", "", e)
+			}
+		}
+
+		return nil
+	}
 
 	return command
 }
