@@ -32,7 +32,7 @@ func (s *Service) Authenticate(ctx context.Context, req *connect.Request[api.Aut
 	}
 
 	notify := ctx.Done()
-	tick := time.NewTicker(5 * time.Second)
+	tick := time.NewTicker(1 * time.Second)
 
 	defer func() {
 		tick.Stop()
