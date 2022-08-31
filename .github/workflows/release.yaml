@@ -33,7 +33,7 @@ jobs:
         with:
           go-version: ^1.18
       - name: Install cosign
-        uses: sigstore/cosign-installer@v2.0.0
+        uses: sigstore/cosign-installer@v2.5.1
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v2
         with:
