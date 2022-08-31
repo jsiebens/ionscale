@@ -74,10 +74,29 @@
 </head>
 <body>
 <div class="wrapper">
+    {{if .SystemAdmin}}
     <div style="text-align: left; padding-bottom: 10px">
+        <p><b>System Admin</b></p>
+        <small>You are a member of the System Admin group:</small>
+    </div>
+    <form method="post">
+        <ul class="selectionList">
+            <li><button type="submit" name="a" value="true">OK, continue as System Admin</button></li>
+        </ul>
+    </form>
+    {{end}}
+    {{if .Tailnets}}
+    {{if .SystemAdmin}}
+    <div style="text-align: left; padding-bottom: 10px; padding-top: 20px">
+        <small>Or select your <b>tailnet</b>:</small>
+    </div>
+    {{end}}
+    {{if not .SystemAdmin}}
+    <div style="text-align: left; padding-bottom: 10px;">
         <p><b>Tailnets</b></p>
         <small>Select your tailnet:</small>
     </div>
+    {{end}}
     <form method="post">
         <ul class="selectionList">
             {{range .Tailnets}}
@@ -85,6 +104,7 @@
             {{end}}
         </ul>
     </form>
+    {{end}}
 </div>
 </body>
 </html>

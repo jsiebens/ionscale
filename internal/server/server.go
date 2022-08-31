@@ -10,6 +10,7 @@ import (
 	"github.com/jsiebens/ionscale/internal/broker"
 	"github.com/jsiebens/ionscale/internal/config"
 	"github.com/jsiebens/ionscale/internal/database"
+	"github.com/jsiebens/ionscale/internal/domain"
 	"github.com/jsiebens/ionscale/internal/handlers"
 	"github.com/jsiebens/ionscale/internal/provider"
 	"github.com/jsiebens/ionscale/internal/service"
@@ -83,7 +84,7 @@ func Start(c *config.Config) error {
 		return e
 	}
 
-	authProvider, err := setupAuthProvider(c.AuthProvider)
+	authProvider, systemIAMPolicy, err := setupAuthProvider(c.AuthProvider)
 	if err != nil {
 		return err
 	}
@@ -94,6 +95,7 @@ func Start(c *config.Config) error {
 	authenticationHandlers := handlers.NewAuthenticationHandlers(
 		c,
 		authProvider,
+		systemIAMPolicy,
 		repository,
 	)
 
@@ -176,11 +178,21 @@ func Start(c *config.Config) error {
 	return g.Wait()
 }
 
-func setupAuthProvider(config config.AuthProvider) (provider.AuthProvider, error) {
+func setupAuthProvider(config config.AuthProvider) (provider.AuthProvider, *domain.IAMPolicy, error) {
 	if len(config.Issuer) == 0 {
-		return nil, nil
+		return nil, &domain.IAMPolicy{}, nil
 	}
-	return provider.NewOIDCProvider(&config)
+
+	authProvider, err := provider.NewOIDCProvider(&config)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return authProvider, &domain.IAMPolicy{
+		Subs:    config.SystemAdminPolicy.Subs,
+		Emails:  config.SystemAdminPolicy.Emails,
+		Filters: config.SystemAdminPolicy.Filters,
+	}, nil
 }
 
 func metricsListener(config *config.Config) (net.Listener, error) {

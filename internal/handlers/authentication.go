@@ -22,11 +22,14 @@ import (
 func NewAuthenticationHandlers(
 	config *config.Config,
 	authProvider provider.AuthProvider,
+	systemIAMPolicy *domain.IAMPolicy,
 	repository domain.Repository) *AuthenticationHandlers {
+
 	return &AuthenticationHandlers{
 		config:            config,
 		authProvider:      authProvider,
 		repository:        repository,
+		systemIAMPolicy:   systemIAMPolicy,
 		pendingOAuthUsers: cache.New(5*time.Minute, 10*time.Minute),
 	}
 }
@@ -35,6 +38,7 @@ type AuthenticationHandlers struct {
 	repository        domain.Repository
 	authProvider      provider.AuthProvider
 	config            *config.Config
+	systemIAMPolicy   *domain.IAMPolicy
 	pendingOAuthUsers *cache.Cache
 }
 
@@ -43,7 +47,8 @@ type AuthFormData struct {
 }
 
 type TailnetSelectionData struct {
-	Tailnets []domain.Tailnet
+	Tailnets    []domain.Tailnet
+	SystemAdmin bool
 }
 
 type oauthState struct {
@@ -128,12 +133,17 @@ func (h *AuthenticationHandlers) Callback(c echo.Context) error {
 		return err
 	}
 
+	isSystemAdmin, err := h.isSystemAdmin(ctx, user)
+	if err != nil {
+		return err
+	}
+
 	tailnets, err := h.listAvailableTailnets(ctx, user)
 	if err != nil {
 		return err
 	}
 
-	if len(tailnets) == 0 {
+	if !isSystemAdmin && len(tailnets) == 0 {
 		if state.Flow == "r" {
 			req, err := h.repository.GetRegistrationRequestByKey(ctx, state.Key)
 			if err == nil && req != nil {
@@ -157,7 +167,11 @@ func (h *AuthenticationHandlers) Callback(c echo.Context) error {
 
 	h.pendingOAuthUsers.Set(state.Key, account, cache.DefaultExpiration)
 
-	return c.Render(http.StatusOK, "tailnets.html", &TailnetSelectionData{Tailnets: tailnets})
+	return c.Render(http.StatusOK, "tailnets.html", &TailnetSelectionData{Tailnets: tailnets, SystemAdmin: isSystemAdmin})
+}
+
+func (h *AuthenticationHandlers) isSystemAdmin(ctx context.Context, u *provider.User) (bool, error) {
+	return h.systemIAMPolicy.EvaluatePolicy(&domain.Identity{UserID: u.ID, Email: u.Name, Attr: u.Attr})
 }
 
 func (h *AuthenticationHandlers) listAvailableTailnets(ctx context.Context, u *provider.User) ([]domain.Tailnet, error) {
@@ -221,6 +235,34 @@ func (h *AuthenticationHandlers) Error(c echo.Context) error {
 func (h *AuthenticationHandlers) endCliAuthenticationFlow(c echo.Context, req *domain.AuthenticationRequest, state *oauthState) error {
 	ctx := c.Request().Context()
 
+	item, ok := h.pendingOAuthUsers.Get(state.Key)
+	if !ok {
+		return c.Redirect(http.StatusFound, "/a/error")
+	}
+
+	oa := item.(*domain.Account)
+
+	// continue as system admin?
+	if c.FormValue("a") == "true" {
+		expiresAt := time.Now().Add(24 * time.Hour)
+		token, apiKey := domain.CreateSystemApiKey(oa, &expiresAt)
+		req.Token = token
+
+		err := h.repository.Transaction(func(rp domain.Repository) error {
+			if err := rp.SaveSystemApiKey(ctx, apiKey); err != nil {
+				return err
+			}
+			if err := rp.SaveAuthenticationRequest(ctx, req); err != nil {
+				return err
+			}
+			return nil
+		})
+		if err != nil {
+			return err
+		}
+		return c.Redirect(http.StatusFound, "/a/success")
+	}
+
 	tailnetIDParam := c.FormValue("s")
 
 	parseUint, err := strconv.ParseUint(tailnetIDParam, 10, 64)
@@ -231,13 +273,6 @@ func (h *AuthenticationHandlers) endCliAuthenticationFlow(c echo.Context, req *d
 	if err != nil {
 		return err
 	}
-
-	item, ok := h.pendingOAuthUsers.Get(state.Key)
-	if !ok {
-		return c.Redirect(http.StatusFound, "/a/error")
-	}
-
-	oa := item.(*domain.Account)
 
 	user, _, err := h.repository.GetOrCreateUserWithAccount(ctx, tailnet, oa)
 	if err != nil {

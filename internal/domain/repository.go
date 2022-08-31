@@ -20,6 +20,9 @@ type Repository interface {
 	ListTailnets(ctx context.Context) ([]Tailnet, error)
 	DeleteTailnet(ctx context.Context, id uint64) error
 
+	SaveSystemApiKey(ctx context.Context, key *SystemApiKey) error
+	LoadSystemApiKey(ctx context.Context, key string) (*SystemApiKey, error)
+
 	SaveApiKey(ctx context.Context, key *ApiKey) error
 	LoadApiKey(ctx context.Context, key string) (*ApiKey, error)
 	DeleteApiKeysByTailnet(ctx context.Context, tailnetID uint64) error

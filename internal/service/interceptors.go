@@ -82,13 +82,18 @@ func exchangeToken(ctx context.Context, systemAdminKey key.ServerPrivate, reposi
 	}
 
 	apiKey, err := repository.LoadApiKey(ctx, value)
-	if err != nil || apiKey == nil {
-		return nil
+	if err == nil && apiKey != nil {
+		user := apiKey.User
+		tailnet := apiKey.Tailnet
+		role := tailnet.IAMPolicy.GetRole(user)
+
+		return &Principal{User: &apiKey.User, SystemRole: domain.SystemRoleNone, UserRole: role}
 	}
 
-	user := apiKey.User
-	tailnet := apiKey.Tailnet
-	role := tailnet.IAMPolicy.GetRole(user)
+	systemApiKey, err := repository.LoadSystemApiKey(ctx, value)
+	if err == nil && systemApiKey != nil {
+		return &Principal{SystemRole: domain.SystemRoleAdmin}
+	}
 
-	return &Principal{User: &apiKey.User, SystemRole: domain.SystemRoleNone, UserRole: role}
+	return nil
 }

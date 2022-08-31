@@ -136,10 +136,17 @@ type Keys struct {
 }
 
 type AuthProvider struct {
-	Issuer       string   `yaml:"issuer"`
-	ClientID     string   `yaml:"client_id"`
-	ClientSecret string   `yaml:"client_secret"`
-	Scopes       []string `yaml:"additional_scopes"`
+	Issuer            string            `yaml:"issuer"`
+	ClientID          string            `yaml:"client_id"`
+	ClientSecret      string            `yaml:"client_secret"`
+	Scopes            []string          `yaml:"additional_scopes"`
+	SystemAdminPolicy SystemAdminPolicy `yaml:"system_admins"`
+}
+
+type SystemAdminPolicy struct {
+	Subs    []string `json:"subs,omitempty"`
+	Emails  []string `json:"emails,omitempty"`
+	Filters []string `json:"filters,omitempty"`
 }
 
 func (c *Config) CreateUrl(format string, a ...interface{}) string {
