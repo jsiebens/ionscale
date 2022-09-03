@@ -5,9 +5,9 @@ import (
 	"encoding/json"
 	"github.com/jsiebens/ionscale/internal/addr"
 	"github.com/jsiebens/ionscale/internal/provider"
+	"github.com/labstack/echo/v4/middleware"
 	"github.com/mr-tron/base58"
 	"net/http"
-	"strconv"
 	"tailscale.com/tailcfg"
 	"time"
 
@@ -15,7 +15,6 @@ import (
 	"github.com/jsiebens/ionscale/internal/domain"
 	"github.com/jsiebens/ionscale/internal/util"
 	"github.com/labstack/echo/v4"
-	"github.com/patrickmn/go-cache"
 	"tailscale.com/util/dnsname"
 )
 
@@ -26,29 +25,30 @@ func NewAuthenticationHandlers(
 	repository domain.Repository) *AuthenticationHandlers {
 
 	return &AuthenticationHandlers{
-		config:            config,
-		authProvider:      authProvider,
-		repository:        repository,
-		systemIAMPolicy:   systemIAMPolicy,
-		pendingOAuthUsers: cache.New(5*time.Minute, 10*time.Minute),
+		config:          config,
+		authProvider:    authProvider,
+		repository:      repository,
+		systemIAMPolicy: systemIAMPolicy,
 	}
 }
 
 type AuthenticationHandlers struct {
-	repository        domain.Repository
-	authProvider      provider.AuthProvider
-	config            *config.Config
-	systemIAMPolicy   *domain.IAMPolicy
-	pendingOAuthUsers *cache.Cache
+	repository      domain.Repository
+	authProvider    provider.AuthProvider
+	config          *config.Config
+	systemIAMPolicy *domain.IAMPolicy
 }
 
 type AuthFormData struct {
 	ProviderAvailable bool
+	Csrf              string
 }
 
 type TailnetSelectionData struct {
+	AccountID   uint64
 	Tailnets    []domain.Tailnet
 	SystemAdmin bool
+	Csrf        string
 }
 
 type oauthState struct {
@@ -86,7 +86,8 @@ func (h *AuthenticationHandlers) StartAuth(c echo.Context) error {
 		return c.Redirect(http.StatusFound, "/a/error")
 	}
 
-	return c.Render(http.StatusOK, "auth.html", &AuthFormData{ProviderAvailable: h.authProvider != nil})
+	csrf := c.Get(middleware.DefaultCSRFConfig.ContextKey).(string)
+	return c.Render(http.StatusOK, "auth.html", &AuthFormData{ProviderAvailable: h.authProvider != nil, Csrf: csrf})
 }
 
 func (h *AuthenticationHandlers) ProcessAuth(c echo.Context) error {
@@ -165,9 +166,13 @@ func (h *AuthenticationHandlers) Callback(c echo.Context) error {
 		return err
 	}
 
-	h.pendingOAuthUsers.Set(state.Key, account, cache.DefaultExpiration)
-
-	return c.Render(http.StatusOK, "tailnets.html", &TailnetSelectionData{Tailnets: tailnets, SystemAdmin: isSystemAdmin})
+	csrf := c.Get(middleware.DefaultCSRFConfig.ContextKey).(string)
+	return c.Render(http.StatusOK, "tailnets.html", &TailnetSelectionData{
+		Csrf:        csrf,
+		Tailnets:    tailnets,
+		SystemAdmin: isSystemAdmin,
+		AccountID:   account.ID,
+	})
 }
 
 func (h *AuthenticationHandlers) isSystemAdmin(ctx context.Context, u *provider.User) (bool, error) {
@@ -232,20 +237,30 @@ func (h *AuthenticationHandlers) Error(c echo.Context) error {
 	return c.Render(http.StatusOK, "error.html", nil)
 }
 
+type TailnetSelectionForm struct {
+	AccountID     uint64 `form:"aid"`
+	TailnetID     uint64 `form:"tid"`
+	AsSystemAdmin bool   `form:"sad"`
+	AuthKey       string `form:"ak"`
+}
+
 func (h *AuthenticationHandlers) endCliAuthenticationFlow(c echo.Context, req *domain.AuthenticationRequest, state *oauthState) error {
 	ctx := c.Request().Context()
 
-	item, ok := h.pendingOAuthUsers.Get(state.Key)
-	if !ok {
+	var form TailnetSelectionForm
+	if err := c.Bind(&form); err != nil {
 		return c.Redirect(http.StatusFound, "/a/error")
 	}
 
-	oa := item.(*domain.Account)
+	account, err := h.repository.GetAccount(ctx, form.AccountID)
+	if err != nil {
+		return c.Redirect(http.StatusFound, "/a/error")
+	}
 
 	// continue as system admin?
-	if c.FormValue("a") == "true" {
+	if form.AsSystemAdmin {
 		expiresAt := time.Now().Add(24 * time.Hour)
-		token, apiKey := domain.CreateSystemApiKey(oa, &expiresAt)
+		token, apiKey := domain.CreateSystemApiKey(account, &expiresAt)
 		req.Token = token
 
 		err := h.repository.Transaction(func(rp domain.Repository) error {
@@ -263,18 +278,12 @@ func (h *AuthenticationHandlers) endCliAuthenticationFlow(c echo.Context, req *d
 		return c.Redirect(http.StatusFound, "/a/success")
 	}
 
-	tailnetIDParam := c.FormValue("s")
-
-	parseUint, err := strconv.ParseUint(tailnetIDParam, 10, 64)
-	if err != nil {
-		return err
-	}
-	tailnet, err := h.repository.GetTailnet(ctx, parseUint)
+	tailnet, err := h.repository.GetTailnet(ctx, form.TailnetID)
 	if err != nil {
 		return err
 	}
 
-	user, _, err := h.repository.GetOrCreateUserWithAccount(ctx, tailnet, oa)
+	user, _, err := h.repository.GetOrCreateUserWithAccount(ctx, tailnet, account)
 	if err != nil {
 		return err
 	}
@@ -302,8 +311,10 @@ func (h *AuthenticationHandlers) endCliAuthenticationFlow(c echo.Context, req *d
 func (h *AuthenticationHandlers) endMachineRegistrationFlow(c echo.Context, registrationRequest *domain.RegistrationRequest, state *oauthState) error {
 	ctx := c.Request().Context()
 
-	authKeyParam := c.FormValue("ak")
-	tailnetIDParam := c.FormValue("s")
+	var form TailnetSelectionForm
+	if err := c.Bind(&form); err != nil {
+		return c.Redirect(http.StatusFound, "/a/error")
+	}
 
 	req := tailcfg.RegisterRequest(registrationRequest.Data)
 	machineKey := registrationRequest.MachineKey
@@ -313,10 +324,9 @@ func (h *AuthenticationHandlers) endMachineRegistrationFlow(c echo.Context, regi
 	var user *domain.User
 	var ephemeral bool
 	var tags = []string{}
-	//var expiryDisabled bool
 
-	if authKeyParam != "" {
-		authKey, err := h.repository.LoadAuthKey(ctx, authKeyParam)
+	if form.AuthKey != "" {
+		authKey, err := h.repository.LoadAuthKey(ctx, form.AuthKey)
 		if err != nil {
 			return err
 		}
@@ -338,27 +348,23 @@ func (h *AuthenticationHandlers) endMachineRegistrationFlow(c echo.Context, regi
 		tags = authKey.Tags
 		ephemeral = authKey.Ephemeral
 	} else {
-		parseUint, err := strconv.ParseUint(tailnetIDParam, 10, 64)
-		if err != nil {
-			return err
-		}
-		tailnet, err = h.repository.GetTailnet(ctx, parseUint)
+		selectedTailnet, err := h.repository.GetTailnet(ctx, form.TailnetID)
 		if err != nil {
 			return err
 		}
 
-		item, ok := h.pendingOAuthUsers.Get(state.Key)
-		if !ok {
+		account, err := h.repository.GetAccount(ctx, form.AccountID)
+		if err != nil {
 			return c.Redirect(http.StatusFound, "/a/error")
 		}
 
-		oa := item.(*domain.Account)
-
-		user, _, err = h.repository.GetOrCreateUserWithAccount(ctx, tailnet, oa)
+		selectedUser, _, err := h.repository.GetOrCreateUserWithAccount(ctx, tailnet, account)
 		if err != nil {
 			return err
 		}
 
+		user = selectedUser
+		tailnet = selectedTailnet
 		ephemeral = false
 	}
 

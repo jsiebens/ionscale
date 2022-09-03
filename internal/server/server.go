@@ -17,6 +17,7 @@ import (
 	"github.com/jsiebens/ionscale/internal/templates"
 	echo_prometheus "github.com/labstack/echo-contrib/prometheus"
 	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
 	"golang.org/x/net/http2"
 	"golang.org/x/net/http2/h2c"
 	"golang.org/x/sync/errgroup"
@@ -130,6 +131,9 @@ func Start(c *config.Config) error {
 	tlsAppHandler.POST("/machine/:id/map", pollNetMapHandler.PollNetMap)
 
 	auth := tlsAppHandler.Group("/a")
+	auth.Use(middleware.CSRFWithConfig(middleware.CSRFConfig{
+		TokenLookup: "form:_csrf",
+	}))
 	auth.GET("/:key", authenticationHandlers.StartAuth)
 	auth.POST("/:key", authenticationHandlers.ProcessAuth)
 	auth.GET("/c/:key", authenticationHandlers.StartCliAuth)

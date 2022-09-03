@@ -80,6 +80,7 @@
         <small>Login with:</small>
     </div>
     <form method="post">
+        <input type="hidden" name="_csrf" value="{{.Csrf}}">
         <ul class="selectionList">
             <li><button type="submit" name="s" value="true">OpenID</button></li>
         </ul>
@@ -95,6 +96,7 @@
     </div>
     {{end}}
     <form method="post" style="text-align: right">
+        <input type="hidden" name="_csrf" value="{{.Csrf}}">
         <p><input id="ak" name="ak" type="text"/></p>
         <div style="padding-top: 10px">
             <button type="submit">submit</button>

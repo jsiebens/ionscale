@@ -18,7 +18,6 @@ require (
 	github.com/mr-tron/base58 v1.2.0
 	github.com/muesli/coral v1.0.0
 	github.com/nleeper/goment v1.4.4
-	github.com/patrickmn/go-cache v2.1.0+incompatible
 	github.com/rodaine/table v1.0.1
 	github.com/sony/sonyflake v1.0.0
 	github.com/xhit/go-str2duration/v2 v2.0.0

@@ -80,8 +80,10 @@
         <small>You are a member of the System Admin group:</small>
     </div>
     <form method="post">
+        <input type="hidden" name="aid" value="{{.AccountID}}">
+        <input type="hidden" name="_csrf" value="{{.Csrf}}">
         <ul class="selectionList">
-            <li><button type="submit" name="a" value="true">OK, continue as System Admin</button></li>
+            <li><button type="submit" name="sad" value="true">OK, continue as System Admin</button></li>
         </ul>
     </form>
     {{end}}
@@ -98,9 +100,11 @@
     </div>
     {{end}}
     <form method="post">
+        <input type="hidden" name="aid" value="{{.AccountID}}">
+        <input type="hidden" name="_csrf" value="{{.Csrf}}">
         <ul class="selectionList">
             {{range .Tailnets}}
-            <li><button type="submit" name="s" value="{{.ID}}">{{.Name}}</button></li>
+            <li><button type="submit" name="tid" value="{{.ID}}">{{.Name}}</button></li>
             {{end}}
         </ul>
     </form>
