@@ -9,7 +9,11 @@ import (
 )
 
 func HttpRedirectHandler(tls config.Tls) echo.HandlerFunc {
-	if tls.CertMagicDomain != "" {
+	if tls.Disable {
+		return IndexHandler(http.StatusNotFound)
+	}
+
+	if tls.AcmeEnabled {
 		cfg := certmagic.NewDefault()
 		if len(cfg.Issuers) > 0 {
 			if am, ok := cfg.Issuers[0].(*certmagic.ACMEIssuer); ok {
@@ -17,10 +21,6 @@ func HttpRedirectHandler(tls config.Tls) echo.HandlerFunc {
 				return echo.WrapHandler(handler)
 			}
 		}
-	}
-
-	if tls.Disable {
-		return IndexHandler(http.StatusNotFound)
 	}
 
 	return echo.WrapHandler(http.HandlerFunc(httpRedirectHandler))

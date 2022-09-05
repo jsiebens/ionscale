@@ -47,10 +47,10 @@ const (
 	tlsDisableKey               = "IONSCALE_TLS_DISABLE"
 	tlsCertFileKey              = "IONSCALE_TLS_CERT_FILE"
 	tlsKeyFileKey               = "IONSCALE_TLS_KEY_FILE"
-	tlsCertMagicCAKey           = "IONSCALE_TLS_CERT_MAGIC_CA"
-	tlsCertMagicDomainKey       = "IONSCALE_TLS_CERT_MAGIC_DOMAIN"
-	tlsCertMagicEmailKey        = "IONSCALE_TLS_CERT_MAGIC_EMAIL"
-	tlsCertMagicStoragePath     = "IONSCALE_TLS_CERT_MAGIC_STORAGE_PATH"
+	tlsAcmeKey                  = "IONSCALE_TLS_ACME"
+	tlsAcmeCAKey                = "IONSCALE_TLS_ACME_CA"
+	tlsAcmeEmailKey             = "IONSCALE_TLS_ACME_EMAIL"
+	tlsAcmePath                 = "IONSCALE_TLS_ACME_PATH"
 	metricsListenAddrKey        = "IONSCALE_METRICS_LISTEN_ADDR"
 	loggingLevelKey             = "IONSCALE_LOGGING_LEVEL"
 	loggingFormatKey            = "IONSCALE_LOGGING_FORMAT"
@@ -74,13 +74,12 @@ func defaultConfig() *Config {
 			Url: GetString(databaseUrlKey, "ionscale.db"),
 		},
 		Tls: Tls{
-			Disable:              GetBool(tlsDisableKey, false),
-			CertFile:             GetString(tlsCertFileKey, ""),
-			KeyFile:              GetString(tlsKeyFileKey, ""),
-			CertMagicCA:          GetString(tlsCertMagicCAKey, certmagic.LetsEncryptProductionCA),
-			CertMagicDomain:      GetString(tlsCertMagicDomainKey, ""),
-			CertMagicEmail:       GetString(tlsCertMagicEmailKey, ""),
-			CertMagicStoragePath: GetString(tlsCertMagicStoragePath, ""),
+			Disable:   GetBool(tlsDisableKey, false),
+			CertFile:  GetString(tlsCertFileKey, ""),
+			KeyFile:   GetString(tlsKeyFileKey, ""),
+			AcmeCA:    GetString(tlsAcmeCAKey, certmagic.LetsEncryptProductionCA),
+			AcmeEmail: GetString(tlsAcmeEmailKey, ""),
+			AcmePath:  GetString(tlsAcmePath, ""),
 		},
 		AuthProvider: AuthProvider{
 			Issuer:       GetString(authProviderIssuerKey, ""),
@@ -115,13 +114,13 @@ type Config struct {
 }
 
 type Tls struct {
-	Disable              bool   `yaml:"disable"`
-	CertFile             string `yaml:"cert_file,omitempty"`
-	KeyFile              string `yaml:"key_file,omitempty"`
-	CertMagicDomain      string `yaml:"cert_magic_domain,omitempty"`
-	CertMagicEmail       string `yaml:"cert_magic_email,omitempty"`
-	CertMagicCA          string `yaml:"cert_magic_ca,omitempty"`
-	CertMagicStoragePath string `yaml:"cert_magic_storage_path,omitempty"`
+	Disable     bool   `yaml:"disable"`
+	CertFile    string `yaml:"cert_file,omitempty"`
+	KeyFile     string `yaml:"key_file,omitempty"`
+	AcmeEnabled bool   `yaml:"acme,omitempty"`
+	AcmeEmail   string `yaml:"acme_email,omitempty"`
+	AcmeCA      string `yaml:"acme_ca,omitempty"`
+	AcmePath    string `yaml:"acme_path,omitempty"`
 }
 
 type Logging struct {

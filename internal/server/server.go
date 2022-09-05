@@ -23,6 +23,7 @@ import (
 	"log"
 	"net"
 	"net/http"
+	"net/url"
 	"os"
 	"strings"
 	"tailscale.com/types/key"
@@ -52,17 +53,22 @@ func Start(c *config.Config) error {
 	go offlineTimers.Start()
 	go reaper.Start()
 
+	serverUrl, err := url.Parse(c.ServerUrl)
+	if err != nil {
+		return err
+	}
+
 	// prepare CertMagic
-	if c.Tls.CertMagicDomain != "" {
+	if c.Tls.AcmeEnabled {
 		certmagic.DefaultACME.Agreed = true
-		certmagic.DefaultACME.Email = c.Tls.CertMagicEmail
-		certmagic.DefaultACME.CA = c.Tls.CertMagicCA
-		if c.Tls.CertMagicStoragePath != "" {
-			certmagic.Default.Storage = &certmagic.FileStorage{Path: c.Tls.CertMagicStoragePath}
+		certmagic.DefaultACME.Email = c.Tls.AcmeEmail
+		certmagic.DefaultACME.CA = c.Tls.AcmeCA
+		if c.Tls.AcmePath != "" {
+			certmagic.Default.Storage = &certmagic.FileStorage{Path: c.Tls.AcmePath}
 		}
 
 		cfg := certmagic.NewDefault()
-		if err := cfg.ManageAsync(context.Background(), []string{c.Tls.CertMagicDomain}); err != nil {
+		if err := cfg.ManageAsync(context.Background(), []string{serverUrl.Host}); err != nil {
 			return err
 		}
 
@@ -166,8 +172,8 @@ func Start(c *config.Config) error {
 		g.Go(func() error { return http.Serve(nonTlsL, nonTlsAppHandler) })
 	}
 
-	if c.Tls.CertMagicDomain != "" {
-		logger.Info("TLS is enabled with CertMagic", "domain", c.Tls.CertMagicDomain)
+	if c.Tls.AcmeEnabled {
+		logger.Info("TLS is enabled with ACME", "domain", serverUrl.Host)
 		logger.Info("Server is running", "http_addr", c.HttpListenAddr, "https_addr", c.HttpsListenAddr, "metrics_addr", c.MetricsListenAddr)
 	} else if !c.Tls.Disable {
 		logger.Info("TLS is enabled", "cert", c.Tls.CertFile)
@@ -202,25 +208,25 @@ func metricsListener(config *config.Config) (net.Listener, error) {
 }
 
 func tlsListener(config *config.Config) (net.Listener, error) {
-	if config.Tls.CertMagicDomain != "" {
+	if config.Tls.Disable {
+		return nil, nil
+	}
+
+	if config.Tls.AcmeEnabled {
 		cfg := certmagic.NewDefault()
 		tlsConfig := cfg.TLSConfig()
 		tlsConfig.NextProtos = append([]string{"h2", "http/1.1"}, tlsConfig.NextProtos...)
 		return tls.Listen("tcp", config.HttpsListenAddr, tlsConfig)
 	}
 
-	if !config.Tls.Disable {
-		cer, err := tls.LoadX509KeyPair(config.Tls.CertFile, config.Tls.KeyFile)
-		if err != nil {
-			return nil, err
-		}
-
-		tlsConfig := &tls.Config{Certificates: []tls.Certificate{cer}}
-
-		return tls.Listen("tcp", config.HttpsListenAddr, tlsConfig)
+	cer, err := tls.LoadX509KeyPair(config.Tls.CertFile, config.Tls.KeyFile)
+	if err != nil {
+		return nil, err
 	}
 
-	return nil, nil
+	tlsConfig := &tls.Config{Certificates: []tls.Certificate{cer}}
+
+	return tls.Listen("tcp", config.HttpsListenAddr, tlsConfig)
 }
 
 func nonTlsListener(config *config.Config) (net.Listener, error) {
