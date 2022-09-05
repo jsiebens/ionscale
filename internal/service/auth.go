@@ -49,7 +49,7 @@ func (s *Service) Authenticate(ctx context.Context, req *connect.Request[api.Aut
 			}
 
 			if len(m.Token) != 0 {
-				if err := stream.Send(&api.AuthenticationResponse{Token: m.Token}); err != nil {
+				if err := stream.Send(&api.AuthenticationResponse{Token: m.Token, TailnetId: m.TailnetID}); err != nil {
 					return err
 				}
 				return nil

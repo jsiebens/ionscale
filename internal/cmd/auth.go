@@ -48,7 +48,7 @@ func authLoginCommand() *coral.Command {
 			if len(resp.Token) != 0 {
 				fmt.Println()
 				fmt.Println("Success.")
-				if err := ionscale.TokenToFile(resp.Token); err != nil {
+				if err := ionscale.SessionToFile(resp.Token, resp.TailnetId); err != nil {
 					fmt.Println()
 					fmt.Println("Your api token:")
 					fmt.Println()

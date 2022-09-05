@@ -9,4 +9,5 @@ message AuthenticationRequest {
 message AuthenticationResponse {
   string auth_url = 1;
   string token = 2;
+  optional uint64 tailnet_id = 3;
 }

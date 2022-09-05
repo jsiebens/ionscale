@@ -10,6 +10,7 @@ import (
 type AuthenticationRequest struct {
 	Key       string `gorm:"primary_key;autoIncrement:false"`
 	Token     string
+	TailnetID *uint64
 	Error     string
 	CreatedAt time.Time
 }

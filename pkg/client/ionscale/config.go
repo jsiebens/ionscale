@@ -42,6 +42,16 @@ func valueFromFile(name string) (string, error) {
 	return string(token), nil
 }
 
+func SessionToFile(token string, tailnetID *uint64) error {
+	if err := TokenToFile(token); err != nil {
+		return err
+	}
+	if err := TailnetToFile(tailnetID); err != nil {
+		return err
+	}
+	return nil
+}
+
 func TokenToFile(token string) error {
 	file, err := EnsureFile("token")
 	if err != nil {

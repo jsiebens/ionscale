@@ -291,6 +291,7 @@ func (h *AuthenticationHandlers) endCliAuthenticationFlow(c echo.Context, req *d
 	expiresAt := time.Now().Add(24 * time.Hour)
 	token, apiKey := domain.CreateApiKey(tailnet, user, &expiresAt)
 	req.Token = token
+	req.TailnetID = &tailnet.ID
 
 	err = h.repository.Transaction(func(rp domain.Repository) error {
 		if err := rp.SaveApiKey(ctx, apiKey); err != nil {

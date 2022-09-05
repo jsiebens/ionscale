@@ -4,24 +4,19 @@ import (
 	"context"
 	"fmt"
 	"github.com/bufbuild/connect-go"
+	"github.com/jsiebens/ionscale/pkg/client/ionscale"
 	api "github.com/jsiebens/ionscale/pkg/gen/ionscale/v1"
 	apiconnect "github.com/jsiebens/ionscale/pkg/gen/ionscale/v1/ionscalev1connect"
 	"github.com/muesli/coral"
 )
 
-func checkAll(checks ...func(cmd *coral.Command, args []string) error) func(cmd *coral.Command, args []string) error {
-	return func(cmd *coral.Command, args []string) error {
-		for _, c := range checks {
-			if err := c(cmd, args); err != nil {
-				return err
-			}
-		}
-		return nil
-	}
-}
-
 func checkRequiredTailnetAndTailnetIdFlags(cmd *coral.Command, args []string) error {
-	if !cmd.Flags().Changed("tailnet") && !cmd.Flags().Changed("tailnet-id") {
+	savedTailnetID, err := ionscale.TailnetFromFile()
+	if err != nil {
+		return err
+	}
+
+	if savedTailnetID == 0 && !cmd.Flags().Changed("tailnet") && !cmd.Flags().Changed("tailnet-id") {
 		return fmt.Errorf("flag --tailnet or --tailnet-id is required")
 	}
 
@@ -33,7 +28,12 @@ func checkRequiredTailnetAndTailnetIdFlags(cmd *coral.Command, args []string) er
 }
 
 func findTailnet(client apiconnect.IonscaleServiceClient, tailnet string, tailnetID uint64) (*api.Tailnet, error) {
-	if tailnetID == 0 && tailnet == "" {
+	savedTailnetID, err := ionscale.TailnetFromFile()
+	if err != nil {
+		return nil, err
+	}
+
+	if savedTailnetID == 0 && tailnetID == 0 && tailnet == "" {
 		return nil, fmt.Errorf("requested tailnet not found or you are not authorized for this tailnet")
 	}
 
@@ -43,7 +43,7 @@ func findTailnet(client apiconnect.IonscaleServiceClient, tailnet string, tailne
 	}
 
 	for _, t := range tailnets.Msg.Tailnet {
-		if t.Id == tailnetID || t.Name == tailnet {
+		if t.Id == savedTailnetID || t.Id == tailnetID || t.Name == tailnet {
 			return t, nil
 		}
 	}
