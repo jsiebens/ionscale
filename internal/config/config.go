@@ -43,6 +43,8 @@ const (
 	httpsListenAddrKey          = "IONSCALE_HTTPS_LISTEN_ADDR"
 	serverUrlKey                = "IONSCALE_SERVER_URL"
 	keysSystemAdminKeyKey       = "IONSCALE_SYSTEM_ADMIN_KEY"
+	keysControlKeyKey           = "IONSCALE_CONTROL_KEY"
+	keysLegacyControlKeyKey     = "IONSCALE_LEGACY_CONTROL_KEY"
 	databaseUrlKey              = "IONSCALE_DB_URL"
 	tlsDisableKey               = "IONSCALE_TLS_DISABLE"
 	tlsCertFileKey              = "IONSCALE_TLS_CERT_FILE"
@@ -68,7 +70,9 @@ func defaultConfig() *Config {
 		MetricsListenAddr: GetString(metricsListenAddrKey, ":8081"),
 		ServerUrl:         GetString(serverUrlKey, "https://localhost:8443"),
 		Keys: Keys{
-			SystemAdminKey: GetString(keysSystemAdminKeyKey, ""),
+			SystemAdminKey:   GetString(keysSystemAdminKeyKey, ""),
+			ControlKey:       GetString(keysControlKeyKey, ""),
+			LegacyControlKey: GetString(keysLegacyControlKeyKey, ""),
 		},
 		Database: Database{
 			Url: GetString(databaseUrlKey, "ionscale.db"),
