@@ -7,7 +7,6 @@ import (
 	"github.com/caddyserver/certmagic"
 	"github.com/hashicorp/go-hclog"
 	"github.com/jsiebens/ionscale/internal/bind"
-	"github.com/jsiebens/ionscale/internal/broker"
 	"github.com/jsiebens/ionscale/internal/config"
 	"github.com/jsiebens/ionscale/internal/database"
 	"github.com/jsiebens/ionscale/internal/domain"
@@ -42,12 +41,11 @@ func Start(c *config.Config) error {
 		return err
 	}
 
-	_, repository, err := database.OpenDB(&c.Database, logger)
+	_, repository, brokers, err := database.OpenDB(&c.Database, logger)
 	if err != nil {
 		return err
 	}
 
-	brokers := broker.NewBrokerPool()
 	offlineTimers := handlers.NewOfflineTimers(repository, brokers)
 	reaper := handlers.NewReaper(brokers, repository)
 

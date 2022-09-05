@@ -12,15 +12,15 @@ const (
 	inactivityTimeout = 30 * time.Minute
 )
 
-func NewReaper(brokers *broker.BrokerPool, repository domain.Repository) *Reaper {
+func NewReaper(brokers broker.Pubsub, repository domain.Repository) *Reaper {
 	return &Reaper{
-		brokers:    brokers,
+		pubsub:     brokers,
 		repository: repository,
 	}
 }
 
 type Reaper struct {
-	brokers    *broker.BrokerPool
+	pubsub     broker.Pubsub
 	repository domain.Repository
 }
 
@@ -55,7 +55,7 @@ func (r *Reaper) reapInactiveEphemeralNodes() {
 
 	if len(removedNodes) != 0 {
 		for i, p := range removedNodes {
-			r.brokers.Get(i).SignalPeersRemoved(p)
+			r.pubsub.Publish(i, &broker.Signal{PeersRemoved: p})
 		}
 	}
 }

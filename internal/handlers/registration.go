@@ -19,11 +19,11 @@ import (
 func NewRegistrationHandlers(
 	createBinder bind.Factory,
 	config *config.Config,
-	brokers *broker.BrokerPool,
+	brokers broker.Pubsub,
 	repository domain.Repository) *RegistrationHandlers {
 	return &RegistrationHandlers{
 		createBinder: createBinder,
-		brokers:      brokers.Get,
+		pubsub:       brokers,
 		repository:   repository,
 		config:       config,
 	}
@@ -32,7 +32,7 @@ func NewRegistrationHandlers(
 type RegistrationHandlers struct {
 	createBinder bind.Factory
 	repository   domain.Repository
-	brokers      func(uint64) broker.Broker
+	pubsub       broker.Pubsub
 	config       *config.Config
 }
 
@@ -72,7 +72,7 @@ func (h *RegistrationHandlers) Register(c echo.Context) error {
 				return err
 			}
 
-			h.brokers(m.TailnetID).SignalPeerUpdated(m.ID)
+			h.pubsub.Publish(m.TailnetID, &broker.Signal{PeerUpdated: &m.ID})
 
 			response := tailcfg.RegisterResponse{NodeKeyExpired: true}
 			return binder.WriteResponse(c, http.StatusOK, response)

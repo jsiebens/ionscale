@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/bufbuild/connect-go"
+	"github.com/jsiebens/ionscale/internal/broker"
 	"github.com/jsiebens/ionscale/internal/domain"
 	"github.com/jsiebens/ionscale/internal/mapping"
 	api "github.com/jsiebens/ionscale/pkg/gen/ionscale/v1"
@@ -56,7 +57,7 @@ func (s *Service) SetACLPolicy(ctx context.Context, req *connect.Request[api.Set
 		return nil, err
 	}
 
-	s.brokers(tailnet.ID).SignalACLUpdated()
+	s.pubsub.Publish(tailnet.ID, &broker.Signal{ACLUpdated: true})
 
 	return connect.NewResponse(&api.SetACLPolicyResponse{}), nil
 }

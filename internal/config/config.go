@@ -10,6 +10,11 @@ import (
 	"io/ioutil"
 	"strings"
 	tkey "tailscale.com/types/key"
+	"time"
+)
+
+const (
+	KeepAliveInterval = 1 * time.Minute
 )
 
 func LoadConfig(path string) (*Config, error) {
@@ -126,7 +131,8 @@ type Logging struct {
 }
 
 type Database struct {
-	Url string `yaml:"url,omitempty"`
+	Type string `yaml:"type,omitempty"`
+	Url  string `yaml:"url,omitempty"`
 }
 
 type Keys struct {

@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"github.com/bufbuild/connect-go"
+	"github.com/jsiebens/ionscale/internal/broker"
 	api "github.com/jsiebens/ionscale/pkg/gen/ionscale/v1"
 	"tailscale.com/tailcfg"
 )
@@ -40,11 +41,18 @@ func (s *Service) SetDERPMap(ctx context.Context, req *connect.Request[api.SetDE
 		return nil, err
 	}
 
+	tailnets, err := s.repository.ListTailnets(ctx)
+	if err != nil {
+		return nil, err
+	}
+
 	if err := s.repository.SetDERPMap(ctx, &derpMap); err != nil {
 		return nil, err
 	}
 
-	s.brokerPool.SignalDERPMapUpdated(&derpMap)
+	for _, t := range tailnets {
+		s.pubsub.Publish(t.ID, &broker.Signal{})
+	}
 
 	return connect.NewResponse(&api.SetDERPMapResponse{Value: req.Msg.Value}), nil
 }

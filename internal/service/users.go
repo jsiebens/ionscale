@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"github.com/bufbuild/connect-go"
+	"github.com/jsiebens/ionscale/internal/broker"
 	"github.com/jsiebens/ionscale/internal/domain"
 	api "github.com/jsiebens/ionscale/pkg/gen/ionscale/v1"
 )
@@ -85,7 +86,7 @@ func (s *Service) DeleteUser(ctx context.Context, req *connect.Request[api.Delet
 		return nil, err
 	}
 
-	s.brokers(user.TailnetID).SignalUpdate()
+	s.pubsub.Publish(user.TailnetID, &broker.Signal{})
 
 	return connect.NewResponse(&api.DeleteUserResponse{}), nil
 }

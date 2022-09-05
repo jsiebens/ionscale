@@ -11,12 +11,12 @@ import (
 	api "github.com/jsiebens/ionscale/pkg/gen/ionscale/v1"
 )
 
-func NewService(config *config.Config, authProvider provider.AuthProvider, repository domain.Repository, brokerPool *broker.BrokerPool) *Service {
+func NewService(config *config.Config, authProvider provider.AuthProvider, repository domain.Repository, pubsub broker.Pubsub) *Service {
 	return &Service{
 		config:       config,
 		authProvider: authProvider,
 		repository:   repository,
-		brokerPool:   brokerPool,
+		pubsub:       pubsub,
 	}
 }
 
@@ -24,11 +24,7 @@ type Service struct {
 	config       *config.Config
 	authProvider provider.AuthProvider
 	repository   domain.Repository
-	brokerPool   *broker.BrokerPool
-}
-
-func (s *Service) brokers(tailnetID uint64) broker.Broker {
-	return s.brokerPool.Get(tailnetID)
+	pubsub       broker.Pubsub
 }
 
 func (s *Service) GetVersion(_ context.Context, _ *connect.Request[api.GetVersionRequest]) (*connect.Response[api.GetVersionResponse], error) {

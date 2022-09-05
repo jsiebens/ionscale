@@ -3,6 +3,7 @@ package mapping
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/jsiebens/ionscale/internal/config"
 	"github.com/jsiebens/ionscale/internal/domain"
 	"github.com/jsiebens/ionscale/internal/util"
 	"inet.af/netaddr"
@@ -73,7 +74,7 @@ func ToDNSConfig(tailnet *domain.Tailnet, c *domain.DNSConfig) *tailcfg.DNSConfi
 	return config
 }
 
-func ToNode(m *domain.Machine, connected bool) (*tailcfg.Node, *tailcfg.UserProfile, error) {
+func ToNode(m *domain.Machine) (*tailcfg.Node, *tailcfg.UserProfile, error) {
 	nKey, err := util.ParseNodePublicKey(m.NodeKey)
 	if err != nil {
 		return nil, nil, err
@@ -168,10 +169,11 @@ func ToNode(m *domain.Machine, connected bool) (*tailcfg.Node, *tailcfg.UserProf
 		n.KeyExpiry = time.Time{}
 	}
 
-	n.Online = &connected
-	if !connected && m.LastSeen != nil {
+	if m.LastSeen != nil {
 		l := m.LastSeen.UTC()
+		online := m.LastSeen.After(time.Now().Add(-config.KeepAliveInterval))
 		n.LastSeen = &l
+		n.Online = &online
 	}
 
 	var user = ToUserProfile(m.User)

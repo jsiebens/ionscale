@@ -116,6 +116,14 @@ func (i IP) Value() (driver.Value, error) {
 	return i.String(), nil
 }
 
+func (IP) GormDBDataType(db *gorm.DB, field *schema.Field) string {
+	switch db.Dialector.Name() {
+	case "postgres":
+		return "TEXT"
+	}
+	return ""
+}
+
 type AllowIPs []netaddr.IPPrefix
 
 func (hi *AllowIPs) Scan(destination interface{}) error {

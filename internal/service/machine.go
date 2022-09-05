@@ -5,6 +5,8 @@ import (
 	"errors"
 	"fmt"
 	"github.com/bufbuild/connect-go"
+	"github.com/jsiebens/ionscale/internal/broker"
+	"github.com/jsiebens/ionscale/internal/config"
 	"github.com/jsiebens/ionscale/internal/domain"
 	api "github.com/jsiebens/ionscale/pkg/gen/ionscale/v1"
 	"google.golang.org/protobuf/types/known/timestamppb"
@@ -19,9 +21,11 @@ func (s *Service) machineToApi(m *domain.Machine) *api.Machine {
 	if m.NameIdx != 0 {
 		name = fmt.Sprintf("%s-%d", m.Name, m.NameIdx)
 	}
-	online := s.brokers(m.TailnetID).IsConnected(m.ID)
+	// TODO connected?
+	online := false
 	if m.LastSeen != nil {
 		lastSeen = timestamppb.New(*m.LastSeen)
+		online = m.LastSeen.After(time.Now().Add(-config.KeepAliveInterval))
 	}
 
 	return &api.Machine{
@@ -118,7 +122,7 @@ func (s *Service) DeleteMachine(ctx context.Context, req *connect.Request[api.De
 		return nil, err
 	}
 
-	s.brokers(m.TailnetID).SignalPeersRemoved([]uint64{m.ID})
+	s.pubsub.Publish(m.TailnetID, &broker.Signal{PeersRemoved: []uint64{m.ID}})
 
 	return connect.NewResponse(&api.DeleteMachineResponse{}), nil
 }
@@ -147,7 +151,7 @@ func (s *Service) ExpireMachine(ctx context.Context, req *connect.Request[api.Ex
 		return nil, err
 	}
 
-	s.brokers(m.TailnetID).SignalPeerUpdated(m.ID)
+	s.pubsub.Publish(m.TailnetID, &broker.Signal{PeerUpdated: &m.ID})
 
 	return connect.NewResponse(&api.ExpireMachineResponse{}), nil
 }
@@ -213,7 +217,7 @@ func (s *Service) SetMachineRoutes(ctx context.Context, req *connect.Request[api
 		return nil, err
 	}
 
-	s.brokers(m.TailnetID).SignalPeerUpdated(m.ID)
+	s.pubsub.Publish(m.TailnetID, &broker.Signal{PeerUpdated: &m.ID})
 
 	var routes []*api.RoutableIP
 	for _, r := range m.HostInfo.RoutableIPs {
@@ -252,7 +256,7 @@ func (s *Service) SetMachineKeyExpiry(ctx context.Context, req *connect.Request[
 		return nil, err
 	}
 
-	s.brokers(m.TailnetID).SignalPeerUpdated(m.ID)
+	s.pubsub.Publish(m.TailnetID, &broker.Signal{PeerUpdated: &m.ID})
 
 	return connect.NewResponse(&api.SetMachineKeyExpiryResponse{}), nil
 }

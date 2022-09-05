@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/bufbuild/connect-go"
+	"github.com/jsiebens/ionscale/internal/broker"
 	"github.com/jsiebens/ionscale/internal/domain"
 	api "github.com/jsiebens/ionscale/pkg/gen/ionscale/v1"
 )
@@ -124,7 +125,7 @@ func (s *Service) DeleteTailnet(ctx context.Context, req *connect.Request[api.De
 		return nil, err
 	}
 
-	s.brokers(req.Msg.TailnetId).SignalUpdate()
+	s.pubsub.Publish(req.Msg.TailnetId, &broker.Signal{})
 
 	return connect.NewResponse(&api.DeleteTailnetResponse{}), nil
 }
