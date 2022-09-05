@@ -101,7 +101,7 @@ func defaultConfig() *Config {
 }
 
 type ServerKeys struct {
-	SystemAdminKey   key.ServerPrivate
+	SystemAdminKey   *key.ServerPrivate
 	ControlKey       tkey.MachinePrivate
 	LegacyControlKey tkey.MachinePrivate
 }
@@ -165,24 +165,28 @@ func (c *Config) CreateUrl(format string, a ...interface{}) string {
 }
 
 func (c *Config) ReadServerKeys() (*ServerKeys, error) {
-	systemAdminKey, err := key.ParsePrivateKey(c.Keys.SystemAdminKey)
-	if err != nil {
-		return nil, fmt.Errorf("error reading system admin key: %v", err)
+	keys := &ServerKeys{}
+
+	if len(c.Keys.SystemAdminKey) != 0 {
+		systemAdminKey, err := key.ParsePrivateKey(c.Keys.SystemAdminKey)
+		if err != nil {
+			return nil, fmt.Errorf("error reading system admin key: %v", err)
+		}
+
+		keys.SystemAdminKey = systemAdminKey
 	}
 
 	controlKey, err := util.ParseMachinePrivateKey(c.Keys.ControlKey)
 	if err != nil {
 		return nil, fmt.Errorf("error reading control key: %v", err)
 	}
+	keys.ControlKey = *controlKey
 
 	legacyControlKey, err := util.ParseMachinePrivateKey(c.Keys.LegacyControlKey)
 	if err != nil {
 		return nil, fmt.Errorf("error reading legacy control key: %v", err)
 	}
+	keys.LegacyControlKey = *legacyControlKey
 
-	return &ServerKeys{
-		SystemAdminKey:   *systemAdminKey,
-		ControlKey:       *controlKey,
-		LegacyControlKey: *legacyControlKey,
-	}, nil
+	return keys, nil
 }

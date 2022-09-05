@@ -48,7 +48,7 @@ func CurrentPrincipal(ctx context.Context) Principal {
 	return p.(Principal)
 }
 
-func AuthenticationInterceptor(systemAdminKey key.ServerPrivate, repository domain.Repository) connect.UnaryInterceptorFunc {
+func AuthenticationInterceptor(systemAdminKey *key.ServerPrivate, repository domain.Repository) connect.UnaryInterceptorFunc {
 	return func(next connect.UnaryFunc) connect.UnaryFunc {
 		return func(ctx context.Context, req connect.AnyRequest) (connect.AnyResponse, error) {
 			name := req.Spec().Procedure
@@ -69,13 +69,13 @@ func AuthenticationInterceptor(systemAdminKey key.ServerPrivate, repository doma
 	}
 }
 
-func exchangeToken(ctx context.Context, systemAdminKey key.ServerPrivate, repository domain.Repository, value string) *Principal {
+func exchangeToken(ctx context.Context, systemAdminKey *key.ServerPrivate, repository domain.Repository, value string) *Principal {
 	if len(value) == 0 {
 		return nil
 	}
 
-	if token.IsSystemAdminToken(value) {
-		_, err := token.ParseSystemAdminToken(systemAdminKey, value)
+	if systemAdminKey != nil && token.IsSystemAdminToken(value) {
+		_, err := token.ParseSystemAdminToken(*systemAdminKey, value)
 		if err == nil {
 			return &Principal{SystemRole: domain.SystemRoleAdmin}
 		}
