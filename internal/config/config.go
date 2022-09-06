@@ -7,7 +7,8 @@ import (
 	"github.com/jsiebens/ionscale/internal/util"
 	"github.com/mitchellh/go-homedir"
 	"gopkg.in/yaml.v3"
-	"io/ioutil"
+	"os"
+	"path/filepath"
 	"strings"
 	tkey "tailscale.com/types/key"
 	"time"
@@ -25,7 +26,13 @@ func LoadConfig(path string) (*Config, error) {
 		if err != nil {
 			return nil, err
 		}
-		b, err := ioutil.ReadFile(expandedPath)
+
+		absPath, err := filepath.Abs(expandedPath)
+		if err != nil {
+			return nil, err
+		}
+
+		b, err := os.ReadFile(absPath)
 		if err != nil {
 			return nil, err
 		}
