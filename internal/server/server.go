@@ -42,7 +42,7 @@ func Start(c *config.Config) error {
 		return err
 	}
 
-	_, repository, brokers, err := database.OpenDB(&c.Database, logger)
+	repository, brokers, err := database.OpenDB(&c.Database, logger)
 	if err != nil {
 		return err
 	}

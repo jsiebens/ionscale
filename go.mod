@@ -1,6 +1,6 @@
 module github.com/jsiebens/ionscale
 
-go 1.18
+go 1.19
 
 require (
 	github.com/apparentlymart/go-cidr v1.1.0
@@ -11,6 +11,7 @@ require (
 	github.com/google/uuid v1.3.0
 	github.com/hashicorp/go-bexpr v0.1.11
 	github.com/hashicorp/go-hclog v1.1.0
+	github.com/hashicorp/go-multierror v1.1.1
 	github.com/klauspost/compress v1.15.3
 	github.com/labstack/echo-contrib v0.12.0
 	github.com/labstack/echo/v4 v4.6.3
@@ -47,6 +48,7 @@ require (
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/google/go-cmp v0.5.8 // indirect
+	github.com/hashicorp/errwrap v1.1.0 // indirect
 	github.com/inconshreveable/mousetrap v1.0.0 // indirect
 	github.com/jackc/chunkreader/v2 v2.0.1 // indirect
 	github.com/jackc/pgconn v1.12.1 // indirect
