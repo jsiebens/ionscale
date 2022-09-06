@@ -12,7 +12,7 @@ require (
 	github.com/hashicorp/go-bexpr v0.1.11
 	github.com/hashicorp/go-hclog v1.1.0
 	github.com/hashicorp/go-multierror v1.1.1
-	github.com/klauspost/compress v1.15.3
+	github.com/klauspost/compress v1.15.4
 	github.com/labstack/echo-contrib v0.12.0
 	github.com/labstack/echo/v4 v4.6.3
 	github.com/lib/pq v1.10.2
@@ -26,16 +26,16 @@ require (
 	github.com/sony/sonyflake v1.0.0
 	github.com/xhit/go-str2duration/v2 v2.0.0
 	golang.org/x/crypto v0.0.0-20220427172511-eb4f295cb31f
-	golang.org/x/net v0.0.0-20220407224826-aac1ed45d8e3
+	golang.org/x/net v0.0.0-20220607020251-c690dde0001d
 	golang.org/x/oauth2 v0.0.0-20210514164344-f6687ab2804c
-	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
+	golang.org/x/sync v0.0.0-20220601150217-0de741cfad7f
 	google.golang.org/protobuf v1.28.0
 	gopkg.in/yaml.v2 v2.4.0
 	gopkg.in/yaml.v3 v3.0.0
 	gorm.io/driver/postgres v1.3.9
 	gorm.io/gorm v1.23.7
-	inet.af/netaddr v0.0.0-20211027220019-c74959edd3b6
-	tailscale.com v1.24.2
+	inet.af/netaddr v0.0.0-20220617031823-097006376321
+	tailscale.com v1.30.0
 )
 
 require (
@@ -87,13 +87,12 @@ require (
 	go.uber.org/zap v1.21.0 // indirect
 	go4.org/intern v0.0.0-20211027215823-ae77deb06f29 // indirect
 	go4.org/mem v0.0.0-20210711025021-927187094b94 // indirect
-	go4.org/unsafe/assume-no-moving-gc v0.0.0-20211027215541-db492cf91b37 // indirect
-	golang.org/x/mod v0.6.0-dev.0.20220106191415-9b9b3d81d5e3 // indirect
-	golang.org/x/sys v0.0.0-20220422013727-9388b58f7150 // indirect
+	go4.org/unsafe/assume-no-moving-gc v0.0.0-20220617031537-928513b29760 // indirect
+	golang.org/x/mod v0.6.0-dev.0.20220419223038-86c51ed26bb4 // indirect
+	golang.org/x/sys v0.0.0-20220715151400-c0bba94af5f8 // indirect
 	golang.org/x/text v0.3.7 // indirect
 	golang.org/x/time v0.0.0-20211116232009-f0f3c7e86c11 // indirect
-	golang.org/x/tools v0.1.11-0.20220413170336-afc6aad76eb1 // indirect
-	golang.org/x/xerrors v0.0.0-20220411194840-2f41105eb62f // indirect
+	golang.org/x/tools v0.1.11 // indirect
 	golang.zx2c4.com/wireguard/windows v0.4.10 // indirect
 	google.golang.org/appengine v1.6.6 // indirect
 	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c // indirect
@@ -102,4 +101,5 @@ require (
 	modernc.org/mathutil v1.4.1 // indirect
 	modernc.org/memory v1.1.1 // indirect
 	modernc.org/sqlite v1.17.3 // indirect
+	nhooyr.io/websocket v1.8.7 // indirect
 )

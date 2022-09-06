@@ -9,8 +9,8 @@ import (
 	"github.com/jsiebens/ionscale/internal/domain"
 	"github.com/jsiebens/ionscale/internal/util"
 	"github.com/labstack/echo/v4"
-	"inet.af/netaddr"
 	"net/http"
+	"net/netip"
 	"tailscale.com/tailcfg"
 	"tailscale.com/util/dnsname"
 	"time"
@@ -197,8 +197,8 @@ func (h *RegistrationHandlers) authenticateMachineWithAuthKey(c echo.Context, bi
 		if err != nil {
 			return err
 		}
-		m.IPv4 = domain.IP{IP: ipv4}
-		m.IPv6 = domain.IP{IP: ipv6}
+		m.IPv4 = domain.IP{Addr: ipv4}
+		m.IPv6 = domain.IP{Addr: ipv6}
 	} else {
 		registeredTags := authKey.Tags
 		advertisedTags := domain.SanitizeTags(req.Hostinfo.RequestTags)
@@ -263,7 +263,7 @@ func (h *RegistrationHandlers) followup(c echo.Context, binder bind.Binder, req 
 }
 
 func checkIP(cxt context.Context, s Selector) addr.Predicate {
-	return func(ip netaddr.IP) (bool, error) {
+	return func(ip netip.Addr) (bool, error) {
 		c, err := s(cxt, ip.String())
 		if err != nil {
 			return false, err

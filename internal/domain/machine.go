@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"gorm.io/gorm"
 	"gorm.io/gorm/schema"
-	"inet.af/netaddr"
+	"net/netip"
 	"tailscale.com/tailcfg"
 	"time"
 )
@@ -49,8 +49,8 @@ func (m *Machine) IsExpired() bool {
 	return !m.KeyExpiryDisabled && !m.ExpiresAt.IsZero() && m.ExpiresAt.Before(time.Now())
 }
 
-func (m *Machine) HasIP(v netaddr.IP) bool {
-	return v.Compare(*m.IPv4.IP) == 0 || v.Compare(*m.IPv6.IP) == 0
+func (m *Machine) HasIP(v netip.Addr) bool {
+	return v.Compare(*m.IPv4.Addr) == 0 || v.Compare(*m.IPv6.Addr) == 0
 }
 
 func (m *Machine) HasTag(tag string) bool {
@@ -70,7 +70,7 @@ func (m *Machine) HasTags() bool {
 	return len(m.Tags) != 0
 }
 
-func (m *Machine) IsAllowedIP(i netaddr.IP) bool {
+func (m *Machine) IsAllowedIP(i netip.Addr) bool {
 	if m.HasIP(i) {
 		return true
 	}
@@ -82,7 +82,7 @@ func (m *Machine) IsAllowedIP(i netaddr.IP) bool {
 	return false
 }
 
-func (m *Machine) IsAllowedIPPrefix(i netaddr.IPPrefix) bool {
+func (m *Machine) IsAllowedIPPrefix(i netip.Prefix) bool {
 	for _, t := range m.AllowIPs {
 		if t.Overlaps(i) {
 			return true
@@ -92,13 +92,13 @@ func (m *Machine) IsAllowedIPPrefix(i netaddr.IPPrefix) bool {
 }
 
 type IP struct {
-	*netaddr.IP
+	*netip.Addr
 }
 
 func (i *IP) Scan(destination interface{}) error {
 	switch value := destination.(type) {
 	case string:
-		ip, err := netaddr.ParseIP(value)
+		ip, err := netip.ParseAddr(value)
 		if err != nil {
 			return err
 		}
@@ -110,7 +110,7 @@ func (i *IP) Scan(destination interface{}) error {
 }
 
 func (i IP) Value() (driver.Value, error) {
-	if i.IP == nil {
+	if i.Addr == nil {
 		return nil, nil
 	}
 	return i.String(), nil
@@ -124,7 +124,7 @@ func (IP) GormDBDataType(db *gorm.DB, field *schema.Field) string {
 	return ""
 }
 
-type AllowIPs []netaddr.IPPrefix
+type AllowIPs []netip.Prefix
 
 func (hi *AllowIPs) Scan(destination interface{}) error {
 	switch value := destination.(type) {

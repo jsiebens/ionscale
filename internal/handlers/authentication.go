@@ -410,8 +410,8 @@ func (h *AuthenticationHandlers) endMachineRegistrationFlow(c echo.Context, regi
 		if err != nil {
 			return err
 		}
-		m.IPv4 = domain.IP{IP: ipv4}
-		m.IPv6 = domain.IP{IP: ipv6}
+		m.IPv4 = domain.IP{Addr: ipv4}
+		m.IPv6 = domain.IP{Addr: ipv6}
 	} else {
 		registeredTags := tags
 		advertisedTags := domain.SanitizeTags(req.Hostinfo.RequestTags)

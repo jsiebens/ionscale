@@ -10,7 +10,7 @@ import (
 	"github.com/jsiebens/ionscale/internal/domain"
 	api "github.com/jsiebens/ionscale/pkg/gen/ionscale/v1"
 	"google.golang.org/protobuf/types/known/timestamppb"
-	"inet.af/netaddr"
+	"net/netip"
 	"time"
 )
 
@@ -203,9 +203,9 @@ func (s *Service) SetMachineRoutes(ctx context.Context, req *connect.Request[api
 		return nil, connect.NewError(connect.CodePermissionDenied, errors.New("permission denied"))
 	}
 
-	var allowedIps []netaddr.IPPrefix
+	var allowedIps []netip.Prefix
 	for _, r := range req.Msg.AllowedIps {
-		prefix, err := netaddr.ParseIPPrefix(r)
+		prefix, err := netip.ParsePrefix(r)
 		if err != nil {
 			return nil, err
 		}

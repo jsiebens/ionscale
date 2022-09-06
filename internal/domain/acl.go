@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"gorm.io/gorm"
 	"gorm.io/gorm/schema"
-	"inet.af/netaddr"
+	"net/netip"
 	"strconv"
 	"strings"
 	"tailscale.com/tailcfg"
@@ -215,17 +215,17 @@ func (a *aclEngine) expandMachineAlias(m *Machine, alias string, src bool) []str
 	}
 
 	if src {
-		ip, err := netaddr.ParseIP(alias)
+		ip, err := netip.ParseAddr(alias)
 		if err == nil && m.HasIP(ip) {
 			return []string{ip.String()}
 		}
 	} else {
-		ip, err := netaddr.ParseIP(alias)
+		ip, err := netip.ParseAddr(alias)
 		if err == nil && m.IsAllowedIP(ip) {
 			return []string{ip.String()}
 		}
 
-		prefix, err := netaddr.ParseIPPrefix(alias)
+		prefix, err := netip.ParsePrefix(alias)
 		if err == nil && m.IsAllowedIPPrefix(prefix) {
 			return []string{prefix.String()}
 		}

@@ -6,7 +6,7 @@ import (
 	"github.com/jsiebens/ionscale/internal/config"
 	"github.com/jsiebens/ionscale/internal/domain"
 	"github.com/jsiebens/ionscale/internal/util"
-	"inet.af/netaddr"
+	"net/netip"
 	"strconv"
 	"tailscale.com/tailcfg"
 	"tailscale.com/types/dnstype"
@@ -32,9 +32,9 @@ func CopyViaJson[F any, T any](f F, t T) error {
 
 func ToDNSConfig(tailnet *domain.Tailnet, c *domain.DNSConfig) *tailcfg.DNSConfig {
 	tailnetDomain := dnsname.SanitizeHostname(tailnet.Name)
-	resolvers := []dnstype.Resolver{}
+	resolvers := []*dnstype.Resolver{}
 	for _, r := range c.Nameservers {
-		resolver := dnstype.Resolver{
+		resolver := &dnstype.Resolver{
 			Addr: r,
 		}
 		resolvers = append(resolvers, resolver)
@@ -56,11 +56,11 @@ func ToDNSConfig(tailnet *domain.Tailnet, c *domain.DNSConfig) *tailcfg.DNSConfi
 	}
 
 	if len(c.Routes) != 0 {
-		routes := make(map[string][]dnstype.Resolver)
+		routes := make(map[string][]*dnstype.Resolver)
 		for r, s := range c.Routes {
-			routeResolver := []dnstype.Resolver{}
+			routeResolver := []*dnstype.Resolver{}
 			for _, addr := range s {
-				resolver := dnstype.Resolver{Addr: addr}
+				resolver := &dnstype.Resolver{Addr: addr}
 				routeResolver = append(routeResolver, resolver)
 			}
 			routes[r] = routeResolver
@@ -97,10 +97,10 @@ func ToNode(m *domain.Machine) (*tailcfg.Node, *tailcfg.UserProfile, error) {
 	endpoints := m.Endpoints
 	hostinfo := tailcfg.Hostinfo(m.HostInfo)
 
-	var addrs []netaddr.IPPrefix
-	var allowedIPs []netaddr.IPPrefix
+	var addrs []netip.Prefix
+	var allowedIPs []netip.Prefix
 
-	if !m.IPv4.IsZero() {
+	if m.IPv4.IsValid() {
 		ipv4, err := m.IPv4.Prefix(32)
 		if err != nil {
 			return nil, nil, err
@@ -109,7 +109,7 @@ func ToNode(m *domain.Machine) (*tailcfg.Node, *tailcfg.UserProfile, error) {
 		allowedIPs = append(allowedIPs, ipv4)
 	}
 
-	if !m.IPv6.IsZero() {
+	if m.IPv6.IsValid() {
 		ipv6, err := m.IPv6.Prefix(128)
 		if err != nil {
 			return nil, nil, err
