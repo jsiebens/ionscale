@@ -5,10 +5,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/glebarez/sqlite"
 	"github.com/hashicorp/go-hclog"
 	"github.com/jsiebens/ionscale/internal/broker"
-	"gorm.io/driver/postgres"
 	"net/http"
 	"tailscale.com/tailcfg"
 	"time"
@@ -19,44 +17,55 @@ import (
 	"gorm.io/gorm/logger"
 )
 
-func OpenDB(config *config.Database, logger hclog.Logger) (*gorm.DB, domain.Repository, broker.Pubsub, error) {
-	gormDB, pubsub, err := createDB(config, logger)
-	if err != nil {
-		return nil, nil, nil, err
-	}
-
-	repository := domain.NewRepository(gormDB)
-
-	if err := migrate(gormDB, repository); err != nil {
-		return nil, nil, nil, err
-	}
-
-	return gormDB, repository, pubsub, nil
+type db interface {
+	DB() *gorm.DB
+	Lock() error
+	Unlock() error
+	UnlockErr(error) error
 }
 
-func createDB(config *config.Database, logger hclog.Logger) (*gorm.DB, broker.Pubsub, error) {
+func OpenDB(config *config.Database, logger hclog.Logger) (domain.Repository, broker.Pubsub, error) {
+	db, pubsub, err := createDB(config, logger)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	repository := domain.NewRepository(db.DB())
+
+	if err := db.Lock(); err != nil {
+		return nil, nil, err
+	}
+
+	if err := db.UnlockErr(migrate(db.DB(), repository)); err != nil {
+		return nil, nil, err
+	}
+
+	return repository, pubsub, nil
+}
+
+func createDB(config *config.Database, logger hclog.Logger) (db, broker.Pubsub, error) {
 	gormConfig := &gorm.Config{
 		Logger: &GormLoggerAdapter{logger: logger.Named("db")},
 	}
 
 	switch config.Type {
 	case "sqlite", "sqlite3":
-		db, err := gorm.Open(sqlite.Open(config.Url), gormConfig)
+		db, err := newSqliteDB(config, gormConfig)
 		return db, broker.NewPubsubInMemory(), err
 	case "postgres", "postgresql":
-		gormDB, err := gorm.Open(postgres.Open(config.Url), gormConfig)
+		db, err := newPostgresDB(config, gormConfig)
 		if err != nil {
 			return nil, nil, err
 		}
-		db, err := gormDB.DB()
+		stdDB, err := db.DB().DB()
 		if err != nil {
 			return nil, nil, err
 		}
-		pubsub, err := broker.NewPubsub(context.Background(), db, config.Url)
+		pubsub, err := broker.NewPubsub(context.TODO(), stdDB, config.Url)
 		if err != nil {
 			return nil, nil, err
 		}
-		return gormDB, pubsub, err
+		return db, pubsub, err
 	}
 
 	return nil, nil, fmt.Errorf("invalid database type '%s'", config.Type)
