@@ -8,6 +8,7 @@ require (
 	github.com/caddyserver/certmagic v0.17.1
 	github.com/coreos/go-oidc/v3 v3.3.0
 	github.com/glebarez/sqlite v1.4.6
+	github.com/go-gormigrate/gormigrate/v2 v2.0.2
 	github.com/google/uuid v1.3.0
 	github.com/hashicorp/go-bexpr v0.1.11
 	github.com/hashicorp/go-hclog v1.3.0

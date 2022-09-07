@@ -14,7 +14,7 @@ import (
 )
 
 type Machine struct {
-	ID                uint64 `gorm:"primary_key;autoIncrement:false"`
+	ID                uint64 `gorm:"primary_key"`
 	Name              string
 	NameIdx           uint64
 	MachineKey        string

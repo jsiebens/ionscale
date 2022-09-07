@@ -8,8 +8,8 @@ import (
 )
 
 type Tailnet struct {
-	ID        uint64 `gorm:"primary_key;autoIncrement:false"`
-	Name      string `gorm:"type:varchar(64);unique_index"`
+	ID        uint64 `gorm:"primary_key"`
+	Name      string
 	DNSConfig DNSConfig
 	IAMPolicy IAMPolicy
 	ACLPolicy ACLPolicy

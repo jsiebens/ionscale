@@ -13,8 +13,8 @@ import (
 )
 
 type RegistrationRequest struct {
-	MachineKey    string `gorm:"primary_key;autoIncrement:false"`
-	Key           string `gorm:"type:varchar(64);unique_index"`
+	MachineKey    string `gorm:"primary_key"`
+	Key           string
 	Data          RegistrationRequestData
 	CreatedAt     time.Time
 	Authenticated bool

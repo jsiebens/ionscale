@@ -36,8 +36,8 @@ func CreateAuthKey(tailnet *Tailnet, user *User, ephemeral bool, tags Tags, expi
 }
 
 type AuthKey struct {
-	ID        uint64 `gorm:"primary_key;autoIncrement:false"`
-	Key       string `gorm:"type:varchar(64);unique_index"`
+	ID        uint64 `gorm:"primary_key"`
+	Key       string
 	Hash      string
 	Ephemeral bool
 	Tags      Tags

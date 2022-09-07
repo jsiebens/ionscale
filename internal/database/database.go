@@ -5,8 +5,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/go-gormigrate/gormigrate/v2"
 	"github.com/hashicorp/go-hclog"
 	"github.com/jsiebens/ionscale/internal/broker"
+	"github.com/jsiebens/ionscale/internal/database/migration"
 	"net/http"
 	"tailscale.com/tailcfg"
 	"time"
@@ -72,20 +74,9 @@ func createDB(config *config.Database, logger hclog.Logger) (db, broker.Pubsub, 
 }
 
 func migrate(db *gorm.DB, repository domain.Repository) error {
-	err := db.AutoMigrate(
-		&domain.ServerConfig{},
-		&domain.Tailnet{},
-		&domain.Account{},
-		&domain.User{},
-		&domain.SystemApiKey{},
-		&domain.ApiKey{},
-		&domain.AuthKey{},
-		&domain.Machine{},
-		&domain.RegistrationRequest{},
-		&domain.AuthenticationRequest{},
-	)
+	m := gormigrate.New(db, gormigrate.DefaultOptions, migration.Migrations())
 
-	if err != nil {
+	if err := m.Migrate(); err != nil {
 		return err
 	}
 

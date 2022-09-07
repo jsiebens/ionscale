@@ -38,7 +38,7 @@ func (s UserRole) IsAdmin() bool {
 }
 
 type User struct {
-	ID        uint64 `gorm:"primary_key;autoIncrement:false"`
+	ID        uint64 `gorm:"primary_key"`
 	Name      string
 	UserType  UserType
 	TailnetID uint64

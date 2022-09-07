@@ -8,7 +8,7 @@ import (
 )
 
 type AuthenticationRequest struct {
-	Key       string `gorm:"primary_key;autoIncrement:false"`
+	Key       string `gorm:"primary_key"`
 	Token     string
 	TailnetID *uint64
 	Error     string

@@ -8,7 +8,7 @@ import (
 )
 
 type Account struct {
-	ID         uint64 `gorm:"primary_key;autoIncrement:false"`
+	ID         uint64 `gorm:"primary_key"`
 	ExternalID string
 	LoginName  string
 }
