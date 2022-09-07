@@ -134,31 +134,9 @@ func (h *AuthenticationHandlers) Callback(c echo.Context) error {
 		return err
 	}
 
-	isSystemAdmin, err := h.isSystemAdmin(ctx, user)
-	if err != nil {
-		return err
-	}
-
 	tailnets, err := h.listAvailableTailnets(ctx, user)
 	if err != nil {
 		return err
-	}
-
-	if !isSystemAdmin && len(tailnets) == 0 {
-		if state.Flow == "r" {
-			req, err := h.repository.GetRegistrationRequestByKey(ctx, state.Key)
-			if err == nil && req != nil {
-				req.Error = "unauthorized"
-				_ = h.repository.SaveRegistrationRequest(ctx, req)
-			}
-		} else {
-			req, err := h.repository.GetAuthenticationRequest(ctx, state.Key)
-			if err == nil && req != nil {
-				req.Error = "unauthorized"
-				_ = h.repository.SaveAuthenticationRequest(ctx, req)
-			}
-		}
-		return c.Redirect(http.StatusFound, "/a/error?e=ua")
 	}
 
 	account, _, err := h.repository.GetOrCreateAccount(ctx, user.ID, user.Name)
@@ -167,12 +145,47 @@ func (h *AuthenticationHandlers) Callback(c echo.Context) error {
 	}
 
 	csrf := c.Get(middleware.DefaultCSRFConfig.ContextKey).(string)
-	return c.Render(http.StatusOK, "tailnets.html", &TailnetSelectionData{
-		Csrf:        csrf,
-		Tailnets:    tailnets,
-		SystemAdmin: isSystemAdmin,
-		AccountID:   account.ID,
-	})
+
+	if state.Flow == "r" {
+		if len(tailnets) == 0 {
+			registrationRequest, err := h.repository.GetRegistrationRequestByKey(ctx, state.Key)
+			if err == nil && registrationRequest != nil {
+				registrationRequest.Error = "unauthorized"
+				_ = h.repository.SaveRegistrationRequest(ctx, registrationRequest)
+			}
+			return c.Redirect(http.StatusFound, "/a/error?e=ua")
+		}
+		return c.Render(http.StatusOK, "tailnets.html", &TailnetSelectionData{
+			Csrf:        csrf,
+			Tailnets:    tailnets,
+			SystemAdmin: false,
+			AccountID:   account.ID,
+		})
+	}
+
+	if state.Flow == "c" {
+		isSystemAdmin, err := h.isSystemAdmin(ctx, user)
+		if err != nil {
+			return err
+		}
+
+		if !isSystemAdmin && len(tailnets) == 0 {
+			req, err := h.repository.GetAuthenticationRequest(ctx, state.Key)
+			if err == nil && req != nil {
+				req.Error = "unauthorized"
+				_ = h.repository.SaveAuthenticationRequest(ctx, req)
+			}
+			return c.Redirect(http.StatusFound, "/a/error?e=ua")
+		}
+		return c.Render(http.StatusOK, "tailnets.html", &TailnetSelectionData{
+			Csrf:        csrf,
+			Tailnets:    tailnets,
+			SystemAdmin: isSystemAdmin,
+			AccountID:   account.ID,
+		})
+	}
+
+	return c.Redirect(http.StatusFound, "/a/error")
 }
 
 func (h *AuthenticationHandlers) isSystemAdmin(ctx context.Context, u *provider.User) (bool, error) {
@@ -359,7 +372,7 @@ func (h *AuthenticationHandlers) endMachineRegistrationFlow(c echo.Context, regi
 			return c.Redirect(http.StatusFound, "/a/error")
 		}
 
-		selectedUser, _, err := h.repository.GetOrCreateUserWithAccount(ctx, tailnet, account)
+		selectedUser, _, err := h.repository.GetOrCreateUserWithAccount(ctx, selectedTailnet, account)
 		if err != nil {
 			return err
 		}
