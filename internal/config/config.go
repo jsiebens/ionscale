@@ -119,10 +119,10 @@ type Config struct {
 	MetricsListenAddr string       `yaml:"metrics_listen_addr,omitempty"`
 	ServerUrl         string       `yaml:"server_url,omitempty"`
 	Tls               Tls          `yaml:"tls,omitempty"`
-	Logging           Logging      `yaml:"logging,omitempty"`
 	Keys              Keys         `yaml:"keys,omitempty"`
 	Database          Database     `yaml:"database,omitempty"`
 	AuthProvider      AuthProvider `yaml:"auth_provider,omitempty"`
+	Logging           Logging      `yaml:"logging,omitempty"`
 }
 
 type Tls struct {

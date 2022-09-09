@@ -6,6 +6,7 @@ import (
 
 func Command() *coral.Command {
 	rootCmd := rootCommand()
+	rootCmd.AddCommand(configureCommand())
 	rootCmd.AddCommand(keyCommand())
 	rootCmd.AddCommand(authCommand())
 	rootCmd.AddCommand(derpMapCommand())
