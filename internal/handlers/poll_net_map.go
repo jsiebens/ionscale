@@ -124,7 +124,10 @@ func (h *PollNetMapHandler) handleUpdate(c echo.Context, binder bind.Binder, m *
 	}
 	c.Response().Flush()
 
+	connectedDevices.WithLabelValues(m.Tailnet.Name).Inc()
+
 	defer func() {
+		connectedDevices.WithLabelValues(m.Tailnet.Name).Dec()
 		unsubscribe()
 		keepAliveTicker.Stop()
 		syncTicker.Stop()
