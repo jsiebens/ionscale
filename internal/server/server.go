@@ -120,6 +120,7 @@ func Start(c *config.Config) error {
 	nonTlsAppHandler.Any("/*", handlers.HttpRedirectHandler(c.Tls))
 
 	tlsAppHandler := echo.New()
+	tlsAppHandler.Pre(middleware.HTTPSRedirect())
 	tlsAppHandler.Renderer = templates.NewTemplates()
 	tlsAppHandler.Use(EchoRecover(logger))
 	tlsAppHandler.Use(EchoLogger(logger))
