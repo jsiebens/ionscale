@@ -2,7 +2,10 @@ package domain
 
 import (
 	"context"
+	"encoding/json"
 	"gorm.io/gorm"
+	"net/http"
+	"sync"
 	"tailscale.com/tailcfg"
 	"time"
 )
@@ -72,12 +75,14 @@ type Repository interface {
 
 func NewRepository(db *gorm.DB) Repository {
 	return &repository{
-		db: db,
+		db:             db,
+		defaultDERPMap: &derpMapCache{},
 	}
 }
 
 type repository struct {
-	db *gorm.DB
+	db             *gorm.DB
+	defaultDERPMap *derpMapCache
 }
 
 func (r *repository) withContext(ctx context.Context) *gorm.DB {
@@ -88,4 +93,42 @@ func (r *repository) Transaction(action func(Repository) error) error {
 	return r.db.Transaction(func(tx *gorm.DB) error {
 		return action(NewRepository(tx))
 	})
+}
+
+type derpMapCache struct {
+	sync.RWMutex
+	value *tailcfg.DERPMap
+}
+
+func (d *derpMapCache) Get() (*tailcfg.DERPMap, error) {
+	d.RLock()
+
+	if d.value != nil {
+		d.RUnlock()
+		return d.value, nil
+	}
+	d.RUnlock()
+
+	d.Lock()
+	defer d.Unlock()
+
+	getJson := func(url string, target interface{}) error {
+		c := http.Client{Timeout: 5 * time.Second}
+		r, err := c.Get(url)
+		if err != nil {
+			return err
+		}
+		defer r.Body.Close()
+
+		return json.NewDecoder(r.Body).Decode(target)
+	}
+
+	m := &tailcfg.DERPMap{}
+	if err := getJson("https://controlplane.tailscale.com/derpmap/default", m); err != nil {
+		return nil, err
+	}
+
+	d.value = m
+
+	return d.value, nil
 }

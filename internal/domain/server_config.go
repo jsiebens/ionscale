@@ -25,7 +25,7 @@ func (r *repository) GetDERPMap(ctx context.Context) (*tailcfg.DERPMap, error) {
 	err := r.getServerConfig(ctx, derpMapConfigKey, &m)
 
 	if errors.Is(err, gorm.ErrRecordNotFound) {
-		return nil, nil
+		return r.defaultDERPMap.Get()
 	}
 
 	if err != nil {

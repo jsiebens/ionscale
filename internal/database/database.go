@@ -2,15 +2,12 @@ package database
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/go-gormigrate/gormigrate/v2"
 	"github.com/hashicorp/go-hclog"
 	"github.com/jsiebens/ionscale/internal/broker"
 	"github.com/jsiebens/ionscale/internal/database/migration"
-	"net/http"
-	"tailscale.com/tailcfg"
 	"time"
 
 	"github.com/jsiebens/ionscale/internal/config"
@@ -38,7 +35,7 @@ func OpenDB(config *config.Database, logger hclog.Logger) (domain.Repository, br
 		return nil, nil, err
 	}
 
-	if err := db.UnlockErr(migrate(db.DB(), repository)); err != nil {
+	if err := db.UnlockErr(migrate(db.DB())); err != nil {
 		return nil, nil, err
 	}
 
@@ -73,47 +70,10 @@ func createDB(config *config.Database, logger hclog.Logger) (db, broker.Pubsub, 
 	return nil, nil, fmt.Errorf("invalid database type '%s'", config.Type)
 }
 
-func migrate(db *gorm.DB, repository domain.Repository) error {
+func migrate(db *gorm.DB) error {
 	m := gormigrate.New(db, gormigrate.DefaultOptions, migration.Migrations())
 
 	if err := m.Migrate(); err != nil {
-		return err
-	}
-
-	if err := initializeDERPMap(repository); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func initializeDERPMap(repository domain.Repository) error {
-	ctx := context.Background()
-	derpMap, err := repository.GetDERPMap(ctx)
-	if err != nil {
-		return err
-	}
-	if derpMap != nil {
-		return nil
-	}
-
-	getJson := func(url string, target interface{}) error {
-		c := http.Client{Timeout: 5 * time.Second}
-		r, err := c.Get(url)
-		if err != nil {
-			return err
-		}
-		defer r.Body.Close()
-
-		return json.NewDecoder(r.Body).Decode(target)
-	}
-
-	m := &tailcfg.DERPMap{}
-	if err := getJson("https://controlplane.tailscale.com/derpmap/default", m); err != nil {
-		return err
-	}
-
-	if err := repository.SetDERPMap(ctx, m); err != nil {
 		return err
 	}
 
