@@ -290,6 +290,9 @@ func (h *PollNetMapHandler) createMapResponse(m *domain.Machine, binder bind.Bin
 			Peers:        changedPeers,
 			UserProfiles: users,
 			ControlTime:  &controlTime,
+			Debug: &tailcfg.Debug{
+				DisableLogTail: true,
+			},
 		}
 	} else {
 		mapResponse = &tailcfg.MapResponse{
