@@ -74,7 +74,7 @@ func defaultConfig() *Config {
 	return &Config{
 		HttpListenAddr:    GetString(httpListenAddrKey, ":8080"),
 		HttpsListenAddr:   GetString(httpsListenAddrKey, ":8443"),
-		MetricsListenAddr: GetString(metricsListenAddrKey, ":8081"),
+		MetricsListenAddr: GetString(metricsListenAddrKey, ":9091"),
 		ServerUrl:         GetString(serverUrlKey, "https://localhost:8443"),
 		Keys: Keys{
 			SystemAdminKey:   GetString(keysSystemAdminKeyKey, ""),
