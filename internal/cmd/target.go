@@ -8,7 +8,7 @@ import (
 )
 
 const (
-	ionscaleSystemAdminKey     = "IONSCALE_ADMIN_KEY"
+	ionscaleSystemAdminKey     = "IONSCALE_SYSTEM_ADMIN_KEY"
 	ionscaleAddr               = "IONSCALE_ADDR"
 	ionscaleInsecureSkipVerify = "IONSCALE_SKIP_VERIFY"
 )
@@ -22,7 +22,7 @@ type Target struct {
 func (t *Target) prepareCommand(cmd *coral.Command) {
 	cmd.Flags().StringVar(&t.addr, "addr", "", "Addr of the ionscale server, as a complete URL")
 	cmd.Flags().BoolVar(&t.insecureSkipVerify, "tls-skip-verify", false, "Disable verification of TLS certificates")
-	cmd.Flags().StringVar(&t.systemAdminKey, "admin-key", "", "If specified, the given value will be used as the key to generate a Bearer token for the call. This can also be specified via the IONSCALE_ADMIN_KEY environment variable.")
+	cmd.Flags().StringVar(&t.systemAdminKey, "system-admin-key", "", "If specified, the given value will be used as the key to generate a Bearer token for the call. This can also be specified via the IONSCALE_ADMIN_KEY environment variable.")
 }
 
 func (t *Target) createGRPCClient() (api.IonscaleServiceClient, error) {
