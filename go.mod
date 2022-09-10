@@ -23,6 +23,7 @@ require (
 	github.com/muesli/coral v1.0.0
 	github.com/nleeper/goment v1.4.4
 	github.com/pkg/errors v0.9.1
+	github.com/prometheus/client_golang v1.13.0
 	github.com/rodaine/table v1.0.1
 	github.com/sony/sonyflake v1.1.0
 	github.com/xhit/go-str2duration/v2 v2.0.0
@@ -74,7 +75,6 @@ require (
 	github.com/mholt/acmez v1.0.4 // indirect
 	github.com/miekg/dns v1.1.50 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
-	github.com/prometheus/client_golang v1.13.0 // indirect
 	github.com/prometheus/client_model v0.2.0 // indirect
 	github.com/prometheus/common v0.37.0 // indirect
 	github.com/prometheus/procfs v0.8.0 // indirect
