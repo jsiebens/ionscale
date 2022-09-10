@@ -3,6 +3,7 @@ package config
 import (
 	"os"
 	"strings"
+	"time"
 )
 
 func GetBool(key string, defaultValue bool) bool {
@@ -27,4 +28,16 @@ func GetStrings(key string, defaultValue []string) []string {
 		return strings.Split(v, ",")
 	}
 	return defaultValue
+}
+
+func GetDuration(key string, defaultValue time.Duration) (time.Duration, error) {
+	v := os.Getenv(key)
+	if len(v) > 0 {
+		duration, err := time.ParseDuration(v)
+		if err != nil {
+			return defaultValue, err
+		}
+		return duration, nil
+	}
+	return defaultValue, nil
 }

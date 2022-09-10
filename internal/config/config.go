@@ -14,12 +14,16 @@ import (
 	"time"
 )
 
-const (
+var (
 	KeepAliveInterval = 1 * time.Minute
 )
 
 func LoadConfig(path string) (*Config, error) {
-	config := defaultConfig()
+	config, err := defaultConfig()
+
+	if err != nil {
+		return nil, err
+	}
 
 	if len(path) != 0 {
 		expandedPath, err := homedir.Expand(path)
@@ -42,6 +46,8 @@ func LoadConfig(path string) (*Config, error) {
 		}
 	}
 
+	KeepAliveInterval = config.PollNet.KeepAliveInterval
+
 	return config, nil
 }
 
@@ -61,6 +67,7 @@ const (
 	tlsAcmeCAKey                = "IONSCALE_TLS_ACME_CA"
 	tlsAcmeEmailKey             = "IONSCALE_TLS_ACME_EMAIL"
 	tlsAcmePath                 = "IONSCALE_TLS_ACME_PATH"
+	pollNetKeepAliveInterval    = "IONSCALE_POLL_NET_KEEP_ALIVE_INTERVAL"
 	metricsListenAddrKey        = "IONSCALE_METRICS_LISTEN_ADDR"
 	loggingLevelKey             = "IONSCALE_LOGGING_LEVEL"
 	loggingFormatKey            = "IONSCALE_LOGGING_FORMAT"
@@ -71,8 +78,13 @@ const (
 	authProviderScopesKey       = "IONSCALE_AUTH_PROVIDER_SCOPES"
 )
 
-func defaultConfig() *Config {
-	return &Config{
+func defaultConfig() (*Config, error) {
+	defaultKeepAliveInterval, err := GetDuration(pollNetKeepAliveInterval, 1*time.Minute)
+	if err != nil {
+		return nil, err
+	}
+
+	c := &Config{
 		HttpListenAddr:    GetString(httpListenAddrKey, ":8080"),
 		HttpsListenAddr:   GetString(httpsListenAddrKey, ":8443"),
 		MetricsListenAddr: GetString(metricsListenAddrKey, ":9091"),
@@ -95,6 +107,9 @@ func defaultConfig() *Config {
 			AcmeEmail:   GetString(tlsAcmeEmailKey, ""),
 			AcmePath:    GetString(tlsAcmePath, ""),
 		},
+		PollNet: PollNet{
+			KeepAliveInterval: defaultKeepAliveInterval,
+		},
 		AuthProvider: AuthProvider{
 			Issuer:       GetString(authProviderIssuerKey, ""),
 			ClientID:     GetString(authProviderClientIdKey, ""),
@@ -107,6 +122,7 @@ func defaultConfig() *Config {
 			File:   GetString(loggingFileKey, ""),
 		},
 	}
+	return c, nil
 }
 
 type ServerKeys struct {
@@ -121,6 +137,7 @@ type Config struct {
 	MetricsListenAddr string       `yaml:"metrics_listen_addr,omitempty"`
 	ServerUrl         string       `yaml:"server_url,omitempty"`
 	Tls               Tls          `yaml:"tls,omitempty"`
+	PollNet           PollNet      `yaml:"poll_net,omitempty"`
 	Keys              Keys         `yaml:"keys,omitempty"`
 	Database          Database     `yaml:"database,omitempty"`
 	AuthProvider      AuthProvider `yaml:"auth_provider,omitempty"`
@@ -136,6 +153,10 @@ type Tls struct {
 	AcmeEmail   string `yaml:"acme_email,omitempty"`
 	AcmeCA      string `yaml:"acme_ca,omitempty"`
 	AcmePath    string `yaml:"acme_path,omitempty"`
+}
+
+type PollNet struct {
+	KeepAliveInterval time.Duration `yaml:"keep_alive_interval"`
 }
 
 type Logging struct {
