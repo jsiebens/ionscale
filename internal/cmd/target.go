@@ -42,7 +42,7 @@ func (t *Target) getAddr() string {
 	if len(t.addr) != 0 {
 		return t.addr
 	}
-	return config.GetString(ionscaleAddr, "https://localhost:8000")
+	return config.GetString(ionscaleAddr, "https://localhost:8443")
 }
 
 func (t *Target) getInsecureSkipVerify() bool {
