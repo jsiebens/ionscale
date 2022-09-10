@@ -54,6 +54,7 @@ const (
 	keysLegacyControlKeyKey     = "IONSCALE_LEGACY_CONTROL_KEY"
 	databaseUrlKey              = "IONSCALE_DB_URL"
 	tlsDisableKey               = "IONSCALE_TLS_DISABLE"
+	tlsForceHttpsKey            = "IONSCALE_TLS_FORCE_HTTPS"
 	tlsCertFileKey              = "IONSCALE_TLS_CERT_FILE"
 	tlsKeyFileKey               = "IONSCALE_TLS_KEY_FILE"
 	tlsAcmeKey                  = "IONSCALE_TLS_ACME"
@@ -86,6 +87,7 @@ func defaultConfig() *Config {
 		},
 		Tls: Tls{
 			Disable:     GetBool(tlsDisableKey, false),
+			ForceHttps:  GetBool(tlsForceHttpsKey, true),
 			CertFile:    GetString(tlsCertFileKey, ""),
 			KeyFile:     GetString(tlsKeyFileKey, ""),
 			AcmeEnabled: GetBool(tlsAcmeKey, false),
@@ -127,6 +129,7 @@ type Config struct {
 
 type Tls struct {
 	Disable     bool   `yaml:"disable"`
+	ForceHttps  bool   `yaml:"force_https"`
 	CertFile    string `yaml:"cert_file,omitempty"`
 	KeyFile     string `yaml:"key_file,omitempty"`
 	AcmeEnabled bool   `yaml:"acme,omitempty"`
