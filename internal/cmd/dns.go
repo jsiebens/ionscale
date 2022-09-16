@@ -117,7 +117,7 @@ func setDNSConfigCommand() *coral.Command {
 			Config: &api.DNSConfig{
 				MagicDns:         magicDNS,
 				OverrideLocalDns: overrideLocalDNS,
-				Nameservers:      nameservers,
+				Nameservers:      globalNameservers,
 				Routes:           routes,
 			},
 		}
