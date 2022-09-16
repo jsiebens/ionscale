@@ -121,6 +121,10 @@ func (s *Service) CreateAuthKey(ctx context.Context, req *connect.Request[api.Cr
 		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("at least one tag is required when creating an auth key"))
 	}
 
+	if err := domain.CheckTags(req.Msg.Tags); err != nil {
+		return nil, connect.NewError(connect.CodeInvalidArgument, err)
+	}
+
 	tailnet, err := s.repository.GetTailnet(ctx, req.Msg.TailnetId)
 	if err != nil {
 		return nil, err

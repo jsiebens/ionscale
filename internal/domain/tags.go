@@ -3,7 +3,9 @@ package domain
 import (
 	"database/sql/driver"
 	"fmt"
+	"github.com/hashicorp/go-multierror"
 	"strings"
+	"tailscale.com/tailcfg"
 )
 
 type Tags []string
@@ -29,6 +31,20 @@ func (i Tags) Value() (driver.Value, error) {
 	}
 	v := "|" + strings.Join(i, "|") + "|"
 	return v, nil
+}
+
+func CheckTag(tag string) error {
+	return tailcfg.CheckTag(tag)
+}
+
+func CheckTags(tags []string) error {
+	var result *multierror.Error
+	for _, t := range tags {
+		if err := CheckTag(t); err != nil {
+			result = multierror.Append(result, err)
+		}
+	}
+	return result.ErrorOrNil()
 }
 
 func SanitizeTags(input []string) Tags {
