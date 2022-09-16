@@ -1,62 +1,60 @@
-/*
-
-Package listen is a self-contained Go program which uses the LISTEN / NOTIFY
-mechanism to avoid polling the database while waiting for more work to arrive.
-
-    //
-    // You can see the program in action by defining a function similar to
-    // the following:
-    //
-    // CREATE OR REPLACE FUNCTION public.get_work()
-    //   RETURNS bigint
-    //   LANGUAGE sql
-    //   AS $$
-    //     SELECT CASE WHEN random() >= 0.2 THEN int8 '1' END
-    //   $$
-    // ;
-*/
 package main
 
 import (
 	"database/sql"
 	"fmt"
+	"github.com/muesli/coral"
+	"os"
 	"time"
 
 	"github.com/lib/pq"
 )
 
-func waitForNotification(l *pq.Listener) {
-	select {
-	case n, _ := <-l.Notify:
-		fmt.Println(n.Extra)
+func main() {
+	cmd := rootCommand()
+	if err := cmd.Execute(); err != nil {
+		os.Exit(1)
 	}
 }
 
-func main() {
-	var conninfo string = "postgres://ionscale:ionscale@localhost/ionscale?sslmode=disable"
-
-	_, err := sql.Open("postgres", conninfo)
-	if err != nil {
-		panic(err)
+func rootCommand() *coral.Command {
+	command := &coral.Command{
+		Use: "pg-ionscale-events",
 	}
 
-	reportProblem := func(ev pq.ListenerEventType, err error) {
+	var url string
+	command.Flags().StringVar(&url, "url", "", "")
+	_ = command.MarkFlagRequired("url")
+
+	command.RunE = func(cmd *coral.Command, args []string) error {
+		_, err := sql.Open("postgres", url)
 		if err != nil {
-			fmt.Println(err.Error())
+			return err
+		}
+
+		reportProblem := func(ev pq.ListenerEventType, err error) {
+			if err != nil {
+				fmt.Println(err.Error())
+			}
+		}
+
+		minReconn := 10 * time.Second
+		maxReconn := time.Minute
+		listener := pq.NewListener(url, minReconn, maxReconn, reportProblem)
+		err = listener.Listen("ionscale_events")
+		if err != nil {
+			return err
+		}
+
+		fmt.Println("listening for events ...")
+		fmt.Println("")
+		for {
+			select {
+			case n, _ := <-listener.Notify:
+				fmt.Println(n.Extra)
+			}
 		}
 	}
 
-	minReconn := 10 * time.Second
-	maxReconn := time.Minute
-	listener := pq.NewListener(conninfo, minReconn, maxReconn, reportProblem)
-	err = listener.Listen("ionscale_events")
-	if err != nil {
-		panic(err)
-	}
-
-	fmt.Println("entering main loop")
-	for {
-		// process all available work before waiting for notifications
-		waitForNotification(listener)
-	}
+	return command
 }
