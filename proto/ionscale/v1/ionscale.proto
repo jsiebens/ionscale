@@ -54,5 +54,6 @@ service IonscaleService {
   rpc DeleteMachine(DeleteMachineRequest) returns (DeleteMachineResponse) {}
   rpc SetMachineKeyExpiry(SetMachineKeyExpiryRequest) returns (SetMachineKeyExpiryResponse) {}
   rpc GetMachineRoutes (GetMachineRoutesRequest) returns (GetMachineRoutesResponse) {}
-  rpc SetMachineRoutes (SetMachineRoutesRequest) returns (GetMachineRoutesResponse) {}
+  rpc EnableMachineRoutes (EnableMachineRoutesRequest) returns (GetMachineRoutesResponse) {}
+  rpc DisableMachineRoutes (DisableMachineRoutesRequest) returns (GetMachineRoutesResponse) {}
 }

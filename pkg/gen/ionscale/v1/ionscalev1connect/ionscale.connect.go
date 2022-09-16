@@ -53,7 +53,8 @@ type IonscaleServiceClient interface {
 	DeleteMachine(context.Context, *connect_go.Request[v1.DeleteMachineRequest]) (*connect_go.Response[v1.DeleteMachineResponse], error)
 	SetMachineKeyExpiry(context.Context, *connect_go.Request[v1.SetMachineKeyExpiryRequest]) (*connect_go.Response[v1.SetMachineKeyExpiryResponse], error)
 	GetMachineRoutes(context.Context, *connect_go.Request[v1.GetMachineRoutesRequest]) (*connect_go.Response[v1.GetMachineRoutesResponse], error)
-	SetMachineRoutes(context.Context, *connect_go.Request[v1.SetMachineRoutesRequest]) (*connect_go.Response[v1.GetMachineRoutesResponse], error)
+	EnableMachineRoutes(context.Context, *connect_go.Request[v1.EnableMachineRoutesRequest]) (*connect_go.Response[v1.GetMachineRoutesResponse], error)
+	DisableMachineRoutes(context.Context, *connect_go.Request[v1.DisableMachineRoutesRequest]) (*connect_go.Response[v1.GetMachineRoutesResponse], error)
 }
 
 // NewIonscaleServiceClient constructs a client for the ionscale.v1.IonscaleService service. By
@@ -196,9 +197,14 @@ func NewIonscaleServiceClient(httpClient connect_go.HTTPClient, baseURL string, 
 			baseURL+"/ionscale.v1.IonscaleService/GetMachineRoutes",
 			opts...,
 		),
-		setMachineRoutes: connect_go.NewClient[v1.SetMachineRoutesRequest, v1.GetMachineRoutesResponse](
+		enableMachineRoutes: connect_go.NewClient[v1.EnableMachineRoutesRequest, v1.GetMachineRoutesResponse](
 			httpClient,
-			baseURL+"/ionscale.v1.IonscaleService/SetMachineRoutes",
+			baseURL+"/ionscale.v1.IonscaleService/EnableMachineRoutes",
+			opts...,
+		),
+		disableMachineRoutes: connect_go.NewClient[v1.DisableMachineRoutesRequest, v1.GetMachineRoutesResponse](
+			httpClient,
+			baseURL+"/ionscale.v1.IonscaleService/DisableMachineRoutes",
 			opts...,
 		),
 	}
@@ -206,33 +212,34 @@ func NewIonscaleServiceClient(httpClient connect_go.HTTPClient, baseURL string, 
 
 // ionscaleServiceClient implements IonscaleServiceClient.
 type ionscaleServiceClient struct {
-	getVersion          *connect_go.Client[v1.GetVersionRequest, v1.GetVersionResponse]
-	authenticate        *connect_go.Client[v1.AuthenticationRequest, v1.AuthenticationResponse]
-	getDERPMap          *connect_go.Client[v1.GetDERPMapRequest, v1.GetDERPMapResponse]
-	setDERPMap          *connect_go.Client[v1.SetDERPMapRequest, v1.SetDERPMapResponse]
-	createTailnet       *connect_go.Client[v1.CreateTailnetRequest, v1.CreateTailnetResponse]
-	getTailnet          *connect_go.Client[v1.GetTailnetRequest, v1.GetTailnetResponse]
-	listTailnets        *connect_go.Client[v1.ListTailnetRequest, v1.ListTailnetResponse]
-	deleteTailnet       *connect_go.Client[v1.DeleteTailnetRequest, v1.DeleteTailnetResponse]
-	getDNSConfig        *connect_go.Client[v1.GetDNSConfigRequest, v1.GetDNSConfigResponse]
-	setDNSConfig        *connect_go.Client[v1.SetDNSConfigRequest, v1.SetDNSConfigResponse]
-	getIAMPolicy        *connect_go.Client[v1.GetIAMPolicyRequest, v1.GetIAMPolicyResponse]
-	setIAMPolicy        *connect_go.Client[v1.SetIAMPolicyRequest, v1.SetIAMPolicyResponse]
-	getACLPolicy        *connect_go.Client[v1.GetACLPolicyRequest, v1.GetACLPolicyResponse]
-	setACLPolicy        *connect_go.Client[v1.SetACLPolicyRequest, v1.SetACLPolicyResponse]
-	getAuthKey          *connect_go.Client[v1.GetAuthKeyRequest, v1.GetAuthKeyResponse]
-	createAuthKey       *connect_go.Client[v1.CreateAuthKeyRequest, v1.CreateAuthKeyResponse]
-	deleteAuthKey       *connect_go.Client[v1.DeleteAuthKeyRequest, v1.DeleteAuthKeyResponse]
-	listAuthKeys        *connect_go.Client[v1.ListAuthKeysRequest, v1.ListAuthKeysResponse]
-	listUsers           *connect_go.Client[v1.ListUsersRequest, v1.ListUsersResponse]
-	deleteUser          *connect_go.Client[v1.DeleteUserRequest, v1.DeleteUserResponse]
-	getMachine          *connect_go.Client[v1.GetMachineRequest, v1.GetMachineResponse]
-	listMachines        *connect_go.Client[v1.ListMachinesRequest, v1.ListMachinesResponse]
-	expireMachine       *connect_go.Client[v1.ExpireMachineRequest, v1.ExpireMachineResponse]
-	deleteMachine       *connect_go.Client[v1.DeleteMachineRequest, v1.DeleteMachineResponse]
-	setMachineKeyExpiry *connect_go.Client[v1.SetMachineKeyExpiryRequest, v1.SetMachineKeyExpiryResponse]
-	getMachineRoutes    *connect_go.Client[v1.GetMachineRoutesRequest, v1.GetMachineRoutesResponse]
-	setMachineRoutes    *connect_go.Client[v1.SetMachineRoutesRequest, v1.GetMachineRoutesResponse]
+	getVersion           *connect_go.Client[v1.GetVersionRequest, v1.GetVersionResponse]
+	authenticate         *connect_go.Client[v1.AuthenticationRequest, v1.AuthenticationResponse]
+	getDERPMap           *connect_go.Client[v1.GetDERPMapRequest, v1.GetDERPMapResponse]
+	setDERPMap           *connect_go.Client[v1.SetDERPMapRequest, v1.SetDERPMapResponse]
+	createTailnet        *connect_go.Client[v1.CreateTailnetRequest, v1.CreateTailnetResponse]
+	getTailnet           *connect_go.Client[v1.GetTailnetRequest, v1.GetTailnetResponse]
+	listTailnets         *connect_go.Client[v1.ListTailnetRequest, v1.ListTailnetResponse]
+	deleteTailnet        *connect_go.Client[v1.DeleteTailnetRequest, v1.DeleteTailnetResponse]
+	getDNSConfig         *connect_go.Client[v1.GetDNSConfigRequest, v1.GetDNSConfigResponse]
+	setDNSConfig         *connect_go.Client[v1.SetDNSConfigRequest, v1.SetDNSConfigResponse]
+	getIAMPolicy         *connect_go.Client[v1.GetIAMPolicyRequest, v1.GetIAMPolicyResponse]
+	setIAMPolicy         *connect_go.Client[v1.SetIAMPolicyRequest, v1.SetIAMPolicyResponse]
+	getACLPolicy         *connect_go.Client[v1.GetACLPolicyRequest, v1.GetACLPolicyResponse]
+	setACLPolicy         *connect_go.Client[v1.SetACLPolicyRequest, v1.SetACLPolicyResponse]
+	getAuthKey           *connect_go.Client[v1.GetAuthKeyRequest, v1.GetAuthKeyResponse]
+	createAuthKey        *connect_go.Client[v1.CreateAuthKeyRequest, v1.CreateAuthKeyResponse]
+	deleteAuthKey        *connect_go.Client[v1.DeleteAuthKeyRequest, v1.DeleteAuthKeyResponse]
+	listAuthKeys         *connect_go.Client[v1.ListAuthKeysRequest, v1.ListAuthKeysResponse]
+	listUsers            *connect_go.Client[v1.ListUsersRequest, v1.ListUsersResponse]
+	deleteUser           *connect_go.Client[v1.DeleteUserRequest, v1.DeleteUserResponse]
+	getMachine           *connect_go.Client[v1.GetMachineRequest, v1.GetMachineResponse]
+	listMachines         *connect_go.Client[v1.ListMachinesRequest, v1.ListMachinesResponse]
+	expireMachine        *connect_go.Client[v1.ExpireMachineRequest, v1.ExpireMachineResponse]
+	deleteMachine        *connect_go.Client[v1.DeleteMachineRequest, v1.DeleteMachineResponse]
+	setMachineKeyExpiry  *connect_go.Client[v1.SetMachineKeyExpiryRequest, v1.SetMachineKeyExpiryResponse]
+	getMachineRoutes     *connect_go.Client[v1.GetMachineRoutesRequest, v1.GetMachineRoutesResponse]
+	enableMachineRoutes  *connect_go.Client[v1.EnableMachineRoutesRequest, v1.GetMachineRoutesResponse]
+	disableMachineRoutes *connect_go.Client[v1.DisableMachineRoutesRequest, v1.GetMachineRoutesResponse]
 }
 
 // GetVersion calls ionscale.v1.IonscaleService.GetVersion.
@@ -365,9 +372,14 @@ func (c *ionscaleServiceClient) GetMachineRoutes(ctx context.Context, req *conne
 	return c.getMachineRoutes.CallUnary(ctx, req)
 }
 
-// SetMachineRoutes calls ionscale.v1.IonscaleService.SetMachineRoutes.
-func (c *ionscaleServiceClient) SetMachineRoutes(ctx context.Context, req *connect_go.Request[v1.SetMachineRoutesRequest]) (*connect_go.Response[v1.GetMachineRoutesResponse], error) {
-	return c.setMachineRoutes.CallUnary(ctx, req)
+// EnableMachineRoutes calls ionscale.v1.IonscaleService.EnableMachineRoutes.
+func (c *ionscaleServiceClient) EnableMachineRoutes(ctx context.Context, req *connect_go.Request[v1.EnableMachineRoutesRequest]) (*connect_go.Response[v1.GetMachineRoutesResponse], error) {
+	return c.enableMachineRoutes.CallUnary(ctx, req)
+}
+
+// DisableMachineRoutes calls ionscale.v1.IonscaleService.DisableMachineRoutes.
+func (c *ionscaleServiceClient) DisableMachineRoutes(ctx context.Context, req *connect_go.Request[v1.DisableMachineRoutesRequest]) (*connect_go.Response[v1.GetMachineRoutesResponse], error) {
+	return c.disableMachineRoutes.CallUnary(ctx, req)
 }
 
 // IonscaleServiceHandler is an implementation of the ionscale.v1.IonscaleService service.
@@ -398,7 +410,8 @@ type IonscaleServiceHandler interface {
 	DeleteMachine(context.Context, *connect_go.Request[v1.DeleteMachineRequest]) (*connect_go.Response[v1.DeleteMachineResponse], error)
 	SetMachineKeyExpiry(context.Context, *connect_go.Request[v1.SetMachineKeyExpiryRequest]) (*connect_go.Response[v1.SetMachineKeyExpiryResponse], error)
 	GetMachineRoutes(context.Context, *connect_go.Request[v1.GetMachineRoutesRequest]) (*connect_go.Response[v1.GetMachineRoutesResponse], error)
-	SetMachineRoutes(context.Context, *connect_go.Request[v1.SetMachineRoutesRequest]) (*connect_go.Response[v1.GetMachineRoutesResponse], error)
+	EnableMachineRoutes(context.Context, *connect_go.Request[v1.EnableMachineRoutesRequest]) (*connect_go.Response[v1.GetMachineRoutesResponse], error)
+	DisableMachineRoutes(context.Context, *connect_go.Request[v1.DisableMachineRoutesRequest]) (*connect_go.Response[v1.GetMachineRoutesResponse], error)
 }
 
 // NewIonscaleServiceHandler builds an HTTP handler from the service implementation. It returns the
@@ -538,9 +551,14 @@ func NewIonscaleServiceHandler(svc IonscaleServiceHandler, opts ...connect_go.Ha
 		svc.GetMachineRoutes,
 		opts...,
 	))
-	mux.Handle("/ionscale.v1.IonscaleService/SetMachineRoutes", connect_go.NewUnaryHandler(
-		"/ionscale.v1.IonscaleService/SetMachineRoutes",
-		svc.SetMachineRoutes,
+	mux.Handle("/ionscale.v1.IonscaleService/EnableMachineRoutes", connect_go.NewUnaryHandler(
+		"/ionscale.v1.IonscaleService/EnableMachineRoutes",
+		svc.EnableMachineRoutes,
+		opts...,
+	))
+	mux.Handle("/ionscale.v1.IonscaleService/DisableMachineRoutes", connect_go.NewUnaryHandler(
+		"/ionscale.v1.IonscaleService/DisableMachineRoutes",
+		svc.DisableMachineRoutes,
 		opts...,
 	))
 	return "/ionscale.v1.IonscaleService/", mux
@@ -653,6 +671,10 @@ func (UnimplementedIonscaleServiceHandler) GetMachineRoutes(context.Context, *co
 	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("ionscale.v1.IonscaleService.GetMachineRoutes is not implemented"))
 }
 
-func (UnimplementedIonscaleServiceHandler) SetMachineRoutes(context.Context, *connect_go.Request[v1.SetMachineRoutesRequest]) (*connect_go.Response[v1.GetMachineRoutesResponse], error) {
-	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("ionscale.v1.IonscaleService.SetMachineRoutes is not implemented"))
+func (UnimplementedIonscaleServiceHandler) EnableMachineRoutes(context.Context, *connect_go.Request[v1.EnableMachineRoutesRequest]) (*connect_go.Response[v1.GetMachineRoutesResponse], error) {
+	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("ionscale.v1.IonscaleService.EnableMachineRoutes is not implemented"))
+}
+
+func (UnimplementedIonscaleServiceHandler) DisableMachineRoutes(context.Context, *connect_go.Request[v1.DisableMachineRoutesRequest]) (*connect_go.Response[v1.GetMachineRoutesResponse], error) {
+	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("ionscale.v1.IonscaleService.DisableMachineRoutes is not implemented"))
 }

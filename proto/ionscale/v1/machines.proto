@@ -60,6 +60,8 @@ message Machine {
   google.protobuf.Timestamp created_at = 14;
   google.protobuf.Timestamp expires_at = 15;
   bool key_expiry_disabled = 16;
+  repeated string enabled_routes = 17;
+  repeated string advertised_routes = 18;
 }
 
 message ClientConnectivity {

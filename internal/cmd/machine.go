@@ -26,7 +26,8 @@ func machineCommands() *coral.Command {
 	command.AddCommand(expireMachineCommand())
 	command.AddCommand(listMachinesCommand())
 	command.AddCommand(getMachineRoutesCommand())
-	command.AddCommand(setMachineRoutesCommand())
+	command.AddCommand(enableMachineRoutesCommand())
+	command.AddCommand(disableMachineRoutesCommand())
 	command.AddCommand(enableMachineKeyExpiryCommand())
 	command.AddCommand(disableMachineKeyExpiryCommand())
 
@@ -106,6 +107,22 @@ func getMachineCommand() *coral.Command {
 				fmt.Fprintf(w, "%s\t%s\n", "Endpoints", e)
 			} else {
 				fmt.Fprintf(w, "%s\t%s\n", "", e)
+			}
+		}
+
+		for i, t := range m.AdvertisedRoutes {
+			if i == 0 {
+				fmt.Fprintf(w, "%s\t%s\n", "Advertised routes", t)
+			} else {
+				fmt.Fprintf(w, "%s\t%s\n", "", t)
+			}
+		}
+
+		for i, t := range m.EnabledRoutes {
+			if i == 0 {
+				fmt.Fprintf(w, "%s\t%s\n", "Enabled routes", t)
+			} else {
+				fmt.Fprintf(w, "%s\t%s\n", "", t)
 			}
 		}
 
@@ -262,11 +279,25 @@ func getMachineRoutesCommand() *coral.Command {
 			return err
 		}
 
-		tbl := table.New("ROUTE", "ALLOWED")
-		for _, r := range resp.Msg.Routes {
-			tbl.AddRow(r.Advertised, r.Allowed)
+		w := new(tabwriter.Writer)
+		w.Init(os.Stdout, 8, 8, 0, '\t', 0)
+		defer w.Flush()
+
+		for i, t := range resp.Msg.AdvertisedRoutes {
+			if i == 0 {
+				fmt.Fprintf(w, "%s\t%s\n", "Advertised routes", t)
+			} else {
+				fmt.Fprintf(w, "%s\t%s\n", "", t)
+			}
 		}
-		tbl.Print()
+
+		for i, t := range resp.Msg.EnabledRoutes {
+			if i == 0 {
+				fmt.Fprintf(w, "%s\t%s\n", "Enabled routes", t)
+			} else {
+				fmt.Fprintf(w, "%s\t%s\n", "", t)
+			}
+		}
 
 		return nil
 	}
@@ -274,19 +305,21 @@ func getMachineRoutesCommand() *coral.Command {
 	return command
 }
 
-func setMachineRoutesCommand() *coral.Command {
+func enableMachineRoutesCommand() *coral.Command {
 	command := &coral.Command{
-		Use:          "set-routes",
-		Short:        "Set the enabled routes for a given machine",
+		Use:          "enable-routes",
+		Short:        "Enable routes for a given machine",
 		SilenceUsage: true,
 	}
 
 	var machineID uint64
-	var allowedIps []string
+	var routes []string
+	var replace bool
 	var target = Target{}
 	target.prepareCommand(command)
 	command.Flags().Uint64Var(&machineID, "machine-id", 0, "Machine ID")
-	command.Flags().StringSliceVar(&allowedIps, "allowed-ips", []string{}, "List of routes to enable")
+	command.Flags().StringSliceVar(&routes, "routes", []string{}, "List of routes to enable")
+	command.Flags().BoolVar(&replace, "replace", false, "Replace current enabled routes with this new list")
 
 	_ = command.MarkFlagRequired("machine-id")
 
@@ -296,26 +329,97 @@ func setMachineRoutesCommand() *coral.Command {
 			return err
 		}
 
-		var prefixes []netaddr.IPPrefix
-		for _, r := range allowedIps {
-			p, err := netaddr.ParseIPPrefix(r)
-			if err != nil {
+		for _, r := range routes {
+			if _, err := netaddr.ParseIPPrefix(r); err != nil {
 				return err
 			}
-			prefixes = append(prefixes, p)
 		}
 
-		req := api.SetMachineRoutesRequest{MachineId: machineID, AllowedIps: allowedIps}
-		resp, err := client.SetMachineRoutes(context.Background(), connect.NewRequest(&req))
+		req := api.EnableMachineRoutesRequest{MachineId: machineID, Routes: routes, Replace: replace}
+		resp, err := client.EnableMachineRoutes(context.Background(), connect.NewRequest(&req))
 		if err != nil {
 			return err
 		}
 
-		tbl := table.New("ROUTE", "ALLOWED")
-		for _, r := range resp.Msg.Routes {
-			tbl.AddRow(r.Advertised, r.Allowed)
+		w := new(tabwriter.Writer)
+		w.Init(os.Stdout, 8, 8, 0, '\t', 0)
+		defer w.Flush()
+
+		for i, t := range resp.Msg.AdvertisedRoutes {
+			if i == 0 {
+				fmt.Fprintf(w, "%s\t%s\n", "Advertised routes", t)
+			} else {
+				fmt.Fprintf(w, "%s\t%s\n", "", t)
+			}
 		}
-		tbl.Print()
+
+		for i, t := range resp.Msg.EnabledRoutes {
+			if i == 0 {
+				fmt.Fprintf(w, "%s\t%s\n", "Enabled routes", t)
+			} else {
+				fmt.Fprintf(w, "%s\t%s\n", "", t)
+			}
+		}
+
+		return nil
+	}
+
+	return command
+}
+
+func disableMachineRoutesCommand() *coral.Command {
+	command := &coral.Command{
+		Use:          "disable-routes",
+		Short:        "Disable routes for a given machine",
+		SilenceUsage: true,
+	}
+
+	var machineID uint64
+	var routes []string
+	var target = Target{}
+	target.prepareCommand(command)
+	command.Flags().Uint64Var(&machineID, "machine-id", 0, "Machine ID")
+	command.Flags().StringSliceVar(&routes, "routes", []string{}, "List of routes to enable")
+
+	_ = command.MarkFlagRequired("machine-id")
+
+	command.RunE = func(command *coral.Command, args []string) error {
+		client, err := target.createGRPCClient()
+		if err != nil {
+			return err
+		}
+
+		for _, r := range routes {
+			if _, err := netaddr.ParseIPPrefix(r); err != nil {
+				return err
+			}
+		}
+
+		req := api.DisableMachineRoutesRequest{MachineId: machineID, Routes: routes}
+		resp, err := client.DisableMachineRoutes(context.Background(), connect.NewRequest(&req))
+		if err != nil {
+			return err
+		}
+
+		w := new(tabwriter.Writer)
+		w.Init(os.Stdout, 8, 8, 0, '\t', 0)
+		defer w.Flush()
+
+		for i, t := range resp.Msg.AdvertisedRoutes {
+			if i == 0 {
+				fmt.Fprintf(w, "%s\t%s\n", "Advertised routes", t)
+			} else {
+				fmt.Fprintf(w, "%s\t%s\n", "", t)
+			}
+		}
+
+		for i, t := range resp.Msg.EnabledRoutes {
+			if i == 0 {
+				fmt.Fprintf(w, "%s\t%s\n", "Enabled routes", t)
+			} else {
+				fmt.Fprintf(w, "%s\t%s\n", "", t)
+			}
+		}
 
 		return nil
 	}

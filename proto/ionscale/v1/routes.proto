@@ -8,15 +8,17 @@ message GetMachineRoutesRequest {
 }
 
 message GetMachineRoutesResponse {
-  repeated RoutableIP routes = 1;
+  repeated string advertised_routes = 1;
+  repeated string enabled_routes = 2;
 }
 
-message SetMachineRoutesRequest {
+message EnableMachineRoutesRequest {
   uint64 machine_id = 1;
-  repeated string allowed_ips = 2;
+  repeated string routes = 2;
+  bool replace = 3;
 }
 
-message RoutableIP {
-  string advertised = 1;
-  bool allowed = 2;
+message DisableMachineRoutesRequest {
+  uint64 machine_id = 1;
+  repeated string routes = 2;
 }
