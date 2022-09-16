@@ -64,23 +64,12 @@ func DefaultPolicy() ACLPolicy {
 	}
 }
 
-type aclEngine struct {
-	policy       *ACLPolicy
-	expandedTags map[string][]string
-}
+func (a ACLPolicy) IsValidPeer(src *Machine, dest *Machine) bool {
+	if !src.HasTags() && !dest.HasTags() && dest.HasUser(src.User.Name) {
+		return true
+	}
 
-func (p ACLPolicy) IsValidPeer(src *Machine, dest *Machine) bool {
-	f := &aclEngine{policy: &p}
-	return f.isValidPeer(src, dest)
-}
-
-func (p ACLPolicy) BuildFilterRules(dst *Machine, peers []Machine) []tailcfg.FilterRule {
-	f := &aclEngine{policy: &p}
-	return f.build(dst, peers)
-}
-
-func (a *aclEngine) isValidPeer(src *Machine, dest *Machine) bool {
-	for _, acl := range a.policy.ACLs {
+	for _, acl := range a.ACLs {
 		allDestPorts := a.expandMachineToDstPorts(dest, acl.Dst)
 		if len(allDestPorts) == 0 {
 			continue
@@ -95,19 +84,19 @@ func (a *aclEngine) isValidPeer(src *Machine, dest *Machine) bool {
 	return false
 }
 
-func (a *aclEngine) build(dst *Machine, peers []Machine) []tailcfg.FilterRule {
+func (a ACLPolicy) BuildFilterRules(srcs []Machine, dst *Machine) []tailcfg.FilterRule {
 	var rules []tailcfg.FilterRule
 
-	for _, acl := range a.policy.ACLs {
+	for _, acl := range a.ACLs {
 		allDestPorts := a.expandMachineToDstPorts(dst, acl.Dst)
 		if len(allDestPorts) == 0 {
 			continue
 		}
 
 		var allSrcIPsSet = &StringSet{}
-		for _, src := range acl.Src {
-			for _, peer := range peers {
-				srcIPs := a.expandMachineAlias(&peer, src, true)
+		for _, alias := range acl.Src {
+			for _, src := range srcs {
+				srcIPs := a.expandMachineAlias(&src, alias, true)
 				allSrcIPsSet.Add(srcIPs...)
 			}
 		}
@@ -133,7 +122,7 @@ func (a *aclEngine) build(dst *Machine, peers []Machine) []tailcfg.FilterRule {
 	return rules
 }
 
-func (a *aclEngine) expandMachineToDstPorts(m *Machine, ports []string) []tailcfg.NetPortRange {
+func (a ACLPolicy) expandMachineToDstPorts(m *Machine, ports []string) []tailcfg.NetPortRange {
 	allDestRanges := []tailcfg.NetPortRange{}
 	for _, d := range ports {
 		ranges := a.expandMachineDestToNetPortRanges(m, d)
@@ -142,7 +131,7 @@ func (a *aclEngine) expandMachineToDstPorts(m *Machine, ports []string) []tailcf
 	return allDestRanges
 }
 
-func (a *aclEngine) expandMachineDestToNetPortRanges(m *Machine, dest string) []tailcfg.NetPortRange {
+func (a ACLPolicy) expandMachineDestToNetPortRanges(m *Machine, dest string) []tailcfg.NetPortRange {
 	tokens := strings.Split(dest, ":")
 	if len(tokens) < 2 || len(tokens) > 3 {
 		return nil
@@ -179,7 +168,7 @@ func (a *aclEngine) expandMachineDestToNetPortRanges(m *Machine, dest string) []
 	return dests
 }
 
-func (a *aclEngine) expandMachineAlias(m *Machine, alias string, src bool) []string {
+func (a ACLPolicy) expandMachineAlias(m *Machine, alias string, src bool) []string {
 	if alias == "*" {
 		if alias == "*" {
 			return []string{"*"}
@@ -191,7 +180,7 @@ func (a *aclEngine) expandMachineAlias(m *Machine, alias string, src bool) []str
 	}
 
 	if strings.HasPrefix(alias, "group:") && !m.HasTags() {
-		users, ok := a.policy.Groups[alias]
+		users, ok := a.Groups[alias]
 
 		if !ok {
 			return []string{}
@@ -210,7 +199,7 @@ func (a *aclEngine) expandMachineAlias(m *Machine, alias string, src bool) []str
 		return []string{m.IPv4.String(), m.IPv6.String()}
 	}
 
-	if h, ok := a.policy.Hosts[alias]; ok {
+	if h, ok := a.Hosts[alias]; ok {
 		alias = h
 	}
 
@@ -234,7 +223,7 @@ func (a *aclEngine) expandMachineAlias(m *Machine, alias string, src bool) []str
 	return []string{}
 }
 
-func (a *aclEngine) expandValuePortToPortRange(s string) ([]tailcfg.PortRange, error) {
+func (a ACLPolicy) expandValuePortToPortRange(s string) ([]tailcfg.PortRange, error) {
 	if s == "*" {
 		return []tailcfg.PortRange{{First: 0, Last: 65535}}, nil
 	}

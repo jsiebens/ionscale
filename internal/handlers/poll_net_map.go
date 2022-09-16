@@ -274,7 +274,7 @@ func (h *PollNetMapHandler) createMapResponse(m *domain.Machine, binder bind.Bin
 		return nil, nil, err
 	}
 
-	rules := policies.BuildFilterRules(m, candidatePeers)
+	rules := policies.BuildFilterRules(candidatePeers, m)
 
 	controlTime := time.Now().UTC()
 	var mapResponse *tailcfg.MapResponse
