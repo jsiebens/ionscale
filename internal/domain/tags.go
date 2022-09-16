@@ -48,20 +48,6 @@ func CheckTags(tags []string) error {
 }
 
 func SanitizeTags(input []string) Tags {
-	keys := make(map[string]bool)
-	var tags []string
-	for _, v := range input {
-		var entry string
-		if strings.HasPrefix(v, "tag:") {
-			entry = v[4:]
-		} else {
-			entry = v
-		}
-
-		if _, value := keys[entry]; !value {
-			keys[entry] = true
-			tags = append(tags, entry)
-		}
-	}
-	return tags
+	s := StringSet{}
+	return s.Add(input...).Items()
 }

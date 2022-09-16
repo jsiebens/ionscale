@@ -195,7 +195,7 @@ func (a ACLPolicy) expandMachineAlias(m *Machine, alias string, src bool) []stri
 		return []string{}
 	}
 
-	if strings.HasPrefix(alias, "tag:") && m.HasTag(alias[4:]) {
+	if strings.HasPrefix(alias, "tag:") && m.HasTag(alias) {
 		return []string{m.IPv4.String(), m.IPv6.String()}
 	}
 
