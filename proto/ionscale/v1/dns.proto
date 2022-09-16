@@ -28,6 +28,7 @@ message DNSConfig {
   bool override_local_dns = 2;
   repeated string nameservers = 3;
   map<string, Routes> routes = 4;
+  string magic_dns_suffix = 5;
 }
 
 message Routes {

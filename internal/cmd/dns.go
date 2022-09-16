@@ -6,7 +6,9 @@ import (
 	"github.com/bufbuild/connect-go"
 	api "github.com/jsiebens/ionscale/pkg/gen/ionscale/v1"
 	"github.com/muesli/coral"
+	"os"
 	"strings"
+	"text/tabwriter"
 )
 
 func getDNSConfigCommand() *coral.Command {
@@ -52,9 +54,33 @@ func getDNSConfigCommand() *coral.Command {
 			}
 		}
 
-		fmt.Printf("%-*v%v\n", 25, "Magic DNS Enabled:", config.MagicDns)
-		fmt.Printf("%-*v%v\n", 25, "Override Local DNS:", config.OverrideLocalDns)
-		fmt.Printf("%-*v%v\n", 25, "Nameservers:", strings.Join(allNameservers, ","))
+		w := new(tabwriter.Writer)
+		w.Init(os.Stdout, 8, 8, 0, '\t', 0)
+		defer w.Flush()
+
+		fmt.Fprintf(w, "%s\t\t%v\n", "Override Local DNS", config.OverrideLocalDns)
+
+		if config.MagicDns {
+			fmt.Fprintf(w, "MagicDNS\t%s\t%s\n", config.MagicDnsSuffix, "100.100.100.100")
+		}
+
+		for k, r := range config.Routes {
+			for i, t := range r.Routes {
+				if i == 0 {
+					fmt.Fprintf(w, "SplitDNS\t%s\t%s\n", k, t)
+				} else {
+					fmt.Fprintf(w, "%s\t%s\n", "", t)
+				}
+			}
+		}
+
+		for i, t := range config.Nameservers {
+			if i == 0 {
+				fmt.Fprintf(w, "%s\t%s\t%s\n", "Global", "", t)
+			} else {
+				fmt.Fprintf(w, "%s\t%s\t%s\n", "", "", t)
+			}
+		}
 
 		return nil
 	}
