@@ -4,6 +4,7 @@ import (
 	"database/sql/driver"
 	"encoding/json"
 	"fmt"
+	"github.com/hashicorp/go-multierror"
 	"gorm.io/gorm"
 	"gorm.io/gorm/schema"
 	"net/netip"
@@ -13,43 +14,16 @@ import (
 )
 
 type ACLPolicy struct {
-	Groups map[string][]string `json:"groups,omitempty"`
-	Hosts  map[string]string   `json:"hosts,omitempty"`
-	ACLs   []ACL               `json:"acls"`
+	Groups    map[string][]string `json:"groups,omitempty"`
+	Hosts     map[string]string   `json:"hosts,omitempty"`
+	ACLs      []ACL               `json:"acls"`
+	TagOwners map[string][]string `json:"tag_owners"`
 }
 
 type ACL struct {
 	Action string   `json:"action"`
 	Src    []string `json:"src"`
 	Dst    []string `json:"dst"`
-}
-
-func (i *ACLPolicy) Scan(destination interface{}) error {
-	switch value := destination.(type) {
-	case []byte:
-		return json.Unmarshal(value, i)
-	default:
-		return fmt.Errorf("unexpected data type %T", destination)
-	}
-}
-
-func (i ACLPolicy) Value() (driver.Value, error) {
-	bytes, err := json.Marshal(i)
-	return bytes, err
-}
-
-// GormDataType gorm common data type
-func (ACLPolicy) GormDataType() string {
-	return "json"
-}
-
-// GormDBDataType gorm db data type
-func (ACLPolicy) GormDBDataType(db *gorm.DB, field *schema.Field) string {
-	switch db.Dialector.Name() {
-	case "sqlite":
-		return "JSON"
-	}
-	return ""
 }
 
 func DefaultPolicy() ACLPolicy {
@@ -62,6 +36,55 @@ func DefaultPolicy() ACLPolicy {
 			},
 		},
 	}
+}
+
+func (a ACLPolicy) CheckTags(tags []string) error {
+	var result *multierror.Error
+	for _, t := range tags {
+		if _, ok := a.TagOwners[t]; !ok {
+			result = multierror.Append(result, fmt.Errorf("tag [%s] is invalid or not permitted", t))
+		}
+	}
+	return result.ErrorOrNil()
+}
+
+func (a ACLPolicy) CheckTagOwners(tags []string, p *User) error {
+	var result *multierror.Error
+	for _, t := range tags {
+		if ok := a.IsTagOwner(t, p); !ok {
+			result = multierror.Append(result, fmt.Errorf("tag [%s] is invalid or not permitted", t))
+		}
+	}
+	return result.ErrorOrNil()
+}
+
+func (a ACLPolicy) IsTagOwner(tag string, p *User) bool {
+	if tagOwners, ok := a.TagOwners[tag]; ok {
+		if p.UserType == UserTypeService {
+			return true
+		}
+		return a.validateTagOwners(tagOwners, p)
+	}
+	return false
+}
+
+func (a ACLPolicy) validateTagOwners(tagOwners []string, p *User) bool {
+	for _, alias := range tagOwners {
+		if strings.HasPrefix(alias, "group:") {
+			if group, ok := a.Groups[alias]; ok {
+				for _, groupMember := range group {
+					if groupMember == p.Name {
+						return true
+					}
+				}
+			}
+		} else {
+			if alias == p.Name {
+				return true
+			}
+		}
+	}
+	return false
 }
 
 func (a ACLPolicy) IsValidPeer(src *Machine, dest *Machine) bool {
@@ -258,6 +281,34 @@ func (a ACLPolicy) expandValuePortToPortRange(s string) ([]tailcfg.PortRange, er
 		}
 	}
 	return ports, nil
+}
+
+func (i *ACLPolicy) Scan(destination interface{}) error {
+	switch value := destination.(type) {
+	case []byte:
+		return json.Unmarshal(value, i)
+	default:
+		return fmt.Errorf("unexpected data type %T", destination)
+	}
+}
+
+func (i ACLPolicy) Value() (driver.Value, error) {
+	bytes, err := json.Marshal(i)
+	return bytes, err
+}
+
+// GormDataType gorm common data type
+func (ACLPolicy) GormDataType() string {
+	return "json"
+}
+
+// GormDBDataType gorm db data type
+func (ACLPolicy) GormDBDataType(db *gorm.DB, field *schema.Field) string {
+	switch db.Dialector.Name() {
+	case "sqlite":
+		return "JSON"
+	}
+	return ""
 }
 
 type StringSet struct {

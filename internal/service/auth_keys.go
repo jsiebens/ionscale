@@ -134,6 +134,16 @@ func (s *Service) CreateAuthKey(ctx context.Context, req *connect.Request[api.Cr
 		return nil, connect.NewError(connect.CodeNotFound, errors.New("tailnet not found"))
 	}
 
+	if principal.IsSystemAdmin() {
+		if err := tailnet.ACLPolicy.CheckTags(req.Msg.Tags); err != nil {
+			return nil, connect.NewError(connect.CodeInvalidArgument, err)
+		}
+	} else {
+		if err := tailnet.ACLPolicy.CheckTagOwners(req.Msg.Tags, principal.User); err != nil {
+			return nil, connect.NewError(connect.CodeInvalidArgument, err)
+		}
+	}
+
 	var expiresAt *time.Time
 	var expiresAtPb *timestamppb.Timestamp
 

@@ -27,6 +27,7 @@ message ACLPolicy {
   map<string, string> hosts = 1;
   map<string, google.protobuf.ListValue> groups = 2;
   repeated ACL acls = 3;
+  map<string, google.protobuf.ListValue> tag_owners = 4;
 }
 
 message ACL {

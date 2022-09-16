@@ -246,6 +246,8 @@ func (h *AuthenticationHandlers) Error(c echo.Context) error {
 		return c.Render(http.StatusForbidden, "invalidauthkey.html", nil)
 	case "ua":
 		return c.Render(http.StatusForbidden, "unauthorized.html", nil)
+	case "nto":
+		return c.Render(http.StatusForbidden, "notagowner.html", nil)
 	}
 	return c.Render(http.StatusOK, "error.html", nil)
 }
@@ -380,6 +382,15 @@ func (h *AuthenticationHandlers) endMachineRegistrationFlow(c echo.Context, regi
 		user = selectedUser
 		tailnet = selectedTailnet
 		ephemeral = false
+	}
+
+	if err := tailnet.ACLPolicy.CheckTagOwners(registrationRequest.Data.Hostinfo.RequestTags, user); err != nil {
+		registrationRequest.Authenticated = false
+		registrationRequest.Error = err.Error()
+		if err := h.repository.SaveRegistrationRequest(ctx, registrationRequest); err != nil {
+			return c.Redirect(http.StatusFound, "/a/error")
+		}
+		return c.Redirect(http.StatusFound, "/a/error?e=nto")
 	}
 
 	var m *domain.Machine

@@ -151,6 +151,11 @@ func (h *RegistrationHandlers) authenticateMachineWithAuthKey(c echo.Context, bi
 	tailnet := authKey.Tailnet
 	user := authKey.User
 
+	if err := tailnet.ACLPolicy.CheckTagOwners(req.Hostinfo.RequestTags, &user); err != nil {
+		response := tailcfg.RegisterResponse{MachineAuthorized: false, Error: err.Error()}
+		return binder.WriteResponse(c, http.StatusOK, response)
+	}
+
 	var m *domain.Machine
 
 	m, err = h.repository.GetMachineByKey(ctx, tailnet.ID, machineKey)
@@ -158,7 +163,6 @@ func (h *RegistrationHandlers) authenticateMachineWithAuthKey(c echo.Context, bi
 		return err
 	}
 
-	//var expiryDisabled bool
 	now := time.Now().UTC()
 
 	if m == nil {

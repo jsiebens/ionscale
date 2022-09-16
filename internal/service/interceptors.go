@@ -18,34 +18,12 @@ const (
 	principalKey = "principalKay"
 )
 
-type Principal struct {
-	SystemRole domain.SystemRole
-	User       *domain.User
-	UserRole   domain.UserRole
-}
-
-func (p Principal) IsSystemAdmin() bool {
-	return p.SystemRole.IsAdmin()
-}
-
-func (p Principal) IsTailnetAdmin(tailnetID uint64) bool {
-	return p.User.TailnetID == tailnetID && p.UserRole.IsAdmin()
-}
-
-func (p Principal) IsTailnetMember(tailnetID uint64) bool {
-	return p.User.TailnetID == tailnetID
-}
-
-func (p Principal) UserMatches(userID uint64) bool {
-	return p.User.ID == userID
-}
-
-func CurrentPrincipal(ctx context.Context) Principal {
+func CurrentPrincipal(ctx context.Context) domain.Principal {
 	p := ctx.Value(principalKey)
 	if p == nil {
-		return Principal{SystemRole: domain.SystemRoleNone, UserRole: domain.UserRoleNone}
+		return domain.Principal{SystemRole: domain.SystemRoleNone, UserRole: domain.UserRoleNone}
 	}
-	return p.(Principal)
+	return p.(domain.Principal)
 }
 
 func AuthenticationInterceptor(systemAdminKey *key.ServerPrivate, repository domain.Repository) connect.UnaryInterceptorFunc {
@@ -69,7 +47,7 @@ func AuthenticationInterceptor(systemAdminKey *key.ServerPrivate, repository dom
 	}
 }
 
-func exchangeToken(ctx context.Context, systemAdminKey *key.ServerPrivate, repository domain.Repository, value string) *Principal {
+func exchangeToken(ctx context.Context, systemAdminKey *key.ServerPrivate, repository domain.Repository, value string) *domain.Principal {
 	if len(value) == 0 {
 		return nil
 	}
@@ -77,7 +55,7 @@ func exchangeToken(ctx context.Context, systemAdminKey *key.ServerPrivate, repos
 	if systemAdminKey != nil && token.IsSystemAdminToken(value) {
 		_, err := token.ParseSystemAdminToken(*systemAdminKey, value)
 		if err == nil {
-			return &Principal{SystemRole: domain.SystemRoleAdmin}
+			return &domain.Principal{SystemRole: domain.SystemRoleAdmin}
 		}
 	}
 
@@ -87,12 +65,12 @@ func exchangeToken(ctx context.Context, systemAdminKey *key.ServerPrivate, repos
 		tailnet := apiKey.Tailnet
 		role := tailnet.IAMPolicy.GetRole(user)
 
-		return &Principal{User: &apiKey.User, SystemRole: domain.SystemRoleNone, UserRole: role}
+		return &domain.Principal{User: &apiKey.User, SystemRole: domain.SystemRoleNone, UserRole: role}
 	}
 
 	systemApiKey, err := repository.LoadSystemApiKey(ctx, value)
 	if err == nil && systemApiKey != nil {
-		return &Principal{SystemRole: domain.SystemRoleAdmin}
+		return &domain.Principal{SystemRole: domain.SystemRoleAdmin}
 	}
 
 	return nil
