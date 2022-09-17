@@ -5,6 +5,7 @@ go 1.19
 require (
 	github.com/apparentlymart/go-cidr v1.1.0
 	github.com/bufbuild/connect-go v0.4.0
+	github.com/caarlos0/env/v6 v6.10.1
 	github.com/caddyserver/certmagic v0.17.1
 	github.com/coreos/go-oidc/v3 v3.3.0
 	github.com/glebarez/sqlite v1.4.6
@@ -13,6 +14,7 @@ require (
 	github.com/hashicorp/go-bexpr v0.1.11
 	github.com/hashicorp/go-hclog v1.3.0
 	github.com/hashicorp/go-multierror v1.1.1
+	github.com/imdario/mergo v0.3.12
 	github.com/klauspost/compress v1.15.9
 	github.com/labstack/echo-contrib v0.13.0
 	github.com/labstack/echo/v4 v4.9.0

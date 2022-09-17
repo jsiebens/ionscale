@@ -2,7 +2,9 @@ package config
 
 import (
 	"fmt"
+	"github.com/caarlos0/env/v6"
 	"github.com/caddyserver/certmagic"
+	"github.com/imdario/mergo"
 	"github.com/jsiebens/ionscale/internal/key"
 	"github.com/jsiebens/ionscale/internal/util"
 	"github.com/mitchellh/go-homedir"
@@ -19,11 +21,7 @@ var (
 )
 
 func LoadConfig(path string) (*Config, error) {
-	config, err := defaultConfig()
-
-	if err != nil {
-		return nil, err
-	}
+	cfg := defaultConfig()
 
 	if len(path) != 0 {
 		expandedPath, err := homedir.Expand(path)
@@ -41,88 +39,43 @@ func LoadConfig(path string) (*Config, error) {
 			return nil, err
 		}
 
-		if err := yaml.Unmarshal(b, config); err != nil {
+		if err := yaml.Unmarshal(b, cfg); err != nil {
 			return nil, err
 		}
 	}
 
-	KeepAliveInterval = config.PollNet.KeepAliveInterval
-
-	return config, nil
-}
-
-const (
-	httpListenAddrKey           = "IONSCALE_HTTP_LISTEN_ADDR"
-	httpsListenAddrKey          = "IONSCALE_HTTPS_LISTEN_ADDR"
-	serverUrlKey                = "IONSCALE_SERVER_URL"
-	keysSystemAdminKeyKey       = "IONSCALE_SYSTEM_ADMIN_KEY"
-	keysControlKeyKey           = "IONSCALE_CONTROL_KEY"
-	keysLegacyControlKeyKey     = "IONSCALE_LEGACY_CONTROL_KEY"
-	databaseUrlKey              = "IONSCALE_DB_URL"
-	tlsDisableKey               = "IONSCALE_TLS_DISABLE"
-	tlsForceHttpsKey            = "IONSCALE_TLS_FORCE_HTTPS"
-	tlsCertFileKey              = "IONSCALE_TLS_CERT_FILE"
-	tlsKeyFileKey               = "IONSCALE_TLS_KEY_FILE"
-	tlsAcmeKey                  = "IONSCALE_TLS_ACME"
-	tlsAcmeCAKey                = "IONSCALE_TLS_ACME_CA"
-	tlsAcmeEmailKey             = "IONSCALE_TLS_ACME_EMAIL"
-	tlsAcmePath                 = "IONSCALE_TLS_ACME_PATH"
-	pollNetKeepAliveInterval    = "IONSCALE_POLL_NET_KEEP_ALIVE_INTERVAL"
-	metricsListenAddrKey        = "IONSCALE_METRICS_LISTEN_ADDR"
-	loggingLevelKey             = "IONSCALE_LOGGING_LEVEL"
-	loggingFormatKey            = "IONSCALE_LOGGING_FORMAT"
-	loggingFileKey              = "IONSCALE_LOGGING_FILE"
-	authProviderIssuerKey       = "IONSCALE_AUTH_PROVIDER_ISSUER"
-	authProviderClientIdKey     = "IONSCALE_AUTH_PROVIDER_CLIENT_ID"
-	authProviderClientSecretKey = "IONSCALE_AUTH_PROVIDER_CLIENT_SECRET"
-	authProviderScopesKey       = "IONSCALE_AUTH_PROVIDER_SCOPES"
-)
-
-func defaultConfig() (*Config, error) {
-	defaultKeepAliveInterval, err := GetDuration(pollNetKeepAliveInterval, 1*time.Minute)
-	if err != nil {
+	envCfg := &Config{}
+	if err := env.Parse(envCfg, env.Options{Prefix: "IONSCALE_"}); err != nil {
 		return nil, err
 	}
 
-	c := &Config{
-		HttpListenAddr:    GetString(httpListenAddrKey, ":8080"),
-		HttpsListenAddr:   GetString(httpsListenAddrKey, ":8443"),
-		MetricsListenAddr: GetString(metricsListenAddrKey, ":9091"),
-		ServerUrl:         GetString(serverUrlKey, "https://localhost:8443"),
-		Keys: Keys{
-			SystemAdminKey:   GetString(keysSystemAdminKeyKey, ""),
-			ControlKey:       GetString(keysControlKeyKey, ""),
-			LegacyControlKey: GetString(keysLegacyControlKeyKey, ""),
-		},
+	// merge env configuration on top of the default/file configuration
+	if err := mergo.Merge(cfg, envCfg, mergo.WithOverride); err != nil {
+		return nil, err
+	}
+
+	return cfg, nil
+}
+
+func defaultConfig() *Config {
+	return &Config{
+		HttpListenAddr:    ":8080",
+		HttpsListenAddr:   ":8443",
+		MetricsListenAddr: ":9091",
+		ServerUrl:         "https://localhost:8843",
 		Database: Database{
-			Url: GetString(databaseUrlKey, "ionscale.db"),
+			Type: "sqlite",
+			Url:  "ionscale.db",
 		},
 		Tls: Tls{
-			Disable:     GetBool(tlsDisableKey, false),
-			ForceHttps:  GetBool(tlsForceHttpsKey, true),
-			CertFile:    GetString(tlsCertFileKey, ""),
-			KeyFile:     GetString(tlsKeyFileKey, ""),
-			AcmeEnabled: GetBool(tlsAcmeKey, false),
-			AcmeCA:      GetString(tlsAcmeCAKey, certmagic.LetsEncryptProductionCA),
-			AcmeEmail:   GetString(tlsAcmeEmailKey, ""),
-			AcmePath:    GetString(tlsAcmePath, ""),
+			Disable:     false,
+			ForceHttps:  true,
+			AcmeEnabled: false,
+			AcmeCA:      certmagic.LetsEncryptProductionCA,
 		},
-		PollNet: PollNet{
-			KeepAliveInterval: defaultKeepAliveInterval,
-		},
-		AuthProvider: AuthProvider{
-			Issuer:       GetString(authProviderIssuerKey, ""),
-			ClientID:     GetString(authProviderClientIdKey, ""),
-			ClientSecret: GetString(authProviderClientSecretKey, ""),
-			Scopes:       GetStrings(authProviderScopesKey, nil),
-		},
-		Logging: Logging{
-			Level:  GetString(loggingLevelKey, "info"),
-			Format: GetString(loggingFormatKey, ""),
-			File:   GetString(loggingFileKey, ""),
-		},
+		PollNet: PollNet{KeepAliveInterval: 1 * time.Minute},
+		Logging: Logging{Level: "info"},
 	}
-	return c, nil
 }
 
 type ServerKeys struct {
@@ -132,55 +85,55 @@ type ServerKeys struct {
 }
 
 type Config struct {
-	HttpListenAddr    string       `yaml:"http_listen_addr,omitempty"`
-	HttpsListenAddr   string       `yaml:"https_listen_addr,omitempty"`
-	MetricsListenAddr string       `yaml:"metrics_listen_addr,omitempty"`
-	ServerUrl         string       `yaml:"server_url,omitempty"`
-	Tls               Tls          `yaml:"tls,omitempty"`
-	PollNet           PollNet      `yaml:"poll_net,omitempty"`
-	Keys              Keys         `yaml:"keys,omitempty"`
-	Database          Database     `yaml:"database,omitempty"`
-	AuthProvider      AuthProvider `yaml:"auth_provider,omitempty"`
-	Logging           Logging      `yaml:"logging,omitempty"`
+	HttpListenAddr    string       `yaml:"http_listen_addr,omitempty" env:"HTTP_LISTEN_ADDR"`
+	HttpsListenAddr   string       `yaml:"https_listen_addr,omitempty" env:"HTTPS_LISTEN_ADDR"`
+	MetricsListenAddr string       `yaml:"metrics_listen_addr,omitempty" env:"METRICS_LISTEN_ADDR"`
+	ServerUrl         string       `yaml:"server_url,omitempty" env:"SERVER_URL"`
+	Tls               Tls          `yaml:"tls,omitempty" envPrefix:"TLS_"`
+	PollNet           PollNet      `yaml:"poll_net,omitempty" envPrefix:"POLL_NET_"`
+	Keys              Keys         `yaml:"keys,omitempty" envPrefix:"KEYS_"`
+	Database          Database     `yaml:"database,omitempty" envPrefix:"DB_"`
+	AuthProvider      AuthProvider `yaml:"auth_provider,omitempty" envPrefix:"AUTH_PROVIDER_"`
+	Logging           Logging      `yaml:"logging,omitempty" envPrefix:"LOGGING_"`
 }
 
 type Tls struct {
-	Disable     bool   `yaml:"disable"`
-	ForceHttps  bool   `yaml:"force_https"`
-	CertFile    string `yaml:"cert_file,omitempty"`
-	KeyFile     string `yaml:"key_file,omitempty"`
-	AcmeEnabled bool   `yaml:"acme,omitempty"`
-	AcmeEmail   string `yaml:"acme_email,omitempty"`
-	AcmeCA      string `yaml:"acme_ca,omitempty"`
-	AcmePath    string `yaml:"acme_path,omitempty"`
+	Disable     bool   `yaml:"disable" env:"DISABLE"`
+	ForceHttps  bool   `yaml:"force_https" env:"FORCE_HTTPS"`
+	CertFile    string `yaml:"cert_file,omitempty" env:"CERT_FILE"`
+	KeyFile     string `yaml:"key_file,omitempty" env:"KEY_FILE"`
+	AcmeEnabled bool   `yaml:"acme,omitempty" env:"ACME_ENABLED"`
+	AcmeEmail   string `yaml:"acme_email,omitempty" env:"ACME_EMAIL"`
+	AcmeCA      string `yaml:"acme_ca,omitempty" env:"ACME_CA"`
+	AcmePath    string `yaml:"acme_path,omitempty" env:"ACME_PATH"`
 }
 
 type PollNet struct {
-	KeepAliveInterval time.Duration `yaml:"keep_alive_interval"`
+	KeepAliveInterval time.Duration `yaml:"keep_alive_interval" env:"KEEP_ALIVE_INTERVAL"`
 }
 
 type Logging struct {
-	Level  string `yaml:"level,omitempty"`
-	Format string `yaml:"format,omitempty"`
-	File   string `yaml:"file,omitempty"`
+	Level  string `yaml:"level,omitempty" env:"LEVEL"`
+	Format string `yaml:"format,omitempty" env:"FORMAT"`
+	File   string `yaml:"file,omitempty" env:"FILE"`
 }
 
 type Database struct {
-	Type string `yaml:"type,omitempty"`
-	Url  string `yaml:"url,omitempty"`
+	Type string `yaml:"type,omitempty" env:"TYPE"`
+	Url  string `yaml:"url,omitempty" env:"URL"`
 }
 
 type Keys struct {
-	ControlKey       string `yaml:"control_key,omitempty"`
-	LegacyControlKey string `yaml:"legacy_control_key,omitempty"`
-	SystemAdminKey   string `yaml:"system_admin_key,omitempty"`
+	ControlKey       string `yaml:"control_key,omitempty" env:"CONTROL_KEY"`
+	LegacyControlKey string `yaml:"legacy_control_key,omitempty" env:"LEGACY_CONTROL_KEY"`
+	SystemAdminKey   string `yaml:"system_admin_key,omitempty" env:"SYSTEM_ADMIN_KEY"`
 }
 
 type AuthProvider struct {
-	Issuer            string            `yaml:"issuer"`
-	ClientID          string            `yaml:"client_id"`
-	ClientSecret      string            `yaml:"client_secret"`
-	Scopes            []string          `yaml:"additional_scopes"`
+	Issuer            string            `yaml:"issuer" env:"ISSUER"`
+	ClientID          string            `yaml:"client_id" env:"CLIENT_ID"`
+	ClientSecret      string            `yaml:"client_secret" env:"CLIENT_SECRET"`
+	Scopes            []string          `yaml:"additional_scopes" env:"ADDITIONAL_SCOPES"`
 	SystemAdminPolicy SystemAdminPolicy `yaml:"system_admins"`
 }
 
