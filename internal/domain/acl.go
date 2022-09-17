@@ -59,10 +59,10 @@ func (a ACLPolicy) CheckTagOwners(tags []string, p *User) error {
 }
 
 func (a ACLPolicy) IsTagOwner(tag string, p *User) bool {
+	if p.UserType == UserTypeService {
+		return true
+	}
 	if tagOwners, ok := a.TagOwners[tag]; ok {
-		if p.UserType == UserTypeService {
-			return true
-		}
 		return a.validateTagOwners(tagOwners, p)
 	}
 	return false

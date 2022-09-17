@@ -29,6 +29,13 @@ func TestACLPolicy_IsTagOwner(t *testing.T) {
 			expectErr: false,
 		},
 		{
+			name:      "system admin is always a valid owner",
+			tag:       "tag:unknown",
+			userName:  "system admin",
+			userType:  UserTypeService,
+			expectErr: false,
+		},
+		{
 			name:      "direct tag owner",
 			tag:       "tag:web",
 			userName:  "john@example.com",
