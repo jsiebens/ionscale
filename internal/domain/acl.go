@@ -17,7 +17,7 @@ type ACLPolicy struct {
 	Groups    map[string][]string `json:"groups,omitempty"`
 	Hosts     map[string]string   `json:"hosts,omitempty"`
 	ACLs      []ACL               `json:"acls"`
-	TagOwners map[string][]string `json:"tag_owners"`
+	TagOwners map[string][]string `json:"tagowners"`
 }
 
 type ACL struct {
