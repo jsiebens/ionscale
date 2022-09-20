@@ -12,9 +12,17 @@ func keyCommand() *coral.Command {
 		SilenceUsage: true,
 	}
 
+	var disableNewLine bool
+
+	command.Flags().BoolVarP(&disableNewLine, "no-newline", "n", false, "do not output a trailing newline")
+
 	command.RunE = func(command *coral.Command, args []string) error {
 		serverKey := key.NewServerKey()
-		fmt.Println(serverKey.String())
+		if disableNewLine {
+			fmt.Print(serverKey.String())
+		} else {
+			fmt.Println(serverKey.String())
+		}
 		return nil
 	}
 
