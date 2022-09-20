@@ -15,7 +15,7 @@ func serverCommand() *coral.Command {
 
 	var configFile string
 
-	command.Flags().StringVarP(&configFile, "config", "c", "ionscale.yaml", "Path to the configuration file.")
+	command.Flags().StringVarP(&configFile, "config", "c", "", "Path to the configuration file.")
 
 	command.RunE = func(command *coral.Command, args []string) error {
 
