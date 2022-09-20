@@ -91,7 +91,7 @@ func Start(c *config.Config) error {
 
 	authProvider, systemIAMPolicy, err := setupAuthProvider(c.AuthProvider)
 	if err != nil {
-		return err
+		return fmt.Errorf("error configuring OIDC provider: %v", err)
 	}
 
 	noiseHandlers := handlers.NewNoiseHandlers(serverKey.ControlKey, createPeerHandler)
@@ -220,9 +220,18 @@ func tlsListener(config *config.Config) (net.Listener, error) {
 		return tls.Listen("tcp", config.HttpsListenAddr, tlsConfig)
 	}
 
-	cer, err := tls.LoadX509KeyPair(config.Tls.CertFile, config.Tls.KeyFile)
+	certPEMBlock, err := os.ReadFile(config.Tls.CertFile)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error reading cert file: %v", err)
+	}
+	keyPEMBlock, err := os.ReadFile(config.Tls.KeyFile)
+	if err != nil {
+		return nil, fmt.Errorf("error reading key file: %v", err)
+	}
+
+	cer, err := tls.X509KeyPair(certPEMBlock, keyPEMBlock)
+	if err != nil {
+		return nil, fmt.Errorf("error reading cert and key file: %v", err)
 	}
 
 	tlsConfig := &tls.Config{Certificates: []tls.Certificate{cer}}
