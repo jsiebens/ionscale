@@ -20,7 +20,7 @@ var (
 	KeepAliveInterval = 1 * time.Minute
 )
 
-func LoadConfig(path string) (*Config, error) {
+func LoadConfig(path string, flagsCfg *Config) (*Config, error) {
 	cfg := defaultConfig()
 
 	if len(path) != 0 {
@@ -46,6 +46,11 @@ func LoadConfig(path string) (*Config, error) {
 
 	envCfg := &Config{}
 	if err := env.Parse(envCfg, env.Options{Prefix: "IONSCALE_"}); err != nil {
+		return nil, err
+	}
+
+	// merge flag configuration on top of the default/file configuration
+	if err := mergo.Merge(cfg, flagsCfg, mergo.WithOverride); err != nil {
 		return nil, err
 	}
 
@@ -134,13 +139,13 @@ type AuthProvider struct {
 	ClientID          string            `yaml:"client_id" env:"CLIENT_ID"`
 	ClientSecret      string            `yaml:"client_secret" env:"CLIENT_SECRET"`
 	Scopes            []string          `yaml:"additional_scopes" env:"ADDITIONAL_SCOPES"`
-	SystemAdminPolicy SystemAdminPolicy `yaml:"system_admins"`
+	SystemAdminPolicy SystemAdminPolicy `yaml:"system_admins" envPrefix:"SYSTEM_ADMINS_"`
 }
 
 type SystemAdminPolicy struct {
-	Subs    []string `json:"subs,omitempty"`
-	Emails  []string `json:"emails,omitempty"`
-	Filters []string `json:"filters,omitempty"`
+	Subs    []string `json:"subs,omitempty" env:"SUBS"`
+	Emails  []string `json:"emails,omitempty" env:"EMAILS"`
+	Filters []string `json:"filters,omitempty" env:"FILTERS"`
 }
 
 func (c *Config) CreateUrl(format string, a ...interface{}) string {
