@@ -70,13 +70,14 @@ func defaultConfig() *Config {
 		ServerUrl:         "https://localhost:8843",
 		Database: Database{
 			Type: "sqlite",
-			Url:  "ionscale.db",
+			Url:  "./ionscale.db?_pragma=busy_timeout(5000)&_pragma=journal_mode(WAL)&_pragma=foreign_keys(ON)",
 		},
 		Tls: Tls{
 			Disable:     false,
 			ForceHttps:  true,
 			AcmeEnabled: false,
 			AcmeCA:      certmagic.LetsEncryptProductionCA,
+			AcmePath:    "./acme",
 		},
 		PollNet: PollNet{KeepAliveInterval: 1 * time.Minute},
 		Logging: Logging{Level: "info"},
