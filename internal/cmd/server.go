@@ -61,14 +61,6 @@ func (c *configByFlags) prepareCommand(cmd *coral.Command) {
 	cmd.Flags().StringVar(&c.c.Database.Type, "database-type", "", "")
 	cmd.Flags().StringVar(&c.c.Database.Url, "database-url", "", "")
 
-	cmd.Flags().StringVar(&c.c.AuthProvider.Issuer, "auth-provider-issuer", "", "")
-	cmd.Flags().StringVar(&c.c.AuthProvider.ClientID, "auth-provider-client-id", "", "")
-	cmd.Flags().StringVar(&c.c.AuthProvider.ClientSecret, "auth-provider-client-secret", "", "")
-	cmd.Flags().StringSliceVar(&c.c.AuthProvider.Scopes, "auth-provider-additional-scopes", []string{}, "")
-	cmd.Flags().StringSliceVar(&c.c.AuthProvider.SystemAdminPolicy.Subs, "auth-provider-system-admins-subs", []string{}, "")
-	cmd.Flags().StringSliceVar(&c.c.AuthProvider.SystemAdminPolicy.Emails, "auth-provider-system-admins-emails", []string{}, "")
-	cmd.Flags().StringSliceVar(&c.c.AuthProvider.SystemAdminPolicy.Filters, "auth-provider-system-admins-filters", []string{}, "")
-
 	cmd.Flags().StringVar(&c.c.Logging.Level, "logging-level", "", "")
 	cmd.Flags().StringVar(&c.c.Logging.Format, "logging-format", "", "")
 	cmd.Flags().StringVar(&c.c.Logging.File, "logging-file", "", "")

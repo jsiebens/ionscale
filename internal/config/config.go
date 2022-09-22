@@ -99,7 +99,7 @@ type Config struct {
 	PollNet           PollNet      `yaml:"poll_net,omitempty" envPrefix:"POLL_NET_"`
 	Keys              Keys         `yaml:"keys,omitempty" envPrefix:"KEYS_"`
 	Database          Database     `yaml:"database,omitempty" envPrefix:"DB_"`
-	AuthProvider      AuthProvider `yaml:"auth_provider,omitempty" envPrefix:"AUTH_PROVIDER_"`
+	AuthProvider      AuthProvider `yaml:"auth_provider,omitempty"`
 	Logging           Logging      `yaml:"logging,omitempty" envPrefix:"LOGGING_"`
 }
 
@@ -136,17 +136,17 @@ type Keys struct {
 }
 
 type AuthProvider struct {
-	Issuer            string            `yaml:"issuer" env:"ISSUER"`
-	ClientID          string            `yaml:"client_id" env:"CLIENT_ID"`
-	ClientSecret      string            `yaml:"client_secret" env:"CLIENT_SECRET"`
-	Scopes            []string          `yaml:"additional_scopes" env:"ADDITIONAL_SCOPES"`
-	SystemAdminPolicy SystemAdminPolicy `yaml:"system_admins" envPrefix:"SYSTEM_ADMINS_"`
+	Issuer            string            `yaml:"issuer"`
+	ClientID          string            `yaml:"client_id"`
+	ClientSecret      string            `yaml:"client_secret"`
+	Scopes            []string          `yaml:"additional_scopes"`
+	SystemAdminPolicy SystemAdminPolicy `yaml:"system_admins"`
 }
 
 type SystemAdminPolicy struct {
-	Subs    []string `json:"subs,omitempty" env:"SUBS"`
-	Emails  []string `json:"emails,omitempty" env:"EMAILS"`
-	Filters []string `json:"filters,omitempty" env:"FILTERS"`
+	Subs    []string `json:"subs,omitempty"`
+	Emails  []string `json:"emails,omitempty"`
+	Filters []string `json:"filters,omitempty"`
 }
 
 func (c *Config) CreateUrl(format string, a ...interface{}) string {
