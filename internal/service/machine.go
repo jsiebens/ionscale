@@ -25,7 +25,7 @@ func (s *Service) machineToApi(m *domain.Machine) *api.Machine {
 	online := false
 	if m.LastSeen != nil {
 		lastSeen = timestamppb.New(*m.LastSeen)
-		online = m.LastSeen.After(time.Now().Add(-config.KeepAliveInterval))
+		online = m.LastSeen.After(time.Now().Add(-config.KeepAliveInterval()))
 	}
 
 	var advertisedRoutes []string

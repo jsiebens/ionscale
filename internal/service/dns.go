@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"github.com/bufbuild/connect-go"
 	"github.com/jsiebens/ionscale/internal/broker"
+	"github.com/jsiebens/ionscale/internal/config"
 	"github.com/jsiebens/ionscale/internal/domain"
-	"github.com/jsiebens/ionscale/internal/mapping"
 	api "github.com/jsiebens/ionscale/pkg/gen/ionscale/v1"
 	"tailscale.com/util/dnsname"
 )
@@ -26,16 +26,16 @@ func (s *Service) GetDNSConfig(ctx context.Context, req *connect.Request[api.Get
 		return nil, connect.NewError(connect.CodeNotFound, errors.New("tailnet not found"))
 	}
 
-	config := tailnet.DNSConfig
+	dnsConfig := tailnet.DNSConfig
 	tailnetDomain := dnsname.SanitizeHostname(tailnet.Name)
 
 	resp := &api.GetDNSConfigResponse{
 		Config: &api.DNSConfig{
-			MagicDns:         config.MagicDNS,
-			MagicDnsSuffix:   fmt.Sprintf("%s.%s", tailnetDomain, mapping.NetworkMagicDNSSuffix),
-			OverrideLocalDns: config.OverrideLocalDNS,
-			Nameservers:      config.Nameservers,
-			Routes:           domainRoutesToApiRoutes(config.Routes),
+			MagicDns:         dnsConfig.MagicDNS,
+			MagicDnsSuffix:   fmt.Sprintf("%s.%s", tailnetDomain, config.MagicDNSSuffix()),
+			OverrideLocalDns: dnsConfig.OverrideLocalDNS,
+			Nameservers:      dnsConfig.Nameservers,
+			Routes:           domainRoutesToApiRoutes(dnsConfig.Routes),
 		},
 	}
 

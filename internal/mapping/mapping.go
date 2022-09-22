@@ -15,8 +15,6 @@ import (
 	"time"
 )
 
-const NetworkMagicDNSSuffix = "ionscale.net"
-
 func CopyViaJson[F any, T any](f F, t T) error {
 	raw, err := json.Marshal(f)
 	if err != nil {
@@ -40,19 +38,19 @@ func ToDNSConfig(tailnet *domain.Tailnet, c *domain.DNSConfig) *tailcfg.DNSConfi
 		resolvers = append(resolvers, resolver)
 	}
 
-	config := &tailcfg.DNSConfig{}
+	dnsConfig := &tailcfg.DNSConfig{}
 
 	var domains []string
 
 	if c.MagicDNS {
-		domains = append(domains, fmt.Sprintf("%s.%s", tailnetDomain, NetworkMagicDNSSuffix))
-		config.Proxied = true
+		domains = append(domains, fmt.Sprintf("%s.%s", tailnetDomain, config.MagicDNSSuffix()))
+		dnsConfig.Proxied = true
 	}
 
 	if c.OverrideLocalDNS {
-		config.Resolvers = resolvers
+		dnsConfig.Resolvers = resolvers
 	} else {
-		config.FallbackResolvers = resolvers
+		dnsConfig.FallbackResolvers = resolvers
 	}
 
 	if len(c.Routes) != 0 {
@@ -66,12 +64,12 @@ func ToDNSConfig(tailnet *domain.Tailnet, c *domain.DNSConfig) *tailcfg.DNSConfi
 			routes[r] = routeResolver
 			domains = append(domains, r)
 		}
-		config.Routes = routes
+		dnsConfig.Routes = routes
 	}
 
-	config.Domains = domains
+	dnsConfig.Domains = domains
 
-	return config
+	return dnsConfig
 }
 
 func ToNode(m *domain.Machine) (*tailcfg.Node, *tailcfg.UserProfile, error) {
@@ -143,7 +141,7 @@ func ToNode(m *domain.Machine) (*tailcfg.Node, *tailcfg.UserProfile, error) {
 	n := tailcfg.Node{
 		ID:         tailcfg.NodeID(m.ID),
 		StableID:   tailcfg.StableNodeID(strconv.FormatUint(m.ID, 10)),
-		Name:       fmt.Sprintf("%s.%s.%s.", name, sanitizedTailnetName, NetworkMagicDNSSuffix),
+		Name:       fmt.Sprintf("%s.%s.%s.", name, sanitizedTailnetName, config.MagicDNSSuffix()),
 		Key:        *nKey,
 		Machine:    *mKey,
 		DiscoKey:   discoKey,
@@ -171,7 +169,7 @@ func ToNode(m *domain.Machine) (*tailcfg.Node, *tailcfg.UserProfile, error) {
 
 	if m.LastSeen != nil {
 		l := m.LastSeen.UTC()
-		online := m.LastSeen.After(time.Now().Add(-config.KeepAliveInterval))
+		online := m.LastSeen.After(time.Now().Add(-config.KeepAliveInterval()))
 		n.LastSeen = &l
 		n.Online = &online
 	}

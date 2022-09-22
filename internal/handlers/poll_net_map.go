@@ -114,7 +114,7 @@ func (h *PollNetMapHandler) handleUpdate(c echo.Context, binder bind.Binder, m *
 	if err != nil {
 		return err
 	}
-	keepAliveTicker := time.NewTicker(config.KeepAliveInterval)
+	keepAliveTicker := time.NewTicker(config.KeepAliveInterval())
 	syncTicker := time.NewTicker(5 * time.Second)
 
 	c.Response().WriteHeader(http.StatusOK)
@@ -355,7 +355,7 @@ func (o *OfflineTimers) scheduleOfflineMessage(tailnetID, machineID uint64) {
 		delete(o.data, machineID)
 	}
 
-	timer := time.NewTimer(config.KeepAliveInterval)
+	timer := time.NewTimer(config.KeepAliveInterval())
 	go func() {
 		<-timer.C
 		o.pubsub.Publish(tailnetID, &broker.Signal{PeerUpdated: &machineID})

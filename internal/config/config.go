@@ -16,9 +16,23 @@ import (
 	"time"
 )
 
-var (
-	KeepAliveInterval = 1 * time.Minute
+const (
+	defaultKeepAliveInterval = 1 * time.Minute
+	defaultMagicDNSSuffix    = "ionscale.net"
 )
+
+var (
+	keepAliveInterval = defaultKeepAliveInterval
+	magicDNSSuffix    = defaultMagicDNSSuffix
+)
+
+func KeepAliveInterval() time.Duration {
+	return keepAliveInterval
+}
+
+func MagicDNSSuffix() string {
+	return magicDNSSuffix
+}
 
 func LoadConfig(path string, flagsCfg *Config) (*Config, error) {
 	cfg := defaultConfig()
@@ -59,6 +73,9 @@ func LoadConfig(path string, flagsCfg *Config) (*Config, error) {
 		return nil, err
 	}
 
+	keepAliveInterval = cfg.PollNet.KeepAliveInterval
+	magicDNSSuffix = cfg.DNS.MagicDNSSuffix
+
 	return cfg, nil
 }
 
@@ -79,8 +96,15 @@ func defaultConfig() *Config {
 			AcmeCA:      certmagic.LetsEncryptProductionCA,
 			AcmePath:    "./acme",
 		},
-		PollNet: PollNet{KeepAliveInterval: 1 * time.Minute},
-		Logging: Logging{Level: "info"},
+		PollNet: PollNet{
+			KeepAliveInterval: defaultKeepAliveInterval,
+		},
+		DNS: DNS{
+			MagicDNSSuffix: defaultMagicDNSSuffix,
+		},
+		Logging: Logging{
+			Level: "info",
+		},
 	}
 }
 
@@ -100,6 +124,7 @@ type Config struct {
 	Keys              Keys         `yaml:"keys,omitempty" envPrefix:"KEYS_"`
 	Database          Database     `yaml:"database,omitempty" envPrefix:"DB_"`
 	AuthProvider      AuthProvider `yaml:"auth_provider,omitempty"`
+	DNS               DNS          `yaml:"dns,omitempty"`
 	Logging           Logging      `yaml:"logging,omitempty" envPrefix:"LOGGING_"`
 }
 
@@ -141,6 +166,10 @@ type AuthProvider struct {
 	ClientSecret      string            `yaml:"client_secret"`
 	Scopes            []string          `yaml:"additional_scopes"`
 	SystemAdminPolicy SystemAdminPolicy `yaml:"system_admins"`
+}
+
+type DNS struct {
+	MagicDNSSuffix string `yaml:"magic_dns_suffix"`
 }
 
 type SystemAdminPolicy struct {
