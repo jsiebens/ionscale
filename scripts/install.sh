@@ -22,13 +22,20 @@ setup_env() {
     SUDO=
   fi
 
-  IONSCALE_VERSION=v0.0.1-preview2
+  if [ -z "${IONSCALE_DOMAIN}" ]; then
+    fatal "env variable IONSCALE_DOMAIN is undefined"
+  fi
+
+  if [ -z "${IONSCALE_ACME_EMAIL}" ]; then
+    fatal "env variable IONSCALE_ACME_EMAIL is undefined"
+  fi
+
+  IONSCALE_VERSION=v0.1.0
   IONSCALE_DATA_DIR=/var/lib/ionscale
   IONSCALE_CONFIG_DIR=/etc/ionscale
   IONSCALE_SERVICE_FILE=/etc/systemd/system/ionscale.service
 
   BIN_DIR=/usr/local/bin
-  IP=$(curl -sfSL https://checkip.amazonaws.com)
 }
 
 # --- set arch and suffix, fatal if architecture not supported ---
@@ -87,43 +94,29 @@ create_folders_and_config() {
   $SUDO mkdir --parents ${IONSCALE_CONFIG_DIR}
 
   if [ ! -f "/etc/default/ionscale" ]; then
-    $SUDO echo "IONSCALE_SYSTEM_ADMIN_KEY=$($BIN_DIR/ionscale genkey | xargs)" > /etc/default/ionscale
+    $SUDO echo "IONSCALE_KEYS_SYSTEM_ADMIN_KEY=$($BIN_DIR/ionscale genkey -n)" >> /etc/default/ionscale
+    $SUDO echo "IONSCALE_KEYS_CONTROL_KEY=$($BIN_DIR/ionscale genkey -n)" >> /etc/default/ionscale
+    $SUDO echo "IONSCALE_KEYS_LEGACY_CONTROL_KEY=$($BIN_DIR/ionscale genkey -n)" >> /etc/default/ionscale
   fi
 
-  if [ ! -z "${IONSCALE_DOMAIN}" ]; then
     $SUDO tee ${IONSCALE_CONFIG_DIR}/config.yaml >/dev/null <<EOF
 http_listen_addr: ":80"
 https_listen_addr: ":443"
+metrics_listen_addr: 127.0.0.1:9090
 server_url: "https://${IONSCALE_DOMAIN}"
 
 tls:
-  cert_magic_domain: ${IONSCALE_DOMAIN}
-  cert_magic_email: "${IONSCALE_EMAIL}"
-  cert_magic_storage_path: "${IONSCALE_DATA_DIR}/certmagic"
+  acme: true
+  acme_email: "${IONSCALE_ACME_EMAIL}"
+  acme_path: "${IONSCALE_DATA_DIR}/acme"
 
 database:
   type: sqlite
-  url: "${IONSCALE_DATA_DIR}/ionscale.db?_pragma=busy_timeout(5000)&_pragma=journal_mode(WAL)"
+  url: "${IONSCALE_DATA_DIR}/ionscale.db?_pragma=busy_timeout(5000)&_pragma=journal_mode(WAL)&_pragma=foreign_keys(ON)"
 
 logging:
   level: info
 EOF
-  else
-    $SUDO tee ${IONSCALE_CONFIG_DIR}/config.yaml >/dev/null <<EOF
-listen_addr: ":8080"
-server_url: "http://${IP}:8080"
-
-tls:
-  disable: true
-
-database:
-  type: sqlite
-  url: "${IONSCALE_DATA_DIR}/ionscale.db?_pragma=busy_timeout(5000)&_pragma=journal_mode(WAL)"
-
-logging:
-  level: info
-EOF
-  fi
 
 }
 
@@ -167,7 +160,7 @@ setup_env
 setup_verify_arch
 verify_system
 install_dependencies
-create_folders_and_config
 download_and_install
+create_folders_and_config
 create_systemd_service_file
 systemd_enable_and_start
