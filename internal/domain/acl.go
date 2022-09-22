@@ -38,16 +38,6 @@ func DefaultPolicy() ACLPolicy {
 	}
 }
 
-func (a ACLPolicy) CheckTags(tags []string) error {
-	var result *multierror.Error
-	for _, t := range tags {
-		if _, ok := a.TagOwners[t]; !ok {
-			result = multierror.Append(result, fmt.Errorf("tag [%s] is invalid or not permitted", t))
-		}
-	}
-	return result.ErrorOrNil()
-}
-
 func (a ACLPolicy) CheckTagOwners(tags []string, p *User) error {
 	var result *multierror.Error
 	for _, t := range tags {
