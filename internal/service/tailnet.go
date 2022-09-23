@@ -16,7 +16,15 @@ func (s *Service) CreateTailnet(ctx context.Context, req *connect.Request[api.Cr
 		return nil, connect.NewError(connect.CodePermissionDenied, errors.New("permission denied"))
 	}
 
-	tailnet, created, err := s.repository.GetOrCreateTailnet(ctx, req.Msg.Name)
+	name := req.Msg.Name
+	iamPolicy := domain.IAMPolicy{
+		Subs:    req.Msg.IamPolicy.Subs,
+		Emails:  req.Msg.IamPolicy.Emails,
+		Filters: req.Msg.IamPolicy.Filters,
+		Roles:   apiRolesMapToDomainRolesMap(req.Msg.IamPolicy.Roles),
+	}
+
+	tailnet, created, err := s.repository.GetOrCreateTailnet(ctx, name, iamPolicy)
 	if err != nil {
 		return nil, err
 	}

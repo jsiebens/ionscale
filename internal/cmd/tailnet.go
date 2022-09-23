@@ -4,9 +4,11 @@ import (
 	"context"
 	"fmt"
 	"github.com/bufbuild/connect-go"
+	idomain "github.com/jsiebens/ionscale/internal/domain"
 	api "github.com/jsiebens/ionscale/pkg/gen/ionscale/v1"
 	"github.com/muesli/coral"
 	"github.com/rodaine/table"
+	"strings"
 )
 
 func tailnetCommand() *coral.Command {
@@ -71,20 +73,62 @@ func createTailnetsCommand() *coral.Command {
 	}
 
 	var name string
+	var domain string
+	var email string
 	var target = Target{}
 	target.prepareCommand(command)
 
 	command.Flags().StringVarP(&name, "name", "n", "", "")
-	_ = command.MarkFlagRequired("name")
+	command.Flags().StringVar(&domain, "domain", "", "")
+	command.Flags().StringVar(&email, "email", "", "")
+
+	command.PreRunE = func(cmd *coral.Command, args []string) error {
+		if name == "" && email == "" && domain == "" {
+			return fmt.Errorf("at least flag --name, --email or --domain is required")
+		}
+		if domain != "" && email != "" {
+			return fmt.Errorf("flags --email and --domain are mutually exclusive")
+		}
+		return nil
+	}
 
 	command.RunE = func(command *coral.Command, args []string) error {
+
+		var tailnetName = ""
+		var iamPolicy = api.IAMPolicy{}
+
+		if len(domain) != 0 {
+			domainToLower := strings.ToLower(domain)
+			tailnetName = domainToLower
+			iamPolicy = api.IAMPolicy{
+				Filters: []string{fmt.Sprintf("domain == %s", domainToLower)},
+			}
+		}
+
+		if len(email) != 0 {
+			emailToLower := strings.ToLower(email)
+			tailnetName = emailToLower
+			iamPolicy = api.IAMPolicy{
+				Emails: []string{emailToLower},
+				Roles: map[string]string{
+					emailToLower: string(idomain.UserRoleAdmin),
+				},
+			}
+		}
+
+		if len(name) != 0 {
+			tailnetName = name
+		}
 
 		client, err := target.createGRPCClient()
 		if err != nil {
 			return err
 		}
 
-		resp, err := client.CreateTailnet(context.Background(), connect.NewRequest(&api.CreateTailnetRequest{Name: name}))
+		resp, err := client.CreateTailnet(context.Background(), connect.NewRequest(&api.CreateTailnetRequest{
+			Name:      tailnetName,
+			IamPolicy: &iamPolicy,
+		}))
 
 		if err != nil {
 			return err

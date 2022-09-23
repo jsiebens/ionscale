@@ -3,6 +3,8 @@ syntax = "proto3";
 package ionscale.v1;
 option go_package = "github.com/jsiebens/ionscale/pkg/gen/ionscale/v1;ionscalev1";
 
+import "ionscale/v1/iam.proto";
+
 message Tailnet {
   uint64 id = 1;
   string name = 2;
@@ -10,6 +12,7 @@ message Tailnet {
 
 message CreateTailnetRequest {
   string name = 1;
+  IAMPolicy iam_policy = 2;
 }
 
 message CreateTailnetResponse {

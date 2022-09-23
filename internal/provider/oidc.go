@@ -85,10 +85,14 @@ func (p *OIDCProvider) Exchange(redirectURI, code string) (*User, error) {
 		return nil, err
 	}
 
+	domain := strings.Split(email, "@")[1]
+
 	return &User{
 		ID:   sub,
 		Name: email,
 		Attr: map[string]interface{}{
+			"email":    email,
+			"domain":   domain,
 			"token":    tokenClaims,
 			"userinfo": userInfoClaims,
 		},
