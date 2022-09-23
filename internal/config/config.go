@@ -34,7 +34,7 @@ func MagicDNSSuffix() string {
 	return magicDNSSuffix
 }
 
-func LoadConfig(path string, flagsCfg *Config) (*Config, error) {
+func LoadConfig(path string) (*Config, error) {
 	cfg := defaultConfig()
 
 	if len(path) != 0 {
@@ -60,11 +60,6 @@ func LoadConfig(path string, flagsCfg *Config) (*Config, error) {
 
 	envCfg := &Config{}
 	if err := env.Parse(envCfg, env.Options{Prefix: "IONSCALE_"}); err != nil {
-		return nil, err
-	}
-
-	// merge flag configuration on top of the default/file configuration
-	if err := mergo.Merge(cfg, flagsCfg, mergo.WithOverride); err != nil {
 		return nil, err
 	}
 
