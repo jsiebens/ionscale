@@ -26,6 +26,8 @@ func tailnetCommand() *coral.Command {
 	command.AddCommand(setACLConfigCommand())
 	command.AddCommand(getIAMPolicyCommand())
 	command.AddCommand(setIAMPolicyCommand())
+	command.AddCommand(enableHttpsCommand())
+	command.AddCommand(disableHttpsCommand())
 
 	return command
 }

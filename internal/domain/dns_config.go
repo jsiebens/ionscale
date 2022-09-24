@@ -9,10 +9,11 @@ import (
 )
 
 type DNSConfig struct {
-	MagicDNS         bool                `json:"magic_dns"`
-	OverrideLocalDNS bool                `json:"override_local_dns"`
-	Nameservers      []string            `json:"nameservers"`
-	Routes           map[string][]string `json:"routes"`
+	HttpsCertsEnabled bool                `json:"http_certs"`
+	MagicDNS          bool                `json:"magic_dns"`
+	OverrideLocalDNS  bool                `json:"override_local_dns"`
+	Nameservers       []string            `json:"nameservers"`
+	Routes            map[string][]string `json:"routes"`
 }
 
 func (i *DNSConfig) Scan(destination interface{}) error {

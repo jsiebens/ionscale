@@ -57,6 +57,8 @@ type IonscaleServiceClient interface {
 	DisableMachineRoutes(context.Context, *connect_go.Request[v1.DisableMachineRoutesRequest]) (*connect_go.Response[v1.GetMachineRoutesResponse], error)
 	EnableExitNode(context.Context, *connect_go.Request[v1.EnableExitNodeRequest]) (*connect_go.Response[v1.GetMachineRoutesResponse], error)
 	DisableExitNode(context.Context, *connect_go.Request[v1.DisableExitNodeRequest]) (*connect_go.Response[v1.GetMachineRoutesResponse], error)
+	EnableHttpsCertificates(context.Context, *connect_go.Request[v1.EnableHttpsCertificatesRequest]) (*connect_go.Response[v1.EnableHttpsCertificatesResponse], error)
+	DisableHttpsCertificates(context.Context, *connect_go.Request[v1.DisableHttpsCertificatesRequest]) (*connect_go.Response[v1.DisableHttpsCertificatesResponse], error)
 }
 
 // NewIonscaleServiceClient constructs a client for the ionscale.v1.IonscaleService service. By
@@ -219,41 +221,53 @@ func NewIonscaleServiceClient(httpClient connect_go.HTTPClient, baseURL string, 
 			baseURL+"/ionscale.v1.IonscaleService/DisableExitNode",
 			opts...,
 		),
+		enableHttpsCertificates: connect_go.NewClient[v1.EnableHttpsCertificatesRequest, v1.EnableHttpsCertificatesResponse](
+			httpClient,
+			baseURL+"/ionscale.v1.IonscaleService/EnableHttpsCertificates",
+			opts...,
+		),
+		disableHttpsCertificates: connect_go.NewClient[v1.DisableHttpsCertificatesRequest, v1.DisableHttpsCertificatesResponse](
+			httpClient,
+			baseURL+"/ionscale.v1.IonscaleService/DisableHttpsCertificates",
+			opts...,
+		),
 	}
 }
 
 // ionscaleServiceClient implements IonscaleServiceClient.
 type ionscaleServiceClient struct {
-	getVersion           *connect_go.Client[v1.GetVersionRequest, v1.GetVersionResponse]
-	authenticate         *connect_go.Client[v1.AuthenticationRequest, v1.AuthenticationResponse]
-	getDERPMap           *connect_go.Client[v1.GetDERPMapRequest, v1.GetDERPMapResponse]
-	setDERPMap           *connect_go.Client[v1.SetDERPMapRequest, v1.SetDERPMapResponse]
-	createTailnet        *connect_go.Client[v1.CreateTailnetRequest, v1.CreateTailnetResponse]
-	getTailnet           *connect_go.Client[v1.GetTailnetRequest, v1.GetTailnetResponse]
-	listTailnets         *connect_go.Client[v1.ListTailnetRequest, v1.ListTailnetResponse]
-	deleteTailnet        *connect_go.Client[v1.DeleteTailnetRequest, v1.DeleteTailnetResponse]
-	getDNSConfig         *connect_go.Client[v1.GetDNSConfigRequest, v1.GetDNSConfigResponse]
-	setDNSConfig         *connect_go.Client[v1.SetDNSConfigRequest, v1.SetDNSConfigResponse]
-	getIAMPolicy         *connect_go.Client[v1.GetIAMPolicyRequest, v1.GetIAMPolicyResponse]
-	setIAMPolicy         *connect_go.Client[v1.SetIAMPolicyRequest, v1.SetIAMPolicyResponse]
-	getACLPolicy         *connect_go.Client[v1.GetACLPolicyRequest, v1.GetACLPolicyResponse]
-	setACLPolicy         *connect_go.Client[v1.SetACLPolicyRequest, v1.SetACLPolicyResponse]
-	getAuthKey           *connect_go.Client[v1.GetAuthKeyRequest, v1.GetAuthKeyResponse]
-	createAuthKey        *connect_go.Client[v1.CreateAuthKeyRequest, v1.CreateAuthKeyResponse]
-	deleteAuthKey        *connect_go.Client[v1.DeleteAuthKeyRequest, v1.DeleteAuthKeyResponse]
-	listAuthKeys         *connect_go.Client[v1.ListAuthKeysRequest, v1.ListAuthKeysResponse]
-	listUsers            *connect_go.Client[v1.ListUsersRequest, v1.ListUsersResponse]
-	deleteUser           *connect_go.Client[v1.DeleteUserRequest, v1.DeleteUserResponse]
-	getMachine           *connect_go.Client[v1.GetMachineRequest, v1.GetMachineResponse]
-	listMachines         *connect_go.Client[v1.ListMachinesRequest, v1.ListMachinesResponse]
-	expireMachine        *connect_go.Client[v1.ExpireMachineRequest, v1.ExpireMachineResponse]
-	deleteMachine        *connect_go.Client[v1.DeleteMachineRequest, v1.DeleteMachineResponse]
-	setMachineKeyExpiry  *connect_go.Client[v1.SetMachineKeyExpiryRequest, v1.SetMachineKeyExpiryResponse]
-	getMachineRoutes     *connect_go.Client[v1.GetMachineRoutesRequest, v1.GetMachineRoutesResponse]
-	enableMachineRoutes  *connect_go.Client[v1.EnableMachineRoutesRequest, v1.GetMachineRoutesResponse]
-	disableMachineRoutes *connect_go.Client[v1.DisableMachineRoutesRequest, v1.GetMachineRoutesResponse]
-	enableExitNode       *connect_go.Client[v1.EnableExitNodeRequest, v1.GetMachineRoutesResponse]
-	disableExitNode      *connect_go.Client[v1.DisableExitNodeRequest, v1.GetMachineRoutesResponse]
+	getVersion               *connect_go.Client[v1.GetVersionRequest, v1.GetVersionResponse]
+	authenticate             *connect_go.Client[v1.AuthenticationRequest, v1.AuthenticationResponse]
+	getDERPMap               *connect_go.Client[v1.GetDERPMapRequest, v1.GetDERPMapResponse]
+	setDERPMap               *connect_go.Client[v1.SetDERPMapRequest, v1.SetDERPMapResponse]
+	createTailnet            *connect_go.Client[v1.CreateTailnetRequest, v1.CreateTailnetResponse]
+	getTailnet               *connect_go.Client[v1.GetTailnetRequest, v1.GetTailnetResponse]
+	listTailnets             *connect_go.Client[v1.ListTailnetRequest, v1.ListTailnetResponse]
+	deleteTailnet            *connect_go.Client[v1.DeleteTailnetRequest, v1.DeleteTailnetResponse]
+	getDNSConfig             *connect_go.Client[v1.GetDNSConfigRequest, v1.GetDNSConfigResponse]
+	setDNSConfig             *connect_go.Client[v1.SetDNSConfigRequest, v1.SetDNSConfigResponse]
+	getIAMPolicy             *connect_go.Client[v1.GetIAMPolicyRequest, v1.GetIAMPolicyResponse]
+	setIAMPolicy             *connect_go.Client[v1.SetIAMPolicyRequest, v1.SetIAMPolicyResponse]
+	getACLPolicy             *connect_go.Client[v1.GetACLPolicyRequest, v1.GetACLPolicyResponse]
+	setACLPolicy             *connect_go.Client[v1.SetACLPolicyRequest, v1.SetACLPolicyResponse]
+	getAuthKey               *connect_go.Client[v1.GetAuthKeyRequest, v1.GetAuthKeyResponse]
+	createAuthKey            *connect_go.Client[v1.CreateAuthKeyRequest, v1.CreateAuthKeyResponse]
+	deleteAuthKey            *connect_go.Client[v1.DeleteAuthKeyRequest, v1.DeleteAuthKeyResponse]
+	listAuthKeys             *connect_go.Client[v1.ListAuthKeysRequest, v1.ListAuthKeysResponse]
+	listUsers                *connect_go.Client[v1.ListUsersRequest, v1.ListUsersResponse]
+	deleteUser               *connect_go.Client[v1.DeleteUserRequest, v1.DeleteUserResponse]
+	getMachine               *connect_go.Client[v1.GetMachineRequest, v1.GetMachineResponse]
+	listMachines             *connect_go.Client[v1.ListMachinesRequest, v1.ListMachinesResponse]
+	expireMachine            *connect_go.Client[v1.ExpireMachineRequest, v1.ExpireMachineResponse]
+	deleteMachine            *connect_go.Client[v1.DeleteMachineRequest, v1.DeleteMachineResponse]
+	setMachineKeyExpiry      *connect_go.Client[v1.SetMachineKeyExpiryRequest, v1.SetMachineKeyExpiryResponse]
+	getMachineRoutes         *connect_go.Client[v1.GetMachineRoutesRequest, v1.GetMachineRoutesResponse]
+	enableMachineRoutes      *connect_go.Client[v1.EnableMachineRoutesRequest, v1.GetMachineRoutesResponse]
+	disableMachineRoutes     *connect_go.Client[v1.DisableMachineRoutesRequest, v1.GetMachineRoutesResponse]
+	enableExitNode           *connect_go.Client[v1.EnableExitNodeRequest, v1.GetMachineRoutesResponse]
+	disableExitNode          *connect_go.Client[v1.DisableExitNodeRequest, v1.GetMachineRoutesResponse]
+	enableHttpsCertificates  *connect_go.Client[v1.EnableHttpsCertificatesRequest, v1.EnableHttpsCertificatesResponse]
+	disableHttpsCertificates *connect_go.Client[v1.DisableHttpsCertificatesRequest, v1.DisableHttpsCertificatesResponse]
 }
 
 // GetVersion calls ionscale.v1.IonscaleService.GetVersion.
@@ -406,6 +420,16 @@ func (c *ionscaleServiceClient) DisableExitNode(ctx context.Context, req *connec
 	return c.disableExitNode.CallUnary(ctx, req)
 }
 
+// EnableHttpsCertificates calls ionscale.v1.IonscaleService.EnableHttpsCertificates.
+func (c *ionscaleServiceClient) EnableHttpsCertificates(ctx context.Context, req *connect_go.Request[v1.EnableHttpsCertificatesRequest]) (*connect_go.Response[v1.EnableHttpsCertificatesResponse], error) {
+	return c.enableHttpsCertificates.CallUnary(ctx, req)
+}
+
+// DisableHttpsCertificates calls ionscale.v1.IonscaleService.DisableHttpsCertificates.
+func (c *ionscaleServiceClient) DisableHttpsCertificates(ctx context.Context, req *connect_go.Request[v1.DisableHttpsCertificatesRequest]) (*connect_go.Response[v1.DisableHttpsCertificatesResponse], error) {
+	return c.disableHttpsCertificates.CallUnary(ctx, req)
+}
+
 // IonscaleServiceHandler is an implementation of the ionscale.v1.IonscaleService service.
 type IonscaleServiceHandler interface {
 	GetVersion(context.Context, *connect_go.Request[v1.GetVersionRequest]) (*connect_go.Response[v1.GetVersionResponse], error)
@@ -438,6 +462,8 @@ type IonscaleServiceHandler interface {
 	DisableMachineRoutes(context.Context, *connect_go.Request[v1.DisableMachineRoutesRequest]) (*connect_go.Response[v1.GetMachineRoutesResponse], error)
 	EnableExitNode(context.Context, *connect_go.Request[v1.EnableExitNodeRequest]) (*connect_go.Response[v1.GetMachineRoutesResponse], error)
 	DisableExitNode(context.Context, *connect_go.Request[v1.DisableExitNodeRequest]) (*connect_go.Response[v1.GetMachineRoutesResponse], error)
+	EnableHttpsCertificates(context.Context, *connect_go.Request[v1.EnableHttpsCertificatesRequest]) (*connect_go.Response[v1.EnableHttpsCertificatesResponse], error)
+	DisableHttpsCertificates(context.Context, *connect_go.Request[v1.DisableHttpsCertificatesRequest]) (*connect_go.Response[v1.DisableHttpsCertificatesResponse], error)
 }
 
 // NewIonscaleServiceHandler builds an HTTP handler from the service implementation. It returns the
@@ -597,6 +623,16 @@ func NewIonscaleServiceHandler(svc IonscaleServiceHandler, opts ...connect_go.Ha
 		svc.DisableExitNode,
 		opts...,
 	))
+	mux.Handle("/ionscale.v1.IonscaleService/EnableHttpsCertificates", connect_go.NewUnaryHandler(
+		"/ionscale.v1.IonscaleService/EnableHttpsCertificates",
+		svc.EnableHttpsCertificates,
+		opts...,
+	))
+	mux.Handle("/ionscale.v1.IonscaleService/DisableHttpsCertificates", connect_go.NewUnaryHandler(
+		"/ionscale.v1.IonscaleService/DisableHttpsCertificates",
+		svc.DisableHttpsCertificates,
+		opts...,
+	))
 	return "/ionscale.v1.IonscaleService/", mux
 }
 
@@ -721,4 +757,12 @@ func (UnimplementedIonscaleServiceHandler) EnableExitNode(context.Context, *conn
 
 func (UnimplementedIonscaleServiceHandler) DisableExitNode(context.Context, *connect_go.Request[v1.DisableExitNodeRequest]) (*connect_go.Response[v1.GetMachineRoutesResponse], error) {
 	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("ionscale.v1.IonscaleService.DisableExitNode is not implemented"))
+}
+
+func (UnimplementedIonscaleServiceHandler) EnableHttpsCertificates(context.Context, *connect_go.Request[v1.EnableHttpsCertificatesRequest]) (*connect_go.Response[v1.EnableHttpsCertificatesResponse], error) {
+	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("ionscale.v1.IonscaleService.EnableHttpsCertificates is not implemented"))
+}
+
+func (UnimplementedIonscaleServiceHandler) DisableHttpsCertificates(context.Context, *connect_go.Request[v1.DisableHttpsCertificatesRequest]) (*connect_go.Response[v1.DisableHttpsCertificatesResponse], error) {
+	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("ionscale.v1.IonscaleService.DisableHttpsCertificates is not implemented"))
 }

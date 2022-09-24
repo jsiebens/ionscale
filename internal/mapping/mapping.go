@@ -27,8 +27,17 @@ func CopyViaJson[F any, T any](f F, t T) error {
 	return nil
 }
 
-func ToDNSConfig(tailnet *domain.Tailnet, c *domain.DNSConfig) *tailcfg.DNSConfig {
+func ToDNSConfig(m *domain.Machine, peers []domain.Machine, tailnet *domain.Tailnet, c *domain.DNSConfig) *tailcfg.DNSConfig {
+	certDNSSuffix := config.CertDNSSuffix()
+	certsEnabled := c.HttpsCertsEnabled && len(certDNSSuffix) != 0
+
 	tailnetDomain := domain.SanitizeTailnetName(tailnet.Name)
+
+	var certDomain = ""
+	if certsEnabled {
+		certDomain = domain.SanitizeTailnetName(*tailnet.Alias)
+	}
+
 	resolvers := []*dnstype.Resolver{}
 	for _, r := range c.Nameservers {
 		resolver := &dnstype.Resolver{
@@ -40,10 +49,16 @@ func ToDNSConfig(tailnet *domain.Tailnet, c *domain.DNSConfig) *tailcfg.DNSConfi
 	dnsConfig := &tailcfg.DNSConfig{}
 
 	var domains []string
+	var certDomains []string
 
 	if c.MagicDNS {
 		domains = append(domains, fmt.Sprintf("%s.%s", tailnetDomain, config.MagicDNSSuffix()))
 		dnsConfig.Proxied = true
+
+		if certsEnabled {
+			domains = append(domains, fmt.Sprintf("%s.%s", certDomain, certDNSSuffix))
+			certDomains = append(certDomains, fmt.Sprintf("%s.%s.%s", m.CompleteName(), certDomain, certDNSSuffix))
+		}
 	}
 
 	if c.OverrideLocalDNS {
@@ -52,8 +67,13 @@ func ToDNSConfig(tailnet *domain.Tailnet, c *domain.DNSConfig) *tailcfg.DNSConfi
 		dnsConfig.FallbackResolvers = resolvers
 	}
 
-	if len(c.Routes) != 0 {
+	if len(c.Routes) != 0 || certsEnabled {
 		routes := make(map[string][]*dnstype.Resolver)
+
+		if certsEnabled {
+			routes[fmt.Sprintf("%s.", certDNSSuffix)] = nil
+		}
+
 		for r, s := range c.Routes {
 			routeResolver := []*dnstype.Resolver{}
 			for _, addr := range s {
@@ -67,6 +87,23 @@ func ToDNSConfig(tailnet *domain.Tailnet, c *domain.DNSConfig) *tailcfg.DNSConfi
 	}
 
 	dnsConfig.Domains = domains
+	dnsConfig.CertDomains = certDomains
+
+	if certsEnabled {
+		var extraRecords = []tailcfg.DNSRecord{{
+			Name:  fmt.Sprintf("%s.%s.%s", m.CompleteName(), certDomain, certDNSSuffix),
+			Value: m.IPv4.String(),
+		}}
+
+		for _, p := range peers {
+			extraRecords = append(extraRecords, tailcfg.DNSRecord{
+				Name:  fmt.Sprintf("%s.%s.%s", p.CompleteName(), certDomain, certDNSSuffix),
+				Value: p.IPv4.String(),
+			})
+		}
+
+		dnsConfig.ExtraRecords = extraRecords
+	}
 
 	return dnsConfig
 }
@@ -125,10 +162,7 @@ func ToNode(m *domain.Machine) (*tailcfg.Node, *tailcfg.UserProfile, error) {
 		derp = "127.3.3.40:0"
 	}
 
-	var name = m.Name
-	if m.NameIdx != 0 {
-		name = fmt.Sprintf("%s-%d", m.Name, m.NameIdx)
-	}
+	var name = m.CompleteName()
 
 	sanitizedTailnetName := domain.SanitizeTailnetName(m.Tailnet.Name)
 

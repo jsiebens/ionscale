@@ -13,6 +13,7 @@ import (
 type Tailnet struct {
 	ID        uint64 `gorm:"primary_key"`
 	Name      string
+	Alias     *string
 	DNSConfig DNSConfig
 	IAMPolicy IAMPolicy
 	ACLPolicy ACLPolicy
@@ -64,6 +65,21 @@ func (r *repository) GetOrCreateTailnet(ctx context.Context, name string, iamPol
 func (r *repository) GetTailnet(ctx context.Context, id uint64) (*Tailnet, error) {
 	var t Tailnet
 	tx := r.withContext(ctx).Take(&t, "id = ?", id)
+
+	if errors.Is(tx.Error, gorm.ErrRecordNotFound) {
+		return nil, nil
+	}
+
+	if tx.Error != nil {
+		return nil, tx.Error
+	}
+
+	return &t, nil
+}
+
+func (r *repository) GetTailnetByAlias(ctx context.Context, alias string) (*Tailnet, error) {
+	var t Tailnet
+	tx := r.withContext(ctx).Take(&t, "alias = ?", alias)
 
 	if errors.Is(tx.Error, gorm.ErrRecordNotFound) {
 		return nil, nil

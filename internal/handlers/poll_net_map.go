@@ -233,6 +233,7 @@ func (h *PollNetMapHandler) createMapResponse(m *domain.Machine, binder bind.Bin
 	var users = []tailcfg.UserProfile{*user}
 	var changedPeers []*tailcfg.Node
 	var removedPeers []tailcfg.NodeID
+	var validPeers []domain.Machine
 
 	candidatePeers, err := h.repository.ListMachinePeers(ctx, m.TailnetID, m.MachineKey)
 	if err != nil {
@@ -247,6 +248,7 @@ func (h *PollNetMapHandler) createMapResponse(m *domain.Machine, binder bind.Bin
 			continue
 		}
 		if policies.IsValidPeer(m, &peer) || policies.IsValidPeer(&peer, m) {
+			validPeers = append(validPeers, peer)
 			n, u, err := mapping.ToNode(&peer)
 			if err != nil {
 				return nil, nil, err
@@ -282,7 +284,7 @@ func (h *PollNetMapHandler) createMapResponse(m *domain.Machine, binder bind.Bin
 		mapResponse = &tailcfg.MapResponse{
 			KeepAlive:    false,
 			Node:         node,
-			DNSConfig:    mapping.ToDNSConfig(&m.Tailnet, &dnsConfig),
+			DNSConfig:    mapping.ToDNSConfig(m, validPeers, &m.Tailnet, &dnsConfig),
 			PacketFilter: rules,
 			DERPMap:      derpMap,
 			Domain:       domain.SanitizeTailnetName(m.Tailnet.Name),
@@ -296,7 +298,7 @@ func (h *PollNetMapHandler) createMapResponse(m *domain.Machine, binder bind.Bin
 	} else {
 		mapResponse = &tailcfg.MapResponse{
 			Node:         node,
-			DNSConfig:    mapping.ToDNSConfig(&m.Tailnet, &dnsConfig),
+			DNSConfig:    mapping.ToDNSConfig(m, validPeers, &m.Tailnet, &dnsConfig),
 			PacketFilter: rules,
 			DERPMap:      derpMap,
 			Domain:       domain.SanitizeTailnetName(m.Tailnet.Name),

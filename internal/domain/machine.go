@@ -46,6 +46,13 @@ type Machine struct {
 
 type Machines []Machine
 
+func (m *Machine) CompleteName() string {
+	if m.NameIdx != 0 {
+		return fmt.Sprintf("%s-%d", m.Name, m.NameIdx)
+	}
+	return m.Name
+}
+
 func (m *Machine) IPs() []string {
 	return []string{m.IPv4.String(), m.IPv6.String()}
 }
