@@ -45,6 +45,10 @@ type Machine struct {
 
 type Machines []Machine
 
+func (m *Machine) IPs() []string {
+	return []string{m.IPv4.String(), m.IPv6.String()}
+}
+
 func (m *Machine) IsExpired() bool {
 	return !m.KeyExpiryDisabled && !m.ExpiresAt.IsZero() && m.ExpiresAt.Before(time.Now())
 }
