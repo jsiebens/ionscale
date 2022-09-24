@@ -58,4 +58,6 @@ service IonscaleService {
   rpc DisableMachineRoutes (DisableMachineRoutesRequest) returns (GetMachineRoutesResponse) {}
   rpc EnableExitNode (EnableExitNodeRequest) returns (GetMachineRoutesResponse) {}
   rpc DisableExitNode (DisableExitNodeRequest) returns (GetMachineRoutesResponse) {}
+  rpc EnableHttpsCertificates (EnableHttpsCertificatesRequest) returns (EnableHttpsCertificatesResponse) {}
+  rpc DisableHttpsCertificates (DisableHttpsCertificatesRequest) returns (DisableHttpsCertificatesResponse) {}
 }

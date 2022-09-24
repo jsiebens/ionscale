@@ -172,3 +172,88 @@ func setDNSConfigCommand() *coral.Command {
 
 	return command
 }
+
+func enableHttpsCommand() *coral.Command {
+	command := &coral.Command{
+		Use:          "enable-https",
+		Short:        "Enable HTTPS certificates",
+		SilenceUsage: true,
+	}
+
+	var tailnetID uint64
+	var tailnetName string
+	var alias string
+	var target = Target{}
+
+	target.prepareCommand(command)
+	command.Flags().StringVar(&tailnetName, "tailnet", "", "Tailnet name. Mutually exclusive with --tailnet-id.")
+	command.Flags().Uint64Var(&tailnetID, "tailnet-id", 0, "Tailnet ID. Mutually exclusive with --tailnet.")
+	command.Flags().StringVar(&alias, "alias", "", "")
+
+	command.PreRunE = checkRequiredTailnetAndTailnetIdFlags
+	command.RunE = func(command *coral.Command, args []string) error {
+		client, err := target.createGRPCClient()
+		if err != nil {
+			return err
+		}
+
+		tailnet, err := findTailnet(client, tailnetName, tailnetID)
+		if err != nil {
+			return err
+		}
+
+		req := api.EnableHttpsCertificatesRequest{
+			TailnetId: tailnet.Id,
+			Alias:     alias,
+		}
+
+		if _, err := client.EnableHttpsCertificates(context.Background(), connect.NewRequest(&req)); err != nil {
+			return err
+		}
+
+		return nil
+	}
+
+	return command
+}
+
+func disableHttpsCommand() *coral.Command {
+	command := &coral.Command{
+		Use:          "disable-https",
+		Short:        "Disable HTTPS certificates",
+		SilenceUsage: true,
+	}
+
+	var tailnetID uint64
+	var tailnetName string
+	var target = Target{}
+
+	target.prepareCommand(command)
+	command.Flags().StringVar(&tailnetName, "tailnet", "", "Tailnet name. Mutually exclusive with --tailnet-id.")
+	command.Flags().Uint64Var(&tailnetID, "tailnet-id", 0, "Tailnet ID. Mutually exclusive with --tailnet.")
+
+	command.PreRunE = checkRequiredTailnetAndTailnetIdFlags
+	command.RunE = func(command *coral.Command, args []string) error {
+		client, err := target.createGRPCClient()
+		if err != nil {
+			return err
+		}
+
+		tailnet, err := findTailnet(client, tailnetName, tailnetID)
+		if err != nil {
+			return err
+		}
+
+		req := api.DisableHttpsCertificatesRequest{
+			TailnetId: tailnet.Id,
+		}
+
+		if _, err := client.DisableHttpsCertificates(context.Background(), connect.NewRequest(&req)); err != nil {
+			return err
+		}
+
+		return nil
+	}
+
+	return command
+}

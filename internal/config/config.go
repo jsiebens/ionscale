@@ -25,6 +25,7 @@ const (
 var (
 	keepAliveInterval = defaultKeepAliveInterval
 	magicDNSSuffix    = defaultMagicDNSSuffix
+	certDNSSuffix     = ""
 )
 
 func KeepAliveInterval() time.Duration {
@@ -33,6 +34,10 @@ func KeepAliveInterval() time.Duration {
 
 func MagicDNSSuffix() string {
 	return magicDNSSuffix
+}
+
+func CertDNSSuffix() string {
+	return certDNSSuffix
 }
 
 func LoadConfig(path string) (*Config, error) {
@@ -71,6 +76,14 @@ func LoadConfig(path string) (*Config, error) {
 
 	keepAliveInterval = cfg.PollNet.KeepAliveInterval
 	magicDNSSuffix = cfg.DNS.MagicDNSSuffix
+
+	if cfg.DNS.Provider.Zone != "" {
+		if cfg.DNS.Provider.Subdomain == "" {
+			certDNSSuffix = cfg.DNS.Provider.Zone
+		} else {
+			certDNSSuffix = fmt.Sprintf("%s.%s", cfg.DNS.Provider.Subdomain, cfg.DNS.Provider.Zone)
+		}
+	}
 
 	return cfg, nil
 }
@@ -165,13 +178,21 @@ type AuthProvider struct {
 }
 
 type DNS struct {
-	MagicDNSSuffix string `yaml:"magic_dns_suffix"`
+	MagicDNSSuffix string      `yaml:"magic_dns_suffix"`
+	Provider       DNSProvider `yaml:"provider,omitempty"`
+}
+
+type DNSProvider struct {
+	Name          string            `yaml:"name"`
+	Zone          string            `yaml:"zone"`
+	Subdomain     string            `yaml:"subdomain"`
+	Configuration map[string]string `yaml:"config"`
 }
 
 type SystemAdminPolicy struct {
-	Subs    []string `json:"subs,omitempty"`
-	Emails  []string `json:"emails,omitempty"`
-	Filters []string `json:"filters,omitempty"`
+	Subs    []string `yaml:"subs,omitempty"`
+	Emails  []string `yaml:"emails,omitempty"`
+	Filters []string `yaml:"filters,omitempty"`
 }
 
 func (c *Config) CreateUrl(format string, a ...interface{}) string {

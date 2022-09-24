@@ -218,6 +218,184 @@ func (x *SetDNSConfigResponse) GetConfig() *DNSConfig {
 	return nil
 }
 
+type EnableHttpsCertificatesRequest struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	TailnetId uint64 `protobuf:"varint,1,opt,name=tailnet_id,json=tailnetId,proto3" json:"tailnet_id,omitempty"`
+	Alias     string `protobuf:"bytes,2,opt,name=alias,proto3" json:"alias,omitempty"`
+}
+
+func (x *EnableHttpsCertificatesRequest) Reset() {
+	*x = EnableHttpsCertificatesRequest{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_ionscale_v1_dns_proto_msgTypes[4]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *EnableHttpsCertificatesRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*EnableHttpsCertificatesRequest) ProtoMessage() {}
+
+func (x *EnableHttpsCertificatesRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_ionscale_v1_dns_proto_msgTypes[4]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use EnableHttpsCertificatesRequest.ProtoReflect.Descriptor instead.
+func (*EnableHttpsCertificatesRequest) Descriptor() ([]byte, []int) {
+	return file_ionscale_v1_dns_proto_rawDescGZIP(), []int{4}
+}
+
+func (x *EnableHttpsCertificatesRequest) GetTailnetId() uint64 {
+	if x != nil {
+		return x.TailnetId
+	}
+	return 0
+}
+
+func (x *EnableHttpsCertificatesRequest) GetAlias() string {
+	if x != nil {
+		return x.Alias
+	}
+	return ""
+}
+
+type EnableHttpsCertificatesResponse struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+}
+
+func (x *EnableHttpsCertificatesResponse) Reset() {
+	*x = EnableHttpsCertificatesResponse{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_ionscale_v1_dns_proto_msgTypes[5]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *EnableHttpsCertificatesResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*EnableHttpsCertificatesResponse) ProtoMessage() {}
+
+func (x *EnableHttpsCertificatesResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_ionscale_v1_dns_proto_msgTypes[5]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use EnableHttpsCertificatesResponse.ProtoReflect.Descriptor instead.
+func (*EnableHttpsCertificatesResponse) Descriptor() ([]byte, []int) {
+	return file_ionscale_v1_dns_proto_rawDescGZIP(), []int{5}
+}
+
+type DisableHttpsCertificatesRequest struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	TailnetId uint64 `protobuf:"varint,1,opt,name=tailnet_id,json=tailnetId,proto3" json:"tailnet_id,omitempty"`
+}
+
+func (x *DisableHttpsCertificatesRequest) Reset() {
+	*x = DisableHttpsCertificatesRequest{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_ionscale_v1_dns_proto_msgTypes[6]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *DisableHttpsCertificatesRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DisableHttpsCertificatesRequest) ProtoMessage() {}
+
+func (x *DisableHttpsCertificatesRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_ionscale_v1_dns_proto_msgTypes[6]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DisableHttpsCertificatesRequest.ProtoReflect.Descriptor instead.
+func (*DisableHttpsCertificatesRequest) Descriptor() ([]byte, []int) {
+	return file_ionscale_v1_dns_proto_rawDescGZIP(), []int{6}
+}
+
+func (x *DisableHttpsCertificatesRequest) GetTailnetId() uint64 {
+	if x != nil {
+		return x.TailnetId
+	}
+	return 0
+}
+
+type DisableHttpsCertificatesResponse struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+}
+
+func (x *DisableHttpsCertificatesResponse) Reset() {
+	*x = DisableHttpsCertificatesResponse{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_ionscale_v1_dns_proto_msgTypes[7]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *DisableHttpsCertificatesResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DisableHttpsCertificatesResponse) ProtoMessage() {}
+
+func (x *DisableHttpsCertificatesResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_ionscale_v1_dns_proto_msgTypes[7]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DisableHttpsCertificatesResponse.ProtoReflect.Descriptor instead.
+func (*DisableHttpsCertificatesResponse) Descriptor() ([]byte, []int) {
+	return file_ionscale_v1_dns_proto_rawDescGZIP(), []int{7}
+}
+
 type DNSConfig struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -233,7 +411,7 @@ type DNSConfig struct {
 func (x *DNSConfig) Reset() {
 	*x = DNSConfig{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_ionscale_v1_dns_proto_msgTypes[4]
+		mi := &file_ionscale_v1_dns_proto_msgTypes[8]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -246,7 +424,7 @@ func (x *DNSConfig) String() string {
 func (*DNSConfig) ProtoMessage() {}
 
 func (x *DNSConfig) ProtoReflect() protoreflect.Message {
-	mi := &file_ionscale_v1_dns_proto_msgTypes[4]
+	mi := &file_ionscale_v1_dns_proto_msgTypes[8]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -259,7 +437,7 @@ func (x *DNSConfig) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DNSConfig.ProtoReflect.Descriptor instead.
 func (*DNSConfig) Descriptor() ([]byte, []int) {
-	return file_ionscale_v1_dns_proto_rawDescGZIP(), []int{4}
+	return file_ionscale_v1_dns_proto_rawDescGZIP(), []int{8}
 }
 
 func (x *DNSConfig) GetMagicDns() bool {
@@ -308,7 +486,7 @@ type Routes struct {
 func (x *Routes) Reset() {
 	*x = Routes{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_ionscale_v1_dns_proto_msgTypes[5]
+		mi := &file_ionscale_v1_dns_proto_msgTypes[9]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -321,7 +499,7 @@ func (x *Routes) String() string {
 func (*Routes) ProtoMessage() {}
 
 func (x *Routes) ProtoReflect() protoreflect.Message {
-	mi := &file_ionscale_v1_dns_proto_msgTypes[5]
+	mi := &file_ionscale_v1_dns_proto_msgTypes[9]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -334,7 +512,7 @@ func (x *Routes) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Routes.ProtoReflect.Descriptor instead.
 func (*Routes) Descriptor() ([]byte, []int) {
-	return file_ionscale_v1_dns_proto_rawDescGZIP(), []int{5}
+	return file_ionscale_v1_dns_proto_rawDescGZIP(), []int{9}
 }
 
 func (x *Routes) GetRoutes() []string {
@@ -372,7 +550,21 @@ var file_ionscale_v1_dns_proto_rawDesc = []byte{
 	0x65, 0x12, 0x2e, 0x0a, 0x06, 0x63, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x18, 0x01, 0x20, 0x01, 0x28,
 	0x0b, 0x32, 0x16, 0x2e, 0x69, 0x6f, 0x6e, 0x73, 0x63, 0x61, 0x6c, 0x65, 0x2e, 0x76, 0x31, 0x2e,
 	0x44, 0x4e, 0x53, 0x43, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x52, 0x06, 0x63, 0x6f, 0x6e, 0x66, 0x69,
-	0x67, 0x22, 0xae, 0x02, 0x0a, 0x09, 0x44, 0x4e, 0x53, 0x43, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x12,
+	0x67, 0x22, 0x55, 0x0a, 0x1e, 0x45, 0x6e, 0x61, 0x62, 0x6c, 0x65, 0x48, 0x74, 0x74, 0x70, 0x73,
+	0x43, 0x65, 0x72, 0x74, 0x69, 0x66, 0x69, 0x63, 0x61, 0x74, 0x65, 0x73, 0x52, 0x65, 0x71, 0x75,
+	0x65, 0x73, 0x74, 0x12, 0x1d, 0x0a, 0x0a, 0x74, 0x61, 0x69, 0x6c, 0x6e, 0x65, 0x74, 0x5f, 0x69,
+	0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x04, 0x52, 0x09, 0x74, 0x61, 0x69, 0x6c, 0x6e, 0x65, 0x74,
+	0x49, 0x64, 0x12, 0x14, 0x0a, 0x05, 0x61, 0x6c, 0x69, 0x61, 0x73, 0x18, 0x02, 0x20, 0x01, 0x28,
+	0x09, 0x52, 0x05, 0x61, 0x6c, 0x69, 0x61, 0x73, 0x22, 0x21, 0x0a, 0x1f, 0x45, 0x6e, 0x61, 0x62,
+	0x6c, 0x65, 0x48, 0x74, 0x74, 0x70, 0x73, 0x43, 0x65, 0x72, 0x74, 0x69, 0x66, 0x69, 0x63, 0x61,
+	0x74, 0x65, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x40, 0x0a, 0x1f, 0x44,
+	0x69, 0x73, 0x61, 0x62, 0x6c, 0x65, 0x48, 0x74, 0x74, 0x70, 0x73, 0x43, 0x65, 0x72, 0x74, 0x69,
+	0x66, 0x69, 0x63, 0x61, 0x74, 0x65, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x1d,
+	0x0a, 0x0a, 0x74, 0x61, 0x69, 0x6c, 0x6e, 0x65, 0x74, 0x5f, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01,
+	0x28, 0x04, 0x52, 0x09, 0x74, 0x61, 0x69, 0x6c, 0x6e, 0x65, 0x74, 0x49, 0x64, 0x22, 0x22, 0x0a,
+	0x20, 0x44, 0x69, 0x73, 0x61, 0x62, 0x6c, 0x65, 0x48, 0x74, 0x74, 0x70, 0x73, 0x43, 0x65, 0x72,
+	0x74, 0x69, 0x66, 0x69, 0x63, 0x61, 0x74, 0x65, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73,
+	0x65, 0x22, 0xae, 0x02, 0x0a, 0x09, 0x44, 0x4e, 0x53, 0x43, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x12,
 	0x1b, 0x0a, 0x09, 0x6d, 0x61, 0x67, 0x69, 0x63, 0x5f, 0x64, 0x6e, 0x73, 0x18, 0x01, 0x20, 0x01,
 	0x28, 0x08, 0x52, 0x08, 0x6d, 0x61, 0x67, 0x69, 0x63, 0x44, 0x6e, 0x73, 0x12, 0x2c, 0x0a, 0x12,
 	0x6f, 0x76, 0x65, 0x72, 0x72, 0x69, 0x64, 0x65, 0x5f, 0x6c, 0x6f, 0x63, 0x61, 0x6c, 0x5f, 0x64,
@@ -412,27 +604,31 @@ func file_ionscale_v1_dns_proto_rawDescGZIP() []byte {
 	return file_ionscale_v1_dns_proto_rawDescData
 }
 
-var file_ionscale_v1_dns_proto_msgTypes = make([]protoimpl.MessageInfo, 7)
+var file_ionscale_v1_dns_proto_msgTypes = make([]protoimpl.MessageInfo, 11)
 var file_ionscale_v1_dns_proto_goTypes = []interface{}{
-	(*GetDNSConfigRequest)(nil),  // 0: ionscale.v1.GetDNSConfigRequest
-	(*GetDNSConfigResponse)(nil), // 1: ionscale.v1.GetDNSConfigResponse
-	(*SetDNSConfigRequest)(nil),  // 2: ionscale.v1.SetDNSConfigRequest
-	(*SetDNSConfigResponse)(nil), // 3: ionscale.v1.SetDNSConfigResponse
-	(*DNSConfig)(nil),            // 4: ionscale.v1.DNSConfig
-	(*Routes)(nil),               // 5: ionscale.v1.Routes
-	nil,                          // 6: ionscale.v1.DNSConfig.RoutesEntry
+	(*GetDNSConfigRequest)(nil),              // 0: ionscale.v1.GetDNSConfigRequest
+	(*GetDNSConfigResponse)(nil),             // 1: ionscale.v1.GetDNSConfigResponse
+	(*SetDNSConfigRequest)(nil),              // 2: ionscale.v1.SetDNSConfigRequest
+	(*SetDNSConfigResponse)(nil),             // 3: ionscale.v1.SetDNSConfigResponse
+	(*EnableHttpsCertificatesRequest)(nil),   // 4: ionscale.v1.EnableHttpsCertificatesRequest
+	(*EnableHttpsCertificatesResponse)(nil),  // 5: ionscale.v1.EnableHttpsCertificatesResponse
+	(*DisableHttpsCertificatesRequest)(nil),  // 6: ionscale.v1.DisableHttpsCertificatesRequest
+	(*DisableHttpsCertificatesResponse)(nil), // 7: ionscale.v1.DisableHttpsCertificatesResponse
+	(*DNSConfig)(nil),                        // 8: ionscale.v1.DNSConfig
+	(*Routes)(nil),                           // 9: ionscale.v1.Routes
+	nil,                                      // 10: ionscale.v1.DNSConfig.RoutesEntry
 }
 var file_ionscale_v1_dns_proto_depIdxs = []int32{
-	4, // 0: ionscale.v1.GetDNSConfigResponse.config:type_name -> ionscale.v1.DNSConfig
-	4, // 1: ionscale.v1.SetDNSConfigRequest.config:type_name -> ionscale.v1.DNSConfig
-	4, // 2: ionscale.v1.SetDNSConfigResponse.config:type_name -> ionscale.v1.DNSConfig
-	6, // 3: ionscale.v1.DNSConfig.routes:type_name -> ionscale.v1.DNSConfig.RoutesEntry
-	5, // 4: ionscale.v1.DNSConfig.RoutesEntry.value:type_name -> ionscale.v1.Routes
-	5, // [5:5] is the sub-list for method output_type
-	5, // [5:5] is the sub-list for method input_type
-	5, // [5:5] is the sub-list for extension type_name
-	5, // [5:5] is the sub-list for extension extendee
-	0, // [0:5] is the sub-list for field type_name
+	8,  // 0: ionscale.v1.GetDNSConfigResponse.config:type_name -> ionscale.v1.DNSConfig
+	8,  // 1: ionscale.v1.SetDNSConfigRequest.config:type_name -> ionscale.v1.DNSConfig
+	8,  // 2: ionscale.v1.SetDNSConfigResponse.config:type_name -> ionscale.v1.DNSConfig
+	10, // 3: ionscale.v1.DNSConfig.routes:type_name -> ionscale.v1.DNSConfig.RoutesEntry
+	9,  // 4: ionscale.v1.DNSConfig.RoutesEntry.value:type_name -> ionscale.v1.Routes
+	5,  // [5:5] is the sub-list for method output_type
+	5,  // [5:5] is the sub-list for method input_type
+	5,  // [5:5] is the sub-list for extension type_name
+	5,  // [5:5] is the sub-list for extension extendee
+	0,  // [0:5] is the sub-list for field type_name
 }
 
 func init() { file_ionscale_v1_dns_proto_init() }
@@ -490,7 +686,7 @@ func file_ionscale_v1_dns_proto_init() {
 			}
 		}
 		file_ionscale_v1_dns_proto_msgTypes[4].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*DNSConfig); i {
+			switch v := v.(*EnableHttpsCertificatesRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -502,6 +698,54 @@ func file_ionscale_v1_dns_proto_init() {
 			}
 		}
 		file_ionscale_v1_dns_proto_msgTypes[5].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*EnableHttpsCertificatesResponse); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_ionscale_v1_dns_proto_msgTypes[6].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*DisableHttpsCertificatesRequest); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_ionscale_v1_dns_proto_msgTypes[7].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*DisableHttpsCertificatesResponse); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_ionscale_v1_dns_proto_msgTypes[8].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*DNSConfig); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_ionscale_v1_dns_proto_msgTypes[9].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*Routes); i {
 			case 0:
 				return &v.state
@@ -520,7 +764,7 @@ func file_ionscale_v1_dns_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_ionscale_v1_dns_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   7,
+			NumMessages:   11,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

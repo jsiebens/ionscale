@@ -23,6 +23,21 @@ message SetDNSConfigResponse {
   DNSConfig config = 1;
 }
 
+message EnableHttpsCertificatesRequest {
+  uint64 tailnet_id = 1;
+  string alias = 2;
+}
+
+message EnableHttpsCertificatesResponse {
+}
+
+message DisableHttpsCertificatesRequest {
+  uint64 tailnet_id = 1;
+}
+
+message DisableHttpsCertificatesResponse {
+}
+
 message DNSConfig {
   bool magic_dns = 1;
   bool override_local_dns = 2;
