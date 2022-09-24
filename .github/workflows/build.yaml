@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - '*'
+  pull_request:
+    branches:
+      - main
 
 jobs:
   build:
@@ -19,4 +22,5 @@ jobs:
 
       - name: Build
         run: |
+          go test ./...
           go build cmd/ionscale/main.go
