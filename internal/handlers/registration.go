@@ -182,7 +182,7 @@ func (h *RegistrationHandlers) authenticateMachineWithAuthKey(c echo.Context, bi
 			NameIdx:           nameIdx,
 			MachineKey:        machineKey,
 			NodeKey:           nodeKey,
-			Ephemeral:         authKey.Ephemeral,
+			Ephemeral:         authKey.Ephemeral || req.Ephemeral,
 			RegisteredTags:    registeredTags,
 			Tags:              domain.SanitizeTags(tags),
 			CreatedAt:         now,
@@ -218,7 +218,7 @@ func (h *RegistrationHandlers) authenticateMachineWithAuthKey(c echo.Context, bi
 			m.NameIdx = nameIdx
 		}
 		m.NodeKey = nodeKey
-		m.Ephemeral = authKey.Ephemeral
+		m.Ephemeral = authKey.Ephemeral || req.Ephemeral
 		m.RegisteredTags = registeredTags
 		m.Tags = domain.SanitizeTags(tags)
 		m.UserID = user.ID

@@ -419,7 +419,7 @@ func (h *AuthenticationHandlers) endMachineRegistrationFlow(c echo.Context, regi
 			NameIdx:           nameIdx,
 			MachineKey:        machineKey,
 			NodeKey:           nodeKey,
-			Ephemeral:         ephemeral,
+			Ephemeral:         ephemeral || req.Ephemeral,
 			RegisteredTags:    registeredTags,
 			Tags:              domain.SanitizeTags(tags),
 			CreatedAt:         now,
@@ -451,7 +451,7 @@ func (h *AuthenticationHandlers) endMachineRegistrationFlow(c echo.Context, regi
 			m.NameIdx = nameIdx
 		}
 		m.NodeKey = nodeKey
-		m.Ephemeral = ephemeral
+		m.Ephemeral = ephemeral || req.Ephemeral
 		m.RegisteredTags = registeredTags
 		m.Tags = domain.SanitizeTags(tags)
 		m.UserID = user.ID
