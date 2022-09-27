@@ -28,19 +28,6 @@ func (s *Service) machineToApi(m *domain.Machine) *api.Machine {
 		online = m.LastSeen.After(time.Now().Add(-config.KeepAliveInterval()))
 	}
 
-	var advertisedRoutes []string
-	for _, r := range m.HostInfo.RoutableIPs {
-		advertisedRoutes = append(advertisedRoutes, r.String())
-	}
-
-	var enabledRoutes []string
-	for _, r := range m.AllowIPs {
-		enabledRoutes = append(enabledRoutes, r.String())
-	}
-	for _, r := range m.AutoAllowIPs {
-		enabledRoutes = append(enabledRoutes, r.String())
-	}
-
 	return &api.Machine{
 		Id:                m.ID,
 		Name:              name,
@@ -66,8 +53,10 @@ func (s *Service) machineToApi(m *domain.Machine) *api.Machine {
 		ClientConnectivity: &api.ClientConnectivity{
 			Endpoints: m.Endpoints,
 		},
-		AdvertisedRoutes: advertisedRoutes,
-		EnabledRoutes:    enabledRoutes,
+		AdvertisedRoutes:   m.AdvertisedPrefixes(),
+		EnabledRoutes:      m.AllowedPrefixes(),
+		AdvertisedExitNode: m.IsAdvertisedExitNode(),
+		EnabledExitNode:    m.IsAllowedExitNode(),
 	}
 }
 
@@ -172,19 +161,11 @@ func (s *Service) ExpireMachine(ctx context.Context, req *connect.Request[api.Ex
 }
 
 func (s *Service) createMachineRoutesResponse(m *domain.Machine) (*connect.Response[api.GetMachineRoutesResponse], error) {
-	var advertisedRoutes []string
-	for _, r := range m.HostInfo.RoutableIPs {
-		advertisedRoutes = append(advertisedRoutes, r.String())
-	}
-
-	var enabledRoutes []string
-	for _, r := range m.AllowIPs {
-		enabledRoutes = append(enabledRoutes, r.String())
-	}
-
 	response := api.GetMachineRoutesResponse{
-		AdvertisedRoutes: advertisedRoutes,
-		EnabledRoutes:    enabledRoutes,
+		AdvertisedRoutes:   m.AdvertisedPrefixes(),
+		EnabledRoutes:      m.AllowedPrefixes(),
+		AdvertisedExitNode: m.IsAdvertisedExitNode(),
+		EnabledExitNode:    m.IsAllowedExitNode(),
 	}
 
 	return connect.NewResponse(&response), nil
@@ -282,6 +263,84 @@ func (s *Service) DisableMachineRoutes(ctx context.Context, req *connect.Request
 
 	m.AllowIPs = allowIPs.Items()
 	m.AutoAllowIPs = autoAllowIPs.Items()
+	if err := s.repository.SaveMachine(ctx, m); err != nil {
+		return nil, err
+	}
+
+	s.pubsub.Publish(m.TailnetID, &broker.Signal{PeerUpdated: &m.ID})
+
+	return s.createMachineRoutesResponse(m)
+}
+
+func (s *Service) EnableExitNode(ctx context.Context, req *connect.Request[api.EnableExitNodeRequest]) (*connect.Response[api.GetMachineRoutesResponse], error) {
+	principal := CurrentPrincipal(ctx)
+
+	m, err := s.repository.GetMachine(ctx, req.Msg.MachineId)
+	if err != nil {
+		return nil, err
+	}
+
+	if m == nil {
+		return nil, connect.NewError(connect.CodeNotFound, errors.New("machine not found"))
+	}
+
+	if !principal.IsSystemAdmin() && !principal.IsTailnetAdmin(m.TailnetID) {
+		return nil, connect.NewError(connect.CodePermissionDenied, errors.New("permission denied"))
+	}
+
+	if !m.IsAdvertisedExitNode() {
+		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("machine is not a valid exit node"))
+	}
+
+	prefix4 := netip.MustParsePrefix("0.0.0.0/0")
+	prefix6 := netip.MustParsePrefix("::/0")
+
+	allowIPs := domain.NewAllowIPsSet(m.AllowIPs)
+	allowIPs.Add(prefix4, prefix6)
+
+	m.AllowIPs = allowIPs.Items()
+
+	if err := s.repository.SaveMachine(ctx, m); err != nil {
+		return nil, err
+	}
+
+	s.pubsub.Publish(m.TailnetID, &broker.Signal{PeerUpdated: &m.ID})
+
+	return s.createMachineRoutesResponse(m)
+}
+
+func (s *Service) DisableExitNode(ctx context.Context, req *connect.Request[api.DisableExitNodeRequest]) (*connect.Response[api.GetMachineRoutesResponse], error) {
+	principal := CurrentPrincipal(ctx)
+
+	m, err := s.repository.GetMachine(ctx, req.Msg.MachineId)
+	if err != nil {
+		return nil, err
+	}
+
+	if m == nil {
+		return nil, connect.NewError(connect.CodeNotFound, errors.New("machine not found"))
+	}
+
+	if !principal.IsSystemAdmin() && !principal.IsTailnetAdmin(m.TailnetID) {
+		return nil, connect.NewError(connect.CodePermissionDenied, errors.New("permission denied"))
+	}
+
+	if !m.IsAdvertisedExitNode() {
+		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("machine is not a valid exit node"))
+	}
+
+	prefix4 := netip.MustParsePrefix("0.0.0.0/0")
+	prefix6 := netip.MustParsePrefix("::/0")
+
+	allowIPs := domain.NewAllowIPsSet(m.AllowIPs)
+	allowIPs.Remove(prefix4, prefix6)
+
+	autoAllowIPs := domain.NewAllowIPsSet(m.AutoAllowIPs)
+	autoAllowIPs.Remove(prefix4, prefix6)
+
+	m.AllowIPs = allowIPs.Items()
+	m.AutoAllowIPs = autoAllowIPs.Items()
+
 	if err := s.repository.SaveMachine(ctx, m); err != nil {
 		return nil, err
 	}

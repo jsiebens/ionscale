@@ -56,4 +56,6 @@ service IonscaleService {
   rpc GetMachineRoutes (GetMachineRoutesRequest) returns (GetMachineRoutesResponse) {}
   rpc EnableMachineRoutes (EnableMachineRoutesRequest) returns (GetMachineRoutesResponse) {}
   rpc DisableMachineRoutes (DisableMachineRoutesRequest) returns (GetMachineRoutesResponse) {}
+  rpc EnableExitNode (EnableExitNodeRequest) returns (GetMachineRoutesResponse) {}
+  rpc DisableExitNode (DisableExitNodeRequest) returns (GetMachineRoutesResponse) {}
 }

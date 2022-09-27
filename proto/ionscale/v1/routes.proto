@@ -10,6 +10,8 @@ message GetMachineRoutesRequest {
 message GetMachineRoutesResponse {
   repeated string advertised_routes = 1;
   repeated string enabled_routes = 2;
+  bool advertised_exit_node = 3;
+  bool enabled_exit_node = 4;
 }
 
 message EnableMachineRoutesRequest {
@@ -21,4 +23,12 @@ message EnableMachineRoutesRequest {
 message DisableMachineRoutesRequest {
   uint64 machine_id = 1;
   repeated string routes = 2;
+}
+
+message EnableExitNodeRequest {
+  uint64 machine_id = 1;
+}
+
+message DisableExitNodeRequest {
+  uint64 machine_id = 1;
 }

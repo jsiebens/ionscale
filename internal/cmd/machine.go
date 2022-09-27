@@ -29,6 +29,8 @@ func machineCommands() *coral.Command {
 	command.AddCommand(enableMachineRoutesCommand())
 	command.AddCommand(disableMachineRoutesCommand())
 	command.AddCommand(enableMachineKeyExpiryCommand())
+	command.AddCommand(enableExitNodeCommand())
+	command.AddCommand(disableExitNodeCommand())
 	command.AddCommand(disableMachineKeyExpiryCommand())
 
 	return command
@@ -124,6 +126,16 @@ func getMachineCommand() *coral.Command {
 			} else {
 				fmt.Fprintf(w, "%s\t%s\n", "", t)
 			}
+		}
+
+		if m.AdvertisedExitNode {
+			if m.EnabledExitNode {
+				fmt.Fprintf(w, "%s\t%s\n", "Exit node", "enabled")
+			} else {
+				fmt.Fprintf(w, "%s\t%s\n", "Exit node", "disabled")
+			}
+		} else {
+			fmt.Fprintf(w, "%s\t%s\n", "Exit node", "no")
 		}
 
 		return nil
@@ -279,25 +291,7 @@ func getMachineRoutesCommand() *coral.Command {
 			return err
 		}
 
-		w := new(tabwriter.Writer)
-		w.Init(os.Stdout, 8, 8, 0, '\t', 0)
-		defer w.Flush()
-
-		for i, t := range resp.Msg.AdvertisedRoutes {
-			if i == 0 {
-				fmt.Fprintf(w, "%s\t%s\n", "Advertised routes", t)
-			} else {
-				fmt.Fprintf(w, "%s\t%s\n", "", t)
-			}
-		}
-
-		for i, t := range resp.Msg.EnabledRoutes {
-			if i == 0 {
-				fmt.Fprintf(w, "%s\t%s\n", "Enabled routes", t)
-			} else {
-				fmt.Fprintf(w, "%s\t%s\n", "", t)
-			}
-		}
+		printMachinesRoutesResponse(resp.Msg)
 
 		return nil
 	}
@@ -341,25 +335,7 @@ func enableMachineRoutesCommand() *coral.Command {
 			return err
 		}
 
-		w := new(tabwriter.Writer)
-		w.Init(os.Stdout, 8, 8, 0, '\t', 0)
-		defer w.Flush()
-
-		for i, t := range resp.Msg.AdvertisedRoutes {
-			if i == 0 {
-				fmt.Fprintf(w, "%s\t%s\n", "Advertised routes", t)
-			} else {
-				fmt.Fprintf(w, "%s\t%s\n", "", t)
-			}
-		}
-
-		for i, t := range resp.Msg.EnabledRoutes {
-			if i == 0 {
-				fmt.Fprintf(w, "%s\t%s\n", "Enabled routes", t)
-			} else {
-				fmt.Fprintf(w, "%s\t%s\n", "", t)
-			}
-		}
+		printMachinesRoutesResponse(resp.Msg)
 
 		return nil
 	}
@@ -401,25 +377,75 @@ func disableMachineRoutesCommand() *coral.Command {
 			return err
 		}
 
-		w := new(tabwriter.Writer)
-		w.Init(os.Stdout, 8, 8, 0, '\t', 0)
-		defer w.Flush()
+		printMachinesRoutesResponse(resp.Msg)
 
-		for i, t := range resp.Msg.AdvertisedRoutes {
-			if i == 0 {
-				fmt.Fprintf(w, "%s\t%s\n", "Advertised routes", t)
-			} else {
-				fmt.Fprintf(w, "%s\t%s\n", "", t)
-			}
+		return nil
+	}
+
+	return command
+}
+
+func enableExitNodeCommand() *coral.Command {
+	command := &coral.Command{
+		Use:          "enable-exit-node",
+		Short:        "Enable given machine as an exit node",
+		SilenceUsage: true,
+	}
+
+	var machineID uint64
+	var target = Target{}
+	target.prepareCommand(command)
+	command.Flags().Uint64Var(&machineID, "machine-id", 0, "Machine ID")
+
+	_ = command.MarkFlagRequired("machine-id")
+
+	command.RunE = func(command *coral.Command, args []string) error {
+		client, err := target.createGRPCClient()
+		if err != nil {
+			return err
 		}
 
-		for i, t := range resp.Msg.EnabledRoutes {
-			if i == 0 {
-				fmt.Fprintf(w, "%s\t%s\n", "Enabled routes", t)
-			} else {
-				fmt.Fprintf(w, "%s\t%s\n", "", t)
-			}
+		req := api.EnableExitNodeRequest{MachineId: machineID}
+		resp, err := client.EnableExitNode(context.Background(), connect.NewRequest(&req))
+		if err != nil {
+			return err
 		}
+
+		printMachinesRoutesResponse(resp.Msg)
+
+		return nil
+	}
+
+	return command
+}
+
+func disableExitNodeCommand() *coral.Command {
+	command := &coral.Command{
+		Use:          "disable-exit-node",
+		Short:        "Disable given machine as an exit node",
+		SilenceUsage: true,
+	}
+
+	var machineID uint64
+	var target = Target{}
+	target.prepareCommand(command)
+	command.Flags().Uint64Var(&machineID, "machine-id", 0, "Machine ID")
+
+	_ = command.MarkFlagRequired("machine-id")
+
+	command.RunE = func(command *coral.Command, args []string) error {
+		client, err := target.createGRPCClient()
+		if err != nil {
+			return err
+		}
+
+		req := api.DisableExitNodeRequest{MachineId: machineID}
+		resp, err := client.DisableExitNode(context.Background(), connect.NewRequest(&req))
+		if err != nil {
+			return err
+		}
+
+		printMachinesRoutesResponse(resp.Msg)
 
 		return nil
 	}
@@ -471,4 +497,36 @@ func configureSetMachineKeyExpiryCommand(command *coral.Command, v bool) *coral.
 	}
 
 	return command
+}
+
+func printMachinesRoutesResponse(msg *api.GetMachineRoutesResponse) {
+	w := new(tabwriter.Writer)
+	w.Init(os.Stdout, 8, 8, 0, '\t', 0)
+	defer w.Flush()
+
+	for i, t := range msg.AdvertisedRoutes {
+		if i == 0 {
+			fmt.Fprintf(w, "%s\t%s\n", "Advertised routes", t)
+		} else {
+			fmt.Fprintf(w, "%s\t%s\n", "", t)
+		}
+	}
+
+	for i, t := range msg.EnabledRoutes {
+		if i == 0 {
+			fmt.Fprintf(w, "%s\t%s\n", "Enabled routes", t)
+		} else {
+			fmt.Fprintf(w, "%s\t%s\n", "", t)
+		}
+	}
+
+	if msg.AdvertisedExitNode {
+		if msg.EnabledExitNode {
+			fmt.Fprintf(w, "%s\t%s\n", "Exit node", "enabled")
+		} else {
+			fmt.Fprintf(w, "%s\t%s\n", "Exit node", "disabled")
+		}
+	} else {
+		fmt.Fprintf(w, "%s\t%s\n", "Exit node", "no")
+	}
 }

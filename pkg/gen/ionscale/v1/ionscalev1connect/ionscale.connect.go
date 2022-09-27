@@ -55,6 +55,8 @@ type IonscaleServiceClient interface {
 	GetMachineRoutes(context.Context, *connect_go.Request[v1.GetMachineRoutesRequest]) (*connect_go.Response[v1.GetMachineRoutesResponse], error)
 	EnableMachineRoutes(context.Context, *connect_go.Request[v1.EnableMachineRoutesRequest]) (*connect_go.Response[v1.GetMachineRoutesResponse], error)
 	DisableMachineRoutes(context.Context, *connect_go.Request[v1.DisableMachineRoutesRequest]) (*connect_go.Response[v1.GetMachineRoutesResponse], error)
+	EnableExitNode(context.Context, *connect_go.Request[v1.EnableExitNodeRequest]) (*connect_go.Response[v1.GetMachineRoutesResponse], error)
+	DisableExitNode(context.Context, *connect_go.Request[v1.DisableExitNodeRequest]) (*connect_go.Response[v1.GetMachineRoutesResponse], error)
 }
 
 // NewIonscaleServiceClient constructs a client for the ionscale.v1.IonscaleService service. By
@@ -207,6 +209,16 @@ func NewIonscaleServiceClient(httpClient connect_go.HTTPClient, baseURL string, 
 			baseURL+"/ionscale.v1.IonscaleService/DisableMachineRoutes",
 			opts...,
 		),
+		enableExitNode: connect_go.NewClient[v1.EnableExitNodeRequest, v1.GetMachineRoutesResponse](
+			httpClient,
+			baseURL+"/ionscale.v1.IonscaleService/EnableExitNode",
+			opts...,
+		),
+		disableExitNode: connect_go.NewClient[v1.DisableExitNodeRequest, v1.GetMachineRoutesResponse](
+			httpClient,
+			baseURL+"/ionscale.v1.IonscaleService/DisableExitNode",
+			opts...,
+		),
 	}
 }
 
@@ -240,6 +252,8 @@ type ionscaleServiceClient struct {
 	getMachineRoutes     *connect_go.Client[v1.GetMachineRoutesRequest, v1.GetMachineRoutesResponse]
 	enableMachineRoutes  *connect_go.Client[v1.EnableMachineRoutesRequest, v1.GetMachineRoutesResponse]
 	disableMachineRoutes *connect_go.Client[v1.DisableMachineRoutesRequest, v1.GetMachineRoutesResponse]
+	enableExitNode       *connect_go.Client[v1.EnableExitNodeRequest, v1.GetMachineRoutesResponse]
+	disableExitNode      *connect_go.Client[v1.DisableExitNodeRequest, v1.GetMachineRoutesResponse]
 }
 
 // GetVersion calls ionscale.v1.IonscaleService.GetVersion.
@@ -382,6 +396,16 @@ func (c *ionscaleServiceClient) DisableMachineRoutes(ctx context.Context, req *c
 	return c.disableMachineRoutes.CallUnary(ctx, req)
 }
 
+// EnableExitNode calls ionscale.v1.IonscaleService.EnableExitNode.
+func (c *ionscaleServiceClient) EnableExitNode(ctx context.Context, req *connect_go.Request[v1.EnableExitNodeRequest]) (*connect_go.Response[v1.GetMachineRoutesResponse], error) {
+	return c.enableExitNode.CallUnary(ctx, req)
+}
+
+// DisableExitNode calls ionscale.v1.IonscaleService.DisableExitNode.
+func (c *ionscaleServiceClient) DisableExitNode(ctx context.Context, req *connect_go.Request[v1.DisableExitNodeRequest]) (*connect_go.Response[v1.GetMachineRoutesResponse], error) {
+	return c.disableExitNode.CallUnary(ctx, req)
+}
+
 // IonscaleServiceHandler is an implementation of the ionscale.v1.IonscaleService service.
 type IonscaleServiceHandler interface {
 	GetVersion(context.Context, *connect_go.Request[v1.GetVersionRequest]) (*connect_go.Response[v1.GetVersionResponse], error)
@@ -412,6 +436,8 @@ type IonscaleServiceHandler interface {
 	GetMachineRoutes(context.Context, *connect_go.Request[v1.GetMachineRoutesRequest]) (*connect_go.Response[v1.GetMachineRoutesResponse], error)
 	EnableMachineRoutes(context.Context, *connect_go.Request[v1.EnableMachineRoutesRequest]) (*connect_go.Response[v1.GetMachineRoutesResponse], error)
 	DisableMachineRoutes(context.Context, *connect_go.Request[v1.DisableMachineRoutesRequest]) (*connect_go.Response[v1.GetMachineRoutesResponse], error)
+	EnableExitNode(context.Context, *connect_go.Request[v1.EnableExitNodeRequest]) (*connect_go.Response[v1.GetMachineRoutesResponse], error)
+	DisableExitNode(context.Context, *connect_go.Request[v1.DisableExitNodeRequest]) (*connect_go.Response[v1.GetMachineRoutesResponse], error)
 }
 
 // NewIonscaleServiceHandler builds an HTTP handler from the service implementation. It returns the
@@ -561,6 +587,16 @@ func NewIonscaleServiceHandler(svc IonscaleServiceHandler, opts ...connect_go.Ha
 		svc.DisableMachineRoutes,
 		opts...,
 	))
+	mux.Handle("/ionscale.v1.IonscaleService/EnableExitNode", connect_go.NewUnaryHandler(
+		"/ionscale.v1.IonscaleService/EnableExitNode",
+		svc.EnableExitNode,
+		opts...,
+	))
+	mux.Handle("/ionscale.v1.IonscaleService/DisableExitNode", connect_go.NewUnaryHandler(
+		"/ionscale.v1.IonscaleService/DisableExitNode",
+		svc.DisableExitNode,
+		opts...,
+	))
 	return "/ionscale.v1.IonscaleService/", mux
 }
 
@@ -677,4 +713,12 @@ func (UnimplementedIonscaleServiceHandler) EnableMachineRoutes(context.Context, 
 
 func (UnimplementedIonscaleServiceHandler) DisableMachineRoutes(context.Context, *connect_go.Request[v1.DisableMachineRoutesRequest]) (*connect_go.Response[v1.GetMachineRoutesResponse], error) {
 	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("ionscale.v1.IonscaleService.DisableMachineRoutes is not implemented"))
+}
+
+func (UnimplementedIonscaleServiceHandler) EnableExitNode(context.Context, *connect_go.Request[v1.EnableExitNodeRequest]) (*connect_go.Response[v1.GetMachineRoutesResponse], error) {
+	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("ionscale.v1.IonscaleService.EnableExitNode is not implemented"))
+}
+
+func (UnimplementedIonscaleServiceHandler) DisableExitNode(context.Context, *connect_go.Request[v1.DisableExitNodeRequest]) (*connect_go.Response[v1.GetMachineRoutesResponse], error) {
+	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("ionscale.v1.IonscaleService.DisableExitNode is not implemented"))
 }

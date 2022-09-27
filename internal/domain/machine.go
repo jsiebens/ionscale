@@ -75,6 +75,54 @@ func (m *Machine) HasTags() bool {
 	return len(m.Tags) != 0
 }
 
+func (m *Machine) IsAdvertisedExitNode() bool {
+	for _, r := range m.HostInfo.RoutableIPs {
+		if r.Bits() == 0 {
+			return true
+		}
+	}
+	return false
+}
+
+func (m *Machine) IsAllowedExitNode() bool {
+	for _, r := range m.AllowIPs {
+		if r.Bits() == 0 {
+			return true
+		}
+	}
+	for _, r := range m.AutoAllowIPs {
+		if r.Bits() == 0 {
+			return true
+		}
+	}
+	return false
+}
+
+func (m *Machine) AdvertisedPrefixes() []string {
+	result := []string{}
+	for _, r := range m.HostInfo.RoutableIPs {
+		if r.Bits() != 0 {
+			result = append(result, r.String())
+		}
+	}
+	return result
+}
+
+func (m *Machine) AllowedPrefixes() []string {
+	result := StringSet{}
+	for _, r := range m.AllowIPs {
+		if r.Bits() != 0 {
+			result.Add(r.String())
+		}
+	}
+	for _, r := range m.AutoAllowIPs {
+		if r.Bits() != 0 {
+			result.Add(r.String())
+		}
+	}
+	return result.Items()
+}
+
 func (m *Machine) IsAllowedIP(i netip.Addr) bool {
 	if m.HasIP(i) {
 		return true

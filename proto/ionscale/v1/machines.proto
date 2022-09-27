@@ -62,6 +62,8 @@ message Machine {
   bool key_expiry_disabled = 16;
   repeated string enabled_routes = 17;
   repeated string advertised_routes = 18;
+  bool advertised_exit_node = 19;
+  bool enabled_exit_node = 20;
 }
 
 message ClientConnectivity {
