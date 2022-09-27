@@ -106,6 +106,20 @@ func (m *Machine) IsAllowedIPPrefix(i netip.Prefix) bool {
 	return false
 }
 
+func (m *Machine) IsExitNode() bool {
+	for _, t := range m.AllowIPs {
+		if t.Bits() == 0 {
+			return true
+		}
+	}
+	for _, t := range m.AutoAllowIPs {
+		if t.Bits() == 0 {
+			return true
+		}
+	}
+	return false
+}
+
 type IP struct {
 	*netip.Addr
 }

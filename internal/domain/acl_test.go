@@ -350,6 +350,50 @@ func TestACLPolicy_BuildFilterRulesAutogroupMember(t *testing.T) {
 	assert.Equal(t, expectedRules, actualRules)
 }
 
+func TestACLPolicy_BuildFilterRulesAutogroupInternet(t *testing.T) {
+	p1 := createMachine("nick@example.com")
+	p2 := createMachine("jane@example.com")
+
+	policy := ACLPolicy{
+		ACLs: []ACL{
+			{
+				Action: "accept",
+				Src:    []string{"nick@example.com"},
+				Dst:    []string{"autogroup:internet:*"},
+			},
+		},
+	}
+
+	dst := createMachine("john@example.com")
+	dst.AllowIPs = []netip.Prefix{
+		netip.MustParsePrefix("0.0.0.0/0"),
+	}
+
+	expectedDstPorts := []tailcfg.NetPortRange{}
+	for _, r := range autogroupInternetRanges() {
+		expectedDstPorts = append(expectedDstPorts, tailcfg.NetPortRange{
+			IP: r,
+			Ports: tailcfg.PortRange{
+				First: 0,
+				Last:  65535,
+			},
+		})
+	}
+
+	actualRules := policy.BuildFilterRules([]Machine{*p1, *p2}, dst)
+	expectedRules := []tailcfg.FilterRule{
+		{
+			SrcIPs: []string{
+				p1.IPv4.String(),
+				p1.IPv6.String(),
+			},
+			DstPorts: expectedDstPorts,
+		},
+	}
+
+	assert.Equal(t, expectedRules, actualRules)
+}
+
 func TestWithUser(t *testing.T) {
 	policy := ACLPolicy{
 		ACLs: []ACL{
