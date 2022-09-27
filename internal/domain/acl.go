@@ -19,11 +19,17 @@ const (
 	AutoGroupMembers = "autogroup:members"
 )
 
+type AutoApprovers struct {
+	Routes   map[string][]string `json:"routes"`
+	ExitNode []string            `json:"exitNode"`
+}
+
 type ACLPolicy struct {
-	Groups    map[string][]string `json:"groups,omitempty"`
-	Hosts     map[string]string   `json:"hosts,omitempty"`
-	ACLs      []ACL               `json:"acls"`
-	TagOwners map[string][]string `json:"tagowners"`
+	Groups        map[string][]string `json:"groups,omitempty"`
+	Hosts         map[string]string   `json:"hosts,omitempty"`
+	ACLs          []ACL               `json:"acls"`
+	TagOwners     map[string][]string `json:"tagowners"`
+	AutoApprovers AutoApprovers       `json:"autoApprovers"`
 }
 
 type ACL struct {
@@ -42,6 +48,71 @@ func DefaultPolicy() ACLPolicy {
 			},
 		},
 	}
+}
+
+func (a ACLPolicy) FindAutoApprovedIPs(routableIPs []netip.Prefix, tags []string, u *User) []netip.Prefix {
+	if len(routableIPs) == 0 {
+		return nil
+	}
+
+	matches := func(values []string) bool {
+		for _, alias := range values {
+			if alias == u.Name {
+				return true
+			}
+
+			group, ok := a.Groups[alias]
+			if ok {
+				for _, g := range group {
+					if g == u.Name {
+						return true
+					}
+				}
+			}
+
+			if strings.HasPrefix(alias, "tag:") {
+				for _, tag := range tags {
+					if alias == tag {
+						return true
+					}
+				}
+			}
+		}
+		return false
+	}
+
+	isAutoApproved := func(candidate netip.Prefix, approvedIPs []netip.Prefix) bool {
+		for _, approvedIP := range approvedIPs {
+			if candidate.Bits() >= approvedIP.Bits() && approvedIP.Contains(candidate.Masked().Addr()) {
+				return true
+			}
+		}
+		return false
+	}
+
+	autoApprovedIPs := []netip.Prefix{}
+	for route, autoApprovers := range a.AutoApprovers.Routes {
+		candidate, err := netip.ParsePrefix(route)
+		if err != nil {
+			return nil
+		}
+
+		if matches(autoApprovers) {
+			autoApprovedIPs = append(autoApprovedIPs, candidate)
+		}
+	}
+
+	result := []netip.Prefix{}
+	for _, c := range routableIPs {
+		if c.Bits() == 0 && matches(a.AutoApprovers.ExitNode) {
+			result = append(result, c)
+		}
+		if isAutoApproved(c, autoApprovedIPs) {
+			result = append(result, c)
+		}
+	}
+
+	return result
 }
 
 func (a ACLPolicy) CheckTagOwners(tags []string, p *User) error {

@@ -28,10 +28,16 @@ message ACLPolicy {
   map<string, google.protobuf.ListValue> groups = 2;
   repeated ACL acls = 3;
   map<string, google.protobuf.ListValue> tagowners = 4;
+  AutoApprovers autoapprovers = 5;
 }
 
 message ACL {
   string action = 1;
   repeated string src = 2;
   repeated string dst = 3;
+}
+
+message AutoApprovers {
+  map<string, google.protobuf.ListValue> routes = 1;
+  repeated string exitnode = 2;
 }

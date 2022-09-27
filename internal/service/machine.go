@@ -37,6 +37,9 @@ func (s *Service) machineToApi(m *domain.Machine) *api.Machine {
 	for _, r := range m.AllowIPs {
 		enabledRoutes = append(enabledRoutes, r.String())
 	}
+	for _, r := range m.AutoAllowIPs {
+		enabledRoutes = append(enabledRoutes, r.String())
+	}
 
 	return &api.Machine{
 		Id:                m.ID,
@@ -222,23 +225,24 @@ func (s *Service) EnableMachineRoutes(ctx context.Context, req *connect.Request[
 		return nil, connect.NewError(connect.CodePermissionDenied, errors.New("permission denied"))
 	}
 
-	var enabledRoutes = domain.NewAllowIPsSet(m.AllowIPs)
+	var allowIPs = domain.NewAllowIPsSet(m.AllowIPs)
+	var autoAllowIPs = domain.NewAllowIPsSet(m.AutoAllowIPs)
 
 	if req.Msg.Replace {
-		enabledRoutes = domain.NewAllowIPsSet([]netip.Prefix{})
+		allowIPs = domain.NewAllowIPsSet([]netip.Prefix{})
+		autoAllowIPs = domain.NewAllowIPsSet([]netip.Prefix{})
 	}
 
-	var routesToBeRemoved []netip.Prefix
 	for _, r := range req.Msg.Routes {
 		prefix, err := netip.ParsePrefix(r)
 		if err != nil {
 			return nil, err
 		}
-		enabledRoutes.Add(prefix)
-		routesToBeRemoved = append(routesToBeRemoved, prefix)
+		allowIPs.Add(prefix)
 	}
 
-	m.AllowIPs = enabledRoutes.Items()
+	m.AllowIPs = allowIPs.Items()
+	m.AutoAllowIPs = autoAllowIPs.Items()
 	if err := s.repository.SaveMachine(ctx, m); err != nil {
 		return nil, err
 	}
@@ -264,19 +268,20 @@ func (s *Service) DisableMachineRoutes(ctx context.Context, req *connect.Request
 		return nil, connect.NewError(connect.CodePermissionDenied, errors.New("permission denied"))
 	}
 
-	enabledRoutes := domain.NewAllowIPsSet(m.AllowIPs)
+	allowIPs := domain.NewAllowIPsSet(m.AllowIPs)
+	autoAllowIPs := domain.NewAllowIPsSet(m.AutoAllowIPs)
 
-	var routesToBeRemoved []netip.Prefix
 	for _, r := range req.Msg.Routes {
 		prefix, err := netip.ParsePrefix(r)
 		if err != nil {
 			return nil, err
 		}
-		enabledRoutes.Remove(prefix)
-		routesToBeRemoved = append(routesToBeRemoved, prefix)
+		allowIPs.Remove(prefix)
+		autoAllowIPs.Remove(prefix)
 	}
 
-	m.AllowIPs = enabledRoutes.Items()
+	m.AllowIPs = allowIPs.Items()
+	m.AutoAllowIPs = autoAllowIPs.Items()
 	if err := s.repository.SaveMachine(ctx, m); err != nil {
 		return nil, err
 	}

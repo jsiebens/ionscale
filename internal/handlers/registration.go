@@ -156,6 +156,12 @@ func (h *RegistrationHandlers) authenticateMachineWithAuthKey(c echo.Context, bi
 		return binder.WriteResponse(c, http.StatusOK, response)
 	}
 
+	registeredTags := authKey.Tags
+	advertisedTags := domain.SanitizeTags(req.Hostinfo.RequestTags)
+	tags := append(registeredTags, advertisedTags...)
+
+	autoAllowIPs := tailnet.ACLPolicy.FindAutoApprovedIPs(req.Hostinfo.RoutableIPs, tags, &user)
+
 	var m *domain.Machine
 
 	m, err = h.repository.GetMachineByKey(ctx, tailnet.ID, machineKey)
@@ -166,10 +172,6 @@ func (h *RegistrationHandlers) authenticateMachineWithAuthKey(c echo.Context, bi
 	now := time.Now().UTC()
 
 	if m == nil {
-		registeredTags := authKey.Tags
-		advertisedTags := domain.SanitizeTags(req.Hostinfo.RequestTags)
-		tags := append(registeredTags, advertisedTags...)
-
 		sanitizeHostname := dnsname.SanitizeHostname(req.Hostinfo.Hostname)
 		nameIdx, err := h.repository.GetNextMachineNameIndex(ctx, tailnet.ID, sanitizeHostname)
 		if err != nil {
@@ -185,6 +187,7 @@ func (h *RegistrationHandlers) authenticateMachineWithAuthKey(c echo.Context, bi
 			Ephemeral:         authKey.Ephemeral || req.Ephemeral,
 			RegisteredTags:    registeredTags,
 			Tags:              domain.SanitizeTags(tags),
+			AutoAllowIPs:      autoAllowIPs,
 			CreatedAt:         now,
 			ExpiresAt:         now.Add(180 * 24 * time.Hour).UTC(),
 			KeyExpiryDisabled: len(tags) != 0,
@@ -204,10 +207,6 @@ func (h *RegistrationHandlers) authenticateMachineWithAuthKey(c echo.Context, bi
 		m.IPv4 = domain.IP{Addr: ipv4}
 		m.IPv6 = domain.IP{Addr: ipv6}
 	} else {
-		registeredTags := authKey.Tags
-		advertisedTags := domain.SanitizeTags(req.Hostinfo.RequestTags)
-		tags := append(registeredTags, advertisedTags...)
-
 		sanitizeHostname := dnsname.SanitizeHostname(req.Hostinfo.Hostname)
 		if m.Name != sanitizeHostname {
 			nameIdx, err := h.repository.GetNextMachineNameIndex(ctx, tailnet.ID, sanitizeHostname)
@@ -221,6 +220,7 @@ func (h *RegistrationHandlers) authenticateMachineWithAuthKey(c echo.Context, bi
 		m.Ephemeral = authKey.Ephemeral || req.Ephemeral
 		m.RegisteredTags = registeredTags
 		m.Tags = domain.SanitizeTags(tags)
+		m.AutoAllowIPs = autoAllowIPs
 		m.UserID = user.ID
 		m.User = user
 		m.TailnetID = tailnet.ID

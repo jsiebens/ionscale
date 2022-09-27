@@ -515,3 +515,96 @@ func TestACLPolicy_IsTagOwner(t *testing.T) {
 		})
 	}
 }
+
+func TestACLPolicy_FindAutoApprovedIPs(t *testing.T) {
+	route1 := netip.MustParsePrefix("10.160.0.0/20")
+	route2 := netip.MustParsePrefix("10.161.0.0/20")
+	route3 := netip.MustParsePrefix("10.162.0.0/20")
+
+	policy := ACLPolicy{
+		Groups: map[string][]string{
+			"group:admins": {"jane@example.com"},
+		},
+		AutoApprovers: AutoApprovers{
+			Routes: map[string][]string{
+				route1.String(): {"group:admins"},
+				route2.String(): {"john@example.com", "tag:router"},
+			},
+			ExitNode: []string{"nick@example.com"},
+		},
+	}
+
+	testCases := []struct {
+		name        string
+		tag         []string
+		userName    string
+		routableIPs []netip.Prefix
+		expected    []netip.Prefix
+	}{
+		{
+			name:        "nil",
+			tag:         []string{},
+			userName:    "john@example.com",
+			routableIPs: nil,
+			expected:    nil,
+		},
+		{
+			name:        "empty",
+			tag:         []string{},
+			userName:    "john@example.com",
+			routableIPs: []netip.Prefix{},
+			expected:    nil,
+		},
+		{
+			name:        "by user",
+			tag:         []string{},
+			userName:    "john@example.com",
+			routableIPs: []netip.Prefix{route1, route2, route3},
+			expected:    []netip.Prefix{route2},
+		},
+		{
+			name:        "partial by user",
+			tag:         []string{},
+			userName:    "john@example.com",
+			routableIPs: []netip.Prefix{netip.MustParsePrefix("10.161.4.0/22")},
+			expected:    []netip.Prefix{netip.MustParsePrefix("10.161.4.0/22")},
+		},
+		{
+			name:        "by tag",
+			tag:         []string{"tag:router"},
+			routableIPs: []netip.Prefix{route1, route2, route3},
+			expected:    []netip.Prefix{route2},
+		},
+		{
+			name:        "by group",
+			userName:    "jane@example.com",
+			routableIPs: []netip.Prefix{route1, route2, route3},
+			expected:    []netip.Prefix{route1},
+		},
+		{
+			name:        "no match",
+			userName:    "nick@example.com",
+			routableIPs: []netip.Prefix{route1, route2, route3},
+			expected:    []netip.Prefix{},
+		},
+		{
+			name:        "exit",
+			userName:    "nick@example.com",
+			routableIPs: []netip.Prefix{netip.MustParsePrefix("0.0.0.0/0")},
+			expected:    []netip.Prefix{netip.MustParsePrefix("0.0.0.0/0")},
+		},
+		{
+			name:        "exit no match",
+			userName:    "john@example.com",
+			routableIPs: []netip.Prefix{netip.MustParsePrefix("0.0.0.0/0")},
+			expected:    []netip.Prefix{},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			actualAllowedIPs := policy.FindAutoApprovedIPs(tc.routableIPs, tc.tag, &User{Name: tc.userName})
+			assert.Equal(t, tc.expected, actualAllowedIPs)
+		})
+	}
+}

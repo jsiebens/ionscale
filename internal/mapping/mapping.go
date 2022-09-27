@@ -117,6 +117,7 @@ func ToNode(m *domain.Machine) (*tailcfg.Node, *tailcfg.UserProfile, error) {
 	}
 
 	allowedIPs = append(allowedIPs, m.AllowIPs...)
+	allowedIPs = append(allowedIPs, m.AutoAllowIPs...)
 
 	var derp string
 	if hostinfo.NetInfo != nil {
