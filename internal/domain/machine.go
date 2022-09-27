@@ -25,9 +25,10 @@ type Machine struct {
 	Tags              Tags
 	KeyExpiryDisabled bool
 
-	HostInfo  HostInfo
-	Endpoints Endpoints
-	AllowIPs  AllowIPs
+	HostInfo     HostInfo
+	Endpoints    Endpoints
+	AllowIPs     AllowIPs
+	AutoAllowIPs AllowIPs
 
 	IPv4 IP
 	IPv6 IP
@@ -83,11 +84,21 @@ func (m *Machine) IsAllowedIP(i netip.Addr) bool {
 			return true
 		}
 	}
+	for _, t := range m.AutoAllowIPs {
+		if t.Contains(i) {
+			return true
+		}
+	}
 	return false
 }
 
 func (m *Machine) IsAllowedIPPrefix(i netip.Prefix) bool {
 	for _, t := range m.AllowIPs {
+		if t.Overlaps(i) {
+			return true
+		}
+	}
+	for _, t := range m.AutoAllowIPs {
 		if t.Overlaps(i) {
 			return true
 		}

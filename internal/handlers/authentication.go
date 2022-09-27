@@ -393,6 +393,8 @@ func (h *AuthenticationHandlers) endMachineRegistrationFlow(c echo.Context, regi
 		return c.Redirect(http.StatusFound, "/a/error?e=nto")
 	}
 
+	autoAllowIPs := tailnet.ACLPolicy.FindAutoApprovedIPs(req.Hostinfo.RoutableIPs, tags, user)
+
 	var m *domain.Machine
 
 	m, err := h.repository.GetMachineByKey(ctx, tailnet.ID, machineKey)
@@ -422,6 +424,7 @@ func (h *AuthenticationHandlers) endMachineRegistrationFlow(c echo.Context, regi
 			Ephemeral:         ephemeral || req.Ephemeral,
 			RegisteredTags:    registeredTags,
 			Tags:              domain.SanitizeTags(tags),
+			AutoAllowIPs:      autoAllowIPs,
 			CreatedAt:         now,
 			ExpiresAt:         now.Add(180 * 24 * time.Hour).UTC(),
 			KeyExpiryDisabled: len(tags) != 0,
@@ -454,6 +457,7 @@ func (h *AuthenticationHandlers) endMachineRegistrationFlow(c echo.Context, regi
 		m.Ephemeral = ephemeral || req.Ephemeral
 		m.RegisteredTags = registeredTags
 		m.Tags = domain.SanitizeTags(tags)
+		m.AutoAllowIPs = autoAllowIPs
 		m.UserID = user.ID
 		m.User = *user
 		m.TailnetID = tailnet.ID
