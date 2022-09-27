@@ -8,6 +8,7 @@ import (
 	"github.com/hashicorp/go-hclog"
 	"github.com/jsiebens/ionscale/internal/broker"
 	"github.com/jsiebens/ionscale/internal/database/migration"
+	"github.com/jsiebens/ionscale/internal/util"
 	"tailscale.com/types/key"
 	"time"
 
@@ -85,6 +86,10 @@ func migrate(db *gorm.DB) error {
 		return err
 	}
 
+	if err := createJSONWebKeySet(ctx, repository); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -102,6 +107,29 @@ func createServerKey(ctx context.Context, repository domain.Repository) error {
 		LegacyControlKey: key.NewMachine(),
 	}
 	if err := repository.SetControlKeys(ctx, &keys); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func createJSONWebKeySet(ctx context.Context, repository domain.Repository) error {
+	jwks, err := repository.GetJSONWebKeySet(ctx)
+	if err != nil {
+		return err
+	}
+	if jwks != nil {
+		return nil
+	}
+
+	privateKey, id, err := util.NewPrivateKey()
+	if err != nil {
+		return err
+	}
+
+	jsonWebKey := domain.JSONWebKey{Id: id, PrivateKey: *privateKey}
+
+	if err := repository.SetJSONWebKeySet(ctx, &domain.JSONWebKeys{Key: jsonWebKey}); err != nil {
 		return err
 	}
 

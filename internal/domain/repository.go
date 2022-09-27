@@ -14,6 +14,9 @@ type Repository interface {
 	GetControlKeys(ctx context.Context) (*ControlKeys, error)
 	SetControlKeys(ctx context.Context, keys *ControlKeys) error
 
+	GetJSONWebKeySet(ctx context.Context) (*JSONWebKeys, error)
+	SetJSONWebKeySet(ctx context.Context, keys *JSONWebKeys) error
+
 	GetDERPMap(ctx context.Context) (*tailcfg.DERPMap, error)
 	SetDERPMap(ctx context.Context, v *tailcfg.DERPMap) error
 
