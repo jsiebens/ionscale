@@ -11,6 +11,9 @@ import (
 )
 
 type Repository interface {
+	GetControlKeys(ctx context.Context) (*ControlKeys, error)
+	SetControlKeys(ctx context.Context, keys *ControlKeys) error
+
 	GetDERPMap(ctx context.Context) (*tailcfg.DERPMap, error)
 	SetDERPMap(ctx context.Context, v *tailcfg.DERPMap) error
 

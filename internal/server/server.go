@@ -37,12 +37,17 @@ func Start(c *config.Config) error {
 
 	logger.Info("Starting ionscale server")
 
-	serverKey, err := c.ReadServerKeys()
+	repository, brokers, err := database.OpenDB(&c.Database, logger)
 	if err != nil {
 		return err
 	}
 
-	repository, brokers, err := database.OpenDB(&c.Database, logger)
+	defaultControlKeys, err := repository.GetControlKeys(context.Background())
+	if err != nil {
+		return err
+	}
+
+	serverKey, err := c.ReadServerKeys(defaultControlKeys)
 	if err != nil {
 		return err
 	}

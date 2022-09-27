@@ -5,6 +5,7 @@ import (
 	"github.com/caarlos0/env/v6"
 	"github.com/caddyserver/certmagic"
 	"github.com/imdario/mergo"
+	"github.com/jsiebens/ionscale/internal/domain"
 	"github.com/jsiebens/ionscale/internal/key"
 	"github.com/jsiebens/ionscale/internal/util"
 	"github.com/mitchellh/go-homedir"
@@ -178,8 +179,11 @@ func (c *Config) CreateUrl(format string, a ...interface{}) string {
 	return strings.TrimSuffix(c.ServerUrl, "/") + "/" + strings.TrimPrefix(path, "/")
 }
 
-func (c *Config) ReadServerKeys() (*ServerKeys, error) {
-	keys := &ServerKeys{}
+func (c *Config) ReadServerKeys(defaultKeys *domain.ControlKeys) (*ServerKeys, error) {
+	keys := &ServerKeys{
+		ControlKey:       defaultKeys.ControlKey,
+		LegacyControlKey: defaultKeys.LegacyControlKey,
+	}
 
 	if len(c.Keys.SystemAdminKey) != 0 {
 		systemAdminKey, err := key.ParsePrivateKey(c.Keys.SystemAdminKey)
@@ -190,17 +194,21 @@ func (c *Config) ReadServerKeys() (*ServerKeys, error) {
 		keys.SystemAdminKey = systemAdminKey
 	}
 
-	controlKey, err := util.ParseMachinePrivateKey(c.Keys.ControlKey)
-	if err != nil {
-		return nil, fmt.Errorf("error reading control key: %v", err)
+	if len(c.Keys.ControlKey) != 0 {
+		controlKey, err := util.ParseMachinePrivateKey(c.Keys.ControlKey)
+		if err != nil {
+			return nil, fmt.Errorf("error reading control key: %v", err)
+		}
+		keys.ControlKey = *controlKey
 	}
-	keys.ControlKey = *controlKey
 
-	legacyControlKey, err := util.ParseMachinePrivateKey(c.Keys.LegacyControlKey)
-	if err != nil {
-		return nil, fmt.Errorf("error reading legacy control key: %v", err)
+	if len(c.Keys.LegacyControlKey) != 0 {
+		legacyControlKey, err := util.ParseMachinePrivateKey(c.Keys.LegacyControlKey)
+		if err != nil {
+			return nil, fmt.Errorf("error reading legacy control key: %v", err)
+		}
+		keys.LegacyControlKey = *legacyControlKey
 	}
-	keys.LegacyControlKey = *legacyControlKey
 
 	return keys, nil
 }

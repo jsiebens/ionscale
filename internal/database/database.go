@@ -8,6 +8,7 @@ import (
 	"github.com/hashicorp/go-hclog"
 	"github.com/jsiebens/ionscale/internal/broker"
 	"github.com/jsiebens/ionscale/internal/database/migration"
+	"tailscale.com/types/key"
 	"time"
 
 	"github.com/jsiebens/ionscale/internal/config"
@@ -74,6 +75,33 @@ func migrate(db *gorm.DB) error {
 	m := gormigrate.New(db, gormigrate.DefaultOptions, migration.Migrations())
 
 	if err := m.Migrate(); err != nil {
+		return err
+	}
+
+	ctx := context.Background()
+	repository := domain.NewRepository(db)
+
+	if err := createServerKey(ctx, repository); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func createServerKey(ctx context.Context, repository domain.Repository) error {
+	serverKey, err := repository.GetControlKeys(ctx)
+	if err != nil {
+		return err
+	}
+	if serverKey != nil {
+		return nil
+	}
+
+	keys := domain.ControlKeys{
+		ControlKey:       key.NewMachine(),
+		LegacyControlKey: key.NewMachine(),
+	}
+	if err := repository.SetControlKeys(ctx, &keys); err != nil {
 		return err
 	}
 
