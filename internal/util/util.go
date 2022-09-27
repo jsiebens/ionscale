@@ -1,6 +1,7 @@
 package util
 
 import (
+	"crypto/rsa"
 	"math/rand"
 	"time"
 )
@@ -33,4 +34,15 @@ func RandomBytes(size int) ([]byte, error) {
 		return nil, err
 	}
 	return buf, nil
+}
+
+func NewPrivateKey() (*rsa.PrivateKey, string, error) {
+	id := RandStringBytes(22)
+
+	privateKey, err := rsa.GenerateKey(entropy, 2048)
+	if err != nil {
+		return nil, "", err
+	}
+
+	return privateKey, id, nil
 }

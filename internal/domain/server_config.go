@@ -2,11 +2,14 @@ package domain
 
 import (
 	"context"
+	"crypto"
+	"crypto/rsa"
 	"encoding/json"
 	"errors"
 	"gorm.io/gorm"
 	"tailscale.com/tailcfg"
 	tkey "tailscale.com/types/key"
+	"time"
 )
 
 type configKey string
@@ -14,7 +17,22 @@ type configKey string
 const (
 	derpMapConfigKey     configKey = "derp_map"
 	controlKeysConfigKey configKey = "control_keys"
+	jwksConfigKey        configKey = "jwks"
 )
+
+type JSONWebKeys struct {
+	Key JSONWebKey
+}
+
+type JSONWebKey struct {
+	Id         string
+	PrivateKey rsa.PrivateKey
+	CreatedAt  time.Time
+}
+
+func (j JSONWebKey) Public() crypto.PublicKey {
+	return j.PrivateKey.Public()
+}
 
 type ServerConfig struct {
 	Key   configKey `gorm:"primary_key"`
@@ -43,6 +61,25 @@ func (r *repository) GetControlKeys(ctx context.Context) (*ControlKeys, error) {
 
 func (r *repository) SetControlKeys(ctx context.Context, v *ControlKeys) error {
 	return r.setServerConfig(ctx, controlKeysConfigKey, v)
+}
+
+func (r *repository) GetJSONWebKeySet(ctx context.Context) (*JSONWebKeys, error) {
+	var m JSONWebKeys
+	err := r.getServerConfig(ctx, jwksConfigKey, &m)
+
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, nil
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &m, nil
+}
+
+func (r *repository) SetJSONWebKeySet(ctx context.Context, v *JSONWebKeys) error {
+	return r.setServerConfig(ctx, jwksConfigKey, v)
 }
 
 func (r *repository) GetDERPMap(ctx context.Context) (*tailcfg.DERPMap, error) {

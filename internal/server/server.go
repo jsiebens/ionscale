@@ -96,6 +96,7 @@ func Start(c *config.Config) error {
 		registrationHandlers := handlers.NewRegistrationHandlers(bind.DefaultBinder(p), c, brokers, repository)
 		pollNetMapHandler := handlers.NewPollNetMapHandler(bind.DefaultBinder(p), brokers, repository, offlineTimers)
 		dnsHandlers := handlers.NewDNSHandlers(bind.DefaultBinder(p), dnsProvider)
+		idTokenHandlers := handlers.NewIDTokenHandlers(bind.DefaultBinder(p), c, repository)
 
 		e := echo.New()
 		e.Use(EchoLogger(logger))
@@ -103,6 +104,7 @@ func Start(c *config.Config) error {
 		e.POST("/machine/register", registrationHandlers.Register)
 		e.POST("/machine/map", pollNetMapHandler.PollNetMap)
 		e.POST("/machine/set-dns", dnsHandlers.SetDNS)
+		e.POST("/machine/id-token", idTokenHandlers.FetchToken)
 
 		return e
 	}
@@ -111,6 +113,7 @@ func Start(c *config.Config) error {
 	registrationHandlers := handlers.NewRegistrationHandlers(bind.BoxBinder(serverKey.LegacyControlKey), c, brokers, repository)
 	pollNetMapHandler := handlers.NewPollNetMapHandler(bind.BoxBinder(serverKey.LegacyControlKey), brokers, repository, offlineTimers)
 	dnsHandlers := handlers.NewDNSHandlers(bind.BoxBinder(serverKey.LegacyControlKey), dnsProvider)
+	idTokenHandlers := handlers.NewIDTokenHandlers(bind.BoxBinder(serverKey.LegacyControlKey), c, repository)
 	authenticationHandlers := handlers.NewAuthenticationHandlers(
 		c,
 		authProvider,
@@ -149,6 +152,8 @@ func Start(c *config.Config) error {
 	tlsAppHandler.POST("/machine/:id", registrationHandlers.Register)
 	tlsAppHandler.POST("/machine/:id/map", pollNetMapHandler.PollNetMap)
 	tlsAppHandler.POST("/machine/:id/set-dns", dnsHandlers.SetDNS)
+	tlsAppHandler.GET("/.well-known/jwks", idTokenHandlers.Jwks)
+	tlsAppHandler.GET("/.well-known/openid-configuration", idTokenHandlers.OpenIDConfig)
 
 	auth := tlsAppHandler.Group("/a")
 	auth.Use(middleware.CSRFWithConfig(middleware.CSRFConfig{
