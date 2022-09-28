@@ -5,6 +5,9 @@ import (
 	"errors"
 	"github.com/jsiebens/ionscale/internal/util"
 	"gorm.io/gorm"
+	"net/mail"
+	"strings"
+	"tailscale.com/util/dnsname"
 )
 
 type Tailnet struct {
@@ -13,6 +16,23 @@ type Tailnet struct {
 	DNSConfig DNSConfig
 	IAMPolicy IAMPolicy
 	ACLPolicy ACLPolicy
+}
+
+func SanitizeTailnetName(name string) string {
+	name = strings.ToLower(name)
+
+	a, err := mail.ParseAddress(name)
+	if err == nil && a.Address == name {
+		s := strings.Split(name, "@")
+		return strings.Join([]string{dnsname.SanitizeLabel(s[0]), s[1]}, ".")
+	}
+
+	labels := strings.Split(name, ".")
+	for i, s := range labels {
+		labels[i] = dnsname.SanitizeLabel(s)
+	}
+
+	return strings.Join(labels, ".")
 }
 
 func (r *repository) SaveTailnet(ctx context.Context, tailnet *Tailnet) error {

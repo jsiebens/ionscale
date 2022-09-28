@@ -9,7 +9,6 @@ import (
 	"github.com/jsiebens/ionscale/internal/config"
 	"github.com/jsiebens/ionscale/internal/domain"
 	api "github.com/jsiebens/ionscale/pkg/gen/ionscale/v1"
-	"tailscale.com/util/dnsname"
 )
 
 func (s *Service) GetDNSConfig(ctx context.Context, req *connect.Request[api.GetDNSConfigRequest]) (*connect.Response[api.GetDNSConfigResponse], error) {
@@ -27,7 +26,7 @@ func (s *Service) GetDNSConfig(ctx context.Context, req *connect.Request[api.Get
 	}
 
 	dnsConfig := tailnet.DNSConfig
-	tailnetDomain := dnsname.SanitizeHostname(tailnet.Name)
+	tailnetDomain := domain.SanitizeTailnetName(tailnet.Name)
 
 	resp := &api.GetDNSConfigResponse{
 		Config: &api.DNSConfig{

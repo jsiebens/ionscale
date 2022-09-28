@@ -11,7 +11,6 @@ import (
 	"tailscale.com/tailcfg"
 	"tailscale.com/types/dnstype"
 	"tailscale.com/types/key"
-	"tailscale.com/util/dnsname"
 	"time"
 )
 
@@ -29,7 +28,7 @@ func CopyViaJson[F any, T any](f F, t T) error {
 }
 
 func ToDNSConfig(tailnet *domain.Tailnet, c *domain.DNSConfig) *tailcfg.DNSConfig {
-	tailnetDomain := dnsname.SanitizeHostname(tailnet.Name)
+	tailnetDomain := domain.SanitizeTailnetName(tailnet.Name)
 	resolvers := []*dnstype.Resolver{}
 	for _, r := range c.Nameservers {
 		resolver := &dnstype.Resolver{
@@ -131,7 +130,7 @@ func ToNode(m *domain.Machine) (*tailcfg.Node, *tailcfg.UserProfile, error) {
 		name = fmt.Sprintf("%s-%d", m.Name, m.NameIdx)
 	}
 
-	sanitizedTailnetName := dnsname.SanitizeHostname(m.Tailnet.Name)
+	sanitizedTailnetName := domain.SanitizeTailnetName(m.Tailnet.Name)
 
 	hostInfo := tailcfg.Hostinfo{
 		OS:       hostinfo.OS,

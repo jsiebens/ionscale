@@ -10,7 +10,6 @@ import (
 	"github.com/labstack/echo/v4"
 	"net/http"
 	"tailscale.com/tailcfg"
-	"tailscale.com/util/dnsname"
 	"time"
 )
 
@@ -286,7 +285,7 @@ func (h *PollNetMapHandler) createMapResponse(m *domain.Machine, binder bind.Bin
 			DNSConfig:    mapping.ToDNSConfig(&m.Tailnet, &dnsConfig),
 			PacketFilter: rules,
 			DERPMap:      derpMap,
-			Domain:       dnsname.SanitizeHostname(m.Tailnet.Name),
+			Domain:       domain.SanitizeTailnetName(m.Tailnet.Name),
 			Peers:        changedPeers,
 			UserProfiles: users,
 			ControlTime:  &controlTime,
@@ -300,7 +299,7 @@ func (h *PollNetMapHandler) createMapResponse(m *domain.Machine, binder bind.Bin
 			DNSConfig:    mapping.ToDNSConfig(&m.Tailnet, &dnsConfig),
 			PacketFilter: rules,
 			DERPMap:      derpMap,
-			Domain:       dnsname.SanitizeHostname(m.Tailnet.Name),
+			Domain:       domain.SanitizeTailnetName(m.Tailnet.Name),
 			PeersChanged: changedPeers,
 			PeersRemoved: removedPeers,
 			UserProfiles: users,
