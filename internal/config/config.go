@@ -124,17 +124,17 @@ type ServerKeys struct {
 }
 
 type Config struct {
-	HttpListenAddr    string       `yaml:"http_listen_addr,omitempty" env:"HTTP_LISTEN_ADDR"`
-	HttpsListenAddr   string       `yaml:"https_listen_addr,omitempty" env:"HTTPS_LISTEN_ADDR"`
-	MetricsListenAddr string       `yaml:"metrics_listen_addr,omitempty" env:"METRICS_LISTEN_ADDR"`
-	ServerUrl         string       `yaml:"server_url,omitempty" env:"SERVER_URL"`
-	Tls               Tls          `yaml:"tls,omitempty" envPrefix:"TLS_"`
-	PollNet           PollNet      `yaml:"poll_net,omitempty" envPrefix:"POLL_NET_"`
-	Keys              Keys         `yaml:"keys,omitempty" envPrefix:"KEYS_"`
-	Database          Database     `yaml:"database,omitempty" envPrefix:"DB_"`
-	AuthProvider      AuthProvider `yaml:"auth_provider,omitempty"`
-	DNS               DNS          `yaml:"dns,omitempty"`
-	Logging           Logging      `yaml:"logging,omitempty" envPrefix:"LOGGING_"`
+	HttpListenAddr    string   `yaml:"http_listen_addr,omitempty" env:"HTTP_LISTEN_ADDR"`
+	HttpsListenAddr   string   `yaml:"https_listen_addr,omitempty" env:"HTTPS_LISTEN_ADDR"`
+	MetricsListenAddr string   `yaml:"metrics_listen_addr,omitempty" env:"METRICS_LISTEN_ADDR"`
+	ServerUrl         string   `yaml:"server_url,omitempty" env:"SERVER_URL"`
+	Tls               Tls      `yaml:"tls,omitempty" envPrefix:"TLS_"`
+	PollNet           PollNet  `yaml:"poll_net,omitempty" envPrefix:"POLL_NET_"`
+	Keys              Keys     `yaml:"keys,omitempty" envPrefix:"KEYS_"`
+	Database          Database `yaml:"database,omitempty" envPrefix:"DB_"`
+	Auth              Auth     `yaml:"auth,omitempty" envPrefix:"AUTH_"`
+	DNS               DNS      `yaml:"dns,omitempty"`
+	Logging           Logging  `yaml:"logging,omitempty" envPrefix:"LOGGING_"`
 }
 
 type Tls struct {
@@ -169,12 +169,16 @@ type Keys struct {
 	SystemAdminKey   string `yaml:"system_admin_key,omitempty" env:"SYSTEM_ADMIN_KEY"`
 }
 
-type AuthProvider struct {
-	Issuer            string            `yaml:"issuer"`
-	ClientID          string            `yaml:"client_id"`
-	ClientSecret      string            `yaml:"client_secret"`
-	Scopes            []string          `yaml:"additional_scopes"`
+type Auth struct {
+	Provider          AuthProvider      `yaml:"provider,omitempty" env:"PROVIDER"`
 	SystemAdminPolicy SystemAdminPolicy `yaml:"system_admins"`
+}
+
+type AuthProvider struct {
+	Issuer       string   `yaml:"issuer" env:"ISSUER"`
+	ClientID     string   `yaml:"client_id" env:"CLIENT_ID"`
+	ClientSecret string   `yaml:"client_secret" env:"CLIENT_SECRET"`
+	Scopes       []string `yaml:"additional_scopes"  env:"SCOPES"`
 }
 
 type DNS struct {

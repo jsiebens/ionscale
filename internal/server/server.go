@@ -82,7 +82,7 @@ func Start(c *config.Config) error {
 		c.HttpsListenAddr = fmt.Sprintf(":%d", certmagic.HTTPSPort)
 	}
 
-	authProvider, systemIAMPolicy, err := setupAuthProvider(c.AuthProvider)
+	authProvider, systemIAMPolicy, err := setupAuthProvider(c.Auth)
 	if err != nil {
 		return fmt.Errorf("error configuring OIDC provider: %v", err)
 	}
@@ -202,12 +202,12 @@ func Start(c *config.Config) error {
 	return g.Wait()
 }
 
-func setupAuthProvider(config config.AuthProvider) (provider.AuthProvider, *domain.IAMPolicy, error) {
-	if len(config.Issuer) == 0 {
+func setupAuthProvider(config config.Auth) (provider.AuthProvider, *domain.IAMPolicy, error) {
+	if len(config.Provider.Issuer) == 0 {
 		return nil, &domain.IAMPolicy{}, nil
 	}
 
-	authProvider, err := provider.NewOIDCProvider(&config)
+	authProvider, err := provider.NewOIDCProvider(&config.Provider)
 	if err != nil {
 		return nil, nil, err
 	}
