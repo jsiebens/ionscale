@@ -16,20 +16,18 @@ import "ionscale/v1/routes.proto";
 import "ionscale/v1/dns.proto";
 import "ionscale/v1/iam.proto";
 import "ionscale/v1/acl.proto";
-import "ionscale/v1/derp.proto";
 
 service IonscaleService {
   rpc GetVersion (GetVersionRequest) returns (GetVersionResponse) {}
 
   rpc Authenticate (AuthenticationRequest) returns (stream AuthenticationResponse) {}
 
-  rpc GetDERPMap (GetDERPMapRequest) returns (GetDERPMapResponse) {}
-  rpc SetDERPMap (SetDERPMapRequest) returns (SetDERPMapResponse) {}
-
   rpc CreateTailnet (CreateTailnetRequest) returns (CreateTailnetResponse) {}
   rpc GetTailnet (GetTailnetRequest) returns (GetTailnetResponse) {}
   rpc ListTailnets (ListTailnetRequest) returns (ListTailnetResponse) {}
   rpc DeleteTailnet (DeleteTailnetRequest) returns (DeleteTailnetResponse) {}
+  rpc GetDERPMap (GetDERPMapRequest) returns (GetDERPMapResponse) {}
+  rpc SetDERPMap (SetDERPMapRequest) returns (SetDERPMapResponse) {}
 
   rpc GetDNSConfig (GetDNSConfigRequest) returns (GetDNSConfigResponse) {}
   rpc SetDNSConfig (SetDNSConfigRequest) returns (SetDNSConfigResponse) {}

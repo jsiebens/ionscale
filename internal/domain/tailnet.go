@@ -7,6 +7,7 @@ import (
 	"gorm.io/gorm"
 	"net/mail"
 	"strings"
+	"tailscale.com/tailcfg"
 	"tailscale.com/util/dnsname"
 )
 
@@ -17,6 +18,15 @@ type Tailnet struct {
 	DNSConfig DNSConfig
 	IAMPolicy IAMPolicy
 	ACLPolicy ACLPolicy
+	DERPMap   DERPMap
+}
+
+func (t Tailnet) GetDERPMap(ctx context.Context, fallack DefaultDERPMap) (*tailcfg.DERPMap, error) {
+	if t.DERPMap.Checksum == "" {
+		return fallack.GetDERPMap(ctx)
+	} else {
+		return &t.DERPMap.DERPMap, nil
+	}
 }
 
 func SanitizeTailnetName(name string) string {

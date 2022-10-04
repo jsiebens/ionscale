@@ -2,12 +2,15 @@ package service
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/bufbuild/connect-go"
 	"github.com/jsiebens/ionscale/internal/broker"
 	"github.com/jsiebens/ionscale/internal/domain"
+	"github.com/jsiebens/ionscale/internal/util"
 	api "github.com/jsiebens/ionscale/pkg/gen/ionscale/v1"
+	"tailscale.com/tailcfg"
 )
 
 func (s *Service) CreateTailnet(ctx context.Context, req *connect.Request[api.CreateTailnetRequest]) (*connect.Response[api.CreateTailnetResponse], error) {
@@ -136,4 +139,69 @@ func (s *Service) DeleteTailnet(ctx context.Context, req *connect.Request[api.De
 	s.pubsub.Publish(req.Msg.TailnetId, &broker.Signal{})
 
 	return connect.NewResponse(&api.DeleteTailnetResponse{}), nil
+}
+
+func (s *Service) SetDERPMap(ctx context.Context, req *connect.Request[api.SetDERPMapRequest]) (*connect.Response[api.SetDERPMapResponse], error) {
+	principal := CurrentPrincipal(ctx)
+	if !principal.IsSystemAdmin() && !principal.IsTailnetAdmin(req.Msg.TailnetId) {
+		return nil, connect.NewError(connect.CodePermissionDenied, errors.New("permission denied"))
+	}
+
+	derpMap := tailcfg.DERPMap{}
+	if err := json.Unmarshal(req.Msg.Value, &derpMap); err != nil {
+		return nil, err
+	}
+
+	tailnet, err := s.repository.GetTailnet(ctx, req.Msg.TailnetId)
+	if err != nil {
+		return nil, err
+	}
+	if tailnet == nil {
+		return nil, connect.NewError(connect.CodeNotFound, errors.New("tailnet not found"))
+	}
+
+	tailnet.DERPMap = domain.DERPMap{
+		Checksum: util.Checksum(&derpMap),
+		DERPMap:  derpMap,
+	}
+
+	if err := s.repository.SaveTailnet(ctx, tailnet); err != nil {
+		return nil, err
+	}
+
+	s.pubsub.Publish(tailnet.ID, &broker.Signal{})
+
+	raw, err := json.Marshal(derpMap)
+	if err != nil {
+		return nil, err
+	}
+
+	return connect.NewResponse(&api.SetDERPMapResponse{Value: raw}), nil
+}
+
+func (s *Service) GetDERPMap(ctx context.Context, req *connect.Request[api.GetDERPMapRequest]) (*connect.Response[api.GetDERPMapResponse], error) {
+	principal := CurrentPrincipal(ctx)
+	if !principal.IsSystemAdmin() && !principal.IsTailnetAdmin(req.Msg.TailnetId) {
+		return nil, connect.NewError(connect.CodePermissionDenied, errors.New("permission denied"))
+	}
+
+	tailnet, err := s.repository.GetTailnet(ctx, req.Msg.TailnetId)
+	if err != nil {
+		return nil, err
+	}
+	if tailnet == nil {
+		return nil, connect.NewError(connect.CodeNotFound, errors.New("tailnet not found"))
+	}
+
+	derpMap, err := tailnet.GetDERPMap(ctx, s.repository)
+	if err != nil {
+		return nil, err
+	}
+
+	raw, err := json.Marshal(derpMap)
+	if err != nil {
+		return nil, err
+	}
+
+	return connect.NewResponse(&api.GetDERPMapResponse{Value: raw}), nil
 }

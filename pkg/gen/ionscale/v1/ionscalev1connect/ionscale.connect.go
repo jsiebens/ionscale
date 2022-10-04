@@ -29,12 +29,12 @@ const (
 type IonscaleServiceClient interface {
 	GetVersion(context.Context, *connect_go.Request[v1.GetVersionRequest]) (*connect_go.Response[v1.GetVersionResponse], error)
 	Authenticate(context.Context, *connect_go.Request[v1.AuthenticationRequest]) (*connect_go.ServerStreamForClient[v1.AuthenticationResponse], error)
-	GetDERPMap(context.Context, *connect_go.Request[v1.GetDERPMapRequest]) (*connect_go.Response[v1.GetDERPMapResponse], error)
-	SetDERPMap(context.Context, *connect_go.Request[v1.SetDERPMapRequest]) (*connect_go.Response[v1.SetDERPMapResponse], error)
 	CreateTailnet(context.Context, *connect_go.Request[v1.CreateTailnetRequest]) (*connect_go.Response[v1.CreateTailnetResponse], error)
 	GetTailnet(context.Context, *connect_go.Request[v1.GetTailnetRequest]) (*connect_go.Response[v1.GetTailnetResponse], error)
 	ListTailnets(context.Context, *connect_go.Request[v1.ListTailnetRequest]) (*connect_go.Response[v1.ListTailnetResponse], error)
 	DeleteTailnet(context.Context, *connect_go.Request[v1.DeleteTailnetRequest]) (*connect_go.Response[v1.DeleteTailnetResponse], error)
+	GetDERPMap(context.Context, *connect_go.Request[v1.GetDERPMapRequest]) (*connect_go.Response[v1.GetDERPMapResponse], error)
+	SetDERPMap(context.Context, *connect_go.Request[v1.SetDERPMapRequest]) (*connect_go.Response[v1.SetDERPMapResponse], error)
 	GetDNSConfig(context.Context, *connect_go.Request[v1.GetDNSConfigRequest]) (*connect_go.Response[v1.GetDNSConfigResponse], error)
 	SetDNSConfig(context.Context, *connect_go.Request[v1.SetDNSConfigRequest]) (*connect_go.Response[v1.SetDNSConfigResponse], error)
 	GetIAMPolicy(context.Context, *connect_go.Request[v1.GetIAMPolicyRequest]) (*connect_go.Response[v1.GetIAMPolicyResponse], error)
@@ -81,16 +81,6 @@ func NewIonscaleServiceClient(httpClient connect_go.HTTPClient, baseURL string, 
 			baseURL+"/ionscale.v1.IonscaleService/Authenticate",
 			opts...,
 		),
-		getDERPMap: connect_go.NewClient[v1.GetDERPMapRequest, v1.GetDERPMapResponse](
-			httpClient,
-			baseURL+"/ionscale.v1.IonscaleService/GetDERPMap",
-			opts...,
-		),
-		setDERPMap: connect_go.NewClient[v1.SetDERPMapRequest, v1.SetDERPMapResponse](
-			httpClient,
-			baseURL+"/ionscale.v1.IonscaleService/SetDERPMap",
-			opts...,
-		),
 		createTailnet: connect_go.NewClient[v1.CreateTailnetRequest, v1.CreateTailnetResponse](
 			httpClient,
 			baseURL+"/ionscale.v1.IonscaleService/CreateTailnet",
@@ -109,6 +99,16 @@ func NewIonscaleServiceClient(httpClient connect_go.HTTPClient, baseURL string, 
 		deleteTailnet: connect_go.NewClient[v1.DeleteTailnetRequest, v1.DeleteTailnetResponse](
 			httpClient,
 			baseURL+"/ionscale.v1.IonscaleService/DeleteTailnet",
+			opts...,
+		),
+		getDERPMap: connect_go.NewClient[v1.GetDERPMapRequest, v1.GetDERPMapResponse](
+			httpClient,
+			baseURL+"/ionscale.v1.IonscaleService/GetDERPMap",
+			opts...,
+		),
+		setDERPMap: connect_go.NewClient[v1.SetDERPMapRequest, v1.SetDERPMapResponse](
+			httpClient,
+			baseURL+"/ionscale.v1.IonscaleService/SetDERPMap",
 			opts...,
 		),
 		getDNSConfig: connect_go.NewClient[v1.GetDNSConfigRequest, v1.GetDNSConfigResponse](
@@ -238,12 +238,12 @@ func NewIonscaleServiceClient(httpClient connect_go.HTTPClient, baseURL string, 
 type ionscaleServiceClient struct {
 	getVersion               *connect_go.Client[v1.GetVersionRequest, v1.GetVersionResponse]
 	authenticate             *connect_go.Client[v1.AuthenticationRequest, v1.AuthenticationResponse]
-	getDERPMap               *connect_go.Client[v1.GetDERPMapRequest, v1.GetDERPMapResponse]
-	setDERPMap               *connect_go.Client[v1.SetDERPMapRequest, v1.SetDERPMapResponse]
 	createTailnet            *connect_go.Client[v1.CreateTailnetRequest, v1.CreateTailnetResponse]
 	getTailnet               *connect_go.Client[v1.GetTailnetRequest, v1.GetTailnetResponse]
 	listTailnets             *connect_go.Client[v1.ListTailnetRequest, v1.ListTailnetResponse]
 	deleteTailnet            *connect_go.Client[v1.DeleteTailnetRequest, v1.DeleteTailnetResponse]
+	getDERPMap               *connect_go.Client[v1.GetDERPMapRequest, v1.GetDERPMapResponse]
+	setDERPMap               *connect_go.Client[v1.SetDERPMapRequest, v1.SetDERPMapResponse]
 	getDNSConfig             *connect_go.Client[v1.GetDNSConfigRequest, v1.GetDNSConfigResponse]
 	setDNSConfig             *connect_go.Client[v1.SetDNSConfigRequest, v1.SetDNSConfigResponse]
 	getIAMPolicy             *connect_go.Client[v1.GetIAMPolicyRequest, v1.GetIAMPolicyResponse]
@@ -280,16 +280,6 @@ func (c *ionscaleServiceClient) Authenticate(ctx context.Context, req *connect_g
 	return c.authenticate.CallServerStream(ctx, req)
 }
 
-// GetDERPMap calls ionscale.v1.IonscaleService.GetDERPMap.
-func (c *ionscaleServiceClient) GetDERPMap(ctx context.Context, req *connect_go.Request[v1.GetDERPMapRequest]) (*connect_go.Response[v1.GetDERPMapResponse], error) {
-	return c.getDERPMap.CallUnary(ctx, req)
-}
-
-// SetDERPMap calls ionscale.v1.IonscaleService.SetDERPMap.
-func (c *ionscaleServiceClient) SetDERPMap(ctx context.Context, req *connect_go.Request[v1.SetDERPMapRequest]) (*connect_go.Response[v1.SetDERPMapResponse], error) {
-	return c.setDERPMap.CallUnary(ctx, req)
-}
-
 // CreateTailnet calls ionscale.v1.IonscaleService.CreateTailnet.
 func (c *ionscaleServiceClient) CreateTailnet(ctx context.Context, req *connect_go.Request[v1.CreateTailnetRequest]) (*connect_go.Response[v1.CreateTailnetResponse], error) {
 	return c.createTailnet.CallUnary(ctx, req)
@@ -308,6 +298,16 @@ func (c *ionscaleServiceClient) ListTailnets(ctx context.Context, req *connect_g
 // DeleteTailnet calls ionscale.v1.IonscaleService.DeleteTailnet.
 func (c *ionscaleServiceClient) DeleteTailnet(ctx context.Context, req *connect_go.Request[v1.DeleteTailnetRequest]) (*connect_go.Response[v1.DeleteTailnetResponse], error) {
 	return c.deleteTailnet.CallUnary(ctx, req)
+}
+
+// GetDERPMap calls ionscale.v1.IonscaleService.GetDERPMap.
+func (c *ionscaleServiceClient) GetDERPMap(ctx context.Context, req *connect_go.Request[v1.GetDERPMapRequest]) (*connect_go.Response[v1.GetDERPMapResponse], error) {
+	return c.getDERPMap.CallUnary(ctx, req)
+}
+
+// SetDERPMap calls ionscale.v1.IonscaleService.SetDERPMap.
+func (c *ionscaleServiceClient) SetDERPMap(ctx context.Context, req *connect_go.Request[v1.SetDERPMapRequest]) (*connect_go.Response[v1.SetDERPMapResponse], error) {
+	return c.setDERPMap.CallUnary(ctx, req)
 }
 
 // GetDNSConfig calls ionscale.v1.IonscaleService.GetDNSConfig.
@@ -434,12 +434,12 @@ func (c *ionscaleServiceClient) DisableHttpsCertificates(ctx context.Context, re
 type IonscaleServiceHandler interface {
 	GetVersion(context.Context, *connect_go.Request[v1.GetVersionRequest]) (*connect_go.Response[v1.GetVersionResponse], error)
 	Authenticate(context.Context, *connect_go.Request[v1.AuthenticationRequest], *connect_go.ServerStream[v1.AuthenticationResponse]) error
-	GetDERPMap(context.Context, *connect_go.Request[v1.GetDERPMapRequest]) (*connect_go.Response[v1.GetDERPMapResponse], error)
-	SetDERPMap(context.Context, *connect_go.Request[v1.SetDERPMapRequest]) (*connect_go.Response[v1.SetDERPMapResponse], error)
 	CreateTailnet(context.Context, *connect_go.Request[v1.CreateTailnetRequest]) (*connect_go.Response[v1.CreateTailnetResponse], error)
 	GetTailnet(context.Context, *connect_go.Request[v1.GetTailnetRequest]) (*connect_go.Response[v1.GetTailnetResponse], error)
 	ListTailnets(context.Context, *connect_go.Request[v1.ListTailnetRequest]) (*connect_go.Response[v1.ListTailnetResponse], error)
 	DeleteTailnet(context.Context, *connect_go.Request[v1.DeleteTailnetRequest]) (*connect_go.Response[v1.DeleteTailnetResponse], error)
+	GetDERPMap(context.Context, *connect_go.Request[v1.GetDERPMapRequest]) (*connect_go.Response[v1.GetDERPMapResponse], error)
+	SetDERPMap(context.Context, *connect_go.Request[v1.SetDERPMapRequest]) (*connect_go.Response[v1.SetDERPMapResponse], error)
 	GetDNSConfig(context.Context, *connect_go.Request[v1.GetDNSConfigRequest]) (*connect_go.Response[v1.GetDNSConfigResponse], error)
 	SetDNSConfig(context.Context, *connect_go.Request[v1.SetDNSConfigRequest]) (*connect_go.Response[v1.SetDNSConfigResponse], error)
 	GetIAMPolicy(context.Context, *connect_go.Request[v1.GetIAMPolicyRequest]) (*connect_go.Response[v1.GetIAMPolicyResponse], error)
@@ -483,16 +483,6 @@ func NewIonscaleServiceHandler(svc IonscaleServiceHandler, opts ...connect_go.Ha
 		svc.Authenticate,
 		opts...,
 	))
-	mux.Handle("/ionscale.v1.IonscaleService/GetDERPMap", connect_go.NewUnaryHandler(
-		"/ionscale.v1.IonscaleService/GetDERPMap",
-		svc.GetDERPMap,
-		opts...,
-	))
-	mux.Handle("/ionscale.v1.IonscaleService/SetDERPMap", connect_go.NewUnaryHandler(
-		"/ionscale.v1.IonscaleService/SetDERPMap",
-		svc.SetDERPMap,
-		opts...,
-	))
 	mux.Handle("/ionscale.v1.IonscaleService/CreateTailnet", connect_go.NewUnaryHandler(
 		"/ionscale.v1.IonscaleService/CreateTailnet",
 		svc.CreateTailnet,
@@ -511,6 +501,16 @@ func NewIonscaleServiceHandler(svc IonscaleServiceHandler, opts ...connect_go.Ha
 	mux.Handle("/ionscale.v1.IonscaleService/DeleteTailnet", connect_go.NewUnaryHandler(
 		"/ionscale.v1.IonscaleService/DeleteTailnet",
 		svc.DeleteTailnet,
+		opts...,
+	))
+	mux.Handle("/ionscale.v1.IonscaleService/GetDERPMap", connect_go.NewUnaryHandler(
+		"/ionscale.v1.IonscaleService/GetDERPMap",
+		svc.GetDERPMap,
+		opts...,
+	))
+	mux.Handle("/ionscale.v1.IonscaleService/SetDERPMap", connect_go.NewUnaryHandler(
+		"/ionscale.v1.IonscaleService/SetDERPMap",
+		svc.SetDERPMap,
 		opts...,
 	))
 	mux.Handle("/ionscale.v1.IonscaleService/GetDNSConfig", connect_go.NewUnaryHandler(
@@ -647,14 +647,6 @@ func (UnimplementedIonscaleServiceHandler) Authenticate(context.Context, *connec
 	return connect_go.NewError(connect_go.CodeUnimplemented, errors.New("ionscale.v1.IonscaleService.Authenticate is not implemented"))
 }
 
-func (UnimplementedIonscaleServiceHandler) GetDERPMap(context.Context, *connect_go.Request[v1.GetDERPMapRequest]) (*connect_go.Response[v1.GetDERPMapResponse], error) {
-	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("ionscale.v1.IonscaleService.GetDERPMap is not implemented"))
-}
-
-func (UnimplementedIonscaleServiceHandler) SetDERPMap(context.Context, *connect_go.Request[v1.SetDERPMapRequest]) (*connect_go.Response[v1.SetDERPMapResponse], error) {
-	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("ionscale.v1.IonscaleService.SetDERPMap is not implemented"))
-}
-
 func (UnimplementedIonscaleServiceHandler) CreateTailnet(context.Context, *connect_go.Request[v1.CreateTailnetRequest]) (*connect_go.Response[v1.CreateTailnetResponse], error) {
 	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("ionscale.v1.IonscaleService.CreateTailnet is not implemented"))
 }
@@ -669,6 +661,14 @@ func (UnimplementedIonscaleServiceHandler) ListTailnets(context.Context, *connec
 
 func (UnimplementedIonscaleServiceHandler) DeleteTailnet(context.Context, *connect_go.Request[v1.DeleteTailnetRequest]) (*connect_go.Response[v1.DeleteTailnetResponse], error) {
 	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("ionscale.v1.IonscaleService.DeleteTailnet is not implemented"))
+}
+
+func (UnimplementedIonscaleServiceHandler) GetDERPMap(context.Context, *connect_go.Request[v1.GetDERPMapRequest]) (*connect_go.Response[v1.GetDERPMapResponse], error) {
+	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("ionscale.v1.IonscaleService.GetDERPMap is not implemented"))
+}
+
+func (UnimplementedIonscaleServiceHandler) SetDERPMap(context.Context, *connect_go.Request[v1.SetDERPMapRequest]) (*connect_go.Response[v1.SetDERPMapResponse], error) {
+	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("ionscale.v1.IonscaleService.SetDERPMap is not implemented"))
 }
 
 func (UnimplementedIonscaleServiceHandler) GetDNSConfig(context.Context, *connect_go.Request[v1.GetDNSConfigRequest]) (*connect_go.Response[v1.GetDNSConfigResponse], error) {

@@ -14,12 +14,12 @@ func m202209070900_initial_schema() *gormigrate.Migration {
 			// it's a good practice to copy the struct inside the function,
 			// so side effects are prevented if the original struct changes during the time
 			type ServerConfig struct {
-				Key   string `gorm:"primary_key"`
+				Key   string `gorm:"primaryKey"`
 				Value []byte
 			}
 
 			type Tailnet struct {
-				ID        uint64 `gorm:"primary_key;autoIncrement:false"`
+				ID        uint64 `gorm:"primaryKey;autoIncrement:false"`
 				Name      string `gorm:"type:varchar(64);uniqueIndex"`
 				DNSConfig domain.DNSConfig
 				IAMPolicy domain.IAMPolicy
@@ -27,13 +27,13 @@ func m202209070900_initial_schema() *gormigrate.Migration {
 			}
 
 			type Account struct {
-				ID         uint64 `gorm:"primary_key;autoIncrement:false"`
+				ID         uint64 `gorm:"primaryKey;autoIncrement:false"`
 				ExternalID string
 				LoginName  string
 			}
 
 			type User struct {
-				ID        uint64 `gorm:"primary_key;autoIncrement:false"`
+				ID        uint64 `gorm:"primaryKey;autoIncrement:false"`
 				Name      string
 				UserType  domain.UserType
 				TailnetID uint64
@@ -43,7 +43,7 @@ func m202209070900_initial_schema() *gormigrate.Migration {
 			}
 
 			type SystemApiKey struct {
-				ID   uint64 `gorm:"primary_key;autoIncrement:false"`
+				ID   uint64 `gorm:"primaryKey;autoIncrement:false"`
 				Key  string `gorm:"type:varchar(64);uniqueIndex"`
 				Hash string
 
@@ -55,7 +55,7 @@ func m202209070900_initial_schema() *gormigrate.Migration {
 			}
 
 			type ApiKey struct {
-				ID   uint64 `gorm:"primary_key;autoIncrement:false"`
+				ID   uint64 `gorm:"primaryKey;autoIncrement:false"`
 				Key  string `gorm:"type:varchar(64);uniqueIndex"`
 				Hash string
 
@@ -70,7 +70,7 @@ func m202209070900_initial_schema() *gormigrate.Migration {
 			}
 
 			type AuthKey struct {
-				ID        uint64 `gorm:"primary_key;autoIncrement:false"`
+				ID        uint64 `gorm:"primaryKey;autoIncrement:false"`
 				Key       string `gorm:"type:varchar(64);uniqueIndex"`
 				Hash      string
 				Ephemeral bool
@@ -87,7 +87,7 @@ func m202209070900_initial_schema() *gormigrate.Migration {
 			}
 
 			type Machine struct {
-				ID                uint64 `gorm:"primary_key;autoIncrement:false"`
+				ID                uint64 `gorm:"primaryKey;autoIncrement:false"`
 				Name              string
 				NameIdx           uint64
 				MachineKey        string
@@ -117,7 +117,7 @@ func m202209070900_initial_schema() *gormigrate.Migration {
 			}
 
 			type RegistrationRequest struct {
-				MachineKey    string `gorm:"primary_key;autoIncrement:false"`
+				MachineKey    string `gorm:"primaryKey;autoIncrement:false"`
 				Key           string `gorm:"type:varchar(64);uniqueIndex"`
 				Data          domain.RegistrationRequestData
 				CreatedAt     time.Time
@@ -126,7 +126,7 @@ func m202209070900_initial_schema() *gormigrate.Migration {
 			}
 
 			type AuthenticationRequest struct {
-				Key       string `gorm:"primary_key;autoIncrement:false"`
+				Key       string `gorm:"primaryKey;autoIncrement:false"`
 				Token     string
 				TailnetID *uint64
 				Error     string

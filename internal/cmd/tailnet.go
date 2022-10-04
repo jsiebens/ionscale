@@ -2,13 +2,17 @@ package cmd
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"github.com/bufbuild/connect-go"
 	idomain "github.com/jsiebens/ionscale/internal/domain"
 	api "github.com/jsiebens/ionscale/pkg/gen/ionscale/v1"
 	"github.com/muesli/coral"
 	"github.com/rodaine/table"
+	"gopkg.in/yaml.v3"
+	"os"
 	"strings"
+	"tailscale.com/tailcfg"
 )
 
 func tailnetCommand() *coral.Command {
@@ -28,6 +32,8 @@ func tailnetCommand() *coral.Command {
 	command.AddCommand(setIAMPolicyCommand())
 	command.AddCommand(enableHttpsCommand())
 	command.AddCommand(disableHttpsCommand())
+	command.AddCommand(getDERPMap())
+	command.AddCommand(setDERPMap())
 
 	return command
 }
@@ -183,6 +189,127 @@ func deleteTailnetCommand() *coral.Command {
 		}
 
 		fmt.Println("Tailnet deleted.")
+
+		return nil
+	}
+
+	return command
+}
+
+func getDERPMap() *coral.Command {
+	command := &coral.Command{
+		Use:          "get-derp-map",
+		Short:        "Get the DERP Map configuration",
+		SilenceUsage: true,
+	}
+
+	var tailnetID uint64
+	var tailnetName string
+	var asJson bool
+
+	var target = Target{}
+	target.prepareCommand(command)
+
+	command.Flags().StringVar(&tailnetName, "tailnet", "", "Tailnet name. Mutually exclusive with --tailnet-id.")
+	command.Flags().Uint64Var(&tailnetID, "tailnet-id", 0, "Tailnet ID. Mutually exclusive with --tailnet.")
+	command.Flags().BoolVar(&asJson, "json", false, "When enabled, render output as json otherwise yaml")
+
+	command.PreRunE = checkRequiredTailnetAndTailnetIdFlags
+	command.RunE = func(command *coral.Command, args []string) error {
+		client, err := target.createGRPCClient()
+		if err != nil {
+			return err
+		}
+
+		tailnet, err := findTailnet(client, tailnetName, tailnetID)
+		if err != nil {
+			return err
+		}
+
+		resp, err := client.GetDERPMap(context.Background(), connect.NewRequest(&api.GetDERPMapRequest{TailnetId: tailnet.Id}))
+
+		if err != nil {
+			return err
+		}
+
+		var derpMap struct {
+			Regions map[int]*tailcfg.DERPRegion
+		}
+
+		if err := json.Unmarshal(resp.Msg.Value, &derpMap); err != nil {
+			return err
+		}
+
+		if asJson {
+			marshal, err := json.MarshalIndent(derpMap, "", "  ")
+			if err != nil {
+				return err
+			}
+
+			fmt.Println()
+			fmt.Println(string(marshal))
+		} else {
+			marshal, err := yaml.Marshal(derpMap)
+			if err != nil {
+				return err
+			}
+
+			fmt.Println()
+			fmt.Println(string(marshal))
+		}
+
+		return nil
+	}
+
+	return command
+}
+
+func setDERPMap() *coral.Command {
+	command := &coral.Command{
+		Use:          "set-derp-map",
+		Short:        "Set the DERP Map configuration",
+		SilenceUsage: true,
+	}
+
+	var tailnetID uint64
+	var tailnetName string
+	var file string
+	var target = Target{}
+	target.prepareCommand(command)
+
+	command.Flags().StringVar(&tailnetName, "tailnet", "", "Tailnet name. Mutually exclusive with --tailnet-id.")
+	command.Flags().Uint64Var(&tailnetID, "tailnet-id", 0, "Tailnet ID. Mutually exclusive with --tailnet.")
+	command.Flags().StringVar(&file, "file", "", "Path to json file with the DERP Map configuration")
+
+	command.PreRunE = checkRequiredTailnetAndTailnetIdFlags
+	command.RunE = func(command *coral.Command, args []string) error {
+		client, err := target.createGRPCClient()
+		if err != nil {
+			return err
+		}
+
+		tailnet, err := findTailnet(client, tailnetName, tailnetID)
+		if err != nil {
+			return err
+		}
+
+		rawJson, err := os.ReadFile(file)
+		if err != nil {
+			return err
+		}
+
+		resp, err := client.SetDERPMap(context.Background(), connect.NewRequest(&api.SetDERPMapRequest{TailnetId: tailnet.Id, Value: rawJson}))
+		if err != nil {
+			return err
+		}
+
+		var derpMap tailcfg.DERPMap
+		if err := json.Unmarshal(resp.Msg.Value, &derpMap); err != nil {
+			return err
+		}
+
+		fmt.Println()
+		fmt.Println("DERP Map updated successfully")
 
 		return nil
 	}

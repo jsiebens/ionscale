@@ -270,7 +270,7 @@ func (h *PollNetMapHandler) createMapResponse(m *domain.Machine, binder bind.Bin
 
 	dnsConfig := tailnet.DNSConfig
 
-	derpMap, err := h.repository.GetDERPMap(ctx)
+	derpMap, err := m.Tailnet.GetDERPMap(ctx, h.repository)
 	if err != nil {
 		return nil, nil, err
 	}

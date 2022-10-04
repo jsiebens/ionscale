@@ -1,8 +1,11 @@
 package util
 
 import (
+	"crypto/md5"
 	"crypto/rand"
 	"crypto/rsa"
+	"encoding/hex"
+	"encoding/json"
 	"math/big"
 )
 
@@ -45,4 +48,13 @@ func NewPrivateKey() (*rsa.PrivateKey, string, error) {
 	}
 
 	return privateKey, id, nil
+}
+
+func Checksum(v interface{}) string {
+	marshal, err := json.Marshal(v)
+	if err != nil {
+		panic(err)
+	}
+	sum := md5.Sum(marshal)
+	return hex.EncodeToString(sum[:])
 }
