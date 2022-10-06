@@ -97,6 +97,7 @@ func Start(c *config.Config) error {
 		pollNetMapHandler := handlers.NewPollNetMapHandler(bind.DefaultBinder(p), brokers, repository, offlineTimers)
 		dnsHandlers := handlers.NewDNSHandlers(bind.DefaultBinder(p), dnsProvider)
 		idTokenHandlers := handlers.NewIDTokenHandlers(bind.DefaultBinder(p), c, repository)
+		sshActionHandlers := handlers.NewSSHActionHandlers(bind.DefaultBinder(p), c, repository)
 
 		e := echo.New()
 		e.Use(EchoLogger(logger))
@@ -105,6 +106,8 @@ func Start(c *config.Config) error {
 		e.POST("/machine/map", pollNetMapHandler.PollNetMap)
 		e.POST("/machine/set-dns", dnsHandlers.SetDNS)
 		e.POST("/machine/id-token", idTokenHandlers.FetchToken)
+		e.GET("/machine/ssh/action/:src_machine_id/to/:dst_machine_id", sshActionHandlers.StartAuth)
+		e.GET("/machine/ssh/action/check/:key", sshActionHandlers.CheckAuth)
 
 		return e
 	}
@@ -161,7 +164,7 @@ func Start(c *config.Config) error {
 	}))
 	auth.GET("/:key", authenticationHandlers.StartAuth)
 	auth.POST("/:key", authenticationHandlers.ProcessAuth)
-	auth.GET("/c/:key", authenticationHandlers.StartCliAuth)
+	auth.GET("/:flow/:key", authenticationHandlers.StartCliAuth)
 	auth.GET("/callback", authenticationHandlers.Callback)
 	auth.POST("/callback", authenticationHandlers.EndOAuth)
 	auth.GET("/success", authenticationHandlers.Success)

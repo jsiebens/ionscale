@@ -12,6 +12,7 @@ func Migrations() []*gormigrate.Migration {
 		m202229251530_add_alias_column_constraint(),
 		m202210040828_add_derpmap_colum(),
 		m202210070814_add_filesharing_and_servicecollection_columns(),
+		m202210080700_ssh_action_request(),
 	}
 	return migrations
 }

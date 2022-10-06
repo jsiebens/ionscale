@@ -58,17 +58,26 @@ type oauthState struct {
 
 func (h *AuthenticationHandlers) StartCliAuth(c echo.Context) error {
 	ctx := c.Request().Context()
+	flow := c.Param("flow")
 	key := c.Param("key")
 
-	if s, err := h.repository.GetAuthenticationRequest(ctx, key); err != nil || s == nil {
-		return c.Redirect(http.StatusFound, "/a/error")
+	if flow == "c" {
+		if s, err := h.repository.GetAuthenticationRequest(ctx, key); err != nil || s == nil {
+			return c.Redirect(http.StatusFound, "/a/error")
+		}
+	}
+
+	if flow == "s" {
+		if s, err := h.repository.GetSSHActionRequest(ctx, key); err != nil || s == nil {
+			return c.Redirect(http.StatusFound, "/a/error")
+		}
 	}
 
 	if h.authProvider == nil {
 		return c.Redirect(http.StatusFound, "/a/error")
 	}
 
-	state, err := h.createState("c", key)
+	state, err := h.createState(flow, key)
 	if err != nil {
 		return err
 	}
@@ -134,12 +143,48 @@ func (h *AuthenticationHandlers) Callback(c echo.Context) error {
 		return err
 	}
 
-	tailnets, err := h.listAvailableTailnets(ctx, user)
+	account, _, err := h.repository.GetOrCreateAccount(ctx, user.ID, user.Name)
 	if err != nil {
 		return err
 	}
 
-	account, _, err := h.repository.GetOrCreateAccount(ctx, user.ID, user.Name)
+	if state.Flow == "s" {
+		sshActionReq, err := h.repository.GetSSHActionRequest(ctx, state.Key)
+		if err != nil || sshActionReq == nil {
+			return c.Redirect(http.StatusFound, "/a/error?e=ua")
+		}
+
+		machine, err := h.repository.GetMachine(ctx, sshActionReq.SrcMachineID)
+		if err != nil || sshActionReq == nil {
+			return c.Redirect(http.StatusFound, "/a/error")
+		}
+
+		policy := machine.Tailnet.ACLPolicy
+
+		if machine.HasTags() && policy.IsTagOwner(machine.Tags, &domain.User{Name: account.LoginName, UserType: domain.UserTypePerson}) {
+			sshActionReq.Action = "accept"
+			if err := h.repository.SaveSSHActionRequest(ctx, sshActionReq); err != nil {
+				return c.Redirect(http.StatusFound, "/a/error")
+			}
+			return c.Redirect(http.StatusFound, "/a/success")
+		}
+
+		if machine.User.AccountID != nil && *machine.User.AccountID == account.ID {
+			sshActionReq.Action = "accept"
+			if err := h.repository.SaveSSHActionRequest(ctx, sshActionReq); err != nil {
+				return c.Redirect(http.StatusFound, "/a/error")
+			}
+			return c.Redirect(http.StatusFound, "/a/success")
+		}
+
+		sshActionReq.Action = "reject"
+		if err := h.repository.SaveSSHActionRequest(ctx, sshActionReq); err != nil {
+			return c.Redirect(http.StatusFound, "/a/error")
+		}
+		return c.Redirect(http.StatusFound, "/a/error?e=nmo")
+	}
+
+	tailnets, err := h.listAvailableTailnets(ctx, user)
 	if err != nil {
 		return err
 	}
@@ -248,6 +293,8 @@ func (h *AuthenticationHandlers) Error(c echo.Context) error {
 		return c.Render(http.StatusForbidden, "unauthorized.html", nil)
 	case "nto":
 		return c.Render(http.StatusForbidden, "notagowner.html", nil)
+	case "nmo":
+		return c.Render(http.StatusForbidden, "notmachineowner.html", nil)
 	}
 	return c.Render(http.StatusOK, "error.html", nil)
 }

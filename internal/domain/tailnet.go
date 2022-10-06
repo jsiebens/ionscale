@@ -20,6 +20,7 @@ type Tailnet struct {
 	DERPMap                  DERPMap
 	ServiceCollectionEnabled bool
 	FileSharingEnabled       bool
+	SSHEnabled               bool
 }
 
 func (t Tailnet) GetDERPMap(ctx context.Context, fallack DefaultDERPMap) (*DERPMap, error) {

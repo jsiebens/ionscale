@@ -334,3 +334,55 @@ func (s *Service) DisableServiceCollection(ctx context.Context, req *connect.Req
 
 	return connect.NewResponse(&api.DisableServiceCollectionResponse{}), nil
 }
+
+func (s *Service) EnabledSSH(ctx context.Context, req *connect.Request[api.EnableSSHRequest]) (*connect.Response[api.EnableSSHResponse], error) {
+	principal := CurrentPrincipal(ctx)
+	if !principal.IsSystemAdmin() && !principal.IsTailnetAdmin(req.Msg.TailnetId) {
+		return nil, connect.NewError(connect.CodePermissionDenied, errors.New("permission denied"))
+	}
+
+	tailnet, err := s.repository.GetTailnet(ctx, req.Msg.TailnetId)
+	if err != nil {
+		return nil, err
+	}
+	if tailnet == nil {
+		return nil, connect.NewError(connect.CodeNotFound, errors.New("tailnet not found"))
+	}
+
+	if !tailnet.SSHEnabled {
+		tailnet.SSHEnabled = true
+		if err := s.repository.SaveTailnet(ctx, tailnet); err != nil {
+			return nil, err
+		}
+
+		s.pubsub.Publish(tailnet.ID, &broker.Signal{})
+	}
+
+	return connect.NewResponse(&api.EnableSSHResponse{}), nil
+}
+
+func (s *Service) DisableSSH(ctx context.Context, req *connect.Request[api.DisableSSHRequest]) (*connect.Response[api.DisableSSHResponse], error) {
+	principal := CurrentPrincipal(ctx)
+	if !principal.IsSystemAdmin() && !principal.IsTailnetAdmin(req.Msg.TailnetId) {
+		return nil, connect.NewError(connect.CodePermissionDenied, errors.New("permission denied"))
+	}
+
+	tailnet, err := s.repository.GetTailnet(ctx, req.Msg.TailnetId)
+	if err != nil {
+		return nil, err
+	}
+	if tailnet == nil {
+		return nil, connect.NewError(connect.CodeNotFound, errors.New("tailnet not found"))
+	}
+
+	if tailnet.SSHEnabled {
+		tailnet.SSHEnabled = false
+		if err := s.repository.SaveTailnet(ctx, tailnet); err != nil {
+			return nil, err
+		}
+
+		s.pubsub.Publish(tailnet.ID, &broker.Signal{})
+	}
+
+	return connect.NewResponse(&api.DisableSSHResponse{}), nil
+}

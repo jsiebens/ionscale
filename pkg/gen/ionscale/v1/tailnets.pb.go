@@ -1070,6 +1070,176 @@ func (*DisableServiceCollectionResponse) Descriptor() ([]byte, []int) {
 	return file_ionscale_v1_tailnets_proto_rawDescGZIP(), []int{22}
 }
 
+type EnableSSHRequest struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	TailnetId uint64 `protobuf:"varint,1,opt,name=tailnet_id,json=tailnetId,proto3" json:"tailnet_id,omitempty"`
+}
+
+func (x *EnableSSHRequest) Reset() {
+	*x = EnableSSHRequest{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_ionscale_v1_tailnets_proto_msgTypes[23]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *EnableSSHRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*EnableSSHRequest) ProtoMessage() {}
+
+func (x *EnableSSHRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_ionscale_v1_tailnets_proto_msgTypes[23]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use EnableSSHRequest.ProtoReflect.Descriptor instead.
+func (*EnableSSHRequest) Descriptor() ([]byte, []int) {
+	return file_ionscale_v1_tailnets_proto_rawDescGZIP(), []int{23}
+}
+
+func (x *EnableSSHRequest) GetTailnetId() uint64 {
+	if x != nil {
+		return x.TailnetId
+	}
+	return 0
+}
+
+type EnableSSHResponse struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+}
+
+func (x *EnableSSHResponse) Reset() {
+	*x = EnableSSHResponse{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_ionscale_v1_tailnets_proto_msgTypes[24]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *EnableSSHResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*EnableSSHResponse) ProtoMessage() {}
+
+func (x *EnableSSHResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_ionscale_v1_tailnets_proto_msgTypes[24]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use EnableSSHResponse.ProtoReflect.Descriptor instead.
+func (*EnableSSHResponse) Descriptor() ([]byte, []int) {
+	return file_ionscale_v1_tailnets_proto_rawDescGZIP(), []int{24}
+}
+
+type DisableSSHRequest struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	TailnetId uint64 `protobuf:"varint,1,opt,name=tailnet_id,json=tailnetId,proto3" json:"tailnet_id,omitempty"`
+}
+
+func (x *DisableSSHRequest) Reset() {
+	*x = DisableSSHRequest{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_ionscale_v1_tailnets_proto_msgTypes[25]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *DisableSSHRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DisableSSHRequest) ProtoMessage() {}
+
+func (x *DisableSSHRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_ionscale_v1_tailnets_proto_msgTypes[25]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DisableSSHRequest.ProtoReflect.Descriptor instead.
+func (*DisableSSHRequest) Descriptor() ([]byte, []int) {
+	return file_ionscale_v1_tailnets_proto_rawDescGZIP(), []int{25}
+}
+
+func (x *DisableSSHRequest) GetTailnetId() uint64 {
+	if x != nil {
+		return x.TailnetId
+	}
+	return 0
+}
+
+type DisableSSHResponse struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+}
+
+func (x *DisableSSHResponse) Reset() {
+	*x = DisableSSHResponse{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_ionscale_v1_tailnets_proto_msgTypes[26]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *DisableSSHResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DisableSSHResponse) ProtoMessage() {}
+
+func (x *DisableSSHResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_ionscale_v1_tailnets_proto_msgTypes[26]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DisableSSHResponse.ProtoReflect.Descriptor instead.
+func (*DisableSSHResponse) Descriptor() ([]byte, []int) {
+	return file_ionscale_v1_tailnets_proto_rawDescGZIP(), []int{26}
+}
+
 var File_ionscale_v1_tailnets_proto protoreflect.FileDescriptor
 
 var file_ionscale_v1_tailnets_proto_rawDesc = []byte{
@@ -1151,11 +1321,21 @@ var file_ionscale_v1_tailnets_proto_rawDesc = []byte{
 	0x74, 0x5f, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x04, 0x52, 0x09, 0x74, 0x61, 0x69, 0x6c,
 	0x6e, 0x65, 0x74, 0x49, 0x64, 0x22, 0x22, 0x0a, 0x20, 0x44, 0x69, 0x73, 0x61, 0x62, 0x6c, 0x65,
 	0x53, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x43, 0x6f, 0x6c, 0x6c, 0x65, 0x63, 0x74, 0x69, 0x6f,
-	0x6e, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x42, 0x3d, 0x5a, 0x3b, 0x67, 0x69, 0x74,
-	0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x6a, 0x73, 0x69, 0x65, 0x62, 0x65, 0x6e, 0x73,
-	0x2f, 0x69, 0x6f, 0x6e, 0x73, 0x63, 0x61, 0x6c, 0x65, 0x2f, 0x70, 0x6b, 0x67, 0x2f, 0x67, 0x65,
-	0x6e, 0x2f, 0x69, 0x6f, 0x6e, 0x73, 0x63, 0x61, 0x6c, 0x65, 0x2f, 0x76, 0x31, 0x3b, 0x69, 0x6f,
-	0x6e, 0x73, 0x63, 0x61, 0x6c, 0x65, 0x76, 0x31, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x6e, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x31, 0x0a, 0x10, 0x45, 0x6e, 0x61,
+	0x62, 0x6c, 0x65, 0x53, 0x53, 0x48, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x1d, 0x0a,
+	0x0a, 0x74, 0x61, 0x69, 0x6c, 0x6e, 0x65, 0x74, 0x5f, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28,
+	0x04, 0x52, 0x09, 0x74, 0x61, 0x69, 0x6c, 0x6e, 0x65, 0x74, 0x49, 0x64, 0x22, 0x13, 0x0a, 0x11,
+	0x45, 0x6e, 0x61, 0x62, 0x6c, 0x65, 0x53, 0x53, 0x48, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73,
+	0x65, 0x22, 0x32, 0x0a, 0x11, 0x44, 0x69, 0x73, 0x61, 0x62, 0x6c, 0x65, 0x53, 0x53, 0x48, 0x52,
+	0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x1d, 0x0a, 0x0a, 0x74, 0x61, 0x69, 0x6c, 0x6e, 0x65,
+	0x74, 0x5f, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x04, 0x52, 0x09, 0x74, 0x61, 0x69, 0x6c,
+	0x6e, 0x65, 0x74, 0x49, 0x64, 0x22, 0x14, 0x0a, 0x12, 0x44, 0x69, 0x73, 0x61, 0x62, 0x6c, 0x65,
+	0x53, 0x53, 0x48, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x42, 0x3d, 0x5a, 0x3b, 0x67,
+	0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x6a, 0x73, 0x69, 0x65, 0x62, 0x65,
+	0x6e, 0x73, 0x2f, 0x69, 0x6f, 0x6e, 0x73, 0x63, 0x61, 0x6c, 0x65, 0x2f, 0x70, 0x6b, 0x67, 0x2f,
+	0x67, 0x65, 0x6e, 0x2f, 0x69, 0x6f, 0x6e, 0x73, 0x63, 0x61, 0x6c, 0x65, 0x2f, 0x76, 0x31, 0x3b,
+	0x69, 0x6f, 0x6e, 0x73, 0x63, 0x61, 0x6c, 0x65, 0x76, 0x31, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74,
+	0x6f, 0x33,
 }
 
 var (
@@ -1170,7 +1350,7 @@ func file_ionscale_v1_tailnets_proto_rawDescGZIP() []byte {
 	return file_ionscale_v1_tailnets_proto_rawDescData
 }
 
-var file_ionscale_v1_tailnets_proto_msgTypes = make([]protoimpl.MessageInfo, 23)
+var file_ionscale_v1_tailnets_proto_msgTypes = make([]protoimpl.MessageInfo, 27)
 var file_ionscale_v1_tailnets_proto_goTypes = []interface{}{
 	(*Tailnet)(nil),                          // 0: ionscale.v1.Tailnet
 	(*CreateTailnetRequest)(nil),             // 1: ionscale.v1.CreateTailnetRequest
@@ -1195,10 +1375,14 @@ var file_ionscale_v1_tailnets_proto_goTypes = []interface{}{
 	(*EnableServiceCollectionResponse)(nil),  // 20: ionscale.v1.EnableServiceCollectionResponse
 	(*DisableServiceCollectionRequest)(nil),  // 21: ionscale.v1.DisableServiceCollectionRequest
 	(*DisableServiceCollectionResponse)(nil), // 22: ionscale.v1.DisableServiceCollectionResponse
-	(*IAMPolicy)(nil),                        // 23: ionscale.v1.IAMPolicy
+	(*EnableSSHRequest)(nil),                 // 23: ionscale.v1.EnableSSHRequest
+	(*EnableSSHResponse)(nil),                // 24: ionscale.v1.EnableSSHResponse
+	(*DisableSSHRequest)(nil),                // 25: ionscale.v1.DisableSSHRequest
+	(*DisableSSHResponse)(nil),               // 26: ionscale.v1.DisableSSHResponse
+	(*IAMPolicy)(nil),                        // 27: ionscale.v1.IAMPolicy
 }
 var file_ionscale_v1_tailnets_proto_depIdxs = []int32{
-	23, // 0: ionscale.v1.CreateTailnetRequest.iam_policy:type_name -> ionscale.v1.IAMPolicy
+	27, // 0: ionscale.v1.CreateTailnetRequest.iam_policy:type_name -> ionscale.v1.IAMPolicy
 	0,  // 1: ionscale.v1.CreateTailnetResponse.tailnet:type_name -> ionscale.v1.Tailnet
 	0,  // 2: ionscale.v1.GetTailnetResponse.tailnet:type_name -> ionscale.v1.Tailnet
 	0,  // 3: ionscale.v1.ListTailnetResponse.tailnet:type_name -> ionscale.v1.Tailnet
@@ -1492,6 +1676,54 @@ func file_ionscale_v1_tailnets_proto_init() {
 				return nil
 			}
 		}
+		file_ionscale_v1_tailnets_proto_msgTypes[23].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*EnableSSHRequest); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_ionscale_v1_tailnets_proto_msgTypes[24].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*EnableSSHResponse); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_ionscale_v1_tailnets_proto_msgTypes[25].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*DisableSSHRequest); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_ionscale_v1_tailnets_proto_msgTypes[26].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*DisableSSHResponse); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
@@ -1499,7 +1731,7 @@ func file_ionscale_v1_tailnets_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_ionscale_v1_tailnets_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   23,
+			NumMessages:   27,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

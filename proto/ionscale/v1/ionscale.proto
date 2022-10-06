@@ -38,6 +38,8 @@ service IonscaleService {
   rpc DisableFileSharing (DisableFileSharingRequest) returns (DisableFileSharingResponse) {}
   rpc EnabledServiceCollection (EnableServiceCollectionRequest) returns (EnableServiceCollectionResponse) {}
   rpc DisableServiceCollection (DisableServiceCollectionRequest) returns (DisableServiceCollectionResponse) {}
+  rpc EnabledSSH (EnableSSHRequest) returns (EnableSSHResponse) {}
+  rpc DisableSSH (DisableSSHRequest) returns (DisableSSHResponse) {}
 
   rpc GetDNSConfig (GetDNSConfigRequest) returns (GetDNSConfigResponse) {}
   rpc SetDNSConfig (SetDNSConfigRequest) returns (SetDNSConfigResponse) {}

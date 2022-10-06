@@ -92,3 +92,18 @@ message DisableServiceCollectionRequest {
 
 message DisableServiceCollectionResponse {
 }
+
+
+message EnableSSHRequest {
+  uint64 tailnet_id = 1;
+}
+
+message EnableSSHResponse {
+}
+
+message DisableSSHRequest {
+  uint64 tailnet_id = 1;
+}
+
+message DisableSSHResponse {
+}

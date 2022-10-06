@@ -43,6 +43,8 @@ type IonscaleServiceClient interface {
 	DisableFileSharing(context.Context, *connect_go.Request[v1.DisableFileSharingRequest]) (*connect_go.Response[v1.DisableFileSharingResponse], error)
 	EnabledServiceCollection(context.Context, *connect_go.Request[v1.EnableServiceCollectionRequest]) (*connect_go.Response[v1.EnableServiceCollectionResponse], error)
 	DisableServiceCollection(context.Context, *connect_go.Request[v1.DisableServiceCollectionRequest]) (*connect_go.Response[v1.DisableServiceCollectionResponse], error)
+	EnabledSSH(context.Context, *connect_go.Request[v1.EnableSSHRequest]) (*connect_go.Response[v1.EnableSSHResponse], error)
+	DisableSSH(context.Context, *connect_go.Request[v1.DisableSSHRequest]) (*connect_go.Response[v1.DisableSSHResponse], error)
 	GetDNSConfig(context.Context, *connect_go.Request[v1.GetDNSConfigRequest]) (*connect_go.Response[v1.GetDNSConfigResponse], error)
 	SetDNSConfig(context.Context, *connect_go.Request[v1.SetDNSConfigRequest]) (*connect_go.Response[v1.SetDNSConfigResponse], error)
 	GetIAMPolicy(context.Context, *connect_go.Request[v1.GetIAMPolicyRequest]) (*connect_go.Response[v1.GetIAMPolicyResponse], error)
@@ -157,6 +159,16 @@ func NewIonscaleServiceClient(httpClient connect_go.HTTPClient, baseURL string, 
 		disableServiceCollection: connect_go.NewClient[v1.DisableServiceCollectionRequest, v1.DisableServiceCollectionResponse](
 			httpClient,
 			baseURL+"/ionscale.v1.IonscaleService/DisableServiceCollection",
+			opts...,
+		),
+		enabledSSH: connect_go.NewClient[v1.EnableSSHRequest, v1.EnableSSHResponse](
+			httpClient,
+			baseURL+"/ionscale.v1.IonscaleService/EnabledSSH",
+			opts...,
+		),
+		disableSSH: connect_go.NewClient[v1.DisableSSHRequest, v1.DisableSSHResponse](
+			httpClient,
+			baseURL+"/ionscale.v1.IonscaleService/DisableSSH",
 			opts...,
 		),
 		getDNSConfig: connect_go.NewClient[v1.GetDNSConfigRequest, v1.GetDNSConfigResponse](
@@ -300,6 +312,8 @@ type ionscaleServiceClient struct {
 	disableFileSharing       *connect_go.Client[v1.DisableFileSharingRequest, v1.DisableFileSharingResponse]
 	enabledServiceCollection *connect_go.Client[v1.EnableServiceCollectionRequest, v1.EnableServiceCollectionResponse]
 	disableServiceCollection *connect_go.Client[v1.DisableServiceCollectionRequest, v1.DisableServiceCollectionResponse]
+	enabledSSH               *connect_go.Client[v1.EnableSSHRequest, v1.EnableSSHResponse]
+	disableSSH               *connect_go.Client[v1.DisableSSHRequest, v1.DisableSSHResponse]
 	getDNSConfig             *connect_go.Client[v1.GetDNSConfigRequest, v1.GetDNSConfigResponse]
 	setDNSConfig             *connect_go.Client[v1.SetDNSConfigRequest, v1.SetDNSConfigResponse]
 	getIAMPolicy             *connect_go.Client[v1.GetIAMPolicyRequest, v1.GetIAMPolicyResponse]
@@ -404,6 +418,16 @@ func (c *ionscaleServiceClient) EnabledServiceCollection(ctx context.Context, re
 // DisableServiceCollection calls ionscale.v1.IonscaleService.DisableServiceCollection.
 func (c *ionscaleServiceClient) DisableServiceCollection(ctx context.Context, req *connect_go.Request[v1.DisableServiceCollectionRequest]) (*connect_go.Response[v1.DisableServiceCollectionResponse], error) {
 	return c.disableServiceCollection.CallUnary(ctx, req)
+}
+
+// EnabledSSH calls ionscale.v1.IonscaleService.EnabledSSH.
+func (c *ionscaleServiceClient) EnabledSSH(ctx context.Context, req *connect_go.Request[v1.EnableSSHRequest]) (*connect_go.Response[v1.EnableSSHResponse], error) {
+	return c.enabledSSH.CallUnary(ctx, req)
+}
+
+// DisableSSH calls ionscale.v1.IonscaleService.DisableSSH.
+func (c *ionscaleServiceClient) DisableSSH(ctx context.Context, req *connect_go.Request[v1.DisableSSHRequest]) (*connect_go.Response[v1.DisableSSHResponse], error) {
+	return c.disableSSH.CallUnary(ctx, req)
 }
 
 // GetDNSConfig calls ionscale.v1.IonscaleService.GetDNSConfig.
@@ -544,6 +568,8 @@ type IonscaleServiceHandler interface {
 	DisableFileSharing(context.Context, *connect_go.Request[v1.DisableFileSharingRequest]) (*connect_go.Response[v1.DisableFileSharingResponse], error)
 	EnabledServiceCollection(context.Context, *connect_go.Request[v1.EnableServiceCollectionRequest]) (*connect_go.Response[v1.EnableServiceCollectionResponse], error)
 	DisableServiceCollection(context.Context, *connect_go.Request[v1.DisableServiceCollectionRequest]) (*connect_go.Response[v1.DisableServiceCollectionResponse], error)
+	EnabledSSH(context.Context, *connect_go.Request[v1.EnableSSHRequest]) (*connect_go.Response[v1.EnableSSHResponse], error)
+	DisableSSH(context.Context, *connect_go.Request[v1.DisableSSHRequest]) (*connect_go.Response[v1.DisableSSHResponse], error)
 	GetDNSConfig(context.Context, *connect_go.Request[v1.GetDNSConfigRequest]) (*connect_go.Response[v1.GetDNSConfigResponse], error)
 	SetDNSConfig(context.Context, *connect_go.Request[v1.SetDNSConfigRequest]) (*connect_go.Response[v1.SetDNSConfigResponse], error)
 	GetIAMPolicy(context.Context, *connect_go.Request[v1.GetIAMPolicyRequest]) (*connect_go.Response[v1.GetIAMPolicyResponse], error)
@@ -655,6 +681,16 @@ func NewIonscaleServiceHandler(svc IonscaleServiceHandler, opts ...connect_go.Ha
 	mux.Handle("/ionscale.v1.IonscaleService/DisableServiceCollection", connect_go.NewUnaryHandler(
 		"/ionscale.v1.IonscaleService/DisableServiceCollection",
 		svc.DisableServiceCollection,
+		opts...,
+	))
+	mux.Handle("/ionscale.v1.IonscaleService/EnabledSSH", connect_go.NewUnaryHandler(
+		"/ionscale.v1.IonscaleService/EnabledSSH",
+		svc.EnabledSSH,
+		opts...,
+	))
+	mux.Handle("/ionscale.v1.IonscaleService/DisableSSH", connect_go.NewUnaryHandler(
+		"/ionscale.v1.IonscaleService/DisableSSH",
+		svc.DisableSSH,
 		opts...,
 	))
 	mux.Handle("/ionscale.v1.IonscaleService/GetDNSConfig", connect_go.NewUnaryHandler(
@@ -845,6 +881,14 @@ func (UnimplementedIonscaleServiceHandler) EnabledServiceCollection(context.Cont
 
 func (UnimplementedIonscaleServiceHandler) DisableServiceCollection(context.Context, *connect_go.Request[v1.DisableServiceCollectionRequest]) (*connect_go.Response[v1.DisableServiceCollectionResponse], error) {
 	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("ionscale.v1.IonscaleService.DisableServiceCollection is not implemented"))
+}
+
+func (UnimplementedIonscaleServiceHandler) EnabledSSH(context.Context, *connect_go.Request[v1.EnableSSHRequest]) (*connect_go.Response[v1.EnableSSHResponse], error) {
+	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("ionscale.v1.IonscaleService.EnabledSSH is not implemented"))
+}
+
+func (UnimplementedIonscaleServiceHandler) DisableSSH(context.Context, *connect_go.Request[v1.DisableSSHRequest]) (*connect_go.Response[v1.DisableSSHResponse], error) {
+	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("ionscale.v1.IonscaleService.DisableSSH is not implemented"))
 }
 
 func (UnimplementedIonscaleServiceHandler) GetDNSConfig(context.Context, *connect_go.Request[v1.GetDNSConfigRequest]) (*connect_go.Response[v1.GetDNSConfigResponse], error) {
