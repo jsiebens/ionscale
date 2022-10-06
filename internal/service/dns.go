@@ -50,10 +50,6 @@ func (s *Service) SetDNSConfig(ctx context.Context, req *connect.Request[api.Set
 
 	dnsConfig := req.Msg.Config
 
-	if dnsConfig.MagicDns && len(dnsConfig.Nameservers) == 0 {
-		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("at least one global nameserver is required when enabling magic dns"))
-	}
-
 	tailnet, err := s.repository.GetTailnet(ctx, req.Msg.TailnetId)
 	if err != nil {
 		return nil, err
