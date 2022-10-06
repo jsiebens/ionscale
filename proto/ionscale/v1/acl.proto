@@ -29,6 +29,7 @@ message ACLPolicy {
   repeated ACL acls = 3;
   map<string, google.protobuf.ListValue> tagowners = 4;
   AutoApprovers autoapprovers = 5;
+  repeated SSHRule ssh = 6;
 }
 
 message ACL {
@@ -40,4 +41,11 @@ message ACL {
 message AutoApprovers {
   map<string, google.protobuf.ListValue> routes = 1;
   repeated string exitnode = 2;
+}
+
+message SSHRule {
+  string action = 1;
+  repeated string src = 2;
+  repeated string dst = 3;
+  repeated string users = 4;
 }

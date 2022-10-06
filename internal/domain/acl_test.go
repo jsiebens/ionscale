@@ -1,8 +1,6 @@
 package domain
 
 import (
-	"encoding/json"
-	"fmt"
 	"github.com/jsiebens/ionscale/internal/addr"
 	"github.com/stretchr/testify/assert"
 	"net/netip"
@@ -10,14 +8,6 @@ import (
 	"tailscale.com/tailcfg"
 	"testing"
 )
-
-func printRules(rules []tailcfg.FilterRule) {
-	indent, err := json.MarshalIndent(rules, "", "  ")
-	if err != nil {
-		panic(err)
-	}
-	fmt.Println(string(indent))
-}
 
 func TestACLPolicy_BuildFilterRulesWildcards(t *testing.T) {
 	p1 := createMachine("john@example.com")

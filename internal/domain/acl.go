@@ -31,12 +31,20 @@ type ACLPolicy struct {
 	ACLs          []ACL               `json:"acls"`
 	TagOwners     map[string][]string `json:"tagowners"`
 	AutoApprovers AutoApprovers       `json:"autoApprovers"`
+	SSHRules      []SSHRule           `json:"ssh"`
 }
 
 type ACL struct {
 	Action string   `json:"action"`
 	Src    []string `json:"src"`
 	Dst    []string `json:"dst"`
+}
+
+type SSHRule struct {
+	Action string   `json:"action"`
+	Src    []string `json:"src"`
+	Dst    []string `json:"dst"`
+	Users  []string `json:"users"`
 }
 
 func DefaultPolicy() ACLPolicy {
@@ -116,17 +124,26 @@ func (a ACLPolicy) FindAutoApprovedIPs(routableIPs []netip.Prefix, tags []string
 	return result
 }
 
+func (a ACLPolicy) IsTagOwner(tags []string, p *User) bool {
+	for _, t := range tags {
+		if a.isTagOwner(t, p) {
+			return true
+		}
+	}
+	return false
+}
+
 func (a ACLPolicy) CheckTagOwners(tags []string, p *User) error {
 	var result *multierror.Error
 	for _, t := range tags {
-		if ok := a.IsTagOwner(t, p); !ok {
+		if ok := a.isTagOwner(t, p); !ok {
 			result = multierror.Append(result, fmt.Errorf("tag [%s] is invalid or not permitted", t))
 		}
 	}
 	return result.ErrorOrNil()
 }
 
-func (a ACLPolicy) IsTagOwner(tag string, p *User) bool {
+func (a ACLPolicy) isTagOwner(tag string, p *User) bool {
 	if p.UserType == UserTypeService {
 		return true
 	}
@@ -385,6 +402,25 @@ func (a ACLPolicy) expandValuePortToPortRange(s string) ([]tailcfg.PortRange, er
 		}
 	}
 	return ports, nil
+}
+
+func (a ACLPolicy) isGroupMember(group string, m *Machine) bool {
+	if m.HasTags() {
+		return false
+	}
+
+	users, ok := a.Groups[group]
+	if !ok {
+		return false
+	}
+
+	for _, u := range users {
+		if m.HasUser(u) {
+			return true
+		}
+	}
+
+	return false
 }
 
 func (i *ACLPolicy) Scan(destination interface{}) error {

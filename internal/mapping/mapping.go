@@ -121,6 +121,10 @@ func ToNode(m *domain.Machine, tailnet *domain.Tailnet, peer bool) (*tailcfg.Nod
 		if tailnet.FileSharingEnabled {
 			capabilities = append(capabilities, tailcfg.CapabilityFileSharing)
 		}
+
+		if tailnet.SSHEnabled {
+			capabilities = append(capabilities, tailcfg.CapabilitySSH)
+		}
 	}
 
 	nKey, err := util.ParseNodePublicKey(m.NodeKey)

@@ -226,6 +226,7 @@ func (h *PollNetMapHandler) createMapResponse(m *domain.Machine, binder bind.Bin
 		return nil, nil, "", err
 	}
 
+	hostinfo := tailcfg.Hostinfo(m.HostInfo)
 	node, user, err := mapping.ToNode(m, tailnet, false)
 	if err != nil {
 		return nil, nil, "", err
@@ -277,7 +278,7 @@ func (h *PollNetMapHandler) createMapResponse(m *domain.Machine, binder bind.Bin
 		return nil, nil, "", err
 	}
 
-	rules := policies.BuildFilterRules(candidatePeers, m)
+	filterRules := policies.BuildFilterRules(candidatePeers, m)
 
 	controlTime := time.Now().UTC()
 	var mapResponse *tailcfg.MapResponse
@@ -287,7 +288,7 @@ func (h *PollNetMapHandler) createMapResponse(m *domain.Machine, binder bind.Bin
 			KeepAlive:       false,
 			Node:            node,
 			DNSConfig:       mapping.ToDNSConfig(m, validPeers, &m.Tailnet, &dnsConfig),
-			PacketFilter:    rules,
+			PacketFilter:    filterRules,
 			DERPMap:         &derpMap.DERPMap,
 			Domain:          domain.SanitizeTailnetName(m.Tailnet.Name),
 			Peers:           changedPeers,
@@ -302,7 +303,7 @@ func (h *PollNetMapHandler) createMapResponse(m *domain.Machine, binder bind.Bin
 		mapResponse = &tailcfg.MapResponse{
 			Node:            node,
 			DNSConfig:       mapping.ToDNSConfig(m, validPeers, &m.Tailnet, &dnsConfig),
-			PacketFilter:    rules,
+			PacketFilter:    filterRules,
 			Domain:          domain.SanitizeTailnetName(m.Tailnet.Name),
 			PeersChanged:    changedPeers,
 			PeersRemoved:    removedPeers,
@@ -314,6 +315,10 @@ func (h *PollNetMapHandler) createMapResponse(m *domain.Machine, binder bind.Bin
 		if prevDerpMapChecksum != derpMap.Checksum {
 			mapResponse.DERPMap = &derpMap.DERPMap
 		}
+	}
+
+	if tailnet.SSHEnabled && hostinfo.TailscaleSSHEnabled() {
+		mapResponse.SSHPolicy = policies.BuildSSHPolicy(candidatePeers, m)
 	}
 
 	if request.OmitPeers {

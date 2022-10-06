@@ -1,0 +1,364 @@
+package domain
+
+import (
+	"encoding/json"
+	"fmt"
+	"github.com/stretchr/testify/assert"
+	"tailscale.com/tailcfg"
+	"testing"
+)
+
+func TestACLPolicy_BuildSSHPolicy_(t *testing.T) {
+	p1 := createMachine("john@example.com")
+	p2 := createMachine("jane@example.com")
+
+	policy := ACLPolicy{
+		SSHRules: []SSHRule{
+			{
+				Action: "accept",
+				Src:    []string{"autogroup:members"},
+				Dst:    []string{"autogroup:self"},
+				Users:  []string{"autogroup:nonroot"},
+			},
+		},
+	}
+
+	dst := createMachine("john@example.com")
+
+	actualRules := policy.BuildSSHPolicy([]Machine{*p1, *p2}, dst)
+	expectedRules := []*tailcfg.SSHRule{
+		{
+			Principals: []*tailcfg.SSHPrincipal{
+				{NodeIP: p1.IPv4.String()},
+				{NodeIP: p1.IPv6.String()},
+			},
+			SSHUsers: map[string]string{
+				"*":    "=",
+				"root": "",
+			},
+			Action: &tailcfg.SSHAction{
+				Accept:                   true,
+				AllowAgentForwarding:     true,
+				AllowLocalPortForwarding: true,
+			},
+		},
+	}
+
+	assert.Equal(t, expectedRules, actualRules.Rules)
+}
+
+func TestACLPolicy_BuildSSHPolicy_WithGroup(t *testing.T) {
+	p1 := createMachine("john@example.com")
+	p2 := createMachine("jane@example.com")
+
+	policy := ACLPolicy{
+		Groups: map[string][]string{
+			"group:sre": {
+				"john@example.com",
+			},
+		},
+		SSHRules: []SSHRule{
+			{
+				Action: "accept",
+				Src:    []string{"group:sre"},
+				Dst:    []string{"tag:web"},
+				Users:  []string{"autogroup:nonroot", "root"},
+			},
+		},
+	}
+
+	dst := createMachine("john@example.com", "tag:web")
+
+	actualRules := policy.BuildSSHPolicy([]Machine{*p1, *p2}, dst)
+	expectedRules := []*tailcfg.SSHRule{
+		{
+			Principals: []*tailcfg.SSHPrincipal{
+				{NodeIP: p1.IPv4.String()},
+				{NodeIP: p1.IPv6.String()},
+			},
+			SSHUsers: map[string]string{
+				"*":    "=",
+				"root": "root",
+			},
+			Action: &tailcfg.SSHAction{
+				Accept:                   true,
+				AllowAgentForwarding:     true,
+				AllowLocalPortForwarding: true,
+			},
+		},
+	}
+
+	assert.Equal(t, expectedRules, actualRules.Rules)
+}
+
+func TestACLPolicy_BuildSSHPolicy_WithMatchingUsers(t *testing.T) {
+	p1 := createMachine("john@example.com")
+	p2 := createMachine("jane@example.com")
+
+	policy := ACLPolicy{
+		SSHRules: []SSHRule{
+			{
+				Action: "accept",
+				Src:    []string{"john@example.com"},
+				Dst:    []string{"john@example.com"},
+				Users:  []string{"autogroup:nonroot", "root"},
+			},
+		},
+	}
+
+	dst := createMachine("john@example.com")
+
+	actualRules := policy.BuildSSHPolicy([]Machine{*p1, *p2}, dst)
+	expectedRules := []*tailcfg.SSHRule{
+		{
+			Principals: sshPrincipalsFromMachines(*p1),
+			SSHUsers: map[string]string{
+				"*":    "=",
+				"root": "root",
+			},
+			Action: &tailcfg.SSHAction{
+				Accept:                   true,
+				AllowAgentForwarding:     true,
+				AllowLocalPortForwarding: true,
+			},
+		},
+	}
+
+	assert.Equal(t, expectedRules, actualRules.Rules)
+}
+
+func TestACLPolicy_BuildSSHPolicy_WithMatchingUsersInGroup(t *testing.T) {
+	p1 := createMachine("john@example.com")
+	p2 := createMachine("jane@example.com")
+
+	policy := ACLPolicy{
+		Groups: map[string][]string{
+			"group:sre": {"jane@example.com", "john@example.com"},
+		},
+		SSHRules: []SSHRule{
+			{
+				Action: "accept",
+				Src:    []string{"group:sre"},
+				Dst:    []string{"john@example.com"},
+				Users:  []string{"autogroup:nonroot", "root"},
+			},
+		},
+	}
+
+	dst := createMachine("john@example.com")
+
+	actualRules := policy.BuildSSHPolicy([]Machine{*p1, *p2}, dst)
+	expectedRules := []*tailcfg.SSHRule{
+		{
+			Principals: sshPrincipalsFromMachines(*p1),
+			SSHUsers: map[string]string{
+				"*":    "=",
+				"root": "root",
+			},
+			Action: &tailcfg.SSHAction{
+				Accept:                   true,
+				AllowAgentForwarding:     true,
+				AllowLocalPortForwarding: true,
+			},
+		},
+	}
+
+	assert.Equal(t, expectedRules, actualRules.Rules)
+}
+
+func TestACLPolicy_BuildSSHPolicy_WithNoMatchingUsers(t *testing.T) {
+	p1 := createMachine("john@example.com")
+	p2 := createMachine("jane@example.com")
+
+	policy := ACLPolicy{
+		SSHRules: []SSHRule{
+			{
+				Action: "accept",
+				Src:    []string{"jane@example.com"},
+				Dst:    []string{"john@example.com"},
+				Users:  []string{"autogroup:nonroot", "root"},
+			},
+		},
+	}
+
+	dst := createMachine("john@example.com")
+
+	actualRules := policy.BuildSSHPolicy([]Machine{*p1, *p2}, dst)
+
+	assert.Nil(t, actualRules.Rules)
+}
+
+func TestACLPolicy_BuildSSHPolicy_WithTags(t *testing.T) {
+	p1 := createMachine("john@example.com")
+	p2 := createMachine("nick@example.com")
+	p3 := createMachine("nick@example.com", "tag:web")
+
+	policy := ACLPolicy{
+		SSHRules: []SSHRule{
+			{
+				Action: "accept",
+				Src:    []string{"john@example.com", "tag:web"},
+				Dst:    []string{"tag:web"},
+				Users:  []string{"ubuntu"},
+			},
+		},
+	}
+
+	dst := createMachine("john@example.com", "tag:web")
+
+	actualRules := policy.BuildSSHPolicy([]Machine{*p1, *p2, *p3}, dst)
+	expectedRules := []*tailcfg.SSHRule{
+		{
+			Principals: sshPrincipalsFromMachines(*p1, *p3),
+			SSHUsers: map[string]string{
+				"ubuntu": "ubuntu",
+			},
+			Action: &tailcfg.SSHAction{
+				Accept:                   true,
+				AllowAgentForwarding:     true,
+				AllowLocalPortForwarding: true,
+			},
+		},
+	}
+
+	assert.Equal(t, expectedRules, actualRules.Rules)
+}
+
+func TestACLPolicy_BuildSSHPolicy_WithTagsInDstAndAutogroupMemberInSrc(t *testing.T) {
+	p1 := createMachine("john@example.com")
+	p2 := createMachine("nick@example.com")
+	p3 := createMachine("nick@example.com", "tag:web")
+
+	policy := ACLPolicy{
+		SSHRules: []SSHRule{
+			{
+				Action: "accept",
+				Src:    []string{"autogroup:members"},
+				Dst:    []string{"tag:web"},
+				Users:  []string{"ubuntu"},
+			},
+		},
+	}
+
+	dst := createMachine("john@example.com", "tag:web")
+
+	actualRules := policy.BuildSSHPolicy([]Machine{*p1, *p2, *p3}, dst)
+	expectedRules := []*tailcfg.SSHRule{
+		{
+			Principals: sshPrincipalsFromMachines(*p1, *p2),
+			SSHUsers: map[string]string{
+				"ubuntu": "ubuntu",
+			},
+			Action: &tailcfg.SSHAction{
+				Accept:                   true,
+				AllowAgentForwarding:     true,
+				AllowLocalPortForwarding: true,
+			},
+		},
+	}
+
+	assert.Equal(t, expectedRules, actualRules.Rules)
+}
+
+func TestACLPolicy_BuildSSHPolicy_WithUserInDstAndNonMatchingSrc(t *testing.T) {
+	p1 := createMachine("john@example.com")
+	p2 := createMachine("jane@example.com")
+
+	policy := ACLPolicy{
+		SSHRules: []SSHRule{
+			{
+				Action: "accept",
+				Src:    []string{"jane@example.com"},
+				Dst:    []string{"john@example.com"},
+				Users:  []string{"autogroup:nonroot"},
+			},
+		},
+	}
+
+	dst := createMachine("john@example.com")
+
+	actualRules := policy.BuildSSHPolicy([]Machine{*p1, *p2}, dst)
+
+	assert.Nil(t, actualRules.Rules)
+}
+
+func TestACLPolicy_BuildSSHPolicy_WithUserInDstAndAutogroupMembersSrc(t *testing.T) {
+	p1 := createMachine("john@example.com")
+	p2 := createMachine("jane@example.com")
+
+	policy := ACLPolicy{
+		SSHRules: []SSHRule{
+			{
+				Action: "accept",
+				Src:    []string{"autogroup:members"},
+				Dst:    []string{"john@example.com"},
+				Users:  []string{"autogroup:nonroot"},
+			},
+		},
+	}
+
+	dst := createMachine("john@example.com")
+
+	actualRules := policy.BuildSSHPolicy([]Machine{*p1, *p2}, dst)
+	expectedRules := []*tailcfg.SSHRule{
+		{
+			Principals: sshPrincipalsFromMachines(*p1),
+			SSHUsers: map[string]string{
+				"*":    "=",
+				"root": "",
+			},
+			Action: &tailcfg.SSHAction{
+				Accept:                   true,
+				AllowAgentForwarding:     true,
+				AllowLocalPortForwarding: true,
+			},
+		},
+	}
+
+	assert.Equal(t, expectedRules, actualRules.Rules)
+}
+
+func TestACLPolicy_BuildSSHPolicy_WithAutogroupSelfAndTagSrc(t *testing.T) {
+	p1 := createMachine("john@example.com")
+	p2 := createMachine("jane@example.com", "tag:web")
+
+	policy := ACLPolicy{
+		SSHRules: []SSHRule{
+			{
+				Action: "accept",
+				Src:    []string{"tag:web"},
+				Dst:    []string{"autogroup:self"},
+				Users:  []string{"autogroup:nonroot"},
+			},
+		},
+	}
+
+	dst := createMachine("john@example.com")
+
+	actualRules := policy.BuildSSHPolicy([]Machine{*p1, *p2}, dst)
+
+	assert.Nil(t, actualRules.Rules)
+}
+
+func printRules(rules []*tailcfg.SSHRule) {
+	indent, err := json.MarshalIndent(rules, "", "  ")
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(string(indent))
+}
+
+func sshPrincipalsFromMachines(machines ...Machine) []*tailcfg.SSHPrincipal {
+	x := StringSet{}
+	for _, m := range machines {
+		x.Add(m.IPv4.String(), m.IPv6.String())
+	}
+
+	var result = []*tailcfg.SSHPrincipal{}
+
+	for _, i := range x.Items() {
+		result = append(result, &tailcfg.SSHPrincipal{NodeIP: i})
+	}
+
+	return result
+}

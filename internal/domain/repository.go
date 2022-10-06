@@ -78,6 +78,10 @@ type Repository interface {
 	GetAuthenticationRequest(ctx context.Context, key string) (*AuthenticationRequest, error)
 	DeleteAuthenticationRequest(ctx context.Context, key string) error
 
+	SaveSSHActionRequest(ctx context.Context, session *SSHActionRequest) error
+	GetSSHActionRequest(ctx context.Context, key string) (*SSHActionRequest, error)
+	DeleteSSHActionRequest(ctx context.Context, key string) error
+
 	Transaction(func(rp Repository) error) error
 }
 
