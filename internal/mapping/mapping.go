@@ -108,7 +108,15 @@ func ToDNSConfig(m *domain.Machine, peers []domain.Machine, tailnet *domain.Tail
 	return dnsConfig
 }
 
-func ToNode(m *domain.Machine) (*tailcfg.Node, *tailcfg.UserProfile, error) {
+func ToNode(m *domain.Machine, tailnet *domain.Tailnet) (*tailcfg.Node, *tailcfg.UserProfile, error) {
+	role := tailnet.IAMPolicy.GetRole(m.User)
+
+	var capabilities []string
+
+	if !m.HasTags() && role == domain.UserRoleAdmin {
+		capabilities = append(capabilities, tailcfg.CapabilityAdmin)
+	}
+
 	nKey, err := util.ParseNodePublicKey(m.NodeKey)
 	if err != nil {
 		return nil, nil, err
@@ -184,7 +192,8 @@ func ToNode(m *domain.Machine) (*tailcfg.Node, *tailcfg.UserProfile, error) {
 		Endpoints:  endpoints,
 		DERP:       derp,
 
-		Hostinfo: hostInfo.View(),
+		Hostinfo:     hostInfo.View(),
+		Capabilities: capabilities,
 
 		Created: m.CreatedAt.UTC(),
 

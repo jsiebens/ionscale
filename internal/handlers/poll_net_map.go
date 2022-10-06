@@ -219,12 +219,12 @@ func (h *PollNetMapHandler) createKeepAliveResponse(binder bind.Binder, request 
 func (h *PollNetMapHandler) createMapResponse(m *domain.Machine, binder bind.Binder, request *tailcfg.MapRequest, delta bool, prevSyncedPeerIDs map[uint64]bool) ([]byte, map[uint64]bool, error) {
 	ctx := context.TODO()
 
-	node, user, err := mapping.ToNode(m)
+	tailnet, err := h.repository.GetTailnet(ctx, m.TailnetID)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	tailnet, err := h.repository.GetTailnet(ctx, m.TailnetID)
+	node, user, err := mapping.ToNode(m, tailnet)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -249,7 +249,7 @@ func (h *PollNetMapHandler) createMapResponse(m *domain.Machine, binder bind.Bin
 		}
 		if policies.IsValidPeer(m, &peer) || policies.IsValidPeer(&peer, m) {
 			validPeers = append(validPeers, peer)
-			n, u, err := mapping.ToNode(&peer)
+			n, u, err := mapping.ToNode(&peer, tailnet)
 			if err != nil {
 				return nil, nil, err
 			}
