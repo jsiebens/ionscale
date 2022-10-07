@@ -17,6 +17,7 @@ import (
 func machineCommands() *coral.Command {
 	command := &coral.Command{
 		Use:          "machines",
+		Aliases:      []string{"machine"},
 		Short:        "Manage ionscale machines",
 		SilenceUsage: true,
 	}

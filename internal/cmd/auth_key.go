@@ -15,8 +15,9 @@ import (
 
 func authkeysCommand() *coral.Command {
 	command := &coral.Command{
-		Use:   "auth-keys",
-		Short: "Manage ionscale auth keys",
+		Use:     "auth-keys",
+		Aliases: []string{"auth-key"},
+		Short:   "Manage ionscale auth keys",
 	}
 
 	command.AddCommand(createAuthkeysCommand())

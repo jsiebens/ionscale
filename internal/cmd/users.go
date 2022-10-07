@@ -12,6 +12,7 @@ import (
 func userCommands() *coral.Command {
 	command := &coral.Command{
 		Use:          "users",
+		Aliases:      []string{"user"},
 		Short:        "Manage ionscale users",
 		SilenceUsage: true,
 	}

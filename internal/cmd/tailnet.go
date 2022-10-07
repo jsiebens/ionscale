@@ -17,8 +17,9 @@ import (
 
 func tailnetCommand() *coral.Command {
 	command := &coral.Command{
-		Use:   "tailnets",
-		Short: "Manage ionscale tailnets",
+		Use:     "tailnets",
+		Aliases: []string{"tailnet"},
+		Short:   "Manage ionscale tailnets",
 	}
 
 	command.AddCommand(listTailnetsCommand())
