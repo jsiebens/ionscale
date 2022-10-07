@@ -93,8 +93,9 @@ func (h *PollNetMapHandler) handleUpdate(c echo.Context, binder bind.Binder, m *
 	}
 
 	var syncedPeers = make(map[uint64]bool)
+	var derpMapChecksum = ""
 
-	response, syncedPeers, err := h.createMapResponse(m, binder, mapRequest, false, make(map[uint64]bool))
+	response, syncedPeers, derpMapChecksum, err := h.createMapResponse(m, binder, mapRequest, false, make(map[uint64]bool), derpMapChecksum)
 	if err != nil {
 		return err
 	}
@@ -163,7 +164,7 @@ func (h *PollNetMapHandler) handleUpdate(c echo.Context, binder bind.Binder, m *
 				var payload []byte
 				var payloadErr error
 
-				payload, syncedPeers, payloadErr = h.createMapResponse(machine, binder, mapRequest, true, syncedPeers)
+				payload, syncedPeers, derpMapChecksum, payloadErr = h.createMapResponse(machine, binder, mapRequest, true, syncedPeers, derpMapChecksum)
 
 				if payloadErr != nil {
 					return payloadErr
@@ -192,7 +193,7 @@ func (h *PollNetMapHandler) handleReadOnly(c echo.Context, binder bind.Binder, m
 		return err
 	}
 
-	response, _, err := h.createMapResponse(m, binder, request, false, map[uint64]bool{})
+	response, _, _, err := h.createMapResponse(m, binder, request, false, map[uint64]bool{}, "")
 	if err != nil {
 		return err
 	}
@@ -217,17 +218,17 @@ func (h *PollNetMapHandler) createKeepAliveResponse(binder bind.Binder, request 
 	return binder.Marshal(request.Compress, mapResponse)
 }
 
-func (h *PollNetMapHandler) createMapResponse(m *domain.Machine, binder bind.Binder, request *tailcfg.MapRequest, delta bool, prevSyncedPeerIDs map[uint64]bool) ([]byte, map[uint64]bool, error) {
+func (h *PollNetMapHandler) createMapResponse(m *domain.Machine, binder bind.Binder, request *tailcfg.MapRequest, delta bool, prevSyncedPeerIDs map[uint64]bool, prevDerpMapChecksum string) ([]byte, map[uint64]bool, string, error) {
 	ctx := context.TODO()
 
 	tailnet, err := h.repository.GetTailnet(ctx, m.TailnetID)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, "", err
 	}
 
 	node, user, err := mapping.ToNode(m, tailnet)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, "", err
 	}
 
 	policies := tailnet.ACLPolicy
@@ -238,7 +239,7 @@ func (h *PollNetMapHandler) createMapResponse(m *domain.Machine, binder bind.Bin
 
 	candidatePeers, err := h.repository.ListMachinePeers(ctx, m.TailnetID, m.MachineKey)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, "", err
 	}
 
 	syncedPeerIDs := map[uint64]bool{}
@@ -252,7 +253,7 @@ func (h *PollNetMapHandler) createMapResponse(m *domain.Machine, binder bind.Bin
 			validPeers = append(validPeers, peer)
 			n, u, err := mapping.ToNode(&peer, tailnet)
 			if err != nil {
-				return nil, nil, err
+				return nil, nil, "", err
 			}
 			changedPeers = append(changedPeers, n)
 			syncedPeerIDs[peer.ID] = true
@@ -273,7 +274,7 @@ func (h *PollNetMapHandler) createMapResponse(m *domain.Machine, binder bind.Bin
 
 	derpMap, err := m.Tailnet.GetDERPMap(ctx, h.repository)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, "", err
 	}
 
 	rules := policies.BuildFilterRules(candidatePeers, m)
@@ -302,13 +303,16 @@ func (h *PollNetMapHandler) createMapResponse(m *domain.Machine, binder bind.Bin
 			Node:            node,
 			DNSConfig:       mapping.ToDNSConfig(m, validPeers, &m.Tailnet, &dnsConfig),
 			PacketFilter:    rules,
-			DERPMap:         &derpMap.DERPMap,
 			Domain:          domain.SanitizeTailnetName(m.Tailnet.Name),
 			PeersChanged:    changedPeers,
 			PeersRemoved:    removedPeers,
 			UserProfiles:    users,
 			ControlTime:     &controlTime,
 			CollectServices: optBool(tailnet.ServiceCollectionEnabled),
+		}
+
+		if prevDerpMapChecksum != derpMap.Checksum {
+			mapResponse.DERPMap = &derpMap.DERPMap
 		}
 	}
 
@@ -320,7 +324,7 @@ func (h *PollNetMapHandler) createMapResponse(m *domain.Machine, binder bind.Bin
 
 	payload, err := binder.Marshal(request.Compress, mapResponse)
 
-	return payload, syncedPeerIDs, nil
+	return payload, syncedPeerIDs, derpMap.Checksum, nil
 }
 
 func NewOfflineTimers(repository domain.Repository, pubsub broker.Pubsub) *OfflineTimers {
