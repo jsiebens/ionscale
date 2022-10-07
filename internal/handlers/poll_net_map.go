@@ -226,7 +226,7 @@ func (h *PollNetMapHandler) createMapResponse(m *domain.Machine, binder bind.Bin
 		return nil, nil, "", err
 	}
 
-	node, user, err := mapping.ToNode(m, tailnet)
+	node, user, err := mapping.ToNode(m, tailnet, false)
 	if err != nil {
 		return nil, nil, "", err
 	}
@@ -251,7 +251,7 @@ func (h *PollNetMapHandler) createMapResponse(m *domain.Machine, binder bind.Bin
 		}
 		if policies.IsValidPeer(m, &peer) || policies.IsValidPeer(&peer, m) {
 			validPeers = append(validPeers, peer)
-			n, u, err := mapping.ToNode(&peer, tailnet)
+			n, u, err := mapping.ToNode(&peer, tailnet, true)
 			if err != nil {
 				return nil, nil, "", err
 			}

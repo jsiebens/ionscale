@@ -108,17 +108,19 @@ func ToDNSConfig(m *domain.Machine, peers []domain.Machine, tailnet *domain.Tail
 	return dnsConfig
 }
 
-func ToNode(m *domain.Machine, tailnet *domain.Tailnet) (*tailcfg.Node, *tailcfg.UserProfile, error) {
+func ToNode(m *domain.Machine, tailnet *domain.Tailnet, peer bool) (*tailcfg.Node, *tailcfg.UserProfile, error) {
 	role := tailnet.IAMPolicy.GetRole(m.User)
 
 	var capabilities []string
 
-	if !m.HasTags() && role == domain.UserRoleAdmin {
-		capabilities = append(capabilities, tailcfg.CapabilityAdmin)
-	}
+	if !peer {
+		if !m.HasTags() && role == domain.UserRoleAdmin {
+			capabilities = append(capabilities, tailcfg.CapabilityAdmin)
+		}
 
-	if tailnet.FileSharingEnabled {
-		capabilities = append(capabilities, tailcfg.CapabilityFileSharing)
+		if tailnet.FileSharingEnabled {
+			capabilities = append(capabilities, tailcfg.CapabilityFileSharing)
+		}
 	}
 
 	nKey, err := util.ParseNodePublicKey(m.NodeKey)
@@ -142,15 +144,6 @@ func ToNode(m *domain.Machine, tailnet *domain.Tailnet) (*tailcfg.Node, *tailcfg
 
 	endpoints := m.Endpoints
 	hostinfo := tailcfg.Hostinfo(m.HostInfo)
-
-	services := []tailcfg.Service{}
-	for _, s := range hostinfo.Services {
-		if s.Proto == tailcfg.TCP || s.Proto == tailcfg.UDP {
-			continue
-		}
-		services = append(services, s)
-	}
-	hostinfo.Services = services
 
 	var addrs []netip.Prefix
 	var allowedIPs []netip.Prefix
@@ -190,7 +183,7 @@ func ToNode(m *domain.Machine, tailnet *domain.Tailnet) (*tailcfg.Node, *tailcfg
 	hostInfo := tailcfg.Hostinfo{
 		OS:       hostinfo.OS,
 		Hostname: hostinfo.Hostname,
-		Services: hostinfo.Services,
+		Services: filterServices(hostinfo.Services),
 	}
 
 	n := tailcfg.Node{
@@ -253,10 +246,13 @@ func ToUserProfile(u domain.User) tailcfg.UserProfile {
 	return profile
 }
 
-func ToUserProfiles(users domain.Users) []tailcfg.UserProfile {
-	var profiles []tailcfg.UserProfile
-	for _, u := range users {
-		profiles = append(profiles, ToUserProfile(u))
+func filterServices(services []tailcfg.Service) []tailcfg.Service {
+	result := []tailcfg.Service{}
+	for _, s := range services {
+		if s.Proto == tailcfg.TCP || s.Proto == tailcfg.UDP {
+			continue
+		}
+		result = append(result, s)
 	}
-	return profiles
+	return result
 }
