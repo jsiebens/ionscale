@@ -205,3 +205,107 @@ func (s *Service) GetDERPMap(ctx context.Context, req *connect.Request[api.GetDE
 
 	return connect.NewResponse(&api.GetDERPMapResponse{Value: raw}), nil
 }
+
+func (s *Service) EnabledFileSharing(ctx context.Context, req *connect.Request[api.EnableFileSharingRequest]) (*connect.Response[api.EnableFileSharingResponse], error) {
+	principal := CurrentPrincipal(ctx)
+	if !principal.IsSystemAdmin() && !principal.IsTailnetAdmin(req.Msg.TailnetId) {
+		return nil, connect.NewError(connect.CodePermissionDenied, errors.New("permission denied"))
+	}
+
+	tailnet, err := s.repository.GetTailnet(ctx, req.Msg.TailnetId)
+	if err != nil {
+		return nil, err
+	}
+	if tailnet == nil {
+		return nil, connect.NewError(connect.CodeNotFound, errors.New("tailnet not found"))
+	}
+
+	if !tailnet.FileSharingEnabled {
+		tailnet.FileSharingEnabled = true
+		if err := s.repository.SaveTailnet(ctx, tailnet); err != nil {
+			return nil, err
+		}
+
+		s.pubsub.Publish(tailnet.ID, &broker.Signal{})
+	}
+
+	return connect.NewResponse(&api.EnableFileSharingResponse{}), nil
+}
+
+func (s *Service) DisableFileSharing(ctx context.Context, req *connect.Request[api.DisableFileSharingRequest]) (*connect.Response[api.DisableFileSharingResponse], error) {
+	principal := CurrentPrincipal(ctx)
+	if !principal.IsSystemAdmin() && !principal.IsTailnetAdmin(req.Msg.TailnetId) {
+		return nil, connect.NewError(connect.CodePermissionDenied, errors.New("permission denied"))
+	}
+
+	tailnet, err := s.repository.GetTailnet(ctx, req.Msg.TailnetId)
+	if err != nil {
+		return nil, err
+	}
+	if tailnet == nil {
+		return nil, connect.NewError(connect.CodeNotFound, errors.New("tailnet not found"))
+	}
+
+	if tailnet.FileSharingEnabled {
+		tailnet.FileSharingEnabled = false
+		if err := s.repository.SaveTailnet(ctx, tailnet); err != nil {
+			return nil, err
+		}
+
+		s.pubsub.Publish(tailnet.ID, &broker.Signal{})
+	}
+
+	return connect.NewResponse(&api.DisableFileSharingResponse{}), nil
+}
+
+func (s *Service) EnabledServiceCollection(ctx context.Context, req *connect.Request[api.EnableServiceCollectionRequest]) (*connect.Response[api.EnableServiceCollectionResponse], error) {
+	principal := CurrentPrincipal(ctx)
+	if !principal.IsSystemAdmin() && !principal.IsTailnetAdmin(req.Msg.TailnetId) {
+		return nil, connect.NewError(connect.CodePermissionDenied, errors.New("permission denied"))
+	}
+
+	tailnet, err := s.repository.GetTailnet(ctx, req.Msg.TailnetId)
+	if err != nil {
+		return nil, err
+	}
+	if tailnet == nil {
+		return nil, connect.NewError(connect.CodeNotFound, errors.New("tailnet not found"))
+	}
+
+	if !tailnet.ServiceCollectionEnabled {
+		tailnet.ServiceCollectionEnabled = true
+		if err := s.repository.SaveTailnet(ctx, tailnet); err != nil {
+			return nil, err
+		}
+
+		s.pubsub.Publish(tailnet.ID, &broker.Signal{})
+	}
+
+	return connect.NewResponse(&api.EnableServiceCollectionResponse{}), nil
+}
+
+func (s *Service) DisableServiceCollection(ctx context.Context, req *connect.Request[api.DisableServiceCollectionRequest]) (*connect.Response[api.DisableServiceCollectionResponse], error) {
+	principal := CurrentPrincipal(ctx)
+	if !principal.IsSystemAdmin() && !principal.IsTailnetAdmin(req.Msg.TailnetId) {
+		return nil, connect.NewError(connect.CodePermissionDenied, errors.New("permission denied"))
+	}
+
+	tailnet, err := s.repository.GetTailnet(ctx, req.Msg.TailnetId)
+	if err != nil {
+		return nil, err
+	}
+	if tailnet == nil {
+		return nil, connect.NewError(connect.CodeNotFound, errors.New("tailnet not found"))
+	}
+
+	if tailnet.ServiceCollectionEnabled {
+		tailnet.ServiceCollectionEnabled = false
+		if err := s.repository.SaveTailnet(ctx, tailnet); err != nil {
+			return nil, err
+		}
+
+		s.pubsub.Publish(tailnet.ID, &broker.Signal{})
+	}
+
+	return connect.NewResponse(&api.DisableServiceCollectionResponse{}), nil
+}

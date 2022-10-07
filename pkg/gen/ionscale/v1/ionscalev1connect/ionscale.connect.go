@@ -35,6 +35,10 @@ type IonscaleServiceClient interface {
 	DeleteTailnet(context.Context, *connect_go.Request[v1.DeleteTailnetRequest]) (*connect_go.Response[v1.DeleteTailnetResponse], error)
 	GetDERPMap(context.Context, *connect_go.Request[v1.GetDERPMapRequest]) (*connect_go.Response[v1.GetDERPMapResponse], error)
 	SetDERPMap(context.Context, *connect_go.Request[v1.SetDERPMapRequest]) (*connect_go.Response[v1.SetDERPMapResponse], error)
+	EnabledFileSharing(context.Context, *connect_go.Request[v1.EnableFileSharingRequest]) (*connect_go.Response[v1.EnableFileSharingResponse], error)
+	DisableFileSharing(context.Context, *connect_go.Request[v1.DisableFileSharingRequest]) (*connect_go.Response[v1.DisableFileSharingResponse], error)
+	EnabledServiceCollection(context.Context, *connect_go.Request[v1.EnableServiceCollectionRequest]) (*connect_go.Response[v1.EnableServiceCollectionResponse], error)
+	DisableServiceCollection(context.Context, *connect_go.Request[v1.DisableServiceCollectionRequest]) (*connect_go.Response[v1.DisableServiceCollectionResponse], error)
 	GetDNSConfig(context.Context, *connect_go.Request[v1.GetDNSConfigRequest]) (*connect_go.Response[v1.GetDNSConfigResponse], error)
 	SetDNSConfig(context.Context, *connect_go.Request[v1.SetDNSConfigRequest]) (*connect_go.Response[v1.SetDNSConfigResponse], error)
 	GetIAMPolicy(context.Context, *connect_go.Request[v1.GetIAMPolicyRequest]) (*connect_go.Response[v1.GetIAMPolicyResponse], error)
@@ -109,6 +113,26 @@ func NewIonscaleServiceClient(httpClient connect_go.HTTPClient, baseURL string, 
 		setDERPMap: connect_go.NewClient[v1.SetDERPMapRequest, v1.SetDERPMapResponse](
 			httpClient,
 			baseURL+"/ionscale.v1.IonscaleService/SetDERPMap",
+			opts...,
+		),
+		enabledFileSharing: connect_go.NewClient[v1.EnableFileSharingRequest, v1.EnableFileSharingResponse](
+			httpClient,
+			baseURL+"/ionscale.v1.IonscaleService/EnabledFileSharing",
+			opts...,
+		),
+		disableFileSharing: connect_go.NewClient[v1.DisableFileSharingRequest, v1.DisableFileSharingResponse](
+			httpClient,
+			baseURL+"/ionscale.v1.IonscaleService/DisableFileSharing",
+			opts...,
+		),
+		enabledServiceCollection: connect_go.NewClient[v1.EnableServiceCollectionRequest, v1.EnableServiceCollectionResponse](
+			httpClient,
+			baseURL+"/ionscale.v1.IonscaleService/EnabledServiceCollection",
+			opts...,
+		),
+		disableServiceCollection: connect_go.NewClient[v1.DisableServiceCollectionRequest, v1.DisableServiceCollectionResponse](
+			httpClient,
+			baseURL+"/ionscale.v1.IonscaleService/DisableServiceCollection",
 			opts...,
 		),
 		getDNSConfig: connect_go.NewClient[v1.GetDNSConfigRequest, v1.GetDNSConfigResponse](
@@ -244,6 +268,10 @@ type ionscaleServiceClient struct {
 	deleteTailnet            *connect_go.Client[v1.DeleteTailnetRequest, v1.DeleteTailnetResponse]
 	getDERPMap               *connect_go.Client[v1.GetDERPMapRequest, v1.GetDERPMapResponse]
 	setDERPMap               *connect_go.Client[v1.SetDERPMapRequest, v1.SetDERPMapResponse]
+	enabledFileSharing       *connect_go.Client[v1.EnableFileSharingRequest, v1.EnableFileSharingResponse]
+	disableFileSharing       *connect_go.Client[v1.DisableFileSharingRequest, v1.DisableFileSharingResponse]
+	enabledServiceCollection *connect_go.Client[v1.EnableServiceCollectionRequest, v1.EnableServiceCollectionResponse]
+	disableServiceCollection *connect_go.Client[v1.DisableServiceCollectionRequest, v1.DisableServiceCollectionResponse]
 	getDNSConfig             *connect_go.Client[v1.GetDNSConfigRequest, v1.GetDNSConfigResponse]
 	setDNSConfig             *connect_go.Client[v1.SetDNSConfigRequest, v1.SetDNSConfigResponse]
 	getIAMPolicy             *connect_go.Client[v1.GetIAMPolicyRequest, v1.GetIAMPolicyResponse]
@@ -308,6 +336,26 @@ func (c *ionscaleServiceClient) GetDERPMap(ctx context.Context, req *connect_go.
 // SetDERPMap calls ionscale.v1.IonscaleService.SetDERPMap.
 func (c *ionscaleServiceClient) SetDERPMap(ctx context.Context, req *connect_go.Request[v1.SetDERPMapRequest]) (*connect_go.Response[v1.SetDERPMapResponse], error) {
 	return c.setDERPMap.CallUnary(ctx, req)
+}
+
+// EnabledFileSharing calls ionscale.v1.IonscaleService.EnabledFileSharing.
+func (c *ionscaleServiceClient) EnabledFileSharing(ctx context.Context, req *connect_go.Request[v1.EnableFileSharingRequest]) (*connect_go.Response[v1.EnableFileSharingResponse], error) {
+	return c.enabledFileSharing.CallUnary(ctx, req)
+}
+
+// DisableFileSharing calls ionscale.v1.IonscaleService.DisableFileSharing.
+func (c *ionscaleServiceClient) DisableFileSharing(ctx context.Context, req *connect_go.Request[v1.DisableFileSharingRequest]) (*connect_go.Response[v1.DisableFileSharingResponse], error) {
+	return c.disableFileSharing.CallUnary(ctx, req)
+}
+
+// EnabledServiceCollection calls ionscale.v1.IonscaleService.EnabledServiceCollection.
+func (c *ionscaleServiceClient) EnabledServiceCollection(ctx context.Context, req *connect_go.Request[v1.EnableServiceCollectionRequest]) (*connect_go.Response[v1.EnableServiceCollectionResponse], error) {
+	return c.enabledServiceCollection.CallUnary(ctx, req)
+}
+
+// DisableServiceCollection calls ionscale.v1.IonscaleService.DisableServiceCollection.
+func (c *ionscaleServiceClient) DisableServiceCollection(ctx context.Context, req *connect_go.Request[v1.DisableServiceCollectionRequest]) (*connect_go.Response[v1.DisableServiceCollectionResponse], error) {
+	return c.disableServiceCollection.CallUnary(ctx, req)
 }
 
 // GetDNSConfig calls ionscale.v1.IonscaleService.GetDNSConfig.
@@ -440,6 +488,10 @@ type IonscaleServiceHandler interface {
 	DeleteTailnet(context.Context, *connect_go.Request[v1.DeleteTailnetRequest]) (*connect_go.Response[v1.DeleteTailnetResponse], error)
 	GetDERPMap(context.Context, *connect_go.Request[v1.GetDERPMapRequest]) (*connect_go.Response[v1.GetDERPMapResponse], error)
 	SetDERPMap(context.Context, *connect_go.Request[v1.SetDERPMapRequest]) (*connect_go.Response[v1.SetDERPMapResponse], error)
+	EnabledFileSharing(context.Context, *connect_go.Request[v1.EnableFileSharingRequest]) (*connect_go.Response[v1.EnableFileSharingResponse], error)
+	DisableFileSharing(context.Context, *connect_go.Request[v1.DisableFileSharingRequest]) (*connect_go.Response[v1.DisableFileSharingResponse], error)
+	EnabledServiceCollection(context.Context, *connect_go.Request[v1.EnableServiceCollectionRequest]) (*connect_go.Response[v1.EnableServiceCollectionResponse], error)
+	DisableServiceCollection(context.Context, *connect_go.Request[v1.DisableServiceCollectionRequest]) (*connect_go.Response[v1.DisableServiceCollectionResponse], error)
 	GetDNSConfig(context.Context, *connect_go.Request[v1.GetDNSConfigRequest]) (*connect_go.Response[v1.GetDNSConfigResponse], error)
 	SetDNSConfig(context.Context, *connect_go.Request[v1.SetDNSConfigRequest]) (*connect_go.Response[v1.SetDNSConfigResponse], error)
 	GetIAMPolicy(context.Context, *connect_go.Request[v1.GetIAMPolicyRequest]) (*connect_go.Response[v1.GetIAMPolicyResponse], error)
@@ -511,6 +563,26 @@ func NewIonscaleServiceHandler(svc IonscaleServiceHandler, opts ...connect_go.Ha
 	mux.Handle("/ionscale.v1.IonscaleService/SetDERPMap", connect_go.NewUnaryHandler(
 		"/ionscale.v1.IonscaleService/SetDERPMap",
 		svc.SetDERPMap,
+		opts...,
+	))
+	mux.Handle("/ionscale.v1.IonscaleService/EnabledFileSharing", connect_go.NewUnaryHandler(
+		"/ionscale.v1.IonscaleService/EnabledFileSharing",
+		svc.EnabledFileSharing,
+		opts...,
+	))
+	mux.Handle("/ionscale.v1.IonscaleService/DisableFileSharing", connect_go.NewUnaryHandler(
+		"/ionscale.v1.IonscaleService/DisableFileSharing",
+		svc.DisableFileSharing,
+		opts...,
+	))
+	mux.Handle("/ionscale.v1.IonscaleService/EnabledServiceCollection", connect_go.NewUnaryHandler(
+		"/ionscale.v1.IonscaleService/EnabledServiceCollection",
+		svc.EnabledServiceCollection,
+		opts...,
+	))
+	mux.Handle("/ionscale.v1.IonscaleService/DisableServiceCollection", connect_go.NewUnaryHandler(
+		"/ionscale.v1.IonscaleService/DisableServiceCollection",
+		svc.DisableServiceCollection,
 		opts...,
 	))
 	mux.Handle("/ionscale.v1.IonscaleService/GetDNSConfig", connect_go.NewUnaryHandler(
@@ -669,6 +741,22 @@ func (UnimplementedIonscaleServiceHandler) GetDERPMap(context.Context, *connect_
 
 func (UnimplementedIonscaleServiceHandler) SetDERPMap(context.Context, *connect_go.Request[v1.SetDERPMapRequest]) (*connect_go.Response[v1.SetDERPMapResponse], error) {
 	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("ionscale.v1.IonscaleService.SetDERPMap is not implemented"))
+}
+
+func (UnimplementedIonscaleServiceHandler) EnabledFileSharing(context.Context, *connect_go.Request[v1.EnableFileSharingRequest]) (*connect_go.Response[v1.EnableFileSharingResponse], error) {
+	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("ionscale.v1.IonscaleService.EnabledFileSharing is not implemented"))
+}
+
+func (UnimplementedIonscaleServiceHandler) DisableFileSharing(context.Context, *connect_go.Request[v1.DisableFileSharingRequest]) (*connect_go.Response[v1.DisableFileSharingResponse], error) {
+	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("ionscale.v1.IonscaleService.DisableFileSharing is not implemented"))
+}
+
+func (UnimplementedIonscaleServiceHandler) EnabledServiceCollection(context.Context, *connect_go.Request[v1.EnableServiceCollectionRequest]) (*connect_go.Response[v1.EnableServiceCollectionResponse], error) {
+	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("ionscale.v1.IonscaleService.EnabledServiceCollection is not implemented"))
+}
+
+func (UnimplementedIonscaleServiceHandler) DisableServiceCollection(context.Context, *connect_go.Request[v1.DisableServiceCollectionRequest]) (*connect_go.Response[v1.DisableServiceCollectionResponse], error) {
+	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("ionscale.v1.IonscaleService.DisableServiceCollection is not implemented"))
 }
 
 func (UnimplementedIonscaleServiceHandler) GetDNSConfig(context.Context, *connect_go.Request[v1.GetDNSConfigRequest]) (*connect_go.Response[v1.GetDNSConfigResponse], error) {

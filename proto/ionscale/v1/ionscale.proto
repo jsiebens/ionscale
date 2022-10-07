@@ -28,6 +28,10 @@ service IonscaleService {
   rpc DeleteTailnet (DeleteTailnetRequest) returns (DeleteTailnetResponse) {}
   rpc GetDERPMap (GetDERPMapRequest) returns (GetDERPMapResponse) {}
   rpc SetDERPMap (SetDERPMapRequest) returns (SetDERPMapResponse) {}
+  rpc EnabledFileSharing (EnableFileSharingRequest) returns (EnableFileSharingResponse) {}
+  rpc DisableFileSharing (DisableFileSharingRequest) returns (DisableFileSharingResponse) {}
+  rpc EnabledServiceCollection (EnableServiceCollectionRequest) returns (EnableServiceCollectionResponse) {}
+  rpc DisableServiceCollection (DisableServiceCollectionRequest) returns (DisableServiceCollectionResponse) {}
 
   rpc GetDNSConfig (GetDNSConfigRequest) returns (GetDNSConfigResponse) {}
   rpc SetDNSConfig (SetDNSConfigRequest) returns (SetDNSConfigResponse) {}

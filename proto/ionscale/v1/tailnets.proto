@@ -57,3 +57,31 @@ message SetDERPMapRequest {
 message SetDERPMapResponse {
   bytes value = 1;
 }
+
+message EnableFileSharingRequest {
+  uint64 tailnet_id = 1;
+}
+
+message EnableFileSharingResponse {
+}
+
+message DisableFileSharingRequest {
+  uint64 tailnet_id = 1;
+}
+
+message DisableFileSharingResponse {
+}
+
+message EnableServiceCollectionRequest {
+  uint64 tailnet_id = 1;
+}
+
+message EnableServiceCollectionResponse {
+}
+
+message DisableServiceCollectionRequest {
+  uint64 tailnet_id = 1;
+}
+
+message DisableServiceCollectionResponse {
+}

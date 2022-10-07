@@ -117,6 +117,10 @@ func ToNode(m *domain.Machine, tailnet *domain.Tailnet) (*tailcfg.Node, *tailcfg
 		capabilities = append(capabilities, tailcfg.CapabilityAdmin)
 	}
 
+	if tailnet.FileSharingEnabled {
+		capabilities = append(capabilities, tailcfg.CapabilityFileSharing)
+	}
+
 	nKey, err := util.ParseNodePublicKey(m.NodeKey)
 	if err != nil {
 		return nil, nil, err
@@ -138,6 +142,15 @@ func ToNode(m *domain.Machine, tailnet *domain.Tailnet) (*tailcfg.Node, *tailcfg
 
 	endpoints := m.Endpoints
 	hostinfo := tailcfg.Hostinfo(m.HostInfo)
+
+	services := []tailcfg.Service{}
+	for _, s := range hostinfo.Services {
+		if s.Proto == tailcfg.TCP || s.Proto == tailcfg.UDP {
+			continue
+		}
+		services = append(services, s)
+	}
+	hostinfo.Services = services
 
 	var addrs []netip.Prefix
 	var allowedIPs []netip.Prefix

@@ -645,6 +645,346 @@ func (x *SetDERPMapResponse) GetValue() []byte {
 	return nil
 }
 
+type EnableFileSharingRequest struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	TailnetId uint64 `protobuf:"varint,1,opt,name=tailnet_id,json=tailnetId,proto3" json:"tailnet_id,omitempty"`
+}
+
+func (x *EnableFileSharingRequest) Reset() {
+	*x = EnableFileSharingRequest{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_ionscale_v1_tailnets_proto_msgTypes[13]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *EnableFileSharingRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*EnableFileSharingRequest) ProtoMessage() {}
+
+func (x *EnableFileSharingRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_ionscale_v1_tailnets_proto_msgTypes[13]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use EnableFileSharingRequest.ProtoReflect.Descriptor instead.
+func (*EnableFileSharingRequest) Descriptor() ([]byte, []int) {
+	return file_ionscale_v1_tailnets_proto_rawDescGZIP(), []int{13}
+}
+
+func (x *EnableFileSharingRequest) GetTailnetId() uint64 {
+	if x != nil {
+		return x.TailnetId
+	}
+	return 0
+}
+
+type EnableFileSharingResponse struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+}
+
+func (x *EnableFileSharingResponse) Reset() {
+	*x = EnableFileSharingResponse{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_ionscale_v1_tailnets_proto_msgTypes[14]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *EnableFileSharingResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*EnableFileSharingResponse) ProtoMessage() {}
+
+func (x *EnableFileSharingResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_ionscale_v1_tailnets_proto_msgTypes[14]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use EnableFileSharingResponse.ProtoReflect.Descriptor instead.
+func (*EnableFileSharingResponse) Descriptor() ([]byte, []int) {
+	return file_ionscale_v1_tailnets_proto_rawDescGZIP(), []int{14}
+}
+
+type DisableFileSharingRequest struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	TailnetId uint64 `protobuf:"varint,1,opt,name=tailnet_id,json=tailnetId,proto3" json:"tailnet_id,omitempty"`
+}
+
+func (x *DisableFileSharingRequest) Reset() {
+	*x = DisableFileSharingRequest{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_ionscale_v1_tailnets_proto_msgTypes[15]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *DisableFileSharingRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DisableFileSharingRequest) ProtoMessage() {}
+
+func (x *DisableFileSharingRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_ionscale_v1_tailnets_proto_msgTypes[15]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DisableFileSharingRequest.ProtoReflect.Descriptor instead.
+func (*DisableFileSharingRequest) Descriptor() ([]byte, []int) {
+	return file_ionscale_v1_tailnets_proto_rawDescGZIP(), []int{15}
+}
+
+func (x *DisableFileSharingRequest) GetTailnetId() uint64 {
+	if x != nil {
+		return x.TailnetId
+	}
+	return 0
+}
+
+type DisableFileSharingResponse struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+}
+
+func (x *DisableFileSharingResponse) Reset() {
+	*x = DisableFileSharingResponse{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_ionscale_v1_tailnets_proto_msgTypes[16]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *DisableFileSharingResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DisableFileSharingResponse) ProtoMessage() {}
+
+func (x *DisableFileSharingResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_ionscale_v1_tailnets_proto_msgTypes[16]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DisableFileSharingResponse.ProtoReflect.Descriptor instead.
+func (*DisableFileSharingResponse) Descriptor() ([]byte, []int) {
+	return file_ionscale_v1_tailnets_proto_rawDescGZIP(), []int{16}
+}
+
+type EnableServiceCollectionRequest struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	TailnetId uint64 `protobuf:"varint,1,opt,name=tailnet_id,json=tailnetId,proto3" json:"tailnet_id,omitempty"`
+}
+
+func (x *EnableServiceCollectionRequest) Reset() {
+	*x = EnableServiceCollectionRequest{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_ionscale_v1_tailnets_proto_msgTypes[17]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *EnableServiceCollectionRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*EnableServiceCollectionRequest) ProtoMessage() {}
+
+func (x *EnableServiceCollectionRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_ionscale_v1_tailnets_proto_msgTypes[17]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use EnableServiceCollectionRequest.ProtoReflect.Descriptor instead.
+func (*EnableServiceCollectionRequest) Descriptor() ([]byte, []int) {
+	return file_ionscale_v1_tailnets_proto_rawDescGZIP(), []int{17}
+}
+
+func (x *EnableServiceCollectionRequest) GetTailnetId() uint64 {
+	if x != nil {
+		return x.TailnetId
+	}
+	return 0
+}
+
+type EnableServiceCollectionResponse struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+}
+
+func (x *EnableServiceCollectionResponse) Reset() {
+	*x = EnableServiceCollectionResponse{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_ionscale_v1_tailnets_proto_msgTypes[18]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *EnableServiceCollectionResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*EnableServiceCollectionResponse) ProtoMessage() {}
+
+func (x *EnableServiceCollectionResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_ionscale_v1_tailnets_proto_msgTypes[18]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use EnableServiceCollectionResponse.ProtoReflect.Descriptor instead.
+func (*EnableServiceCollectionResponse) Descriptor() ([]byte, []int) {
+	return file_ionscale_v1_tailnets_proto_rawDescGZIP(), []int{18}
+}
+
+type DisableServiceCollectionRequest struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	TailnetId uint64 `protobuf:"varint,1,opt,name=tailnet_id,json=tailnetId,proto3" json:"tailnet_id,omitempty"`
+}
+
+func (x *DisableServiceCollectionRequest) Reset() {
+	*x = DisableServiceCollectionRequest{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_ionscale_v1_tailnets_proto_msgTypes[19]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *DisableServiceCollectionRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DisableServiceCollectionRequest) ProtoMessage() {}
+
+func (x *DisableServiceCollectionRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_ionscale_v1_tailnets_proto_msgTypes[19]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DisableServiceCollectionRequest.ProtoReflect.Descriptor instead.
+func (*DisableServiceCollectionRequest) Descriptor() ([]byte, []int) {
+	return file_ionscale_v1_tailnets_proto_rawDescGZIP(), []int{19}
+}
+
+func (x *DisableServiceCollectionRequest) GetTailnetId() uint64 {
+	if x != nil {
+		return x.TailnetId
+	}
+	return 0
+}
+
+type DisableServiceCollectionResponse struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+}
+
+func (x *DisableServiceCollectionResponse) Reset() {
+	*x = DisableServiceCollectionResponse{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_ionscale_v1_tailnets_proto_msgTypes[20]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *DisableServiceCollectionResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DisableServiceCollectionResponse) ProtoMessage() {}
+
+func (x *DisableServiceCollectionResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_ionscale_v1_tailnets_proto_msgTypes[20]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DisableServiceCollectionResponse.ProtoReflect.Descriptor instead.
+func (*DisableServiceCollectionResponse) Descriptor() ([]byte, []int) {
+	return file_ionscale_v1_tailnets_proto_rawDescGZIP(), []int{20}
+}
+
 var File_ionscale_v1_tailnets_proto protoreflect.FileDescriptor
 
 var file_ionscale_v1_tailnets_proto_rawDesc = []byte{
@@ -697,12 +1037,36 @@ var file_ionscale_v1_tailnets_proto_rawDesc = []byte{
 	0x05, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x05, 0x76, 0x61,
 	0x6c, 0x75, 0x65, 0x22, 0x2a, 0x0a, 0x12, 0x53, 0x65, 0x74, 0x44, 0x45, 0x52, 0x50, 0x4d, 0x61,
 	0x70, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x14, 0x0a, 0x05, 0x76, 0x61, 0x6c,
-	0x75, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x05, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x42,
-	0x3d, 0x5a, 0x3b, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x6a, 0x73,
-	0x69, 0x65, 0x62, 0x65, 0x6e, 0x73, 0x2f, 0x69, 0x6f, 0x6e, 0x73, 0x63, 0x61, 0x6c, 0x65, 0x2f,
-	0x70, 0x6b, 0x67, 0x2f, 0x67, 0x65, 0x6e, 0x2f, 0x69, 0x6f, 0x6e, 0x73, 0x63, 0x61, 0x6c, 0x65,
-	0x2f, 0x76, 0x31, 0x3b, 0x69, 0x6f, 0x6e, 0x73, 0x63, 0x61, 0x6c, 0x65, 0x76, 0x31, 0x62, 0x06,
-	0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x75, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x05, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x22,
+	0x39, 0x0a, 0x18, 0x45, 0x6e, 0x61, 0x62, 0x6c, 0x65, 0x46, 0x69, 0x6c, 0x65, 0x53, 0x68, 0x61,
+	0x72, 0x69, 0x6e, 0x67, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x1d, 0x0a, 0x0a, 0x74,
+	0x61, 0x69, 0x6c, 0x6e, 0x65, 0x74, 0x5f, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x04, 0x52,
+	0x09, 0x74, 0x61, 0x69, 0x6c, 0x6e, 0x65, 0x74, 0x49, 0x64, 0x22, 0x1b, 0x0a, 0x19, 0x45, 0x6e,
+	0x61, 0x62, 0x6c, 0x65, 0x46, 0x69, 0x6c, 0x65, 0x53, 0x68, 0x61, 0x72, 0x69, 0x6e, 0x67, 0x52,
+	0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x3a, 0x0a, 0x19, 0x44, 0x69, 0x73, 0x61, 0x62,
+	0x6c, 0x65, 0x46, 0x69, 0x6c, 0x65, 0x53, 0x68, 0x61, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x65, 0x71,
+	0x75, 0x65, 0x73, 0x74, 0x12, 0x1d, 0x0a, 0x0a, 0x74, 0x61, 0x69, 0x6c, 0x6e, 0x65, 0x74, 0x5f,
+	0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x04, 0x52, 0x09, 0x74, 0x61, 0x69, 0x6c, 0x6e, 0x65,
+	0x74, 0x49, 0x64, 0x22, 0x1c, 0x0a, 0x1a, 0x44, 0x69, 0x73, 0x61, 0x62, 0x6c, 0x65, 0x46, 0x69,
+	0x6c, 0x65, 0x53, 0x68, 0x61, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73,
+	0x65, 0x22, 0x3f, 0x0a, 0x1e, 0x45, 0x6e, 0x61, 0x62, 0x6c, 0x65, 0x53, 0x65, 0x72, 0x76, 0x69,
+	0x63, 0x65, 0x43, 0x6f, 0x6c, 0x6c, 0x65, 0x63, 0x74, 0x69, 0x6f, 0x6e, 0x52, 0x65, 0x71, 0x75,
+	0x65, 0x73, 0x74, 0x12, 0x1d, 0x0a, 0x0a, 0x74, 0x61, 0x69, 0x6c, 0x6e, 0x65, 0x74, 0x5f, 0x69,
+	0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x04, 0x52, 0x09, 0x74, 0x61, 0x69, 0x6c, 0x6e, 0x65, 0x74,
+	0x49, 0x64, 0x22, 0x21, 0x0a, 0x1f, 0x45, 0x6e, 0x61, 0x62, 0x6c, 0x65, 0x53, 0x65, 0x72, 0x76,
+	0x69, 0x63, 0x65, 0x43, 0x6f, 0x6c, 0x6c, 0x65, 0x63, 0x74, 0x69, 0x6f, 0x6e, 0x52, 0x65, 0x73,
+	0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x40, 0x0a, 0x1f, 0x44, 0x69, 0x73, 0x61, 0x62, 0x6c, 0x65,
+	0x53, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x43, 0x6f, 0x6c, 0x6c, 0x65, 0x63, 0x74, 0x69, 0x6f,
+	0x6e, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x1d, 0x0a, 0x0a, 0x74, 0x61, 0x69, 0x6c,
+	0x6e, 0x65, 0x74, 0x5f, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x04, 0x52, 0x09, 0x74, 0x61,
+	0x69, 0x6c, 0x6e, 0x65, 0x74, 0x49, 0x64, 0x22, 0x22, 0x0a, 0x20, 0x44, 0x69, 0x73, 0x61, 0x62,
+	0x6c, 0x65, 0x53, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x43, 0x6f, 0x6c, 0x6c, 0x65, 0x63, 0x74,
+	0x69, 0x6f, 0x6e, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x42, 0x3d, 0x5a, 0x3b, 0x67,
+	0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x6a, 0x73, 0x69, 0x65, 0x62, 0x65,
+	0x6e, 0x73, 0x2f, 0x69, 0x6f, 0x6e, 0x73, 0x63, 0x61, 0x6c, 0x65, 0x2f, 0x70, 0x6b, 0x67, 0x2f,
+	0x67, 0x65, 0x6e, 0x2f, 0x69, 0x6f, 0x6e, 0x73, 0x63, 0x61, 0x6c, 0x65, 0x2f, 0x76, 0x31, 0x3b,
+	0x69, 0x6f, 0x6e, 0x73, 0x63, 0x61, 0x6c, 0x65, 0x76, 0x31, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74,
+	0x6f, 0x33,
 }
 
 var (
@@ -717,25 +1081,33 @@ func file_ionscale_v1_tailnets_proto_rawDescGZIP() []byte {
 	return file_ionscale_v1_tailnets_proto_rawDescData
 }
 
-var file_ionscale_v1_tailnets_proto_msgTypes = make([]protoimpl.MessageInfo, 13)
+var file_ionscale_v1_tailnets_proto_msgTypes = make([]protoimpl.MessageInfo, 21)
 var file_ionscale_v1_tailnets_proto_goTypes = []interface{}{
-	(*Tailnet)(nil),               // 0: ionscale.v1.Tailnet
-	(*CreateTailnetRequest)(nil),  // 1: ionscale.v1.CreateTailnetRequest
-	(*CreateTailnetResponse)(nil), // 2: ionscale.v1.CreateTailnetResponse
-	(*GetTailnetRequest)(nil),     // 3: ionscale.v1.GetTailnetRequest
-	(*GetTailnetResponse)(nil),    // 4: ionscale.v1.GetTailnetResponse
-	(*ListTailnetRequest)(nil),    // 5: ionscale.v1.ListTailnetRequest
-	(*ListTailnetResponse)(nil),   // 6: ionscale.v1.ListTailnetResponse
-	(*DeleteTailnetRequest)(nil),  // 7: ionscale.v1.DeleteTailnetRequest
-	(*DeleteTailnetResponse)(nil), // 8: ionscale.v1.DeleteTailnetResponse
-	(*GetDERPMapRequest)(nil),     // 9: ionscale.v1.GetDERPMapRequest
-	(*GetDERPMapResponse)(nil),    // 10: ionscale.v1.GetDERPMapResponse
-	(*SetDERPMapRequest)(nil),     // 11: ionscale.v1.SetDERPMapRequest
-	(*SetDERPMapResponse)(nil),    // 12: ionscale.v1.SetDERPMapResponse
-	(*IAMPolicy)(nil),             // 13: ionscale.v1.IAMPolicy
+	(*Tailnet)(nil),                          // 0: ionscale.v1.Tailnet
+	(*CreateTailnetRequest)(nil),             // 1: ionscale.v1.CreateTailnetRequest
+	(*CreateTailnetResponse)(nil),            // 2: ionscale.v1.CreateTailnetResponse
+	(*GetTailnetRequest)(nil),                // 3: ionscale.v1.GetTailnetRequest
+	(*GetTailnetResponse)(nil),               // 4: ionscale.v1.GetTailnetResponse
+	(*ListTailnetRequest)(nil),               // 5: ionscale.v1.ListTailnetRequest
+	(*ListTailnetResponse)(nil),              // 6: ionscale.v1.ListTailnetResponse
+	(*DeleteTailnetRequest)(nil),             // 7: ionscale.v1.DeleteTailnetRequest
+	(*DeleteTailnetResponse)(nil),            // 8: ionscale.v1.DeleteTailnetResponse
+	(*GetDERPMapRequest)(nil),                // 9: ionscale.v1.GetDERPMapRequest
+	(*GetDERPMapResponse)(nil),               // 10: ionscale.v1.GetDERPMapResponse
+	(*SetDERPMapRequest)(nil),                // 11: ionscale.v1.SetDERPMapRequest
+	(*SetDERPMapResponse)(nil),               // 12: ionscale.v1.SetDERPMapResponse
+	(*EnableFileSharingRequest)(nil),         // 13: ionscale.v1.EnableFileSharingRequest
+	(*EnableFileSharingResponse)(nil),        // 14: ionscale.v1.EnableFileSharingResponse
+	(*DisableFileSharingRequest)(nil),        // 15: ionscale.v1.DisableFileSharingRequest
+	(*DisableFileSharingResponse)(nil),       // 16: ionscale.v1.DisableFileSharingResponse
+	(*EnableServiceCollectionRequest)(nil),   // 17: ionscale.v1.EnableServiceCollectionRequest
+	(*EnableServiceCollectionResponse)(nil),  // 18: ionscale.v1.EnableServiceCollectionResponse
+	(*DisableServiceCollectionRequest)(nil),  // 19: ionscale.v1.DisableServiceCollectionRequest
+	(*DisableServiceCollectionResponse)(nil), // 20: ionscale.v1.DisableServiceCollectionResponse
+	(*IAMPolicy)(nil),                        // 21: ionscale.v1.IAMPolicy
 }
 var file_ionscale_v1_tailnets_proto_depIdxs = []int32{
-	13, // 0: ionscale.v1.CreateTailnetRequest.iam_policy:type_name -> ionscale.v1.IAMPolicy
+	21, // 0: ionscale.v1.CreateTailnetRequest.iam_policy:type_name -> ionscale.v1.IAMPolicy
 	0,  // 1: ionscale.v1.CreateTailnetResponse.tailnet:type_name -> ionscale.v1.Tailnet
 	0,  // 2: ionscale.v1.GetTailnetResponse.tailnet:type_name -> ionscale.v1.Tailnet
 	0,  // 3: ionscale.v1.ListTailnetResponse.tailnet:type_name -> ionscale.v1.Tailnet
@@ -909,6 +1281,102 @@ func file_ionscale_v1_tailnets_proto_init() {
 				return nil
 			}
 		}
+		file_ionscale_v1_tailnets_proto_msgTypes[13].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*EnableFileSharingRequest); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_ionscale_v1_tailnets_proto_msgTypes[14].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*EnableFileSharingResponse); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_ionscale_v1_tailnets_proto_msgTypes[15].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*DisableFileSharingRequest); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_ionscale_v1_tailnets_proto_msgTypes[16].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*DisableFileSharingResponse); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_ionscale_v1_tailnets_proto_msgTypes[17].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*EnableServiceCollectionRequest); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_ionscale_v1_tailnets_proto_msgTypes[18].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*EnableServiceCollectionResponse); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_ionscale_v1_tailnets_proto_msgTypes[19].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*DisableServiceCollectionRequest); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_ionscale_v1_tailnets_proto_msgTypes[20].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*DisableServiceCollectionResponse); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
@@ -916,7 +1384,7 @@ func file_ionscale_v1_tailnets_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_ionscale_v1_tailnets_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   13,
+			NumMessages:   21,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

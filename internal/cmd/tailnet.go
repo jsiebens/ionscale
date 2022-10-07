@@ -32,6 +32,10 @@ func tailnetCommand() *coral.Command {
 	command.AddCommand(setIAMPolicyCommand())
 	command.AddCommand(enableHttpsCommand())
 	command.AddCommand(disableHttpsCommand())
+	command.AddCommand(enableServiceCollectionCommand())
+	command.AddCommand(disableServiceCollectionCommand())
+	command.AddCommand(enableFileSharingCommand())
+	command.AddCommand(disableFileSharingCommand())
 	command.AddCommand(getDERPMap())
 	command.AddCommand(setDERPMap())
 
@@ -310,6 +314,172 @@ func setDERPMap() *coral.Command {
 
 		fmt.Println()
 		fmt.Println("DERP Map updated successfully")
+
+		return nil
+	}
+
+	return command
+}
+
+func enableFileSharingCommand() *coral.Command {
+	command := &coral.Command{
+		Use:          "enable-file-sharing",
+		Aliases:      []string{"enable-taildrop"},
+		Short:        "Enable Taildrop, the file sharing feature",
+		SilenceUsage: true,
+	}
+
+	var tailnetID uint64
+	var tailnetName string
+	var target = Target{}
+
+	target.prepareCommand(command)
+	command.Flags().StringVar(&tailnetName, "tailnet", "", "Tailnet name. Mutually exclusive with --tailnet-id.")
+	command.Flags().Uint64Var(&tailnetID, "tailnet-id", 0, "Tailnet ID. Mutually exclusive with --tailnet.")
+
+	command.PreRunE = checkRequiredTailnetAndTailnetIdFlags
+	command.RunE = func(command *coral.Command, args []string) error {
+		client, err := target.createGRPCClient()
+		if err != nil {
+			return err
+		}
+
+		tailnet, err := findTailnet(client, tailnetName, tailnetID)
+		if err != nil {
+			return err
+		}
+
+		req := api.EnableFileSharingRequest{
+			TailnetId: tailnet.Id,
+		}
+
+		if _, err := client.EnabledFileSharing(context.Background(), connect.NewRequest(&req)); err != nil {
+			return err
+		}
+
+		return nil
+	}
+
+	return command
+}
+
+func disableFileSharingCommand() *coral.Command {
+	command := &coral.Command{
+		Use:          "disable-file-sharing",
+		Aliases:      []string{"disable-taildrop"},
+		Short:        "Disable Taildrop, the file sharing feature",
+		SilenceUsage: true,
+	}
+
+	var tailnetID uint64
+	var tailnetName string
+	var target = Target{}
+
+	target.prepareCommand(command)
+	command.Flags().StringVar(&tailnetName, "tailnet", "", "Tailnet name. Mutually exclusive with --tailnet-id.")
+	command.Flags().Uint64Var(&tailnetID, "tailnet-id", 0, "Tailnet ID. Mutually exclusive with --tailnet.")
+
+	command.PreRunE = checkRequiredTailnetAndTailnetIdFlags
+	command.RunE = func(command *coral.Command, args []string) error {
+		client, err := target.createGRPCClient()
+		if err != nil {
+			return err
+		}
+
+		tailnet, err := findTailnet(client, tailnetName, tailnetID)
+		if err != nil {
+			return err
+		}
+
+		req := api.DisableFileSharingRequest{
+			TailnetId: tailnet.Id,
+		}
+
+		if _, err := client.DisableFileSharing(context.Background(), connect.NewRequest(&req)); err != nil {
+			return err
+		}
+
+		return nil
+	}
+
+	return command
+}
+
+func enableServiceCollectionCommand() *coral.Command {
+	command := &coral.Command{
+		Use:          "enable-service-collection",
+		Short:        "Enable monitoring live services running on your network’s machines.",
+		SilenceUsage: true,
+	}
+
+	var tailnetID uint64
+	var tailnetName string
+	var target = Target{}
+
+	target.prepareCommand(command)
+	command.Flags().StringVar(&tailnetName, "tailnet", "", "Tailnet name. Mutually exclusive with --tailnet-id.")
+	command.Flags().Uint64Var(&tailnetID, "tailnet-id", 0, "Tailnet ID. Mutually exclusive with --tailnet.")
+
+	command.PreRunE = checkRequiredTailnetAndTailnetIdFlags
+	command.RunE = func(command *coral.Command, args []string) error {
+		client, err := target.createGRPCClient()
+		if err != nil {
+			return err
+		}
+
+		tailnet, err := findTailnet(client, tailnetName, tailnetID)
+		if err != nil {
+			return err
+		}
+
+		req := api.EnableServiceCollectionRequest{
+			TailnetId: tailnet.Id,
+		}
+
+		if _, err := client.EnabledServiceCollection(context.Background(), connect.NewRequest(&req)); err != nil {
+			return err
+		}
+
+		return nil
+	}
+
+	return command
+}
+
+func disableServiceCollectionCommand() *coral.Command {
+	command := &coral.Command{
+		Use:          "disable-service-collection",
+		Short:        "Disable monitoring live services running on your network’s machines.",
+		SilenceUsage: true,
+	}
+
+	var tailnetID uint64
+	var tailnetName string
+	var target = Target{}
+
+	target.prepareCommand(command)
+	command.Flags().StringVar(&tailnetName, "tailnet", "", "Tailnet name. Mutually exclusive with --tailnet-id.")
+	command.Flags().Uint64Var(&tailnetID, "tailnet-id", 0, "Tailnet ID. Mutually exclusive with --tailnet.")
+
+	command.PreRunE = checkRequiredTailnetAndTailnetIdFlags
+	command.RunE = func(command *coral.Command, args []string) error {
+		client, err := target.createGRPCClient()
+		if err != nil {
+			return err
+		}
+
+		tailnet, err := findTailnet(client, tailnetName, tailnetID)
+		if err != nil {
+			return err
+		}
+
+		req := api.DisableServiceCollectionRequest{
+			TailnetId: tailnet.Id,
+		}
+
+		if _, err := client.DisableServiceCollection(context.Background(), connect.NewRequest(&req)); err != nil {
+			return err
+		}
 
 		return nil
 	}

@@ -10,6 +10,7 @@ import (
 	"github.com/labstack/echo/v4"
 	"net/http"
 	"tailscale.com/tailcfg"
+	"tailscale.com/types/opt"
 	"time"
 )
 
@@ -282,30 +283,32 @@ func (h *PollNetMapHandler) createMapResponse(m *domain.Machine, binder bind.Bin
 
 	if !delta {
 		mapResponse = &tailcfg.MapResponse{
-			KeepAlive:    false,
-			Node:         node,
-			DNSConfig:    mapping.ToDNSConfig(m, validPeers, &m.Tailnet, &dnsConfig),
-			PacketFilter: rules,
-			DERPMap:      derpMap,
-			Domain:       domain.SanitizeTailnetName(m.Tailnet.Name),
-			Peers:        changedPeers,
-			UserProfiles: users,
-			ControlTime:  &controlTime,
+			KeepAlive:       false,
+			Node:            node,
+			DNSConfig:       mapping.ToDNSConfig(m, validPeers, &m.Tailnet, &dnsConfig),
+			PacketFilter:    rules,
+			DERPMap:         derpMap,
+			Domain:          domain.SanitizeTailnetName(m.Tailnet.Name),
+			Peers:           changedPeers,
+			UserProfiles:    users,
+			ControlTime:     &controlTime,
+			CollectServices: optBool(tailnet.ServiceCollectionEnabled),
 			Debug: &tailcfg.Debug{
 				DisableLogTail: true,
 			},
 		}
 	} else {
 		mapResponse = &tailcfg.MapResponse{
-			Node:         node,
-			DNSConfig:    mapping.ToDNSConfig(m, validPeers, &m.Tailnet, &dnsConfig),
-			PacketFilter: rules,
-			DERPMap:      derpMap,
-			Domain:       domain.SanitizeTailnetName(m.Tailnet.Name),
-			PeersChanged: changedPeers,
-			PeersRemoved: removedPeers,
-			UserProfiles: users,
-			ControlTime:  &controlTime,
+			Node:            node,
+			DNSConfig:       mapping.ToDNSConfig(m, validPeers, &m.Tailnet, &dnsConfig),
+			PacketFilter:    rules,
+			DERPMap:         derpMap,
+			Domain:          domain.SanitizeTailnetName(m.Tailnet.Name),
+			PeersChanged:    changedPeers,
+			PeersRemoved:    removedPeers,
+			UserProfiles:    users,
+			ControlTime:     &controlTime,
+			CollectServices: optBool(tailnet.ServiceCollectionEnabled),
 		}
 	}
 
@@ -372,4 +375,10 @@ func (o *OfflineTimers) cancelOfflineMessage(machineID uint64) {
 		t.Stop()
 		delete(o.data, machineID)
 	}
+}
+
+func optBool(v bool) opt.Bool {
+	b := opt.Bool("")
+	b.Set(v)
+	return b
 }
