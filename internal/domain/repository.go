@@ -3,6 +3,7 @@ package domain
 import (
 	"context"
 	"encoding/json"
+	"github.com/jsiebens/ionscale/internal/util"
 	"gorm.io/gorm"
 	"net/http"
 	"sync"
@@ -17,8 +18,8 @@ type Repository interface {
 	GetJSONWebKeySet(ctx context.Context) (*JSONWebKeys, error)
 	SetJSONWebKeySet(ctx context.Context, keys *JSONWebKeys) error
 
-	GetDERPMap(ctx context.Context) (*tailcfg.DERPMap, error)
-	SetDERPMap(ctx context.Context, v *tailcfg.DERPMap) error
+	GetDERPMap(ctx context.Context) (*DERPMap, error)
+	SetDERPMap(ctx context.Context, v *DERPMap) error
 
 	GetAccount(ctx context.Context, accountID uint64) (*Account, error)
 	GetOrCreateAccount(ctx context.Context, externalID, loginName string) (*Account, bool, error)
@@ -104,10 +105,10 @@ func (r *repository) Transaction(action func(Repository) error) error {
 
 type derpMapCache struct {
 	sync.RWMutex
-	value *tailcfg.DERPMap
+	value *DERPMap
 }
 
-func (d *derpMapCache) Get() (*tailcfg.DERPMap, error) {
+func (d *derpMapCache) Get() (*DERPMap, error) {
 	d.RLock()
 
 	if d.value != nil {
@@ -135,7 +136,10 @@ func (d *derpMapCache) Get() (*tailcfg.DERPMap, error) {
 		return nil, err
 	}
 
-	d.value = m
+	d.value = &DERPMap{
+		Checksum: util.Checksum(m),
+		DERPMap:  *m,
+	}
 
 	return d.value, nil
 }

@@ -44,5 +44,5 @@ func (DERPMap) GormDBDataType(db *gorm.DB, field *schema.Field) string {
 }
 
 type DefaultDERPMap interface {
-	GetDERPMap(ctx context.Context) (*tailcfg.DERPMap, error)
+	GetDERPMap(ctx context.Context) (*DERPMap, error)
 }

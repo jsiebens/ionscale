@@ -16,11 +16,16 @@ import "ionscale/v1/routes.proto";
 import "ionscale/v1/dns.proto";
 import "ionscale/v1/iam.proto";
 import "ionscale/v1/acl.proto";
+import "ionscale/v1/derp.proto";
 
 service IonscaleService {
   rpc GetVersion (GetVersionRequest) returns (GetVersionResponse) {}
 
   rpc Authenticate (AuthenticationRequest) returns (stream AuthenticationResponse) {}
+
+  rpc GetDefaultDERPMap (GetDefaultDERPMapRequest) returns (GetDefaultDERPMapResponse) {}
+  rpc SetDefaultDERPMap (SetDefaultDERPMapRequest) returns (SetDefaultDERPMapResponse) {}
+  rpc ResetDefaultDERPMap (ResetDefaultDERPMapRequest) returns (ResetDefaultDERPMapResponse) {}
 
   rpc CreateTailnet (CreateTailnetRequest) returns (CreateTailnetResponse) {}
   rpc GetTailnet (GetTailnetRequest) returns (GetTailnetResponse) {}
@@ -28,6 +33,7 @@ service IonscaleService {
   rpc DeleteTailnet (DeleteTailnetRequest) returns (DeleteTailnetResponse) {}
   rpc GetDERPMap (GetDERPMapRequest) returns (GetDERPMapResponse) {}
   rpc SetDERPMap (SetDERPMapRequest) returns (SetDERPMapResponse) {}
+  rpc ResetDERPMap (ResetDERPMapRequest) returns (ResetDERPMapResponse) {}
   rpc EnabledFileSharing (EnableFileSharingRequest) returns (EnableFileSharingResponse) {}
   rpc DisableFileSharing (DisableFileSharingRequest) returns (DisableFileSharingResponse) {}
   rpc EnabledServiceCollection (EnableServiceCollectionRequest) returns (EnableServiceCollectionResponse) {}

@@ -179,6 +179,31 @@ func (s *Service) SetDERPMap(ctx context.Context, req *connect.Request[api.SetDE
 	return connect.NewResponse(&api.SetDERPMapResponse{Value: raw}), nil
 }
 
+func (s *Service) ResetDERPMap(ctx context.Context, req *connect.Request[api.ResetDERPMapRequest]) (*connect.Response[api.ResetDERPMapResponse], error) {
+	principal := CurrentPrincipal(ctx)
+	if !principal.IsSystemAdmin() && !principal.IsTailnetAdmin(req.Msg.TailnetId) {
+		return nil, connect.NewError(connect.CodePermissionDenied, errors.New("permission denied"))
+	}
+
+	tailnet, err := s.repository.GetTailnet(ctx, req.Msg.TailnetId)
+	if err != nil {
+		return nil, err
+	}
+	if tailnet == nil {
+		return nil, connect.NewError(connect.CodeNotFound, errors.New("tailnet not found"))
+	}
+
+	tailnet.DERPMap = domain.DERPMap{}
+
+	if err := s.repository.SaveTailnet(ctx, tailnet); err != nil {
+		return nil, err
+	}
+
+	s.pubsub.Publish(tailnet.ID, &broker.Signal{})
+
+	return connect.NewResponse(&api.ResetDERPMapResponse{}), nil
+}
+
 func (s *Service) GetDERPMap(ctx context.Context, req *connect.Request[api.GetDERPMapRequest]) (*connect.Response[api.GetDERPMapResponse], error) {
 	principal := CurrentPrincipal(ctx)
 	if !principal.IsSystemAdmin() && !principal.IsTailnetAdmin(req.Msg.TailnetId) {
@@ -198,7 +223,7 @@ func (s *Service) GetDERPMap(ctx context.Context, req *connect.Request[api.GetDE
 		return nil, err
 	}
 
-	raw, err := json.Marshal(derpMap)
+	raw, err := json.Marshal(derpMap.DERPMap)
 	if err != nil {
 		return nil, err
 	}

@@ -58,6 +58,13 @@ message SetDERPMapResponse {
   bytes value = 1;
 }
 
+message ResetDERPMapRequest {
+  uint64 tailnet_id = 1;
+}
+
+message ResetDERPMapResponse {
+}
+
 message EnableFileSharingRequest {
   uint64 tailnet_id = 1;
 }

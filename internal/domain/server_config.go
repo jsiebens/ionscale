@@ -7,7 +7,6 @@ import (
 	"encoding/json"
 	"errors"
 	"gorm.io/gorm"
-	"tailscale.com/tailcfg"
 	tkey "tailscale.com/types/key"
 	"time"
 )
@@ -82,12 +81,16 @@ func (r *repository) SetJSONWebKeySet(ctx context.Context, v *JSONWebKeys) error
 	return r.setServerConfig(ctx, jwksConfigKey, v)
 }
 
-func (r *repository) GetDERPMap(ctx context.Context) (*tailcfg.DERPMap, error) {
-	var m tailcfg.DERPMap
+func (r *repository) GetDERPMap(ctx context.Context) (*DERPMap, error) {
+	var m DERPMap
 
 	err := r.getServerConfig(ctx, derpMapConfigKey, &m)
 
 	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return r.defaultDERPMap.Get()
+	}
+
+	if m.Checksum == "" {
 		return r.defaultDERPMap.Get()
 	}
 
@@ -98,7 +101,7 @@ func (r *repository) GetDERPMap(ctx context.Context) (*tailcfg.DERPMap, error) {
 	return &m, nil
 }
 
-func (r *repository) SetDERPMap(ctx context.Context, v *tailcfg.DERPMap) error {
+func (r *repository) SetDERPMap(ctx context.Context, v *DERPMap) error {
 	return r.setServerConfig(ctx, "derp_map", v)
 }
 

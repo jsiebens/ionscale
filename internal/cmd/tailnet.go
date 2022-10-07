@@ -39,6 +39,7 @@ func tailnetCommand() *coral.Command {
 	command.AddCommand(disableFileSharingCommand())
 	command.AddCommand(getDERPMap())
 	command.AddCommand(setDERPMap())
+	command.AddCommand(resetDERPMap())
 
 	return command
 }
@@ -251,7 +252,6 @@ func getDERPMap() *coral.Command {
 				return err
 			}
 
-			fmt.Println()
 			fmt.Println(string(marshal))
 		} else {
 			marshal, err := yaml.Marshal(derpMap)
@@ -259,7 +259,6 @@ func getDERPMap() *coral.Command {
 				return err
 			}
 
-			fmt.Println()
 			fmt.Println(string(marshal))
 		}
 
@@ -313,7 +312,45 @@ func setDERPMap() *coral.Command {
 			return err
 		}
 
-		fmt.Println()
+		fmt.Println("DERP Map updated successfully")
+
+		return nil
+	}
+
+	return command
+}
+
+func resetDERPMap() *coral.Command {
+	command := &coral.Command{
+		Use:          "reset-derp-map",
+		Short:        "Reset the DERP Map to the default configuration",
+		SilenceUsage: true,
+	}
+
+	var tailnetID uint64
+	var tailnetName string
+	var target = Target{}
+	target.prepareCommand(command)
+
+	command.Flags().StringVar(&tailnetName, "tailnet", "", "Tailnet name. Mutually exclusive with --tailnet-id.")
+	command.Flags().Uint64Var(&tailnetID, "tailnet-id", 0, "Tailnet ID. Mutually exclusive with --tailnet.")
+
+	command.PreRunE = checkRequiredTailnetAndTailnetIdFlags
+	command.RunE = func(command *coral.Command, args []string) error {
+		client, err := target.createGRPCClient()
+		if err != nil {
+			return err
+		}
+
+		tailnet, err := findTailnet(client, tailnetName, tailnetID)
+		if err != nil {
+			return err
+		}
+
+		if _, err := client.ResetDERPMap(context.Background(), connect.NewRequest(&api.ResetDERPMapRequest{TailnetId: tailnet.Id})); err != nil {
+			return err
+		}
+
 		fmt.Println("DERP Map updated successfully")
 
 		return nil

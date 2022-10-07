@@ -15,6 +15,7 @@ func Command() *coral.Command {
 	rootCmd.AddCommand(authkeysCommand())
 	rootCmd.AddCommand(machineCommands())
 	rootCmd.AddCommand(userCommands())
+	rootCmd.AddCommand(systemCommand())
 
 	return rootCmd
 }
