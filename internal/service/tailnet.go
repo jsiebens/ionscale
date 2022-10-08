@@ -20,11 +20,13 @@ func (s *Service) CreateTailnet(ctx context.Context, req *connect.Request[api.Cr
 	}
 
 	name := req.Msg.Name
-	iamPolicy := domain.IAMPolicy{
-		Subs:    req.Msg.IamPolicy.Subs,
-		Emails:  req.Msg.IamPolicy.Emails,
-		Filters: req.Msg.IamPolicy.Filters,
-		Roles:   apiRolesMapToDomainRolesMap(req.Msg.IamPolicy.Roles),
+	iamPolicy := domain.IAMPolicy{}
+
+	if req.Msg.IamPolicy != nil {
+		iamPolicy.Subs = req.Msg.IamPolicy.Subs
+		iamPolicy.Emails = req.Msg.IamPolicy.Emails
+		iamPolicy.Filters = req.Msg.IamPolicy.Filters
+		iamPolicy.Roles = apiRolesMapToDomainRolesMap(req.Msg.IamPolicy.Roles)
 	}
 
 	tailnet, created, err := s.repository.GetOrCreateTailnet(ctx, name, iamPolicy)
