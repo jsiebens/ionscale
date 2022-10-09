@@ -68,11 +68,17 @@ func (h *RegistrationHandlers) Register(c echo.Context) error {
 		if !req.Expiry.IsZero() && req.Expiry.Before(time.Now()) {
 			m.ExpiresAt = req.Expiry
 
-			if err := h.repository.SaveMachine(ctx, m); err != nil {
-				return err
+			if m.Ephemeral {
+				if _, err := h.repository.DeleteMachine(ctx, m.ID); err != nil {
+					return err
+				}
+				h.pubsub.Publish(m.TailnetID, &broker.Signal{PeersRemoved: []uint64{m.ID}})
+			} else {
+				if err := h.repository.SaveMachine(ctx, m); err != nil {
+					return err
+				}
+				h.pubsub.Publish(m.TailnetID, &broker.Signal{PeerUpdated: &m.ID})
 			}
-
-			h.pubsub.Publish(m.TailnetID, &broker.Signal{PeerUpdated: &m.ID})
 
 			response := tailcfg.RegisterResponse{NodeKeyExpired: true}
 			return binder.WriteResponse(c, http.StatusOK, response)
