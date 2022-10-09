@@ -6,13 +6,13 @@ import (
 	"fmt"
 	"github.com/caddyserver/certmagic"
 	"github.com/hashicorp/go-hclog"
+	"github.com/jsiebens/ionscale/internal/auth"
 	"github.com/jsiebens/ionscale/internal/bind"
 	"github.com/jsiebens/ionscale/internal/config"
 	"github.com/jsiebens/ionscale/internal/database"
 	"github.com/jsiebens/ionscale/internal/dns"
 	"github.com/jsiebens/ionscale/internal/domain"
 	"github.com/jsiebens/ionscale/internal/handlers"
-	"github.com/jsiebens/ionscale/internal/provider"
 	"github.com/jsiebens/ionscale/internal/service"
 	"github.com/jsiebens/ionscale/internal/templates"
 	echo_prometheus "github.com/labstack/echo-contrib/prometheus"
@@ -210,12 +210,12 @@ func Start(c *config.Config) error {
 	return g.Wait()
 }
 
-func setupAuthProvider(config config.Auth) (provider.AuthProvider, *domain.IAMPolicy, error) {
+func setupAuthProvider(config config.Auth) (auth.Provider, *domain.IAMPolicy, error) {
 	if len(config.Provider.Issuer) == 0 {
 		return nil, &domain.IAMPolicy{}, nil
 	}
 
-	authProvider, err := provider.NewOIDCProvider(&config.Provider)
+	authProvider, err := auth.NewOIDCProvider(&config.Provider)
 	if err != nil {
 		return nil, nil, err
 	}

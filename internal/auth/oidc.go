@@ -1,4 +1,4 @@
-package provider
+package auth
 
 import (
 	"context"

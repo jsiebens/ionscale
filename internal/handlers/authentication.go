@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"github.com/jsiebens/ionscale/internal/addr"
-	"github.com/jsiebens/ionscale/internal/provider"
+	"github.com/jsiebens/ionscale/internal/auth"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/mr-tron/base58"
 	"net/http"
@@ -20,7 +20,7 @@ import (
 
 func NewAuthenticationHandlers(
 	config *config.Config,
-	authProvider provider.AuthProvider,
+	authProvider auth.Provider,
 	systemIAMPolicy *domain.IAMPolicy,
 	repository domain.Repository) *AuthenticationHandlers {
 
@@ -34,7 +34,7 @@ func NewAuthenticationHandlers(
 
 type AuthenticationHandlers struct {
 	repository      domain.Repository
-	authProvider    provider.AuthProvider
+	authProvider    auth.Provider
 	config          *config.Config
 	systemIAMPolicy *domain.IAMPolicy
 }
@@ -233,11 +233,11 @@ func (h *AuthenticationHandlers) Callback(c echo.Context) error {
 	return c.Redirect(http.StatusFound, "/a/error")
 }
 
-func (h *AuthenticationHandlers) isSystemAdmin(ctx context.Context, u *provider.User) (bool, error) {
+func (h *AuthenticationHandlers) isSystemAdmin(ctx context.Context, u *auth.User) (bool, error) {
 	return h.systemIAMPolicy.EvaluatePolicy(&domain.Identity{UserID: u.ID, Email: u.Name, Attr: u.Attr})
 }
 
-func (h *AuthenticationHandlers) listAvailableTailnets(ctx context.Context, u *provider.User) ([]domain.Tailnet, error) {
+func (h *AuthenticationHandlers) listAvailableTailnets(ctx context.Context, u *auth.User) ([]domain.Tailnet, error) {
 	var result = []domain.Tailnet{}
 	tailnets, err := h.repository.ListTailnets(ctx)
 	if err != nil {
@@ -534,7 +534,7 @@ func (h *AuthenticationHandlers) endMachineRegistrationFlow(c echo.Context, regi
 	return c.Redirect(http.StatusFound, "/a/success")
 }
 
-func (h *AuthenticationHandlers) exchangeUser(code string) (*provider.User, error) {
+func (h *AuthenticationHandlers) exchangeUser(code string) (*auth.User, error) {
 	redirectUrl := h.config.CreateUrl("/a/callback")
 
 	user, err := h.authProvider.Exchange(redirectUrl, code)

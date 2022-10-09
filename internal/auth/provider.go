@@ -1,6 +1,6 @@
-package provider
+package auth
 
-type AuthProvider interface {
+type Provider interface {
 	GetLoginURL(redirectURI, state string) string
 	Exchange(redirectURI, code string) (*User, error)
 }
