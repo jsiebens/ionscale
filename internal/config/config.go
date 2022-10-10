@@ -170,7 +170,7 @@ type Keys struct {
 }
 
 type Auth struct {
-	Provider          AuthProvider      `yaml:"provider,omitempty" env:"PROVIDER"`
+	Provider          AuthProvider      `yaml:"provider,omitempty" envPrefix:"PROVIDER_"`
 	SystemAdminPolicy SystemAdminPolicy `yaml:"system_admins"`
 }
 
