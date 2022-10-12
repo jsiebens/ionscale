@@ -16,6 +16,7 @@ require (
 	github.com/hashicorp/go-hclog v1.3.0
 	github.com/hashicorp/go-multierror v1.1.1
 	github.com/imdario/mergo v0.3.12
+	github.com/jsiebens/go-edit v0.1.0
 	github.com/klauspost/compress v1.15.9
 	github.com/labstack/echo-contrib v0.13.0
 	github.com/labstack/echo/v4 v4.9.0
@@ -53,6 +54,7 @@ require (
 require (
 	cloud.google.com/go/compute v1.7.0 // indirect
 	github.com/Azure/azure-sdk-for-go v52.4.0+incompatible // indirect
+	github.com/Azure/go-ansiterm v0.0.0-20210617225240-d185dfc1b5a1 // indirect
 	github.com/Azure/go-autorest v14.2.0+incompatible // indirect
 	github.com/Azure/go-autorest/autorest v0.11.17 // indirect
 	github.com/Azure/go-autorest/autorest/adal v0.9.11 // indirect
@@ -115,6 +117,7 @@ require (
 	github.com/mholt/acmez v1.0.4 // indirect
 	github.com/miekg/dns v1.1.50 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
+	github.com/moby/term v0.0.0-20220808134915-39b0c02b01ae // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/prometheus/client_model v0.2.0 // indirect
 	github.com/prometheus/common v0.37.0 // indirect
@@ -132,7 +135,7 @@ require (
 	go4.org/mem v0.0.0-20220726221520-4f986261bf13 // indirect
 	go4.org/unsafe/assume-no-moving-gc v0.0.0-20220617031537-928513b29760 // indirect
 	golang.org/x/mod v0.6.0-dev.0.20220419223038-86c51ed26bb4 // indirect
-	golang.org/x/sys v0.0.0-20221006211917-84dc82d7e875 // indirect
+	golang.org/x/sys v0.0.0-20221010170243-090e33056c14 // indirect
 	golang.org/x/text v0.3.8-0.20211105212822-18b340fc7af2 // indirect
 	golang.org/x/time v0.0.0-20220722155302-e5dcc9cfc0b9 // indirect
 	golang.org/x/tools v0.1.12 // indirect

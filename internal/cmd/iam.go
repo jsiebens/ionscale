@@ -1,13 +1,16 @@
 package cmd
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
 	"github.com/bufbuild/connect-go"
+	"github.com/jsiebens/go-edit/editor"
 	api "github.com/jsiebens/ionscale/pkg/gen/ionscale/v1"
 	"github.com/muesli/coral"
 	"io/ioutil"
+	"os"
 )
 
 func getIAMPolicyCommand() *coral.Command {
@@ -48,6 +51,70 @@ func getIAMPolicyCommand() *coral.Command {
 		}
 
 		fmt.Println(string(marshal))
+
+		return nil
+	}
+
+	return command
+}
+
+func editIAMPolicyCommand() *coral.Command {
+	command := &coral.Command{
+		Use:          "edit-iam-policy",
+		Short:        "Edit the IAM policy",
+		SilenceUsage: true,
+	}
+
+	var tailnetID uint64
+	var tailnetName string
+	var target = Target{}
+
+	target.prepareCommand(command)
+	command.Flags().StringVar(&tailnetName, "tailnet", "", "Tailnet name. Mutually exclusive with --tailnet-id.")
+	command.Flags().Uint64Var(&tailnetID, "tailnet-id", 0, "Tailnet ID. Mutually exclusive with --tailnet.")
+
+	command.PreRunE = checkRequiredTailnetAndTailnetIdFlags
+	command.RunE = func(cmd *coral.Command, args []string) error {
+		edit := editor.NewDefaultEditor([]string{"IONSCALE_EDITOR", "EDITOR"})
+
+		client, err := target.createGRPCClient()
+		if err != nil {
+			return err
+		}
+
+		tailnet, err := findTailnet(client, tailnetName, tailnetID)
+		if err != nil {
+			return err
+		}
+
+		resp, err := client.GetIAMPolicy(context.Background(), connect.NewRequest(&api.GetIAMPolicyRequest{TailnetId: tailnet.Id}))
+		if err != nil {
+			return err
+		}
+
+		previous, err := json.MarshalIndent(resp.Msg.Policy, "", "  ")
+		if err != nil {
+			return err
+		}
+
+		next, s, err := edit.LaunchTempFile("ionscale", ".json", bytes.NewReader(previous))
+		if err != nil {
+			return err
+		}
+
+		defer os.Remove(s)
+
+		var policy = &api.IAMPolicy{}
+		if err := json.Unmarshal(next, policy); err != nil {
+			return err
+		}
+
+		_, err = client.SetIAMPolicy(context.Background(), connect.NewRequest(&api.SetIAMPolicyRequest{TailnetId: tailnet.Id, Policy: policy}))
+		if err != nil {
+			return err
+		}
+
+		fmt.Println("IAM policy updated successfully")
 
 		return nil
 	}
