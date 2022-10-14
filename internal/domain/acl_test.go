@@ -550,6 +550,15 @@ func TestACLPolicy_IsTagOwner(t *testing.T) {
 	}
 }
 
+func TestACLPolicy_FindAutoApprovedIPsWhenNoAutoapproversAreSet(t *testing.T) {
+	route1 := netip.MustParsePrefix("10.160.0.0/20")
+	route2 := netip.MustParsePrefix("10.161.0.0/20")
+	route3 := netip.MustParsePrefix("10.162.0.0/20")
+
+	policy := ACLPolicy{}
+	assert.Nil(t, policy.FindAutoApprovedIPs([]netip.Prefix{route1, route2, route3}, nil, nil))
+}
+
 func TestACLPolicy_FindAutoApprovedIPs(t *testing.T) {
 	route1 := netip.MustParsePrefix("10.160.0.0/20")
 	route2 := netip.MustParsePrefix("10.161.0.0/20")
@@ -559,7 +568,7 @@ func TestACLPolicy_FindAutoApprovedIPs(t *testing.T) {
 		Groups: map[string][]string{
 			"group:admins": {"jane@example.com"},
 		},
-		AutoApprovers: AutoApprovers{
+		AutoApprovers: &AutoApprovers{
 			Routes: map[string][]string{
 				route1.String(): {"group:admins"},
 				route2.String(): {"john@example.com", "tag:router"},

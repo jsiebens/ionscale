@@ -30,7 +30,7 @@ type ACLPolicy struct {
 	Hosts         map[string]string   `json:"hosts,omitempty"`
 	ACLs          []ACL               `json:"acls"`
 	TagOwners     map[string][]string `json:"tagowners"`
-	AutoApprovers AutoApprovers       `json:"autoApprovers"`
+	AutoApprovers *AutoApprovers      `json:"autoApprovers"`
 	SSHRules      []SSHRule           `json:"ssh"`
 }
 
@@ -60,7 +60,7 @@ func DefaultPolicy() ACLPolicy {
 }
 
 func (a ACLPolicy) FindAutoApprovedIPs(routableIPs []netip.Prefix, tags []string, u *User) []netip.Prefix {
-	if len(routableIPs) == 0 {
+	if a.AutoApprovers == nil || len(routableIPs) == 0 {
 		return nil
 	}
 
