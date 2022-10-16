@@ -1,0 +1,56 @@
+site_name: ionscale
+
+repo_name: jsiebens/ionscale
+repo_url: https://github.com/jsiebens/ionscale
+edit_uri: ""
+
+nav:
+  - Overview:
+      - Introduction: index.md
+  - Installation:
+      - Manual: ./getting-started/manual.md
+      - Docker: ./getting-started/docker.md
+  - Configuration:
+      - Reference: ./configuration/reference.md
+
+theme:
+  name: material
+  custom_dir: overrides
+
+  palette:
+    - scheme: default
+      toggle:
+        icon: material/toggle-switch-off-outline
+        name: Switch to dark mode
+    - scheme: slate
+      toggle:
+        icon: material/toggle-switch
+        name: Switch to light mode
+
+  font:
+    text: Lato
+    code: Roboto Mono
+
+  features:
+    - navigation.tracking
+    - navigation.sections
+    - toc.integrate
+
+  include_search_page: false
+  search_index_only: true
+
+  language: en
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences
+
+extra:
+  analytics:
+    provider: custom

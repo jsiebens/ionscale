@@ -5,7 +5,7 @@
 
 **What is Tailscale?**
 
-[Tailscale](https://tailscale.com) is a VPN service that makes the devices and applications you own accessible anywhere in the world, securely and effortlessly. 
+[Tailscale](https://tailscale.com) is a VPN service that makes the devices and applications you own accessible anywhere in the world, securely and effortlessly.
 It enables encrypted point-to-point connections using the open source [WireGuard](https://www.wireguard.com/) protocol, which means only devices on your private network can communicate with each other.
 
 **What is ionscale?**
@@ -22,17 +22,13 @@ _ionscale_ aims to implement such lightweight, open source alternative Tailscale
 - [Auth keys](https://tailscale.com/kb/1085/auth-keys/)
 - [Access control list](https://tailscale.com/kb/1018/acls/)
 - [DNS](https://tailscale.com/kb/1054/dns/)
-  - nameservers
-  - Split DNS
-  - MagicDNS 
+    - nameservers
+    - Split DNS
+    - MagicDNS
 - [HTTPS Certs](https://tailscale.com/kb/1153/enabling-https/)
-- [Tailscale SSH](https://tailscale.com/kb/1193/tailscale-ssh/) 
+- [Tailscale SSH](https://tailscale.com/kb/1193/tailscale-ssh/)
 - [Service collection](https://tailscale.com/kb/1100/services/)
 - [Taildrop](https://tailscale.com/kb/1106/taildrop/)
-
-## Documentation
-
-Some documentation can be found [here](https://jsiebens.github.io/ionscale)
 
 ## Disclaimer
 

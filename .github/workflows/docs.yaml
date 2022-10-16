@@ -1,0 +1,23 @@
+name: docs
+
+on:
+  push:
+    branches: ['main']
+    paths: ['mkdocs/**']
+
+permissions:
+  pages: write
+  contents: write
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: 3.x
+      - run: pip install mkdocs-material
+      - run: cd mkdocs && mkdocs gh-deploy --force
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
