@@ -1,6 +1,7 @@
 package config
 
 import (
+	"encoding/base64"
 	"fmt"
 	"github.com/caarlos0/env/v6"
 	"github.com/caddyserver/certmagic"
@@ -59,6 +60,19 @@ func LoadConfig(path string) (*Config, error) {
 			return nil, err
 		}
 
+		if err := yaml.Unmarshal(b, cfg); err != nil {
+			return nil, err
+		}
+	}
+
+	envCfgB64 := os.Getenv("IONSCALE_CONFIG_BASE64")
+	if len(envCfgB64) != 0 {
+		b, err := base64.RawStdEncoding.DecodeString(envCfgB64)
+		if err != nil {
+			return nil, err
+		}
+
+		// merge env configuration on top of the default/file configuration
 		if err := yaml.Unmarshal(b, cfg); err != nil {
 			return nil, err
 		}
