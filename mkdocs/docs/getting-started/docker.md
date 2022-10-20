@@ -68,5 +68,5 @@ docker run \
   -v $(pwd)/data:/data \
   -p 80:80 \
   -p 443:443 \
-  ghcr.io/jsiebens/ionscale:0.4.0 server --config /etc/ionscale/config.yaml
+  ghcr.io/jsiebens/ionscale:0.5.0 server --config /etc/ionscale/config.yaml
 ```

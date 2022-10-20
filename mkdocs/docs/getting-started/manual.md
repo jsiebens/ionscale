@@ -41,7 +41,7 @@ Run the following commands to install the __ionscale__ binary on your Linux host
 ``` bash
 sudo curl \
     -o "/usr/local/bin/ionscale" \
-    -sfL "https://github.com/jsiebens/ionscale/releases/download/v0.4.0/ionscale_linux_amd64"
+    -sfL "https://github.com/jsiebens/ionscale/releases/download/v0.5.0/ionscale_linux_amd64"
 
 sudo chmod +x "/usr/local/bin/ionscale"
 ```
