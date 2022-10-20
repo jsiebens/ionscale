@@ -8,9 +8,12 @@ import (
 func (a ACLPolicy) BuildSSHPolicy(srcs []Machine, dst *Machine) *tailcfg.SSHPolicy {
 	var rules []*tailcfg.SSHRule
 
-	expandSrcAliases := func(aliases []string, u *User) []*tailcfg.SSHPrincipal {
+	expandSrcAliases := func(aliases []string, action string, u *User) []*tailcfg.SSHPrincipal {
 		var allSrcIPsSet = &StringSet{}
 		for _, alias := range aliases {
+			if strings.HasPrefix(alias, "tag:") && action == "check" {
+				continue
+			}
 			for _, src := range srcs {
 				srcIPs := a.expandSSHSrcAlias(&src, alias, u)
 				allSrcIPsSet.Add(srcIPs...)
@@ -45,7 +48,7 @@ func (a ACLPolicy) BuildSSHPolicy(srcs []Machine, dst *Machine) *tailcfg.SSHPoli
 		selfUsers, otherUsers := a.expandSSHDstToSSHUsers(dst, rule)
 
 		if len(selfUsers) != 0 {
-			principals := expandSrcAliases(rule.Src, &dst.User)
+			principals := expandSrcAliases(rule.Src, rule.Action, &dst.User)
 			if len(principals) != 0 {
 				rules = append(rules, &tailcfg.SSHRule{
 					Principals: principals,
@@ -56,7 +59,7 @@ func (a ACLPolicy) BuildSSHPolicy(srcs []Machine, dst *Machine) *tailcfg.SSHPoli
 		}
 
 		if len(otherUsers) != 0 {
-			principals := expandSrcAliases(rule.Src, nil)
+			principals := expandSrcAliases(rule.Src, rule.Action, nil)
 			if len(principals) != 0 {
 				rules = append(rules, &tailcfg.SSHRule{
 					Principals: principals,

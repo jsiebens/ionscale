@@ -340,6 +340,28 @@ func TestACLPolicy_BuildSSHPolicy_WithAutogroupSelfAndTagSrc(t *testing.T) {
 	assert.Nil(t, actualRules.Rules)
 }
 
+func TestACLPolicy_BuildSSHPolicy_WithTagsAndActionCheck(t *testing.T) {
+	p1 := createMachine("john@example.com")
+	p2 := createMachine("jane@example.com", "tag:web")
+
+	policy := ACLPolicy{
+		SSHRules: []SSHRule{
+			{
+				Action: "check",
+				Src:    []string{"tag:web"},
+				Dst:    []string{"tag:web"},
+				Users:  []string{"autogroup:nonroot"},
+			},
+		},
+	}
+
+	dst := createMachine("john@example.com", "tag:web")
+
+	actualRules := policy.BuildSSHPolicy([]Machine{*p1, *p2}, dst)
+
+	assert.Nil(t, actualRules.Rules)
+}
+
 func printRules(rules []*tailcfg.SSHRule) {
 	indent, err := json.MarshalIndent(rules, "", "  ")
 	if err != nil {
