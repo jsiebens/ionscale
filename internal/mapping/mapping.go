@@ -28,15 +28,10 @@ func CopyViaJson[F any, T any](f F, t T) error {
 }
 
 func ToDNSConfig(m *domain.Machine, peers []domain.Machine, tailnet *domain.Tailnet, c *domain.DNSConfig) *tailcfg.DNSConfig {
-	certDNSSuffix := config.CertDNSSuffix()
-	certsEnabled := c.HttpsCertsEnabled && len(certDNSSuffix) != 0
+	certsEnabled := c.HttpsCertsEnabled && config.DNSProviderConfigured()
 
-	tailnetDomain := domain.SanitizeTailnetName(tailnet.Name)
-
-	var certDomain = ""
-	if certsEnabled {
-		certDomain = domain.SanitizeTailnetName(*tailnet.Alias)
-	}
+	sanitizeTailnetName := domain.SanitizeTailnetName(tailnet.Name)
+	tailnetDomain := fmt.Sprintf("%s.%s", sanitizeTailnetName, config.MagicDNSSuffix())
 
 	resolvers := []*dnstype.Resolver{}
 	for _, r := range c.Nameservers {
@@ -52,12 +47,11 @@ func ToDNSConfig(m *domain.Machine, peers []domain.Machine, tailnet *domain.Tail
 	var certDomains []string
 
 	if c.MagicDNS {
-		domains = append(domains, fmt.Sprintf("%s.%s", tailnetDomain, config.MagicDNSSuffix()))
+		domains = append(domains, tailnetDomain)
 		dnsConfig.Proxied = true
 
 		if certsEnabled {
-			domains = append(domains, fmt.Sprintf("%s.%s", certDomain, certDNSSuffix))
-			certDomains = append(certDomains, fmt.Sprintf("%s.%s.%s", m.CompleteName(), certDomain, certDNSSuffix))
+			certDomains = append(certDomains, fmt.Sprintf("%s.%s", m.CompleteName(), tailnetDomain))
 		}
 	}
 
@@ -69,10 +63,6 @@ func ToDNSConfig(m *domain.Machine, peers []domain.Machine, tailnet *domain.Tail
 
 	if len(c.Routes) != 0 || certsEnabled {
 		routes := make(map[string][]*dnstype.Resolver)
-
-		if certsEnabled {
-			routes[fmt.Sprintf("%s.", certDNSSuffix)] = nil
-		}
 
 		for r, s := range c.Routes {
 			routeResolver := []*dnstype.Resolver{}
@@ -88,22 +78,6 @@ func ToDNSConfig(m *domain.Machine, peers []domain.Machine, tailnet *domain.Tail
 
 	dnsConfig.Domains = domains
 	dnsConfig.CertDomains = certDomains
-
-	if certsEnabled {
-		var extraRecords = []tailcfg.DNSRecord{{
-			Name:  fmt.Sprintf("%s.%s.%s", m.CompleteName(), certDomain, certDNSSuffix),
-			Value: m.IPv4.String(),
-		}}
-
-		for _, p := range peers {
-			extraRecords = append(extraRecords, tailcfg.DNSRecord{
-				Name:  fmt.Sprintf("%s.%s.%s", p.CompleteName(), certDomain, certDNSSuffix),
-				Value: p.IPv4.String(),
-			})
-		}
-
-		dnsConfig.ExtraRecords = extraRecords
-	}
 
 	return dnsConfig
 }

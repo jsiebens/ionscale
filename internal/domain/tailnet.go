@@ -13,7 +13,6 @@ import (
 type Tailnet struct {
 	ID                       uint64 `gorm:"primary_key"`
 	Name                     string
-	Alias                    *string
 	DNSConfig                DNSConfig
 	IAMPolicy                IAMPolicy
 	ACLPolicy                ACLPolicy

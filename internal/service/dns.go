@@ -9,7 +9,6 @@ import (
 	"github.com/jsiebens/ionscale/internal/config"
 	"github.com/jsiebens/ionscale/internal/domain"
 	api "github.com/jsiebens/ionscale/pkg/gen/ionscale/v1"
-	"tailscale.com/util/dnsname"
 )
 
 func (s *Service) GetDNSConfig(ctx context.Context, req *connect.Request[api.GetDNSConfigRequest]) (*connect.Response[api.GetDNSConfigResponse], error) {
@@ -82,8 +81,6 @@ func (s *Service) EnableHttpsCertificates(ctx context.Context, req *connect.Requ
 		return nil, connect.NewError(connect.CodePermissionDenied, errors.New("permission denied"))
 	}
 
-	alias := dnsname.SanitizeLabel(req.Msg.Alias)
-
 	tailnet, err := s.repository.GetTailnet(ctx, req.Msg.TailnetId)
 	if err != nil {
 		return nil, err
@@ -96,28 +93,7 @@ func (s *Service) EnableHttpsCertificates(ctx context.Context, req *connect.Requ
 		return nil, connect.NewError(connect.CodeFailedPrecondition, errors.New("MagicDNS must be enabled for this tailnet"))
 	}
 
-	if tailnet.Alias == nil && len(alias) == 0 {
-		return nil, connect.NewError(connect.CodeFailedPrecondition, errors.New("when enabling HTTPS certificates for the first time, a Tailnet alias is required"))
-	}
-
-	if tailnet.Alias != nil && len(alias) != 0 && *tailnet.Alias != alias {
-		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("a Tailnet alias was already configured previously"))
-	}
-
 	tailnet.DNSConfig.HttpsCertsEnabled = true
-	if tailnet.Alias == nil && len(alias) != 0 {
-		t, err := s.repository.GetTailnetByAlias(ctx, alias)
-		if err != nil {
-			return nil, err
-		}
-
-		if t != nil && t.ID != tailnet.ID {
-			return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("given alias is already in use"))
-		}
-
-		tailnet.Alias = &alias
-	}
-
 	if err := s.repository.SaveTailnet(ctx, tailnet); err != nil {
 		return nil, err
 	}

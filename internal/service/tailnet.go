@@ -29,13 +29,16 @@ func (s *Service) CreateTailnet(ctx context.Context, req *connect.Request[api.Cr
 		iamPolicy.Roles = apiRolesMapToDomainRolesMap(req.Msg.IamPolicy.Roles)
 	}
 
-	tailnet, created, err := s.repository.GetOrCreateTailnet(ctx, name, iamPolicy)
-	if err != nil {
-		return nil, err
+	tailnet := &domain.Tailnet{
+		ID:        util.NextID(),
+		Name:      name,
+		IAMPolicy: iamPolicy,
+		ACLPolicy: domain.DefaultPolicy(),
+		DNSConfig: domain.DNSConfig{MagicDNS: true},
 	}
 
-	if !created {
-		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("tailnet already exists"))
+	if err := s.repository.SaveTailnet(ctx, tailnet); err != nil {
+		return nil, err
 	}
 
 	resp := &api.CreateTailnetResponse{Tailnet: &api.Tailnet{

@@ -87,7 +87,7 @@ func Start(c *config.Config) error {
 		return fmt.Errorf("error configuring OIDC provider: %v", err)
 	}
 
-	dnsProvider, err := dns.NewProvider(c.DNS.Provider)
+	dnsProvider, err := dns.NewProvider(c.DNS)
 	if err != nil {
 		return err
 	}

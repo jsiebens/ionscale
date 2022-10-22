@@ -24,9 +24,9 @@ const (
 )
 
 var (
-	keepAliveInterval = defaultKeepAliveInterval
-	magicDNSSuffix    = defaultMagicDNSSuffix
-	certDNSSuffix     = ""
+	keepAliveInterval     = defaultKeepAliveInterval
+	magicDNSSuffix        = defaultMagicDNSSuffix
+	dnsProviderConfigured = false
 )
 
 func KeepAliveInterval() time.Duration {
@@ -37,8 +37,8 @@ func MagicDNSSuffix() string {
 	return magicDNSSuffix
 }
 
-func CertDNSSuffix() string {
-	return certDNSSuffix
+func DNSProviderConfigured() bool {
+	return dnsProviderConfigured
 }
 
 func LoadConfig(path string) (*Config, error) {
@@ -92,11 +92,7 @@ func LoadConfig(path string) (*Config, error) {
 	magicDNSSuffix = cfg.DNS.MagicDNSSuffix
 
 	if cfg.DNS.Provider.Zone != "" {
-		if cfg.DNS.Provider.Subdomain == "" {
-			certDNSSuffix = cfg.DNS.Provider.Zone
-		} else {
-			certDNSSuffix = fmt.Sprintf("%s.%s", cfg.DNS.Provider.Subdomain, cfg.DNS.Provider.Zone)
-		}
+		dnsProviderConfigured = true
 	}
 
 	return cfg, nil
@@ -203,7 +199,6 @@ type DNS struct {
 type DNSProvider struct {
 	Name          string            `yaml:"name"`
 	Zone          string            `yaml:"zone"`
-	Subdomain     string            `yaml:"subdomain"`
 	Configuration map[string]string `yaml:"config"`
 }
 

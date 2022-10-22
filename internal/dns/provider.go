@@ -20,24 +20,29 @@ type Provider interface {
 	SetRecord(ctx context.Context, recordType, recordName, value string) error
 }
 
-func NewProvider(config config.DNSProvider) (Provider, error) {
-	if len(config.Zone) == 0 {
+func NewProvider(config config.DNS) (Provider, error) {
+	p := config.Provider
+	if len(p.Zone) == 0 {
 		return nil, nil
 	}
 
-	switch config.Name {
+	if !strings.HasSuffix(config.MagicDNSSuffix, p.Zone) {
+		return nil, fmt.Errorf("invalid MagicDNS suffix [%s], not part of zone [%s]", config.MagicDNSSuffix, p.Zone)
+	}
+
+	switch p.Name {
 	case "azure":
-		return configureAzureProvider(config.Zone, config.Configuration)
+		return configureAzureProvider(p.Zone, p.Configuration)
 	case "cloudflare":
-		return configureCloudflareProvider(config.Zone, config.Configuration)
+		return configureCloudflareProvider(p.Zone, p.Configuration)
 	case "digitalocean":
-		return configureDigitalOceanProvider(config.Zone, config.Configuration)
+		return configureDigitalOceanProvider(p.Zone, p.Configuration)
 	case "googleclouddns":
-		return configureGoogleCloudDNSProvider(config.Zone, config.Configuration)
+		return configureGoogleCloudDNSProvider(p.Zone, p.Configuration)
 	case "route53":
-		return configureRoute53Provider(config.Zone, config.Configuration)
+		return configureRoute53Provider(p.Zone, p.Configuration)
 	default:
-		return nil, fmt.Errorf("unknown dns provider: %s", config.Name)
+		return nil, fmt.Errorf("unknown dns provider: %s", p.Name)
 	}
 }
 

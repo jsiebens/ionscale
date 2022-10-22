@@ -182,13 +182,11 @@ func enableHttpsCommand() *coral.Command {
 
 	var tailnetID uint64
 	var tailnetName string
-	var alias string
 	var target = Target{}
 
 	target.prepareCommand(command)
 	command.Flags().StringVar(&tailnetName, "tailnet", "", "Tailnet name. Mutually exclusive with --tailnet-id.")
 	command.Flags().Uint64Var(&tailnetID, "tailnet-id", 0, "Tailnet ID. Mutually exclusive with --tailnet.")
-	command.Flags().StringVar(&alias, "alias", "", "")
 
 	command.PreRunE = checkRequiredTailnetAndTailnetIdFlags
 	command.RunE = func(command *coral.Command, args []string) error {
@@ -204,7 +202,6 @@ func enableHttpsCommand() *coral.Command {
 
 		req := api.EnableHttpsCertificatesRequest{
 			TailnetId: tailnet.Id,
-			Alias:     alias,
 		}
 
 		if _, err := client.EnableHttpsCertificates(context.Background(), connect.NewRequest(&req)); err != nil {

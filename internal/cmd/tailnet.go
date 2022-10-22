@@ -101,8 +101,8 @@ func createTailnetsCommand() *coral.Command {
 	command.Flags().StringVar(&email, "email", "", "")
 
 	command.PreRunE = func(cmd *coral.Command, args []string) error {
-		if name == "" && email == "" && domain == "" {
-			return fmt.Errorf("at least flag --name, --email or --domain is required")
+		if name == "" {
+			return fmt.Errorf("flag --name is required")
 		}
 		if domain != "" && email != "" {
 			return fmt.Errorf("flags --email and --domain are mutually exclusive")
@@ -112,12 +112,10 @@ func createTailnetsCommand() *coral.Command {
 
 	command.RunE = func(command *coral.Command, args []string) error {
 
-		var tailnetName = ""
 		var iamPolicy = api.IAMPolicy{}
 
 		if len(domain) != 0 {
 			domainToLower := strings.ToLower(domain)
-			tailnetName = domainToLower
 			iamPolicy = api.IAMPolicy{
 				Filters: []string{fmt.Sprintf("domain == %s", domainToLower)},
 			}
@@ -125,7 +123,6 @@ func createTailnetsCommand() *coral.Command {
 
 		if len(email) != 0 {
 			emailToLower := strings.ToLower(email)
-			tailnetName = emailToLower
 			iamPolicy = api.IAMPolicy{
 				Emails: []string{emailToLower},
 				Roles: map[string]string{
@@ -134,17 +131,13 @@ func createTailnetsCommand() *coral.Command {
 			}
 		}
 
-		if len(name) != 0 {
-			tailnetName = name
-		}
-
 		client, err := target.createGRPCClient()
 		if err != nil {
 			return err
 		}
 
 		resp, err := client.CreateTailnet(context.Background(), connect.NewRequest(&api.CreateTailnetRequest{
-			Name:      tailnetName,
+			Name:      name,
 			IamPolicy: &iamPolicy,
 		}))
 
