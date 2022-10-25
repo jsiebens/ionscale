@@ -148,7 +148,7 @@ func (r *repository) LoadAuthKey(ctx context.Context, key string) (*AuthKey, err
 		return nil, nil
 	}
 
-	if !m.ExpiresAt.IsZero() && m.ExpiresAt.Before(time.Now()) {
+	if m.ExpiresAt != nil && !m.ExpiresAt.IsZero() && m.ExpiresAt.Before(time.Now()) {
 		return nil, nil
 	}
 
