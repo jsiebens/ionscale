@@ -159,17 +159,7 @@ func (h *AuthenticationHandlers) Callback(c echo.Context) error {
 			return c.Redirect(http.StatusFound, "/a/error")
 		}
 
-		policy := machine.Tailnet.ACLPolicy
-
-		if machine.HasTags() && policy.IsTagOwner(machine.Tags, &domain.User{Name: account.LoginName, UserType: domain.UserTypePerson}) {
-			sshActionReq.Action = "accept"
-			if err := h.repository.SaveSSHActionRequest(ctx, sshActionReq); err != nil {
-				return c.Redirect(http.StatusFound, "/a/error")
-			}
-			return c.Redirect(http.StatusFound, "/a/success")
-		}
-
-		if machine.User.AccountID != nil && *machine.User.AccountID == account.ID {
+		if !machine.HasTags() && machine.User.AccountID != nil && *machine.User.AccountID == account.ID {
 			sshActionReq.Action = "accept"
 			if err := h.repository.SaveSSHActionRequest(ctx, sshActionReq); err != nil {
 				return c.Redirect(http.StatusFound, "/a/error")
