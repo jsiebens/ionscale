@@ -162,9 +162,8 @@ func Start(c *config.Config) error {
 	auth.Use(middleware.CSRFWithConfig(middleware.CSRFConfig{
 		TokenLookup: "form:_csrf",
 	}))
-	auth.GET("/:key", authenticationHandlers.StartAuth)
-	auth.POST("/:key", authenticationHandlers.ProcessAuth)
-	auth.GET("/:flow/:key", authenticationHandlers.StartCliAuth)
+	auth.GET("/:flow/:key", authenticationHandlers.StartAuth)
+	auth.POST("/:flow/:key", authenticationHandlers.ProcessAuth)
 	auth.GET("/callback", authenticationHandlers.Callback)
 	auth.POST("/callback", authenticationHandlers.EndOAuth)
 	auth.GET("/success", authenticationHandlers.Success)

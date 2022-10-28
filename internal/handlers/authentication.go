@@ -56,17 +56,29 @@ type oauthState struct {
 	Flow string
 }
 
-func (h *AuthenticationHandlers) StartCliAuth(c echo.Context) error {
+func (h *AuthenticationHandlers) StartAuth(c echo.Context) error {
 	ctx := c.Request().Context()
 	flow := c.Param("flow")
 	key := c.Param("key")
 
+	// machine registration auth flow
+	if flow == "r" || flow == "" {
+		if req, err := h.repository.GetRegistrationRequestByKey(ctx, key); err != nil || req == nil {
+			return c.Redirect(http.StatusFound, "/a/error")
+		}
+
+		csrf := c.Get(middleware.DefaultCSRFConfig.ContextKey).(string)
+		return c.Render(http.StatusOK, "auth.html", &AuthFormData{ProviderAvailable: h.authProvider != nil, Csrf: csrf})
+	}
+
+	// cli auth flow
 	if flow == "c" {
 		if s, err := h.repository.GetAuthenticationRequest(ctx, key); err != nil || s == nil {
 			return c.Redirect(http.StatusFound, "/a/error")
 		}
 	}
 
+	// ssh check auth flow
 	if flow == "s" {
 		if s, err := h.repository.GetSSHActionRequest(ctx, key); err != nil || s == nil {
 			return c.Redirect(http.StatusFound, "/a/error")
@@ -85,18 +97,6 @@ func (h *AuthenticationHandlers) StartCliAuth(c echo.Context) error {
 	redirectUrl := h.authProvider.GetLoginURL(h.config.CreateUrl("/a/callback"), state)
 
 	return c.Redirect(http.StatusFound, redirectUrl)
-}
-
-func (h *AuthenticationHandlers) StartAuth(c echo.Context) error {
-	ctx := c.Request().Context()
-	key := c.Param("key")
-
-	if req, err := h.repository.GetRegistrationRequestByKey(ctx, key); err != nil || req == nil {
-		return c.Redirect(http.StatusFound, "/a/error")
-	}
-
-	csrf := c.Get(middleware.DefaultCSRFConfig.ContextKey).(string)
-	return c.Render(http.StatusOK, "auth.html", &AuthFormData{ProviderAvailable: h.authProvider != nil, Csrf: csrf})
 }
 
 func (h *AuthenticationHandlers) ProcessAuth(c echo.Context) error {

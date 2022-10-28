@@ -118,7 +118,7 @@ func (h *RegistrationHandlers) authenticateMachine(c echo.Context, binder bind.B
 
 	if req.Auth.AuthKey == "" {
 		key := util.RandStringBytes(8)
-		authUrl := h.config.CreateUrl("/a/%s", key)
+		authUrl := h.config.CreateUrl("/a/r/%s", key)
 
 		request := domain.RegistrationRequest{
 			MachineKey: machineKey,
