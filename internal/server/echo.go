@@ -3,8 +3,8 @@ package server
 import (
 	"fmt"
 	"github.com/hashicorp/go-hclog"
+	"github.com/labstack/echo-contrib/prometheus"
 	"github.com/labstack/echo/v4"
-	"runtime"
 	"time"
 )
 
@@ -36,22 +36,25 @@ func EchoLogger(logger hclog.Logger) echo.MiddlewareFunc {
 }
 
 func EchoRecover(logger hclog.Logger) echo.MiddlewareFunc {
-	httpLogger := logger.Named("http")
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
-			defer func() {
-				if r := recover(); r != nil {
-					err, ok := r.(error)
-					if !ok {
-						err = fmt.Errorf("%v", r)
+			apply := func() (topErr error) {
+				defer func() {
+					if r := recover(); r != nil {
+						err, ok := r.(error)
+						if !ok {
+							err = fmt.Errorf("%v", r)
+						}
+						topErr = err
 					}
-					stack := make([]byte, 4<<10) // 4 KB
-					length := runtime.Stack(stack, false)
-					httpLogger.Error("panic handling request", "err", err, "stack", string(stack[:length]))
-					c.Error(err)
-				}
-			}()
-			return next(c)
+				}()
+				return next(c)
+			}
+			return apply()
 		}
 	}
+}
+
+func EchoMetrics(p *prometheus.Prometheus) echo.MiddlewareFunc {
+	return p.HandlerFunc
 }

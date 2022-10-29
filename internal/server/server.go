@@ -133,18 +133,14 @@ func Start(c *config.Config) error {
 	p.SetMetricsPath(metricsHandler)
 
 	nonTlsAppHandler := echo.New()
-	nonTlsAppHandler.Use(EchoRecover(logger))
-	nonTlsAppHandler.Use(EchoLogger(logger))
-	nonTlsAppHandler.Use(p.HandlerFunc)
+	nonTlsAppHandler.Use(EchoMetrics(p), EchoLogger(logger), EchoRecover(logger))
 	nonTlsAppHandler.POST("/ts2021", noiseHandlers.Upgrade)
 	nonTlsAppHandler.Any("/*", handlers.HttpRedirectHandler(c.Tls))
 
 	tlsAppHandler := echo.New()
-	tlsAppHandler.Pre(handlers.HttpsRedirect(c.Tls))
 	tlsAppHandler.Renderer = templates.NewTemplates()
-	tlsAppHandler.Use(EchoRecover(logger))
-	tlsAppHandler.Use(EchoLogger(logger))
-	tlsAppHandler.Use(p.HandlerFunc)
+	tlsAppHandler.Pre(handlers.HttpsRedirect(c.Tls))
+	tlsAppHandler.Use(EchoMetrics(p), EchoLogger(logger), EchoRecover(logger))
 
 	tlsAppHandler.Any("/*", handlers.IndexHandler(http.StatusNotFound))
 	tlsAppHandler.Any("/", handlers.IndexHandler(http.StatusOK))
