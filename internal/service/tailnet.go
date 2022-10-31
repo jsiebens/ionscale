@@ -70,10 +70,10 @@ func (s *Service) GetTailnet(ctx context.Context, req *connect.Request[api.GetTa
 	}}), nil
 }
 
-func (s *Service) ListTailnets(ctx context.Context, req *connect.Request[api.ListTailnetRequest]) (*connect.Response[api.ListTailnetResponse], error) {
+func (s *Service) ListTailnets(ctx context.Context, req *connect.Request[api.ListTailnetsRequest]) (*connect.Response[api.ListTailnetsResponse], error) {
 	principal := CurrentPrincipal(ctx)
 
-	resp := &api.ListTailnetResponse{}
+	resp := &api.ListTailnetsResponse{}
 
 	if principal.IsSystemAdmin() {
 		tailnets, err := s.repository.ListTailnets(ctx)
@@ -236,7 +236,7 @@ func (s *Service) GetDERPMap(ctx context.Context, req *connect.Request[api.GetDE
 	return connect.NewResponse(&api.GetDERPMapResponse{Value: raw}), nil
 }
 
-func (s *Service) EnabledFileSharing(ctx context.Context, req *connect.Request[api.EnableFileSharingRequest]) (*connect.Response[api.EnableFileSharingResponse], error) {
+func (s *Service) EnableFileSharing(ctx context.Context, req *connect.Request[api.EnableFileSharingRequest]) (*connect.Response[api.EnableFileSharingResponse], error) {
 	principal := CurrentPrincipal(ctx)
 	if !principal.IsSystemAdmin() && !principal.IsTailnetAdmin(req.Msg.TailnetId) {
 		return nil, connect.NewError(connect.CodePermissionDenied, errors.New("permission denied"))
@@ -288,7 +288,7 @@ func (s *Service) DisableFileSharing(ctx context.Context, req *connect.Request[a
 	return connect.NewResponse(&api.DisableFileSharingResponse{}), nil
 }
 
-func (s *Service) EnabledServiceCollection(ctx context.Context, req *connect.Request[api.EnableServiceCollectionRequest]) (*connect.Response[api.EnableServiceCollectionResponse], error) {
+func (s *Service) EnableServiceCollection(ctx context.Context, req *connect.Request[api.EnableServiceCollectionRequest]) (*connect.Response[api.EnableServiceCollectionResponse], error) {
 	principal := CurrentPrincipal(ctx)
 	if !principal.IsSystemAdmin() && !principal.IsTailnetAdmin(req.Msg.TailnetId) {
 		return nil, connect.NewError(connect.CodePermissionDenied, errors.New("permission denied"))
@@ -340,7 +340,7 @@ func (s *Service) DisableServiceCollection(ctx context.Context, req *connect.Req
 	return connect.NewResponse(&api.DisableServiceCollectionResponse{}), nil
 }
 
-func (s *Service) EnabledSSH(ctx context.Context, req *connect.Request[api.EnableSSHRequest]) (*connect.Response[api.EnableSSHResponse], error) {
+func (s *Service) EnableSSH(ctx context.Context, req *connect.Request[api.EnableSSHRequest]) (*connect.Response[api.EnableSSHResponse], error) {
 	principal := CurrentPrincipal(ctx)
 	if !principal.IsSystemAdmin() && !principal.IsTailnetAdmin(req.Msg.TailnetId) {
 		return nil, connect.NewError(connect.CodePermissionDenied, errors.New("permission denied"))

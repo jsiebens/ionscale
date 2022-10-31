@@ -36,7 +36,7 @@ func authLoginCommand() *coral.Command {
 			return err
 		}
 
-		req := &api.AuthenticationRequest{}
+		req := &api.AuthenticateRequest{}
 		stream, err := client.Authenticate(context.Background(), connect.NewRequest(req))
 		if err != nil {
 			return err

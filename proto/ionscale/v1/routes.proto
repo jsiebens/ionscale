@@ -1,6 +1,7 @@
 syntax = "proto3";
 
 package ionscale.v1;
+
 option go_package = "github.com/jsiebens/ionscale/pkg/gen/ionscale/v1;ionscalev1";
 
 message GetMachineRoutesRequest {
@@ -8,10 +9,8 @@ message GetMachineRoutesRequest {
 }
 
 message GetMachineRoutesResponse {
-  repeated string advertised_routes = 1;
-  repeated string enabled_routes = 2;
-  bool advertised_exit_node = 3;
-  bool enabled_exit_node = 4;
+  uint64 machine_id = 1;
+  MachineRoutes routes = 2;
 }
 
 message EnableMachineRoutesRequest {
@@ -20,15 +19,42 @@ message EnableMachineRoutesRequest {
   bool replace = 3;
 }
 
+message EnableMachineRoutesResponse {
+  uint64 machine_id = 1;
+  MachineRoutes routes = 2;
+}
+
 message DisableMachineRoutesRequest {
   uint64 machine_id = 1;
   repeated string routes = 2;
+}
+
+message DisableMachineRoutesResponse {
+  uint64 machine_id = 1;
+  MachineRoutes routes = 2;
 }
 
 message EnableExitNodeRequest {
   uint64 machine_id = 1;
 }
 
+message EnableExitNodeResponse {
+  uint64 machine_id = 1;
+  MachineRoutes routes = 2;
+}
+
 message DisableExitNodeRequest {
   uint64 machine_id = 1;
+}
+
+message DisableExitNodeResponse {
+  uint64 machine_id = 1;
+  MachineRoutes routes = 2;
+}
+
+message MachineRoutes {
+  repeated string advertised_routes = 1;
+  repeated string enabled_routes = 2;
+  bool advertised_exit_node = 3;
+  bool enabled_exit_node = 4;
 }

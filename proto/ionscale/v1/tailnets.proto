@@ -1,9 +1,10 @@
 syntax = "proto3";
 
 package ionscale.v1;
-option go_package = "github.com/jsiebens/ionscale/pkg/gen/ionscale/v1;ionscalev1";
 
 import "ionscale/v1/iam.proto";
+
+option go_package = "github.com/jsiebens/ionscale/pkg/gen/ionscale/v1;ionscalev1";
 
 message Tailnet {
   uint64 id = 1;
@@ -27,10 +28,9 @@ message GetTailnetResponse {
   Tailnet tailnet = 1;
 }
 
-message ListTailnetRequest {
-}
+message ListTailnetsRequest {}
 
-message ListTailnetResponse {
+message ListTailnetsResponse {
   repeated Tailnet tailnet = 1;
 }
 
@@ -62,48 +62,40 @@ message ResetDERPMapRequest {
   uint64 tailnet_id = 1;
 }
 
-message ResetDERPMapResponse {
-}
+message ResetDERPMapResponse {}
 
 message EnableFileSharingRequest {
   uint64 tailnet_id = 1;
 }
 
-message EnableFileSharingResponse {
-}
+message EnableFileSharingResponse {}
 
 message DisableFileSharingRequest {
   uint64 tailnet_id = 1;
 }
 
-message DisableFileSharingResponse {
-}
+message DisableFileSharingResponse {}
 
 message EnableServiceCollectionRequest {
   uint64 tailnet_id = 1;
 }
 
-message EnableServiceCollectionResponse {
-}
+message EnableServiceCollectionResponse {}
 
 message DisableServiceCollectionRequest {
   uint64 tailnet_id = 1;
 }
 
-message DisableServiceCollectionResponse {
-}
-
+message DisableServiceCollectionResponse {}
 
 message EnableSSHRequest {
   uint64 tailnet_id = 1;
 }
 
-message EnableSSHResponse {
-}
+message EnableSSHResponse {}
 
 message DisableSSHRequest {
   uint64 tailnet_id = 1;
 }
 
-message DisableSSHResponse {
-}
+message DisableSSHResponse {}

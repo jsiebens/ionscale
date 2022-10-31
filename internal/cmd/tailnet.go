@@ -65,7 +65,7 @@ func listTailnetsCommand() *coral.Command {
 			return err
 		}
 
-		resp, err := client.ListTailnets(context.Background(), connect.NewRequest(&api.ListTailnetRequest{}))
+		resp, err := client.ListTailnets(context.Background(), connect.NewRequest(&api.ListTailnetsRequest{}))
 
 		if err != nil {
 			return err
@@ -388,7 +388,7 @@ func enableFileSharingCommand() *coral.Command {
 			TailnetId: tailnet.Id,
 		}
 
-		if _, err := client.EnabledFileSharing(context.Background(), connect.NewRequest(&req)); err != nil {
+		if _, err := client.EnableFileSharing(context.Background(), connect.NewRequest(&req)); err != nil {
 			return err
 		}
 
@@ -471,7 +471,7 @@ func enableServiceCollectionCommand() *coral.Command {
 			TailnetId: tailnet.Id,
 		}
 
-		if _, err := client.EnabledServiceCollection(context.Background(), connect.NewRequest(&req)); err != nil {
+		if _, err := client.EnableServiceCollection(context.Background(), connect.NewRequest(&req)); err != nil {
 			return err
 		}
 
@@ -553,7 +553,7 @@ func enableSSHCommand() *coral.Command {
 			TailnetId: tailnet.Id,
 		}
 
-		if _, err := client.EnabledSSH(context.Background(), connect.NewRequest(&req)); err != nil {
+		if _, err := client.EnableSSH(context.Background(), connect.NewRequest(&req)); err != nil {
 			return err
 		}
 

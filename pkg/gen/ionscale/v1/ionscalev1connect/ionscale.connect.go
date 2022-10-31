@@ -28,22 +28,22 @@ const (
 // IonscaleServiceClient is a client for the ionscale.v1.IonscaleService service.
 type IonscaleServiceClient interface {
 	GetVersion(context.Context, *connect_go.Request[v1.GetVersionRequest]) (*connect_go.Response[v1.GetVersionResponse], error)
-	Authenticate(context.Context, *connect_go.Request[v1.AuthenticationRequest]) (*connect_go.ServerStreamForClient[v1.AuthenticationResponse], error)
+	Authenticate(context.Context, *connect_go.Request[v1.AuthenticateRequest]) (*connect_go.ServerStreamForClient[v1.AuthenticateResponse], error)
 	GetDefaultDERPMap(context.Context, *connect_go.Request[v1.GetDefaultDERPMapRequest]) (*connect_go.Response[v1.GetDefaultDERPMapResponse], error)
 	SetDefaultDERPMap(context.Context, *connect_go.Request[v1.SetDefaultDERPMapRequest]) (*connect_go.Response[v1.SetDefaultDERPMapResponse], error)
 	ResetDefaultDERPMap(context.Context, *connect_go.Request[v1.ResetDefaultDERPMapRequest]) (*connect_go.Response[v1.ResetDefaultDERPMapResponse], error)
 	CreateTailnet(context.Context, *connect_go.Request[v1.CreateTailnetRequest]) (*connect_go.Response[v1.CreateTailnetResponse], error)
 	GetTailnet(context.Context, *connect_go.Request[v1.GetTailnetRequest]) (*connect_go.Response[v1.GetTailnetResponse], error)
-	ListTailnets(context.Context, *connect_go.Request[v1.ListTailnetRequest]) (*connect_go.Response[v1.ListTailnetResponse], error)
+	ListTailnets(context.Context, *connect_go.Request[v1.ListTailnetsRequest]) (*connect_go.Response[v1.ListTailnetsResponse], error)
 	DeleteTailnet(context.Context, *connect_go.Request[v1.DeleteTailnetRequest]) (*connect_go.Response[v1.DeleteTailnetResponse], error)
 	GetDERPMap(context.Context, *connect_go.Request[v1.GetDERPMapRequest]) (*connect_go.Response[v1.GetDERPMapResponse], error)
 	SetDERPMap(context.Context, *connect_go.Request[v1.SetDERPMapRequest]) (*connect_go.Response[v1.SetDERPMapResponse], error)
 	ResetDERPMap(context.Context, *connect_go.Request[v1.ResetDERPMapRequest]) (*connect_go.Response[v1.ResetDERPMapResponse], error)
-	EnabledFileSharing(context.Context, *connect_go.Request[v1.EnableFileSharingRequest]) (*connect_go.Response[v1.EnableFileSharingResponse], error)
+	EnableFileSharing(context.Context, *connect_go.Request[v1.EnableFileSharingRequest]) (*connect_go.Response[v1.EnableFileSharingResponse], error)
 	DisableFileSharing(context.Context, *connect_go.Request[v1.DisableFileSharingRequest]) (*connect_go.Response[v1.DisableFileSharingResponse], error)
-	EnabledServiceCollection(context.Context, *connect_go.Request[v1.EnableServiceCollectionRequest]) (*connect_go.Response[v1.EnableServiceCollectionResponse], error)
+	EnableServiceCollection(context.Context, *connect_go.Request[v1.EnableServiceCollectionRequest]) (*connect_go.Response[v1.EnableServiceCollectionResponse], error)
 	DisableServiceCollection(context.Context, *connect_go.Request[v1.DisableServiceCollectionRequest]) (*connect_go.Response[v1.DisableServiceCollectionResponse], error)
-	EnabledSSH(context.Context, *connect_go.Request[v1.EnableSSHRequest]) (*connect_go.Response[v1.EnableSSHResponse], error)
+	EnableSSH(context.Context, *connect_go.Request[v1.EnableSSHRequest]) (*connect_go.Response[v1.EnableSSHResponse], error)
 	DisableSSH(context.Context, *connect_go.Request[v1.DisableSSHRequest]) (*connect_go.Response[v1.DisableSSHResponse], error)
 	GetDNSConfig(context.Context, *connect_go.Request[v1.GetDNSConfigRequest]) (*connect_go.Response[v1.GetDNSConfigResponse], error)
 	SetDNSConfig(context.Context, *connect_go.Request[v1.SetDNSConfigRequest]) (*connect_go.Response[v1.SetDNSConfigResponse], error)
@@ -63,10 +63,10 @@ type IonscaleServiceClient interface {
 	DeleteMachine(context.Context, *connect_go.Request[v1.DeleteMachineRequest]) (*connect_go.Response[v1.DeleteMachineResponse], error)
 	SetMachineKeyExpiry(context.Context, *connect_go.Request[v1.SetMachineKeyExpiryRequest]) (*connect_go.Response[v1.SetMachineKeyExpiryResponse], error)
 	GetMachineRoutes(context.Context, *connect_go.Request[v1.GetMachineRoutesRequest]) (*connect_go.Response[v1.GetMachineRoutesResponse], error)
-	EnableMachineRoutes(context.Context, *connect_go.Request[v1.EnableMachineRoutesRequest]) (*connect_go.Response[v1.GetMachineRoutesResponse], error)
-	DisableMachineRoutes(context.Context, *connect_go.Request[v1.DisableMachineRoutesRequest]) (*connect_go.Response[v1.GetMachineRoutesResponse], error)
-	EnableExitNode(context.Context, *connect_go.Request[v1.EnableExitNodeRequest]) (*connect_go.Response[v1.GetMachineRoutesResponse], error)
-	DisableExitNode(context.Context, *connect_go.Request[v1.DisableExitNodeRequest]) (*connect_go.Response[v1.GetMachineRoutesResponse], error)
+	EnableMachineRoutes(context.Context, *connect_go.Request[v1.EnableMachineRoutesRequest]) (*connect_go.Response[v1.EnableMachineRoutesResponse], error)
+	DisableMachineRoutes(context.Context, *connect_go.Request[v1.DisableMachineRoutesRequest]) (*connect_go.Response[v1.DisableMachineRoutesResponse], error)
+	EnableExitNode(context.Context, *connect_go.Request[v1.EnableExitNodeRequest]) (*connect_go.Response[v1.EnableExitNodeResponse], error)
+	DisableExitNode(context.Context, *connect_go.Request[v1.DisableExitNodeRequest]) (*connect_go.Response[v1.DisableExitNodeResponse], error)
 	EnableHttpsCertificates(context.Context, *connect_go.Request[v1.EnableHttpsCertificatesRequest]) (*connect_go.Response[v1.EnableHttpsCertificatesResponse], error)
 	DisableHttpsCertificates(context.Context, *connect_go.Request[v1.DisableHttpsCertificatesRequest]) (*connect_go.Response[v1.DisableHttpsCertificatesResponse], error)
 }
@@ -86,7 +86,7 @@ func NewIonscaleServiceClient(httpClient connect_go.HTTPClient, baseURL string, 
 			baseURL+"/ionscale.v1.IonscaleService/GetVersion",
 			opts...,
 		),
-		authenticate: connect_go.NewClient[v1.AuthenticationRequest, v1.AuthenticationResponse](
+		authenticate: connect_go.NewClient[v1.AuthenticateRequest, v1.AuthenticateResponse](
 			httpClient,
 			baseURL+"/ionscale.v1.IonscaleService/Authenticate",
 			opts...,
@@ -116,7 +116,7 @@ func NewIonscaleServiceClient(httpClient connect_go.HTTPClient, baseURL string, 
 			baseURL+"/ionscale.v1.IonscaleService/GetTailnet",
 			opts...,
 		),
-		listTailnets: connect_go.NewClient[v1.ListTailnetRequest, v1.ListTailnetResponse](
+		listTailnets: connect_go.NewClient[v1.ListTailnetsRequest, v1.ListTailnetsResponse](
 			httpClient,
 			baseURL+"/ionscale.v1.IonscaleService/ListTailnets",
 			opts...,
@@ -141,9 +141,9 @@ func NewIonscaleServiceClient(httpClient connect_go.HTTPClient, baseURL string, 
 			baseURL+"/ionscale.v1.IonscaleService/ResetDERPMap",
 			opts...,
 		),
-		enabledFileSharing: connect_go.NewClient[v1.EnableFileSharingRequest, v1.EnableFileSharingResponse](
+		enableFileSharing: connect_go.NewClient[v1.EnableFileSharingRequest, v1.EnableFileSharingResponse](
 			httpClient,
-			baseURL+"/ionscale.v1.IonscaleService/EnabledFileSharing",
+			baseURL+"/ionscale.v1.IonscaleService/EnableFileSharing",
 			opts...,
 		),
 		disableFileSharing: connect_go.NewClient[v1.DisableFileSharingRequest, v1.DisableFileSharingResponse](
@@ -151,9 +151,9 @@ func NewIonscaleServiceClient(httpClient connect_go.HTTPClient, baseURL string, 
 			baseURL+"/ionscale.v1.IonscaleService/DisableFileSharing",
 			opts...,
 		),
-		enabledServiceCollection: connect_go.NewClient[v1.EnableServiceCollectionRequest, v1.EnableServiceCollectionResponse](
+		enableServiceCollection: connect_go.NewClient[v1.EnableServiceCollectionRequest, v1.EnableServiceCollectionResponse](
 			httpClient,
-			baseURL+"/ionscale.v1.IonscaleService/EnabledServiceCollection",
+			baseURL+"/ionscale.v1.IonscaleService/EnableServiceCollection",
 			opts...,
 		),
 		disableServiceCollection: connect_go.NewClient[v1.DisableServiceCollectionRequest, v1.DisableServiceCollectionResponse](
@@ -161,9 +161,9 @@ func NewIonscaleServiceClient(httpClient connect_go.HTTPClient, baseURL string, 
 			baseURL+"/ionscale.v1.IonscaleService/DisableServiceCollection",
 			opts...,
 		),
-		enabledSSH: connect_go.NewClient[v1.EnableSSHRequest, v1.EnableSSHResponse](
+		enableSSH: connect_go.NewClient[v1.EnableSSHRequest, v1.EnableSSHResponse](
 			httpClient,
-			baseURL+"/ionscale.v1.IonscaleService/EnabledSSH",
+			baseURL+"/ionscale.v1.IonscaleService/EnableSSH",
 			opts...,
 		),
 		disableSSH: connect_go.NewClient[v1.DisableSSHRequest, v1.DisableSSHResponse](
@@ -261,22 +261,22 @@ func NewIonscaleServiceClient(httpClient connect_go.HTTPClient, baseURL string, 
 			baseURL+"/ionscale.v1.IonscaleService/GetMachineRoutes",
 			opts...,
 		),
-		enableMachineRoutes: connect_go.NewClient[v1.EnableMachineRoutesRequest, v1.GetMachineRoutesResponse](
+		enableMachineRoutes: connect_go.NewClient[v1.EnableMachineRoutesRequest, v1.EnableMachineRoutesResponse](
 			httpClient,
 			baseURL+"/ionscale.v1.IonscaleService/EnableMachineRoutes",
 			opts...,
 		),
-		disableMachineRoutes: connect_go.NewClient[v1.DisableMachineRoutesRequest, v1.GetMachineRoutesResponse](
+		disableMachineRoutes: connect_go.NewClient[v1.DisableMachineRoutesRequest, v1.DisableMachineRoutesResponse](
 			httpClient,
 			baseURL+"/ionscale.v1.IonscaleService/DisableMachineRoutes",
 			opts...,
 		),
-		enableExitNode: connect_go.NewClient[v1.EnableExitNodeRequest, v1.GetMachineRoutesResponse](
+		enableExitNode: connect_go.NewClient[v1.EnableExitNodeRequest, v1.EnableExitNodeResponse](
 			httpClient,
 			baseURL+"/ionscale.v1.IonscaleService/EnableExitNode",
 			opts...,
 		),
-		disableExitNode: connect_go.NewClient[v1.DisableExitNodeRequest, v1.GetMachineRoutesResponse](
+		disableExitNode: connect_go.NewClient[v1.DisableExitNodeRequest, v1.DisableExitNodeResponse](
 			httpClient,
 			baseURL+"/ionscale.v1.IonscaleService/DisableExitNode",
 			opts...,
@@ -297,22 +297,22 @@ func NewIonscaleServiceClient(httpClient connect_go.HTTPClient, baseURL string, 
 // ionscaleServiceClient implements IonscaleServiceClient.
 type ionscaleServiceClient struct {
 	getVersion               *connect_go.Client[v1.GetVersionRequest, v1.GetVersionResponse]
-	authenticate             *connect_go.Client[v1.AuthenticationRequest, v1.AuthenticationResponse]
+	authenticate             *connect_go.Client[v1.AuthenticateRequest, v1.AuthenticateResponse]
 	getDefaultDERPMap        *connect_go.Client[v1.GetDefaultDERPMapRequest, v1.GetDefaultDERPMapResponse]
 	setDefaultDERPMap        *connect_go.Client[v1.SetDefaultDERPMapRequest, v1.SetDefaultDERPMapResponse]
 	resetDefaultDERPMap      *connect_go.Client[v1.ResetDefaultDERPMapRequest, v1.ResetDefaultDERPMapResponse]
 	createTailnet            *connect_go.Client[v1.CreateTailnetRequest, v1.CreateTailnetResponse]
 	getTailnet               *connect_go.Client[v1.GetTailnetRequest, v1.GetTailnetResponse]
-	listTailnets             *connect_go.Client[v1.ListTailnetRequest, v1.ListTailnetResponse]
+	listTailnets             *connect_go.Client[v1.ListTailnetsRequest, v1.ListTailnetsResponse]
 	deleteTailnet            *connect_go.Client[v1.DeleteTailnetRequest, v1.DeleteTailnetResponse]
 	getDERPMap               *connect_go.Client[v1.GetDERPMapRequest, v1.GetDERPMapResponse]
 	setDERPMap               *connect_go.Client[v1.SetDERPMapRequest, v1.SetDERPMapResponse]
 	resetDERPMap             *connect_go.Client[v1.ResetDERPMapRequest, v1.ResetDERPMapResponse]
-	enabledFileSharing       *connect_go.Client[v1.EnableFileSharingRequest, v1.EnableFileSharingResponse]
+	enableFileSharing        *connect_go.Client[v1.EnableFileSharingRequest, v1.EnableFileSharingResponse]
 	disableFileSharing       *connect_go.Client[v1.DisableFileSharingRequest, v1.DisableFileSharingResponse]
-	enabledServiceCollection *connect_go.Client[v1.EnableServiceCollectionRequest, v1.EnableServiceCollectionResponse]
+	enableServiceCollection  *connect_go.Client[v1.EnableServiceCollectionRequest, v1.EnableServiceCollectionResponse]
 	disableServiceCollection *connect_go.Client[v1.DisableServiceCollectionRequest, v1.DisableServiceCollectionResponse]
-	enabledSSH               *connect_go.Client[v1.EnableSSHRequest, v1.EnableSSHResponse]
+	enableSSH                *connect_go.Client[v1.EnableSSHRequest, v1.EnableSSHResponse]
 	disableSSH               *connect_go.Client[v1.DisableSSHRequest, v1.DisableSSHResponse]
 	getDNSConfig             *connect_go.Client[v1.GetDNSConfigRequest, v1.GetDNSConfigResponse]
 	setDNSConfig             *connect_go.Client[v1.SetDNSConfigRequest, v1.SetDNSConfigResponse]
@@ -332,10 +332,10 @@ type ionscaleServiceClient struct {
 	deleteMachine            *connect_go.Client[v1.DeleteMachineRequest, v1.DeleteMachineResponse]
 	setMachineKeyExpiry      *connect_go.Client[v1.SetMachineKeyExpiryRequest, v1.SetMachineKeyExpiryResponse]
 	getMachineRoutes         *connect_go.Client[v1.GetMachineRoutesRequest, v1.GetMachineRoutesResponse]
-	enableMachineRoutes      *connect_go.Client[v1.EnableMachineRoutesRequest, v1.GetMachineRoutesResponse]
-	disableMachineRoutes     *connect_go.Client[v1.DisableMachineRoutesRequest, v1.GetMachineRoutesResponse]
-	enableExitNode           *connect_go.Client[v1.EnableExitNodeRequest, v1.GetMachineRoutesResponse]
-	disableExitNode          *connect_go.Client[v1.DisableExitNodeRequest, v1.GetMachineRoutesResponse]
+	enableMachineRoutes      *connect_go.Client[v1.EnableMachineRoutesRequest, v1.EnableMachineRoutesResponse]
+	disableMachineRoutes     *connect_go.Client[v1.DisableMachineRoutesRequest, v1.DisableMachineRoutesResponse]
+	enableExitNode           *connect_go.Client[v1.EnableExitNodeRequest, v1.EnableExitNodeResponse]
+	disableExitNode          *connect_go.Client[v1.DisableExitNodeRequest, v1.DisableExitNodeResponse]
 	enableHttpsCertificates  *connect_go.Client[v1.EnableHttpsCertificatesRequest, v1.EnableHttpsCertificatesResponse]
 	disableHttpsCertificates *connect_go.Client[v1.DisableHttpsCertificatesRequest, v1.DisableHttpsCertificatesResponse]
 }
@@ -346,7 +346,7 @@ func (c *ionscaleServiceClient) GetVersion(ctx context.Context, req *connect_go.
 }
 
 // Authenticate calls ionscale.v1.IonscaleService.Authenticate.
-func (c *ionscaleServiceClient) Authenticate(ctx context.Context, req *connect_go.Request[v1.AuthenticationRequest]) (*connect_go.ServerStreamForClient[v1.AuthenticationResponse], error) {
+func (c *ionscaleServiceClient) Authenticate(ctx context.Context, req *connect_go.Request[v1.AuthenticateRequest]) (*connect_go.ServerStreamForClient[v1.AuthenticateResponse], error) {
 	return c.authenticate.CallServerStream(ctx, req)
 }
 
@@ -376,7 +376,7 @@ func (c *ionscaleServiceClient) GetTailnet(ctx context.Context, req *connect_go.
 }
 
 // ListTailnets calls ionscale.v1.IonscaleService.ListTailnets.
-func (c *ionscaleServiceClient) ListTailnets(ctx context.Context, req *connect_go.Request[v1.ListTailnetRequest]) (*connect_go.Response[v1.ListTailnetResponse], error) {
+func (c *ionscaleServiceClient) ListTailnets(ctx context.Context, req *connect_go.Request[v1.ListTailnetsRequest]) (*connect_go.Response[v1.ListTailnetsResponse], error) {
 	return c.listTailnets.CallUnary(ctx, req)
 }
 
@@ -400,9 +400,9 @@ func (c *ionscaleServiceClient) ResetDERPMap(ctx context.Context, req *connect_g
 	return c.resetDERPMap.CallUnary(ctx, req)
 }
 
-// EnabledFileSharing calls ionscale.v1.IonscaleService.EnabledFileSharing.
-func (c *ionscaleServiceClient) EnabledFileSharing(ctx context.Context, req *connect_go.Request[v1.EnableFileSharingRequest]) (*connect_go.Response[v1.EnableFileSharingResponse], error) {
-	return c.enabledFileSharing.CallUnary(ctx, req)
+// EnableFileSharing calls ionscale.v1.IonscaleService.EnableFileSharing.
+func (c *ionscaleServiceClient) EnableFileSharing(ctx context.Context, req *connect_go.Request[v1.EnableFileSharingRequest]) (*connect_go.Response[v1.EnableFileSharingResponse], error) {
+	return c.enableFileSharing.CallUnary(ctx, req)
 }
 
 // DisableFileSharing calls ionscale.v1.IonscaleService.DisableFileSharing.
@@ -410,9 +410,9 @@ func (c *ionscaleServiceClient) DisableFileSharing(ctx context.Context, req *con
 	return c.disableFileSharing.CallUnary(ctx, req)
 }
 
-// EnabledServiceCollection calls ionscale.v1.IonscaleService.EnabledServiceCollection.
-func (c *ionscaleServiceClient) EnabledServiceCollection(ctx context.Context, req *connect_go.Request[v1.EnableServiceCollectionRequest]) (*connect_go.Response[v1.EnableServiceCollectionResponse], error) {
-	return c.enabledServiceCollection.CallUnary(ctx, req)
+// EnableServiceCollection calls ionscale.v1.IonscaleService.EnableServiceCollection.
+func (c *ionscaleServiceClient) EnableServiceCollection(ctx context.Context, req *connect_go.Request[v1.EnableServiceCollectionRequest]) (*connect_go.Response[v1.EnableServiceCollectionResponse], error) {
+	return c.enableServiceCollection.CallUnary(ctx, req)
 }
 
 // DisableServiceCollection calls ionscale.v1.IonscaleService.DisableServiceCollection.
@@ -420,9 +420,9 @@ func (c *ionscaleServiceClient) DisableServiceCollection(ctx context.Context, re
 	return c.disableServiceCollection.CallUnary(ctx, req)
 }
 
-// EnabledSSH calls ionscale.v1.IonscaleService.EnabledSSH.
-func (c *ionscaleServiceClient) EnabledSSH(ctx context.Context, req *connect_go.Request[v1.EnableSSHRequest]) (*connect_go.Response[v1.EnableSSHResponse], error) {
-	return c.enabledSSH.CallUnary(ctx, req)
+// EnableSSH calls ionscale.v1.IonscaleService.EnableSSH.
+func (c *ionscaleServiceClient) EnableSSH(ctx context.Context, req *connect_go.Request[v1.EnableSSHRequest]) (*connect_go.Response[v1.EnableSSHResponse], error) {
+	return c.enableSSH.CallUnary(ctx, req)
 }
 
 // DisableSSH calls ionscale.v1.IonscaleService.DisableSSH.
@@ -521,22 +521,22 @@ func (c *ionscaleServiceClient) GetMachineRoutes(ctx context.Context, req *conne
 }
 
 // EnableMachineRoutes calls ionscale.v1.IonscaleService.EnableMachineRoutes.
-func (c *ionscaleServiceClient) EnableMachineRoutes(ctx context.Context, req *connect_go.Request[v1.EnableMachineRoutesRequest]) (*connect_go.Response[v1.GetMachineRoutesResponse], error) {
+func (c *ionscaleServiceClient) EnableMachineRoutes(ctx context.Context, req *connect_go.Request[v1.EnableMachineRoutesRequest]) (*connect_go.Response[v1.EnableMachineRoutesResponse], error) {
 	return c.enableMachineRoutes.CallUnary(ctx, req)
 }
 
 // DisableMachineRoutes calls ionscale.v1.IonscaleService.DisableMachineRoutes.
-func (c *ionscaleServiceClient) DisableMachineRoutes(ctx context.Context, req *connect_go.Request[v1.DisableMachineRoutesRequest]) (*connect_go.Response[v1.GetMachineRoutesResponse], error) {
+func (c *ionscaleServiceClient) DisableMachineRoutes(ctx context.Context, req *connect_go.Request[v1.DisableMachineRoutesRequest]) (*connect_go.Response[v1.DisableMachineRoutesResponse], error) {
 	return c.disableMachineRoutes.CallUnary(ctx, req)
 }
 
 // EnableExitNode calls ionscale.v1.IonscaleService.EnableExitNode.
-func (c *ionscaleServiceClient) EnableExitNode(ctx context.Context, req *connect_go.Request[v1.EnableExitNodeRequest]) (*connect_go.Response[v1.GetMachineRoutesResponse], error) {
+func (c *ionscaleServiceClient) EnableExitNode(ctx context.Context, req *connect_go.Request[v1.EnableExitNodeRequest]) (*connect_go.Response[v1.EnableExitNodeResponse], error) {
 	return c.enableExitNode.CallUnary(ctx, req)
 }
 
 // DisableExitNode calls ionscale.v1.IonscaleService.DisableExitNode.
-func (c *ionscaleServiceClient) DisableExitNode(ctx context.Context, req *connect_go.Request[v1.DisableExitNodeRequest]) (*connect_go.Response[v1.GetMachineRoutesResponse], error) {
+func (c *ionscaleServiceClient) DisableExitNode(ctx context.Context, req *connect_go.Request[v1.DisableExitNodeRequest]) (*connect_go.Response[v1.DisableExitNodeResponse], error) {
 	return c.disableExitNode.CallUnary(ctx, req)
 }
 
@@ -553,22 +553,22 @@ func (c *ionscaleServiceClient) DisableHttpsCertificates(ctx context.Context, re
 // IonscaleServiceHandler is an implementation of the ionscale.v1.IonscaleService service.
 type IonscaleServiceHandler interface {
 	GetVersion(context.Context, *connect_go.Request[v1.GetVersionRequest]) (*connect_go.Response[v1.GetVersionResponse], error)
-	Authenticate(context.Context, *connect_go.Request[v1.AuthenticationRequest], *connect_go.ServerStream[v1.AuthenticationResponse]) error
+	Authenticate(context.Context, *connect_go.Request[v1.AuthenticateRequest], *connect_go.ServerStream[v1.AuthenticateResponse]) error
 	GetDefaultDERPMap(context.Context, *connect_go.Request[v1.GetDefaultDERPMapRequest]) (*connect_go.Response[v1.GetDefaultDERPMapResponse], error)
 	SetDefaultDERPMap(context.Context, *connect_go.Request[v1.SetDefaultDERPMapRequest]) (*connect_go.Response[v1.SetDefaultDERPMapResponse], error)
 	ResetDefaultDERPMap(context.Context, *connect_go.Request[v1.ResetDefaultDERPMapRequest]) (*connect_go.Response[v1.ResetDefaultDERPMapResponse], error)
 	CreateTailnet(context.Context, *connect_go.Request[v1.CreateTailnetRequest]) (*connect_go.Response[v1.CreateTailnetResponse], error)
 	GetTailnet(context.Context, *connect_go.Request[v1.GetTailnetRequest]) (*connect_go.Response[v1.GetTailnetResponse], error)
-	ListTailnets(context.Context, *connect_go.Request[v1.ListTailnetRequest]) (*connect_go.Response[v1.ListTailnetResponse], error)
+	ListTailnets(context.Context, *connect_go.Request[v1.ListTailnetsRequest]) (*connect_go.Response[v1.ListTailnetsResponse], error)
 	DeleteTailnet(context.Context, *connect_go.Request[v1.DeleteTailnetRequest]) (*connect_go.Response[v1.DeleteTailnetResponse], error)
 	GetDERPMap(context.Context, *connect_go.Request[v1.GetDERPMapRequest]) (*connect_go.Response[v1.GetDERPMapResponse], error)
 	SetDERPMap(context.Context, *connect_go.Request[v1.SetDERPMapRequest]) (*connect_go.Response[v1.SetDERPMapResponse], error)
 	ResetDERPMap(context.Context, *connect_go.Request[v1.ResetDERPMapRequest]) (*connect_go.Response[v1.ResetDERPMapResponse], error)
-	EnabledFileSharing(context.Context, *connect_go.Request[v1.EnableFileSharingRequest]) (*connect_go.Response[v1.EnableFileSharingResponse], error)
+	EnableFileSharing(context.Context, *connect_go.Request[v1.EnableFileSharingRequest]) (*connect_go.Response[v1.EnableFileSharingResponse], error)
 	DisableFileSharing(context.Context, *connect_go.Request[v1.DisableFileSharingRequest]) (*connect_go.Response[v1.DisableFileSharingResponse], error)
-	EnabledServiceCollection(context.Context, *connect_go.Request[v1.EnableServiceCollectionRequest]) (*connect_go.Response[v1.EnableServiceCollectionResponse], error)
+	EnableServiceCollection(context.Context, *connect_go.Request[v1.EnableServiceCollectionRequest]) (*connect_go.Response[v1.EnableServiceCollectionResponse], error)
 	DisableServiceCollection(context.Context, *connect_go.Request[v1.DisableServiceCollectionRequest]) (*connect_go.Response[v1.DisableServiceCollectionResponse], error)
-	EnabledSSH(context.Context, *connect_go.Request[v1.EnableSSHRequest]) (*connect_go.Response[v1.EnableSSHResponse], error)
+	EnableSSH(context.Context, *connect_go.Request[v1.EnableSSHRequest]) (*connect_go.Response[v1.EnableSSHResponse], error)
 	DisableSSH(context.Context, *connect_go.Request[v1.DisableSSHRequest]) (*connect_go.Response[v1.DisableSSHResponse], error)
 	GetDNSConfig(context.Context, *connect_go.Request[v1.GetDNSConfigRequest]) (*connect_go.Response[v1.GetDNSConfigResponse], error)
 	SetDNSConfig(context.Context, *connect_go.Request[v1.SetDNSConfigRequest]) (*connect_go.Response[v1.SetDNSConfigResponse], error)
@@ -588,10 +588,10 @@ type IonscaleServiceHandler interface {
 	DeleteMachine(context.Context, *connect_go.Request[v1.DeleteMachineRequest]) (*connect_go.Response[v1.DeleteMachineResponse], error)
 	SetMachineKeyExpiry(context.Context, *connect_go.Request[v1.SetMachineKeyExpiryRequest]) (*connect_go.Response[v1.SetMachineKeyExpiryResponse], error)
 	GetMachineRoutes(context.Context, *connect_go.Request[v1.GetMachineRoutesRequest]) (*connect_go.Response[v1.GetMachineRoutesResponse], error)
-	EnableMachineRoutes(context.Context, *connect_go.Request[v1.EnableMachineRoutesRequest]) (*connect_go.Response[v1.GetMachineRoutesResponse], error)
-	DisableMachineRoutes(context.Context, *connect_go.Request[v1.DisableMachineRoutesRequest]) (*connect_go.Response[v1.GetMachineRoutesResponse], error)
-	EnableExitNode(context.Context, *connect_go.Request[v1.EnableExitNodeRequest]) (*connect_go.Response[v1.GetMachineRoutesResponse], error)
-	DisableExitNode(context.Context, *connect_go.Request[v1.DisableExitNodeRequest]) (*connect_go.Response[v1.GetMachineRoutesResponse], error)
+	EnableMachineRoutes(context.Context, *connect_go.Request[v1.EnableMachineRoutesRequest]) (*connect_go.Response[v1.EnableMachineRoutesResponse], error)
+	DisableMachineRoutes(context.Context, *connect_go.Request[v1.DisableMachineRoutesRequest]) (*connect_go.Response[v1.DisableMachineRoutesResponse], error)
+	EnableExitNode(context.Context, *connect_go.Request[v1.EnableExitNodeRequest]) (*connect_go.Response[v1.EnableExitNodeResponse], error)
+	DisableExitNode(context.Context, *connect_go.Request[v1.DisableExitNodeRequest]) (*connect_go.Response[v1.DisableExitNodeResponse], error)
 	EnableHttpsCertificates(context.Context, *connect_go.Request[v1.EnableHttpsCertificatesRequest]) (*connect_go.Response[v1.EnableHttpsCertificatesResponse], error)
 	DisableHttpsCertificates(context.Context, *connect_go.Request[v1.DisableHttpsCertificatesRequest]) (*connect_go.Response[v1.DisableHttpsCertificatesResponse], error)
 }
@@ -663,9 +663,9 @@ func NewIonscaleServiceHandler(svc IonscaleServiceHandler, opts ...connect_go.Ha
 		svc.ResetDERPMap,
 		opts...,
 	))
-	mux.Handle("/ionscale.v1.IonscaleService/EnabledFileSharing", connect_go.NewUnaryHandler(
-		"/ionscale.v1.IonscaleService/EnabledFileSharing",
-		svc.EnabledFileSharing,
+	mux.Handle("/ionscale.v1.IonscaleService/EnableFileSharing", connect_go.NewUnaryHandler(
+		"/ionscale.v1.IonscaleService/EnableFileSharing",
+		svc.EnableFileSharing,
 		opts...,
 	))
 	mux.Handle("/ionscale.v1.IonscaleService/DisableFileSharing", connect_go.NewUnaryHandler(
@@ -673,9 +673,9 @@ func NewIonscaleServiceHandler(svc IonscaleServiceHandler, opts ...connect_go.Ha
 		svc.DisableFileSharing,
 		opts...,
 	))
-	mux.Handle("/ionscale.v1.IonscaleService/EnabledServiceCollection", connect_go.NewUnaryHandler(
-		"/ionscale.v1.IonscaleService/EnabledServiceCollection",
-		svc.EnabledServiceCollection,
+	mux.Handle("/ionscale.v1.IonscaleService/EnableServiceCollection", connect_go.NewUnaryHandler(
+		"/ionscale.v1.IonscaleService/EnableServiceCollection",
+		svc.EnableServiceCollection,
 		opts...,
 	))
 	mux.Handle("/ionscale.v1.IonscaleService/DisableServiceCollection", connect_go.NewUnaryHandler(
@@ -683,9 +683,9 @@ func NewIonscaleServiceHandler(svc IonscaleServiceHandler, opts ...connect_go.Ha
 		svc.DisableServiceCollection,
 		opts...,
 	))
-	mux.Handle("/ionscale.v1.IonscaleService/EnabledSSH", connect_go.NewUnaryHandler(
-		"/ionscale.v1.IonscaleService/EnabledSSH",
-		svc.EnabledSSH,
+	mux.Handle("/ionscale.v1.IonscaleService/EnableSSH", connect_go.NewUnaryHandler(
+		"/ionscale.v1.IonscaleService/EnableSSH",
+		svc.EnableSSH,
 		opts...,
 	))
 	mux.Handle("/ionscale.v1.IonscaleService/DisableSSH", connect_go.NewUnaryHandler(
@@ -823,7 +823,7 @@ func (UnimplementedIonscaleServiceHandler) GetVersion(context.Context, *connect_
 	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("ionscale.v1.IonscaleService.GetVersion is not implemented"))
 }
 
-func (UnimplementedIonscaleServiceHandler) Authenticate(context.Context, *connect_go.Request[v1.AuthenticationRequest], *connect_go.ServerStream[v1.AuthenticationResponse]) error {
+func (UnimplementedIonscaleServiceHandler) Authenticate(context.Context, *connect_go.Request[v1.AuthenticateRequest], *connect_go.ServerStream[v1.AuthenticateResponse]) error {
 	return connect_go.NewError(connect_go.CodeUnimplemented, errors.New("ionscale.v1.IonscaleService.Authenticate is not implemented"))
 }
 
@@ -847,7 +847,7 @@ func (UnimplementedIonscaleServiceHandler) GetTailnet(context.Context, *connect_
 	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("ionscale.v1.IonscaleService.GetTailnet is not implemented"))
 }
 
-func (UnimplementedIonscaleServiceHandler) ListTailnets(context.Context, *connect_go.Request[v1.ListTailnetRequest]) (*connect_go.Response[v1.ListTailnetResponse], error) {
+func (UnimplementedIonscaleServiceHandler) ListTailnets(context.Context, *connect_go.Request[v1.ListTailnetsRequest]) (*connect_go.Response[v1.ListTailnetsResponse], error) {
 	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("ionscale.v1.IonscaleService.ListTailnets is not implemented"))
 }
 
@@ -867,24 +867,24 @@ func (UnimplementedIonscaleServiceHandler) ResetDERPMap(context.Context, *connec
 	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("ionscale.v1.IonscaleService.ResetDERPMap is not implemented"))
 }
 
-func (UnimplementedIonscaleServiceHandler) EnabledFileSharing(context.Context, *connect_go.Request[v1.EnableFileSharingRequest]) (*connect_go.Response[v1.EnableFileSharingResponse], error) {
-	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("ionscale.v1.IonscaleService.EnabledFileSharing is not implemented"))
+func (UnimplementedIonscaleServiceHandler) EnableFileSharing(context.Context, *connect_go.Request[v1.EnableFileSharingRequest]) (*connect_go.Response[v1.EnableFileSharingResponse], error) {
+	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("ionscale.v1.IonscaleService.EnableFileSharing is not implemented"))
 }
 
 func (UnimplementedIonscaleServiceHandler) DisableFileSharing(context.Context, *connect_go.Request[v1.DisableFileSharingRequest]) (*connect_go.Response[v1.DisableFileSharingResponse], error) {
 	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("ionscale.v1.IonscaleService.DisableFileSharing is not implemented"))
 }
 
-func (UnimplementedIonscaleServiceHandler) EnabledServiceCollection(context.Context, *connect_go.Request[v1.EnableServiceCollectionRequest]) (*connect_go.Response[v1.EnableServiceCollectionResponse], error) {
-	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("ionscale.v1.IonscaleService.EnabledServiceCollection is not implemented"))
+func (UnimplementedIonscaleServiceHandler) EnableServiceCollection(context.Context, *connect_go.Request[v1.EnableServiceCollectionRequest]) (*connect_go.Response[v1.EnableServiceCollectionResponse], error) {
+	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("ionscale.v1.IonscaleService.EnableServiceCollection is not implemented"))
 }
 
 func (UnimplementedIonscaleServiceHandler) DisableServiceCollection(context.Context, *connect_go.Request[v1.DisableServiceCollectionRequest]) (*connect_go.Response[v1.DisableServiceCollectionResponse], error) {
 	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("ionscale.v1.IonscaleService.DisableServiceCollection is not implemented"))
 }
 
-func (UnimplementedIonscaleServiceHandler) EnabledSSH(context.Context, *connect_go.Request[v1.EnableSSHRequest]) (*connect_go.Response[v1.EnableSSHResponse], error) {
-	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("ionscale.v1.IonscaleService.EnabledSSH is not implemented"))
+func (UnimplementedIonscaleServiceHandler) EnableSSH(context.Context, *connect_go.Request[v1.EnableSSHRequest]) (*connect_go.Response[v1.EnableSSHResponse], error) {
+	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("ionscale.v1.IonscaleService.EnableSSH is not implemented"))
 }
 
 func (UnimplementedIonscaleServiceHandler) DisableSSH(context.Context, *connect_go.Request[v1.DisableSSHRequest]) (*connect_go.Response[v1.DisableSSHResponse], error) {
@@ -963,19 +963,19 @@ func (UnimplementedIonscaleServiceHandler) GetMachineRoutes(context.Context, *co
 	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("ionscale.v1.IonscaleService.GetMachineRoutes is not implemented"))
 }
 
-func (UnimplementedIonscaleServiceHandler) EnableMachineRoutes(context.Context, *connect_go.Request[v1.EnableMachineRoutesRequest]) (*connect_go.Response[v1.GetMachineRoutesResponse], error) {
+func (UnimplementedIonscaleServiceHandler) EnableMachineRoutes(context.Context, *connect_go.Request[v1.EnableMachineRoutesRequest]) (*connect_go.Response[v1.EnableMachineRoutesResponse], error) {
 	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("ionscale.v1.IonscaleService.EnableMachineRoutes is not implemented"))
 }
 
-func (UnimplementedIonscaleServiceHandler) DisableMachineRoutes(context.Context, *connect_go.Request[v1.DisableMachineRoutesRequest]) (*connect_go.Response[v1.GetMachineRoutesResponse], error) {
+func (UnimplementedIonscaleServiceHandler) DisableMachineRoutes(context.Context, *connect_go.Request[v1.DisableMachineRoutesRequest]) (*connect_go.Response[v1.DisableMachineRoutesResponse], error) {
 	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("ionscale.v1.IonscaleService.DisableMachineRoutes is not implemented"))
 }
 
-func (UnimplementedIonscaleServiceHandler) EnableExitNode(context.Context, *connect_go.Request[v1.EnableExitNodeRequest]) (*connect_go.Response[v1.GetMachineRoutesResponse], error) {
+func (UnimplementedIonscaleServiceHandler) EnableExitNode(context.Context, *connect_go.Request[v1.EnableExitNodeRequest]) (*connect_go.Response[v1.EnableExitNodeResponse], error) {
 	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("ionscale.v1.IonscaleService.EnableExitNode is not implemented"))
 }
 
-func (UnimplementedIonscaleServiceHandler) DisableExitNode(context.Context, *connect_go.Request[v1.DisableExitNodeRequest]) (*connect_go.Response[v1.GetMachineRoutesResponse], error) {
+func (UnimplementedIonscaleServiceHandler) DisableExitNode(context.Context, *connect_go.Request[v1.DisableExitNodeRequest]) (*connect_go.Response[v1.DisableExitNodeResponse], error) {
 	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("ionscale.v1.IonscaleService.DisableExitNode is not implemented"))
 }
 

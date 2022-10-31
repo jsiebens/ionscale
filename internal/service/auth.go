@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-func (s *Service) Authenticate(ctx context.Context, req *connect.Request[api.AuthenticationRequest], stream *connect.ServerStream[api.AuthenticationResponse]) error {
+func (s *Service) Authenticate(ctx context.Context, req *connect.Request[api.AuthenticateRequest], stream *connect.ServerStream[api.AuthenticateResponse]) error {
 	if s.authProvider == nil {
 		return connect.NewError(connect.CodeFailedPrecondition, errors.New("no authentication method available, contact your ionscale administrator for more information"))
 	}
@@ -27,7 +27,7 @@ func (s *Service) Authenticate(ctx context.Context, req *connect.Request[api.Aut
 		return err
 	}
 
-	if err := stream.Send(&api.AuthenticationResponse{AuthUrl: authUrl}); err != nil {
+	if err := stream.Send(&api.AuthenticateResponse{AuthUrl: authUrl}); err != nil {
 		return err
 	}
 
@@ -49,7 +49,7 @@ func (s *Service) Authenticate(ctx context.Context, req *connect.Request[api.Aut
 			}
 
 			if len(m.Token) != 0 {
-				if err := stream.Send(&api.AuthenticationResponse{Token: m.Token, TailnetId: m.TailnetID}); err != nil {
+				if err := stream.Send(&api.AuthenticateResponse{Token: m.Token, TailnetId: m.TailnetID}); err != nil {
 					return err
 				}
 				return nil
@@ -59,7 +59,7 @@ func (s *Service) Authenticate(ctx context.Context, req *connect.Request[api.Aut
 				return connect.NewError(connect.CodePermissionDenied, errors.New(m.Error))
 			}
 
-			if err := stream.Send(&api.AuthenticationResponse{AuthUrl: authUrl}); err != nil {
+			if err := stream.Send(&api.AuthenticateResponse{AuthUrl: authUrl}); err != nil {
 				return err
 			}
 

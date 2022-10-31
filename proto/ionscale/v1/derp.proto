@@ -1,6 +1,7 @@
 syntax = "proto3";
 
 package ionscale.v1;
+
 option go_package = "github.com/jsiebens/ionscale/pkg/gen/ionscale/v1;ionscalev1";
 
 message GetDefaultDERPMapRequest {}
@@ -17,8 +18,6 @@ message SetDefaultDERPMapResponse {
   bytes value = 1;
 }
 
-message ResetDefaultDERPMapRequest {
-}
+message ResetDefaultDERPMapRequest {}
 
-message ResetDefaultDERPMapResponse {
-}
+message ResetDefaultDERPMapResponse {}

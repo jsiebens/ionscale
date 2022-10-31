@@ -292,7 +292,7 @@ func getMachineRoutesCommand() *coral.Command {
 			return err
 		}
 
-		printMachinesRoutesResponse(resp.Msg)
+		printMachinesRoutesResponse(resp.Msg.Routes)
 
 		return nil
 	}
@@ -336,7 +336,7 @@ func enableMachineRoutesCommand() *coral.Command {
 			return err
 		}
 
-		printMachinesRoutesResponse(resp.Msg)
+		printMachinesRoutesResponse(resp.Msg.Routes)
 
 		return nil
 	}
@@ -378,7 +378,7 @@ func disableMachineRoutesCommand() *coral.Command {
 			return err
 		}
 
-		printMachinesRoutesResponse(resp.Msg)
+		printMachinesRoutesResponse(resp.Msg.Routes)
 
 		return nil
 	}
@@ -412,7 +412,7 @@ func enableExitNodeCommand() *coral.Command {
 			return err
 		}
 
-		printMachinesRoutesResponse(resp.Msg)
+		printMachinesRoutesResponse(resp.Msg.Routes)
 
 		return nil
 	}
@@ -446,7 +446,7 @@ func disableExitNodeCommand() *coral.Command {
 			return err
 		}
 
-		printMachinesRoutesResponse(resp.Msg)
+		printMachinesRoutesResponse(resp.Msg.Routes)
 
 		return nil
 	}
@@ -500,7 +500,7 @@ func configureSetMachineKeyExpiryCommand(command *coral.Command, v bool) *coral.
 	return command
 }
 
-func printMachinesRoutesResponse(msg *api.GetMachineRoutesResponse) {
+func printMachinesRoutesResponse(msg *api.MachineRoutes) {
 	w := new(tabwriter.Writer)
 	w.Init(os.Stdout, 8, 8, 0, '\t', 0)
 	defer w.Flush()
