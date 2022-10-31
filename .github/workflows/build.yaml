@@ -20,6 +20,11 @@ jobs:
         uses: bufbuild/buf-lint-action@v1
         with:
           input: proto
+      - name: Buf Breaking
+        uses: bufbuild/buf-breaking-action@v1
+        with:
+          input: proto
+          against: 'https://github.com/jsiebens/ionscale.git#branch=main'
 
   build:
     runs-on: ubuntu-latest
