@@ -1,19 +1,19 @@
 syntax = "proto3";
 
 package ionscale.v1;
-option go_package = "github.com/jsiebens/ionscale/pkg/gen/ionscale/v1;ionscalev1";
 
-import "google/protobuf/timestamp.proto";
 import "google/protobuf/duration.proto";
-
+import "google/protobuf/timestamp.proto";
 import "ionscale/v1/ref.proto";
+
+option go_package = "github.com/jsiebens/ionscale/pkg/gen/ionscale/v1;ionscalev1";
 
 message GetAuthKeyRequest {
   uint64 auth_key_id = 1;
 }
 
 message GetAuthKeyResponse {
-  AuthKey authKey = 1;
+  AuthKey auth_key = 1;
 }
 
 message CreateAuthKeyRequest {

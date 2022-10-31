@@ -1,10 +1,10 @@
 syntax = "proto3";
 
 package ionscale.v1;
+
 option go_package = "github.com/jsiebens/ionscale/pkg/gen/ionscale/v1;ionscalev1";
 
-message GetVersionRequest {
-}
+message GetVersionRequest {}
 
 message GetVersionResponse {
   string version = 1;

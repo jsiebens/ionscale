@@ -1,6 +1,7 @@
 syntax = "proto3";
 
 package ionscale.v1;
+
 option go_package = "github.com/jsiebens/ionscale/pkg/gen/ionscale/v1;ionscalev1";
 
 message GetIAMPolicyRequest {
@@ -16,8 +17,7 @@ message SetIAMPolicyRequest {
   IAMPolicy policy = 2;
 }
 
-message SetIAMPolicyResponse {
-}
+message SetIAMPolicyResponse {}
 
 message IAMPolicy {
   repeated string subs = 1;

@@ -1,10 +1,8 @@
 syntax = "proto3";
 
 package ionscale.v1;
-option go_package = "github.com/jsiebens/ionscale/pkg/gen/ionscale/v1;ionscalev1";
 
-import "google/protobuf/timestamp.proto";
-import "google/protobuf/duration.proto";
+option go_package = "github.com/jsiebens/ionscale/pkg/gen/ionscale/v1;ionscalev1";
 
 message GetDNSConfigRequest {
   uint64 tailnet_id = 1;
@@ -27,15 +25,13 @@ message EnableHttpsCertificatesRequest {
   uint64 tailnet_id = 1;
 }
 
-message EnableHttpsCertificatesResponse {
-}
+message EnableHttpsCertificatesResponse {}
 
 message DisableHttpsCertificatesRequest {
   uint64 tailnet_id = 1;
 }
 
-message DisableHttpsCertificatesResponse {
-}
+message DisableHttpsCertificatesResponse {}
 
 message DNSConfig {
   bool magic_dns = 1;

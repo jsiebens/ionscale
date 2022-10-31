@@ -160,17 +160,6 @@ func (s *Service) ExpireMachine(ctx context.Context, req *connect.Request[api.Ex
 	return connect.NewResponse(&api.ExpireMachineResponse{}), nil
 }
 
-func (s *Service) createMachineRoutesResponse(m *domain.Machine) (*connect.Response[api.GetMachineRoutesResponse], error) {
-	response := api.GetMachineRoutesResponse{
-		AdvertisedRoutes:   m.AdvertisedPrefixes(),
-		EnabledRoutes:      m.AllowedPrefixes(),
-		AdvertisedExitNode: m.IsAdvertisedExitNode(),
-		EnabledExitNode:    m.IsAllowedExitNode(),
-	}
-
-	return connect.NewResponse(&response), nil
-}
-
 func (s *Service) GetMachineRoutes(ctx context.Context, req *connect.Request[api.GetMachineRoutesRequest]) (*connect.Response[api.GetMachineRoutesResponse], error) {
 	principal := CurrentPrincipal(ctx)
 
@@ -187,10 +176,20 @@ func (s *Service) GetMachineRoutes(ctx context.Context, req *connect.Request[api
 		return nil, connect.NewError(connect.CodePermissionDenied, errors.New("permission denied"))
 	}
 
-	return s.createMachineRoutesResponse(m)
+	response := api.GetMachineRoutesResponse{
+		MachineId: m.ID,
+		Routes: &api.MachineRoutes{
+			AdvertisedRoutes:   m.AdvertisedPrefixes(),
+			EnabledRoutes:      m.AllowedPrefixes(),
+			AdvertisedExitNode: m.IsAdvertisedExitNode(),
+			EnabledExitNode:    m.IsAllowedExitNode(),
+		},
+	}
+
+	return connect.NewResponse(&response), nil
 }
 
-func (s *Service) EnableMachineRoutes(ctx context.Context, req *connect.Request[api.EnableMachineRoutesRequest]) (*connect.Response[api.GetMachineRoutesResponse], error) {
+func (s *Service) EnableMachineRoutes(ctx context.Context, req *connect.Request[api.EnableMachineRoutesRequest]) (*connect.Response[api.EnableMachineRoutesResponse], error) {
 	principal := CurrentPrincipal(ctx)
 
 	m, err := s.repository.GetMachine(ctx, req.Msg.MachineId)
@@ -230,10 +229,20 @@ func (s *Service) EnableMachineRoutes(ctx context.Context, req *connect.Request[
 
 	s.pubsub.Publish(m.TailnetID, &broker.Signal{PeerUpdated: &m.ID})
 
-	return s.createMachineRoutesResponse(m)
+	response := api.EnableMachineRoutesResponse{
+		MachineId: m.ID,
+		Routes: &api.MachineRoutes{
+			AdvertisedRoutes:   m.AdvertisedPrefixes(),
+			EnabledRoutes:      m.AllowedPrefixes(),
+			AdvertisedExitNode: m.IsAdvertisedExitNode(),
+			EnabledExitNode:    m.IsAllowedExitNode(),
+		},
+	}
+
+	return connect.NewResponse(&response), nil
 }
 
-func (s *Service) DisableMachineRoutes(ctx context.Context, req *connect.Request[api.DisableMachineRoutesRequest]) (*connect.Response[api.GetMachineRoutesResponse], error) {
+func (s *Service) DisableMachineRoutes(ctx context.Context, req *connect.Request[api.DisableMachineRoutesRequest]) (*connect.Response[api.DisableMachineRoutesResponse], error) {
 	principal := CurrentPrincipal(ctx)
 
 	m, err := s.repository.GetMachine(ctx, req.Msg.MachineId)
@@ -269,10 +278,20 @@ func (s *Service) DisableMachineRoutes(ctx context.Context, req *connect.Request
 
 	s.pubsub.Publish(m.TailnetID, &broker.Signal{PeerUpdated: &m.ID})
 
-	return s.createMachineRoutesResponse(m)
+	response := api.DisableMachineRoutesResponse{
+		MachineId: m.ID,
+		Routes: &api.MachineRoutes{
+			AdvertisedRoutes:   m.AdvertisedPrefixes(),
+			EnabledRoutes:      m.AllowedPrefixes(),
+			AdvertisedExitNode: m.IsAdvertisedExitNode(),
+			EnabledExitNode:    m.IsAllowedExitNode(),
+		},
+	}
+
+	return connect.NewResponse(&response), nil
 }
 
-func (s *Service) EnableExitNode(ctx context.Context, req *connect.Request[api.EnableExitNodeRequest]) (*connect.Response[api.GetMachineRoutesResponse], error) {
+func (s *Service) EnableExitNode(ctx context.Context, req *connect.Request[api.EnableExitNodeRequest]) (*connect.Response[api.EnableExitNodeResponse], error) {
 	principal := CurrentPrincipal(ctx)
 
 	m, err := s.repository.GetMachine(ctx, req.Msg.MachineId)
@@ -306,10 +325,20 @@ func (s *Service) EnableExitNode(ctx context.Context, req *connect.Request[api.E
 
 	s.pubsub.Publish(m.TailnetID, &broker.Signal{PeerUpdated: &m.ID})
 
-	return s.createMachineRoutesResponse(m)
+	response := api.EnableExitNodeResponse{
+		MachineId: m.ID,
+		Routes: &api.MachineRoutes{
+			AdvertisedRoutes:   m.AdvertisedPrefixes(),
+			EnabledRoutes:      m.AllowedPrefixes(),
+			AdvertisedExitNode: m.IsAdvertisedExitNode(),
+			EnabledExitNode:    m.IsAllowedExitNode(),
+		},
+	}
+
+	return connect.NewResponse(&response), nil
 }
 
-func (s *Service) DisableExitNode(ctx context.Context, req *connect.Request[api.DisableExitNodeRequest]) (*connect.Response[api.GetMachineRoutesResponse], error) {
+func (s *Service) DisableExitNode(ctx context.Context, req *connect.Request[api.DisableExitNodeRequest]) (*connect.Response[api.DisableExitNodeResponse], error) {
 	principal := CurrentPrincipal(ctx)
 
 	m, err := s.repository.GetMachine(ctx, req.Msg.MachineId)
@@ -347,7 +376,17 @@ func (s *Service) DisableExitNode(ctx context.Context, req *connect.Request[api.
 
 	s.pubsub.Publish(m.TailnetID, &broker.Signal{PeerUpdated: &m.ID})
 
-	return s.createMachineRoutesResponse(m)
+	response := api.DisableExitNodeResponse{
+		MachineId: m.ID,
+		Routes: &api.MachineRoutes{
+			AdvertisedRoutes:   m.AdvertisedPrefixes(),
+			EnabledRoutes:      m.AllowedPrefixes(),
+			AdvertisedExitNode: m.IsAdvertisedExitNode(),
+			EnabledExitNode:    m.IsAllowedExitNode(),
+		},
+	}
+
+	return connect.NewResponse(&response), nil
 }
 
 func (s *Service) SetMachineKeyExpiry(ctx context.Context, req *connect.Request[api.SetMachineKeyExpiryRequest]) (*connect.Response[api.SetMachineKeyExpiryResponse], error) {

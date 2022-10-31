@@ -6,3 +6,9 @@ init:
 
 generate:
 	buf generate proto
+
+format:
+	buf format -w proto
+
+lint:
+	buf lint proto

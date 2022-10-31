@@ -37,7 +37,7 @@ func findTailnet(client apiconnect.IonscaleServiceClient, tailnet string, tailne
 		return nil, fmt.Errorf("requested tailnet not found or you are not authorized for this tailnet")
 	}
 
-	tailnets, err := client.ListTailnets(context.Background(), connect.NewRequest(&api.ListTailnetRequest{}))
+	tailnets, err := client.ListTailnets(context.Background(), connect.NewRequest(&api.ListTailnetsRequest{}))
 	if err != nil {
 		return nil, err
 	}

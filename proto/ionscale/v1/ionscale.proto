@@ -1,73 +1,71 @@
 syntax = "proto3";
 
 package ionscale.v1;
-option go_package = "github.com/jsiebens/ionscale/pkg/gen/ionscale/v1;ionscalev1";
 
-import "google/protobuf/timestamp.proto";
-import "google/protobuf/duration.proto";
-
-import "ionscale/v1/version.proto";
+import "ionscale/v1/acl.proto";
 import "ionscale/v1/auth.proto";
-import "ionscale/v1/tailnets.proto";
-import "ionscale/v1/users.proto";
 import "ionscale/v1/auth_keys.proto";
-import "ionscale/v1/machines.proto";
-import "ionscale/v1/routes.proto";
+import "ionscale/v1/derp.proto";
 import "ionscale/v1/dns.proto";
 import "ionscale/v1/iam.proto";
-import "ionscale/v1/acl.proto";
-import "ionscale/v1/derp.proto";
+import "ionscale/v1/machines.proto";
+import "ionscale/v1/routes.proto";
+import "ionscale/v1/tailnets.proto";
+import "ionscale/v1/users.proto";
+import "ionscale/v1/version.proto";
+
+option go_package = "github.com/jsiebens/ionscale/pkg/gen/ionscale/v1;ionscalev1";
 
 service IonscaleService {
-  rpc GetVersion (GetVersionRequest) returns (GetVersionResponse) {}
+  rpc GetVersion(GetVersionRequest) returns (GetVersionResponse) {}
 
-  rpc Authenticate (AuthenticationRequest) returns (stream AuthenticationResponse) {}
+  rpc Authenticate(AuthenticateRequest) returns (stream AuthenticateResponse) {}
 
-  rpc GetDefaultDERPMap (GetDefaultDERPMapRequest) returns (GetDefaultDERPMapResponse) {}
-  rpc SetDefaultDERPMap (SetDefaultDERPMapRequest) returns (SetDefaultDERPMapResponse) {}
-  rpc ResetDefaultDERPMap (ResetDefaultDERPMapRequest) returns (ResetDefaultDERPMapResponse) {}
+  rpc GetDefaultDERPMap(GetDefaultDERPMapRequest) returns (GetDefaultDERPMapResponse) {}
+  rpc SetDefaultDERPMap(SetDefaultDERPMapRequest) returns (SetDefaultDERPMapResponse) {}
+  rpc ResetDefaultDERPMap(ResetDefaultDERPMapRequest) returns (ResetDefaultDERPMapResponse) {}
 
-  rpc CreateTailnet (CreateTailnetRequest) returns (CreateTailnetResponse) {}
-  rpc GetTailnet (GetTailnetRequest) returns (GetTailnetResponse) {}
-  rpc ListTailnets (ListTailnetRequest) returns (ListTailnetResponse) {}
-  rpc DeleteTailnet (DeleteTailnetRequest) returns (DeleteTailnetResponse) {}
-  rpc GetDERPMap (GetDERPMapRequest) returns (GetDERPMapResponse) {}
-  rpc SetDERPMap (SetDERPMapRequest) returns (SetDERPMapResponse) {}
-  rpc ResetDERPMap (ResetDERPMapRequest) returns (ResetDERPMapResponse) {}
-  rpc EnabledFileSharing (EnableFileSharingRequest) returns (EnableFileSharingResponse) {}
-  rpc DisableFileSharing (DisableFileSharingRequest) returns (DisableFileSharingResponse) {}
-  rpc EnabledServiceCollection (EnableServiceCollectionRequest) returns (EnableServiceCollectionResponse) {}
-  rpc DisableServiceCollection (DisableServiceCollectionRequest) returns (DisableServiceCollectionResponse) {}
-  rpc EnabledSSH (EnableSSHRequest) returns (EnableSSHResponse) {}
-  rpc DisableSSH (DisableSSHRequest) returns (DisableSSHResponse) {}
+  rpc CreateTailnet(CreateTailnetRequest) returns (CreateTailnetResponse) {}
+  rpc GetTailnet(GetTailnetRequest) returns (GetTailnetResponse) {}
+  rpc ListTailnets(ListTailnetsRequest) returns (ListTailnetsResponse) {}
+  rpc DeleteTailnet(DeleteTailnetRequest) returns (DeleteTailnetResponse) {}
+  rpc GetDERPMap(GetDERPMapRequest) returns (GetDERPMapResponse) {}
+  rpc SetDERPMap(SetDERPMapRequest) returns (SetDERPMapResponse) {}
+  rpc ResetDERPMap(ResetDERPMapRequest) returns (ResetDERPMapResponse) {}
+  rpc EnableFileSharing(EnableFileSharingRequest) returns (EnableFileSharingResponse) {}
+  rpc DisableFileSharing(DisableFileSharingRequest) returns (DisableFileSharingResponse) {}
+  rpc EnableServiceCollection(EnableServiceCollectionRequest) returns (EnableServiceCollectionResponse) {}
+  rpc DisableServiceCollection(DisableServiceCollectionRequest) returns (DisableServiceCollectionResponse) {}
+  rpc EnableSSH(EnableSSHRequest) returns (EnableSSHResponse) {}
+  rpc DisableSSH(DisableSSHRequest) returns (DisableSSHResponse) {}
 
-  rpc GetDNSConfig (GetDNSConfigRequest) returns (GetDNSConfigResponse) {}
-  rpc SetDNSConfig (SetDNSConfigRequest) returns (SetDNSConfigResponse) {}
+  rpc GetDNSConfig(GetDNSConfigRequest) returns (GetDNSConfigResponse) {}
+  rpc SetDNSConfig(SetDNSConfigRequest) returns (SetDNSConfigResponse) {}
 
-  rpc GetIAMPolicy (GetIAMPolicyRequest) returns (GetIAMPolicyResponse) {}
-  rpc SetIAMPolicy (SetIAMPolicyRequest) returns (SetIAMPolicyResponse) {}
+  rpc GetIAMPolicy(GetIAMPolicyRequest) returns (GetIAMPolicyResponse) {}
+  rpc SetIAMPolicy(SetIAMPolicyRequest) returns (SetIAMPolicyResponse) {}
 
-  rpc GetACLPolicy (GetACLPolicyRequest) returns (GetACLPolicyResponse) {}
-  rpc SetACLPolicy (SetACLPolicyRequest) returns (SetACLPolicyResponse) {}
+  rpc GetACLPolicy(GetACLPolicyRequest) returns (GetACLPolicyResponse) {}
+  rpc SetACLPolicy(SetACLPolicyRequest) returns (SetACLPolicyResponse) {}
 
-  rpc GetAuthKey (GetAuthKeyRequest) returns (GetAuthKeyResponse) {}
-  rpc CreateAuthKey (CreateAuthKeyRequest) returns (CreateAuthKeyResponse) {}
-  rpc DeleteAuthKey (DeleteAuthKeyRequest) returns (DeleteAuthKeyResponse) {}
-  rpc ListAuthKeys (ListAuthKeysRequest) returns (ListAuthKeysResponse) {}
+  rpc GetAuthKey(GetAuthKeyRequest) returns (GetAuthKeyResponse) {}
+  rpc CreateAuthKey(CreateAuthKeyRequest) returns (CreateAuthKeyResponse) {}
+  rpc DeleteAuthKey(DeleteAuthKeyRequest) returns (DeleteAuthKeyResponse) {}
+  rpc ListAuthKeys(ListAuthKeysRequest) returns (ListAuthKeysResponse) {}
 
   rpc ListUsers(ListUsersRequest) returns (ListUsersResponse) {}
   rpc DeleteUser(DeleteUserRequest) returns (DeleteUserResponse) {}
 
-  rpc GetMachine (GetMachineRequest) returns (GetMachineResponse) {}
-  rpc ListMachines (ListMachinesRequest) returns (ListMachinesResponse) {}
+  rpc GetMachine(GetMachineRequest) returns (GetMachineResponse) {}
+  rpc ListMachines(ListMachinesRequest) returns (ListMachinesResponse) {}
   rpc ExpireMachine(ExpireMachineRequest) returns (ExpireMachineResponse) {}
   rpc DeleteMachine(DeleteMachineRequest) returns (DeleteMachineResponse) {}
   rpc SetMachineKeyExpiry(SetMachineKeyExpiryRequest) returns (SetMachineKeyExpiryResponse) {}
-  rpc GetMachineRoutes (GetMachineRoutesRequest) returns (GetMachineRoutesResponse) {}
-  rpc EnableMachineRoutes (EnableMachineRoutesRequest) returns (GetMachineRoutesResponse) {}
-  rpc DisableMachineRoutes (DisableMachineRoutesRequest) returns (GetMachineRoutesResponse) {}
-  rpc EnableExitNode (EnableExitNodeRequest) returns (GetMachineRoutesResponse) {}
-  rpc DisableExitNode (DisableExitNodeRequest) returns (GetMachineRoutesResponse) {}
-  rpc EnableHttpsCertificates (EnableHttpsCertificatesRequest) returns (EnableHttpsCertificatesResponse) {}
-  rpc DisableHttpsCertificates (DisableHttpsCertificatesRequest) returns (DisableHttpsCertificatesResponse) {}
+  rpc GetMachineRoutes(GetMachineRoutesRequest) returns (GetMachineRoutesResponse) {}
+  rpc EnableMachineRoutes(EnableMachineRoutesRequest) returns (EnableMachineRoutesResponse) {}
+  rpc DisableMachineRoutes(DisableMachineRoutesRequest) returns (DisableMachineRoutesResponse) {}
+  rpc EnableExitNode(EnableExitNodeRequest) returns (EnableExitNodeResponse) {}
+  rpc DisableExitNode(DisableExitNodeRequest) returns (DisableExitNodeResponse) {}
+  rpc EnableHttpsCertificates(EnableHttpsCertificatesRequest) returns (EnableHttpsCertificatesResponse) {}
+  rpc DisableHttpsCertificates(DisableHttpsCertificatesRequest) returns (DisableHttpsCertificatesResponse) {}
 }

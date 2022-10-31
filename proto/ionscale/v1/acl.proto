@@ -1,11 +1,10 @@
 syntax = "proto3";
 
 package ionscale.v1;
-option go_package = "github.com/jsiebens/ionscale/pkg/gen/ionscale/v1;ionscalev1";
 
 import "google/protobuf/struct.proto";
 
-import "ionscale/v1/ref.proto";
+option go_package = "github.com/jsiebens/ionscale/pkg/gen/ionscale/v1;ionscalev1";
 
 message GetACLPolicyRequest {
   uint64 tailnet_id = 1;
@@ -20,8 +19,7 @@ message SetACLPolicyRequest {
   ACLPolicy policy = 2;
 }
 
-message SetACLPolicyResponse {
-}
+message SetACLPolicyResponse {}
 
 message ACLPolicy {
   map<string, string> hosts = 1;
