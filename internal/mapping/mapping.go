@@ -181,7 +181,7 @@ func ToNode(m *domain.Machine, tailnet *domain.Tailnet, peer bool) (*tailcfg.Nod
 
 		Created: m.CreatedAt.UTC(),
 
-		MachineAuthorized: true,
+		MachineAuthorized: m.Authorized,
 		User:              tailcfg.UserID(m.UserID),
 	}
 

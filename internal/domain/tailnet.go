@@ -11,15 +11,16 @@ import (
 )
 
 type Tailnet struct {
-	ID                       uint64 `gorm:"primary_key"`
-	Name                     string
-	DNSConfig                DNSConfig
-	IAMPolicy                IAMPolicy
-	ACLPolicy                ACLPolicy
-	DERPMap                  DERPMap
-	ServiceCollectionEnabled bool
-	FileSharingEnabled       bool
-	SSHEnabled               bool
+	ID                          uint64 `gorm:"primary_key"`
+	Name                        string
+	DNSConfig                   DNSConfig
+	IAMPolicy                   IAMPolicy
+	ACLPolicy                   ACLPolicy
+	DERPMap                     DERPMap
+	ServiceCollectionEnabled    bool
+	FileSharingEnabled          bool
+	SSHEnabled                  bool
+	MachineAuthorizationEnabled bool
 }
 
 func (t Tailnet) GetDERPMap(ctx context.Context, fallack DefaultDERPMap) (*DERPMap, error) {

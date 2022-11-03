@@ -271,6 +271,11 @@ func (h *AuthenticationHandlers) EndOAuth(c echo.Context) error {
 }
 
 func (h *AuthenticationHandlers) Success(c echo.Context) error {
+	s := c.QueryParam("s")
+	switch s {
+	case "nma":
+		return c.Render(http.StatusOK, "newmachine.html", nil)
+	}
 	return c.Render(http.StatusOK, "success.html", nil)
 }
 
@@ -377,6 +382,7 @@ func (h *AuthenticationHandlers) endMachineRegistrationFlow(c echo.Context, regi
 	var user *domain.User
 	var ephemeral bool
 	var tags = []string{}
+	var authorized = false
 
 	if form.AuthKey != "" {
 		authKey, err := h.repository.LoadAuthKey(ctx, form.AuthKey)
@@ -400,6 +406,7 @@ func (h *AuthenticationHandlers) endMachineRegistrationFlow(c echo.Context, regi
 		user = &authKey.User
 		tags = authKey.Tags
 		ephemeral = authKey.Ephemeral
+		authorized = authKey.PreAuthorized
 	} else {
 		selectedTailnet, err := h.repository.GetTailnet(ctx, form.TailnetID)
 		if err != nil {
@@ -465,6 +472,7 @@ func (h *AuthenticationHandlers) endMachineRegistrationFlow(c echo.Context, regi
 			CreatedAt:         now,
 			ExpiresAt:         now.Add(180 * 24 * time.Hour).UTC(),
 			KeyExpiryDisabled: len(tags) != 0,
+			Authorized:        !tailnet.MachineAuthorizationEnabled || authorized,
 
 			User:    *user,
 			Tailnet: *tailnet,
@@ -521,7 +529,11 @@ func (h *AuthenticationHandlers) endMachineRegistrationFlow(c echo.Context, regi
 		return err
 	}
 
-	return c.Redirect(http.StatusFound, "/a/success")
+	if m.Authorized {
+		return c.Redirect(http.StatusFound, "/a/success")
+	} else {
+		return c.Redirect(http.StatusFound, "/a/success?s=nma")
+	}
 }
 
 func (h *AuthenticationHandlers) exchangeUser(code string) (*auth.User, error) {

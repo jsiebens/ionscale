@@ -161,7 +161,7 @@ func (s *Service) CreateAuthKey(ctx context.Context, req *connect.Request[api.Cr
 
 	tags := domain.SanitizeTags(req.Msg.Tags)
 
-	v, authKey := domain.CreateAuthKey(tailnet, user, req.Msg.Ephemeral, tags, expiresAt)
+	v, authKey := domain.CreateAuthKey(tailnet, user, req.Msg.Ephemeral, req.Msg.PreAuthorized, tags, expiresAt)
 
 	if err := s.repository.SaveAuthKey(ctx, authKey); err != nil {
 		return nil, err
