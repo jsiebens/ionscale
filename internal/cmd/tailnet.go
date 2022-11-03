@@ -41,6 +41,8 @@ func tailnetCommand() *coral.Command {
 	command.AddCommand(disableFileSharingCommand())
 	command.AddCommand(enableSSHCommand())
 	command.AddCommand(disableSSHCommand())
+	command.AddCommand(enableMachineAuthorizationCommand())
+	command.AddCommand(disableMachineAuthorizationCommand())
 	command.AddCommand(getDERPMap())
 	command.AddCommand(setDERPMap())
 	command.AddCommand(resetDERPMap())
@@ -595,6 +597,88 @@ func disableSSHCommand() *coral.Command {
 		}
 
 		if _, err := client.DisableSSH(context.Background(), connect.NewRequest(&req)); err != nil {
+			return err
+		}
+
+		return nil
+	}
+
+	return command
+}
+
+func enableMachineAuthorizationCommand() *coral.Command {
+	command := &coral.Command{
+		Use:          "enable-machine-authorization",
+		Short:        "Enable machine authorization.",
+		SilenceUsage: true,
+	}
+
+	var tailnetID uint64
+	var tailnetName string
+	var target = Target{}
+
+	target.prepareCommand(command)
+	command.Flags().StringVar(&tailnetName, "tailnet", "", "Tailnet name. Mutually exclusive with --tailnet-id.")
+	command.Flags().Uint64Var(&tailnetID, "tailnet-id", 0, "Tailnet ID. Mutually exclusive with --tailnet.")
+
+	command.PreRunE = checkRequiredTailnetAndTailnetIdFlags
+	command.RunE = func(command *coral.Command, args []string) error {
+		client, err := target.createGRPCClient()
+		if err != nil {
+			return err
+		}
+
+		tailnet, err := findTailnet(client, tailnetName, tailnetID)
+		if err != nil {
+			return err
+		}
+
+		req := api.EnableMachineAuthorizationRequest{
+			TailnetId: tailnet.Id,
+		}
+
+		if _, err := client.EnableMachineAuthorization(context.Background(), connect.NewRequest(&req)); err != nil {
+			return err
+		}
+
+		return nil
+	}
+
+	return command
+}
+
+func disableMachineAuthorizationCommand() *coral.Command {
+	command := &coral.Command{
+		Use:          "disable-machine-authorization",
+		Short:        "Disable machine authorization.",
+		SilenceUsage: true,
+	}
+
+	var tailnetID uint64
+	var tailnetName string
+	var target = Target{}
+
+	target.prepareCommand(command)
+	command.Flags().StringVar(&tailnetName, "tailnet", "", "Tailnet name. Mutually exclusive with --tailnet-id.")
+	command.Flags().Uint64Var(&tailnetID, "tailnet-id", 0, "Tailnet ID. Mutually exclusive with --tailnet.")
+
+	command.PreRunE = checkRequiredTailnetAndTailnetIdFlags
+	command.RunE = func(command *coral.Command, args []string) error {
+		client, err := target.createGRPCClient()
+		if err != nil {
+			return err
+		}
+
+		tailnet, err := findTailnet(client, tailnetName, tailnetID)
+		if err != nil {
+			return err
+		}
+
+		req := api.DisableMachineAuthorizationRequest{
+			TailnetId: tailnet.Id,
+		}
+
+		if _, err := client.DisableMachineAuthorization(context.Background(), connect.NewRequest(&req)); err != nil {
 			return err
 		}
 

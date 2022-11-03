@@ -33,6 +33,7 @@ func machineCommands() *coral.Command {
 	command.AddCommand(enableExitNodeCommand())
 	command.AddCommand(disableExitNodeCommand())
 	command.AddCommand(disableMachineKeyExpiryCommand())
+	command.AddCommand(authorizeMachineCommand())
 
 	return command
 }
@@ -95,6 +96,10 @@ func getMachineCommand() *coral.Command {
 		fmt.Fprintf(w, "%s\t%s\n", "Tailscale IPv4", m.Ipv4)
 		fmt.Fprintf(w, "%s\t%s\n", "Tailscale IPv6", m.Ipv6)
 		fmt.Fprintf(w, "%s\t%s\n", "Last seen", lastSeen)
+		fmt.Fprintf(w, "%s\t%v\n", "Ephemeral", m.Ephemeral)
+		if !m.Authorized {
+			fmt.Fprintf(w, "%s\t%v\n", "Authorized", m.Authorized)
+		}
 		fmt.Fprintf(w, "%s\t%s\n", "Key expiry", expiresAt)
 
 		for i, t := range m.Tags {
@@ -211,6 +216,39 @@ func expireMachineCommand() *coral.Command {
 	return command
 }
 
+func authorizeMachineCommand() *coral.Command {
+	command := &coral.Command{
+		Use:          "authorize",
+		Short:        "Authorizes a machine",
+		SilenceUsage: true,
+	}
+
+	var machineID uint64
+	var target = Target{}
+	target.prepareCommand(command)
+	command.Flags().Uint64Var(&machineID, "machine-id", 0, "Machine ID.")
+
+	_ = command.MarkFlagRequired("machine-id")
+
+	command.RunE = func(command *coral.Command, args []string) error {
+		client, err := target.createGRPCClient()
+		if err != nil {
+			return err
+		}
+
+		req := api.AuthorizeMachineRequest{MachineId: machineID}
+		if _, err := client.AuthorizeMachine(context.Background(), connect.NewRequest(&req)); err != nil {
+			return err
+		}
+
+		fmt.Println("Machine authorized.")
+
+		return nil
+	}
+
+	return command
+}
+
 func listMachinesCommand() *coral.Command {
 	command := &coral.Command{
 		Use:          "list",
@@ -245,7 +283,7 @@ func listMachinesCommand() *coral.Command {
 			return err
 		}
 
-		tbl := table.New("ID", "TAILNET", "NAME", "IPv4", "IPv6", "EPHEMERAL", "LAST_SEEN", "TAGS")
+		tbl := table.New("ID", "TAILNET", "NAME", "IPv4", "IPv6", "AUTHORIZED", "EPHEMERAL", "LAST_SEEN", "TAGS")
 		for _, m := range resp.Msg.Machines {
 			var lastSeen = "N/A"
 			if m.Connected {
@@ -256,7 +294,7 @@ func listMachinesCommand() *coral.Command {
 					lastSeen = mom.FromNow()
 				}
 			}
-			tbl.AddRow(m.Id, m.Tailnet.Name, m.Name, m.Ipv4, m.Ipv6, m.Ephemeral, lastSeen, strings.Join(m.Tags, ","))
+			tbl.AddRow(m.Id, m.Tailnet.Name, m.Name, m.Ipv4, m.Ipv6, m.Authorized, m.Ephemeral, lastSeen, strings.Join(m.Tags, ","))
 		}
 		tbl.Print()
 

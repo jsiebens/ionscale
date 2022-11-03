@@ -99,3 +99,15 @@ message DisableSSHRequest {
 }
 
 message DisableSSHResponse {}
+
+message EnableMachineAuthorizationRequest {
+  uint64 tailnet_id = 1;
+}
+
+message EnableMachineAuthorizationResponse {}
+
+message DisableMachineAuthorizationRequest {
+  uint64 tailnet_id = 1;
+}
+
+message DisableMachineAuthorizationResponse {}

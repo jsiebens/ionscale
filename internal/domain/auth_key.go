@@ -11,7 +11,7 @@ import (
 	"time"
 )
 
-func CreateAuthKey(tailnet *Tailnet, user *User, ephemeral bool, tags Tags, expiresAt *time.Time) (string, *AuthKey) {
+func CreateAuthKey(tailnet *Tailnet, user *User, ephemeral bool, preAuthorized bool, tags Tags, expiresAt *time.Time) (string, *AuthKey) {
 	key := util.RandStringBytes(12)
 	pwd := util.RandStringBytes(22)
 	value := fmt.Sprintf("%s_%s", key, pwd)
@@ -22,13 +22,14 @@ func CreateAuthKey(tailnet *Tailnet, user *User, ephemeral bool, tags Tags, expi
 	}
 
 	return value, &AuthKey{
-		ID:        util.NextID(),
-		Key:       key,
-		Hash:      string(hash),
-		Ephemeral: ephemeral,
-		Tags:      tags,
-		CreatedAt: time.Now().UTC(),
-		ExpiresAt: expiresAt,
+		ID:            util.NextID(),
+		Key:           key,
+		Hash:          string(hash),
+		Ephemeral:     ephemeral,
+		PreAuthorized: preAuthorized,
+		Tags:          tags,
+		CreatedAt:     time.Now().UTC(),
+		ExpiresAt:     expiresAt,
 
 		TailnetID: tailnet.ID,
 		UserID:    user.ID,
@@ -36,11 +37,12 @@ func CreateAuthKey(tailnet *Tailnet, user *User, ephemeral bool, tags Tags, expi
 }
 
 type AuthKey struct {
-	ID        uint64 `gorm:"primary_key"`
-	Key       string
-	Hash      string
-	Ephemeral bool
-	Tags      Tags
+	ID            uint64 `gorm:"primary_key"`
+	Key           string
+	Hash          string
+	Ephemeral     bool
+	PreAuthorized bool
+	Tags          Tags
 
 	CreatedAt time.Time
 	ExpiresAt *time.Time

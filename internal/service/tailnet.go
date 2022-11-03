@@ -391,3 +391,51 @@ func (s *Service) DisableSSH(ctx context.Context, req *connect.Request[api.Disab
 
 	return connect.NewResponse(&api.DisableSSHResponse{}), nil
 }
+
+func (s *Service) EnableMachineAuthorization(ctx context.Context, req *connect.Request[api.EnableMachineAuthorizationRequest]) (*connect.Response[api.EnableMachineAuthorizationResponse], error) {
+	principal := CurrentPrincipal(ctx)
+	if !principal.IsSystemAdmin() && !principal.IsTailnetAdmin(req.Msg.TailnetId) {
+		return nil, connect.NewError(connect.CodePermissionDenied, errors.New("permission denied"))
+	}
+
+	tailnet, err := s.repository.GetTailnet(ctx, req.Msg.TailnetId)
+	if err != nil {
+		return nil, err
+	}
+	if tailnet == nil {
+		return nil, connect.NewError(connect.CodeNotFound, errors.New("tailnet not found"))
+	}
+
+	if !tailnet.MachineAuthorizationEnabled {
+		tailnet.MachineAuthorizationEnabled = true
+		if err := s.repository.SaveTailnet(ctx, tailnet); err != nil {
+			return nil, err
+		}
+	}
+
+	return connect.NewResponse(&api.EnableMachineAuthorizationResponse{}), nil
+}
+
+func (s *Service) DisableMachineAuthorization(ctx context.Context, req *connect.Request[api.DisableMachineAuthorizationRequest]) (*connect.Response[api.DisableMachineAuthorizationResponse], error) {
+	principal := CurrentPrincipal(ctx)
+	if !principal.IsSystemAdmin() && !principal.IsTailnetAdmin(req.Msg.TailnetId) {
+		return nil, connect.NewError(connect.CodePermissionDenied, errors.New("permission denied"))
+	}
+
+	tailnet, err := s.repository.GetTailnet(ctx, req.Msg.TailnetId)
+	if err != nil {
+		return nil, err
+	}
+	if tailnet == nil {
+		return nil, connect.NewError(connect.CodeNotFound, errors.New("tailnet not found"))
+	}
+
+	if tailnet.MachineAuthorizationEnabled {
+		tailnet.MachineAuthorizationEnabled = false
+		if err := s.repository.SaveTailnet(ctx, tailnet); err != nil {
+			return nil, err
+		}
+	}
+
+	return connect.NewResponse(&api.DisableMachineAuthorizationResponse{}), nil
+}

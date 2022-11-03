@@ -21,6 +21,7 @@ message CreateAuthKeyRequest {
   bool ephemeral = 2;
   optional google.protobuf.Duration expiry = 3;
   repeated string tags = 4;
+  bool pre_authorized = 5;
 }
 
 message CreateAuthKeyResponse {

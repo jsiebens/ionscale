@@ -197,6 +197,7 @@ func (h *RegistrationHandlers) authenticateMachineWithAuthKey(c echo.Context, bi
 			CreatedAt:         now,
 			ExpiresAt:         now.Add(180 * 24 * time.Hour).UTC(),
 			KeyExpiryDisabled: len(tags) != 0,
+			Authorized:        !tailnet.MachineAuthorizationEnabled || authKey.PreAuthorized,
 
 			User:    user,
 			Tailnet: tailnet,

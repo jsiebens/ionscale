@@ -57,6 +57,7 @@ func (s *Service) machineToApi(m *domain.Machine) *api.Machine {
 		EnabledRoutes:      m.AllowedPrefixes(),
 		AdvertisedExitNode: m.IsAdvertisedExitNode(),
 		EnabledExitNode:    m.IsAllowedExitNode(),
+		Authorized:         m.Authorized,
 	}
 }
 
@@ -158,6 +159,34 @@ func (s *Service) ExpireMachine(ctx context.Context, req *connect.Request[api.Ex
 	s.pubsub.Publish(m.TailnetID, &broker.Signal{PeerUpdated: &m.ID})
 
 	return connect.NewResponse(&api.ExpireMachineResponse{}), nil
+}
+
+func (s *Service) AuthorizeMachine(ctx context.Context, req *connect.Request[api.AuthorizeMachineRequest]) (*connect.Response[api.AuthorizeMachineResponse], error) {
+	principal := CurrentPrincipal(ctx)
+
+	m, err := s.repository.GetMachine(ctx, req.Msg.MachineId)
+	if err != nil {
+		return nil, err
+	}
+
+	if m == nil {
+		return nil, connect.NewError(connect.CodeNotFound, errors.New("machine not found"))
+	}
+
+	if !principal.IsSystemAdmin() && !principal.IsTailnetAdmin(m.TailnetID) {
+		return nil, connect.NewError(connect.CodePermissionDenied, errors.New("permission denied"))
+	}
+
+	if !m.Authorized {
+		m.Authorized = true
+		if err := s.repository.SaveMachine(ctx, m); err != nil {
+			return nil, err
+		}
+	}
+
+	s.pubsub.Publish(m.TailnetID, &broker.Signal{PeerUpdated: &m.ID})
+
+	return connect.NewResponse(&api.AuthorizeMachineResponse{}), nil
 }
 
 func (s *Service) GetMachineRoutes(ctx context.Context, req *connect.Request[api.GetMachineRoutesRequest]) (*connect.Response[api.GetMachineRoutesResponse], error) {

@@ -24,6 +24,7 @@ type Machine struct {
 	RegisteredTags    Tags
 	Tags              Tags
 	KeyExpiryDisabled bool
+	Authorized        bool
 
 	HostInfo     HostInfo
 	Endpoints    Endpoints

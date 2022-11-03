@@ -42,6 +42,12 @@ message GetMachineResponse {
   Machine machine = 1;
 }
 
+message AuthorizeMachineRequest {
+  uint64 machine_id = 1;
+}
+
+message AuthorizeMachineResponse {}
+
 message Machine {
   uint64 id = 1;
   string name = 2;
@@ -63,6 +69,7 @@ message Machine {
   repeated string advertised_routes = 18;
   bool advertised_exit_node = 19;
   bool enabled_exit_node = 20;
+  bool authorized = 21;
 }
 
 message ClientConnectivity {
