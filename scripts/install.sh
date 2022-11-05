@@ -30,7 +30,7 @@ setup_env() {
     fatal "env variable IONSCALE_ACME_EMAIL is undefined"
   fi
 
-  IONSCALE_VERSION=v0.4.0
+  IONSCALE_VERSION=v0.6.0
   IONSCALE_DATA_DIR=/var/lib/ionscale
   IONSCALE_CONFIG_DIR=/etc/ionscale
   IONSCALE_SERVICE_FILE=/etc/systemd/system/ionscale.service
@@ -94,7 +94,9 @@ create_folders_and_config() {
   $SUDO mkdir --parents ${IONSCALE_CONFIG_DIR}
 
   if [ ! -f "/etc/default/ionscale" ]; then
-    $SUDO echo "IONSCALE_KEYS_SYSTEM_ADMIN_KEY=$($BIN_DIR/ionscale genkey -n)" >> /etc/default/ionscale
+    $SUDO tee /etc/default/ionscale >/dev/null <<EOF
+IONSCALE_KEYS_SYSTEM_ADMIN_KEY=$($BIN_DIR/ionscale genkey -n)
+EOF
   fi
 
     $SUDO tee ${IONSCALE_CONFIG_DIR}/config.yaml >/dev/null <<EOF
