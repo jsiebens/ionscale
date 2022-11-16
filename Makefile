@@ -12,3 +12,6 @@ format:
 
 lint:
 	buf lint proto
+
+breaking:
+	buf breaking proto --against https://github.com/jsiebens/ionscale.git#subdir=proto
