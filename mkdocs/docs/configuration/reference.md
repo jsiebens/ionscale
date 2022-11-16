@@ -93,8 +93,6 @@ dns:
     name: ""
     # DNS zone
     zone: ""
-    # DNS subdomain
-    subdomain: ""
     # Provider specific configuration
     config: {}
 
