@@ -2,27 +2,27 @@ package service
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"github.com/bufbuild/connect-go"
 	"github.com/jsiebens/ionscale/internal/broker"
 	"github.com/jsiebens/ionscale/internal/config"
 	"github.com/jsiebens/ionscale/internal/domain"
+	"github.com/jsiebens/ionscale/internal/errors"
 	api "github.com/jsiebens/ionscale/pkg/gen/ionscale/v1"
 )
 
 func (s *Service) GetDNSConfig(ctx context.Context, req *connect.Request[api.GetDNSConfigRequest]) (*connect.Response[api.GetDNSConfigResponse], error) {
 	principal := CurrentPrincipal(ctx)
 	if !principal.IsSystemAdmin() && !principal.IsTailnetAdmin(req.Msg.TailnetId) {
-		return nil, connect.NewError(connect.CodePermissionDenied, errors.New("permission denied"))
+		return nil, connect.NewError(connect.CodePermissionDenied, fmt.Errorf("permission denied"))
 	}
 
 	tailnet, err := s.repository.GetTailnet(ctx, req.Msg.TailnetId)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, 0)
 	}
 	if tailnet == nil {
-		return nil, connect.NewError(connect.CodeNotFound, errors.New("tailnet not found"))
+		return nil, connect.NewError(connect.CodeNotFound, fmt.Errorf("tailnet not found"))
 	}
 
 	dnsConfig := tailnet.DNSConfig
@@ -44,17 +44,17 @@ func (s *Service) GetDNSConfig(ctx context.Context, req *connect.Request[api.Get
 func (s *Service) SetDNSConfig(ctx context.Context, req *connect.Request[api.SetDNSConfigRequest]) (*connect.Response[api.SetDNSConfigResponse], error) {
 	principal := CurrentPrincipal(ctx)
 	if !principal.IsSystemAdmin() && !principal.IsTailnetAdmin(req.Msg.TailnetId) {
-		return nil, connect.NewError(connect.CodePermissionDenied, errors.New("permission denied"))
+		return nil, connect.NewError(connect.CodePermissionDenied, fmt.Errorf("permission denied"))
 	}
 
 	dnsConfig := req.Msg.Config
 
 	tailnet, err := s.repository.GetTailnet(ctx, req.Msg.TailnetId)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, 0)
 	}
 	if tailnet == nil {
-		return nil, connect.NewError(connect.CodeNotFound, errors.New("tailnet not found"))
+		return nil, connect.NewError(connect.CodeNotFound, fmt.Errorf("tailnet not found"))
 	}
 
 	tailnet.DNSConfig = domain.DNSConfig{
@@ -65,7 +65,7 @@ func (s *Service) SetDNSConfig(ctx context.Context, req *connect.Request[api.Set
 	}
 
 	if err := s.repository.SaveTailnet(ctx, tailnet); err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, 0)
 	}
 
 	s.pubsub.Publish(tailnet.ID, &broker.Signal{DNSUpdated: true})
@@ -78,24 +78,24 @@ func (s *Service) SetDNSConfig(ctx context.Context, req *connect.Request[api.Set
 func (s *Service) EnableHttpsCertificates(ctx context.Context, req *connect.Request[api.EnableHttpsCertificatesRequest]) (*connect.Response[api.EnableHttpsCertificatesResponse], error) {
 	principal := CurrentPrincipal(ctx)
 	if !principal.IsSystemAdmin() && !principal.IsTailnetAdmin(req.Msg.TailnetId) {
-		return nil, connect.NewError(connect.CodePermissionDenied, errors.New("permission denied"))
+		return nil, connect.NewError(connect.CodePermissionDenied, fmt.Errorf("permission denied"))
 	}
 
 	tailnet, err := s.repository.GetTailnet(ctx, req.Msg.TailnetId)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, 0)
 	}
 	if tailnet == nil {
-		return nil, connect.NewError(connect.CodeNotFound, errors.New("tailnet not found"))
+		return nil, connect.NewError(connect.CodeNotFound, fmt.Errorf("tailnet not found"))
 	}
 
 	if !tailnet.DNSConfig.MagicDNS {
-		return nil, connect.NewError(connect.CodeFailedPrecondition, errors.New("MagicDNS must be enabled for this tailnet"))
+		return nil, connect.NewError(connect.CodeFailedPrecondition, fmt.Errorf("MagicDNS must be enabled for this tailnet"))
 	}
 
 	tailnet.DNSConfig.HttpsCertsEnabled = true
 	if err := s.repository.SaveTailnet(ctx, tailnet); err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, 0)
 	}
 
 	s.pubsub.Publish(tailnet.ID, &broker.Signal{DNSUpdated: true})
@@ -106,21 +106,21 @@ func (s *Service) EnableHttpsCertificates(ctx context.Context, req *connect.Requ
 func (s *Service) DisableHttpsCertificates(ctx context.Context, req *connect.Request[api.DisableHttpsCertificatesRequest]) (*connect.Response[api.DisableHttpsCertificatesResponse], error) {
 	principal := CurrentPrincipal(ctx)
 	if !principal.IsSystemAdmin() && !principal.IsTailnetAdmin(req.Msg.TailnetId) {
-		return nil, connect.NewError(connect.CodePermissionDenied, errors.New("permission denied"))
+		return nil, connect.NewError(connect.CodePermissionDenied, fmt.Errorf("permission denied"))
 	}
 
 	tailnet, err := s.repository.GetTailnet(ctx, req.Msg.TailnetId)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, 0)
 	}
 	if tailnet == nil {
-		return nil, connect.NewError(connect.CodeNotFound, errors.New("tailnet not found"))
+		return nil, connect.NewError(connect.CodeNotFound, fmt.Errorf("tailnet not found"))
 	}
 
 	tailnet.DNSConfig.HttpsCertsEnabled = false
 
 	if err := s.repository.SaveTailnet(ctx, tailnet); err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, 0)
 	}
 
 	s.pubsub.Publish(tailnet.ID, &broker.Signal{DNSUpdated: true})

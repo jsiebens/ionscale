@@ -2,9 +2,10 @@ package service
 
 import (
 	"context"
-	"errors"
+	"fmt"
 	"github.com/bufbuild/connect-go"
 	"github.com/jsiebens/ionscale/internal/domain"
+	"github.com/jsiebens/ionscale/internal/errors"
 	api "github.com/jsiebens/ionscale/pkg/gen/ionscale/v1"
 	"google.golang.org/protobuf/types/known/timestamppb"
 	"time"
@@ -15,15 +16,15 @@ func (s *Service) GetAuthKey(ctx context.Context, req *connect.Request[api.GetAu
 
 	key, err := s.repository.GetAuthKey(ctx, req.Msg.AuthKeyId)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, 0)
 	}
 
 	if key == nil {
-		return nil, connect.NewError(connect.CodeNotFound, errors.New("auth key not found"))
+		return nil, connect.NewError(connect.CodeNotFound, fmt.Errorf("auth key not found"))
 	}
 
 	if !principal.IsSystemAdmin() && !principal.IsTailnetAdmin(key.TailnetID) {
-		return nil, connect.NewError(connect.CodePermissionDenied, errors.New("permission denied"))
+		return nil, connect.NewError(connect.CodePermissionDenied, fmt.Errorf("permission denied"))
 	}
 
 	var expiresAt *timestamppb.Timestamp
@@ -74,16 +75,16 @@ func mapAuthKeysToApi(authKeys []domain.AuthKey) []*api.AuthKey {
 func (s *Service) ListAuthKeys(ctx context.Context, req *connect.Request[api.ListAuthKeysRequest]) (*connect.Response[api.ListAuthKeysResponse], error) {
 	principal := CurrentPrincipal(ctx)
 	if !principal.IsSystemAdmin() && !principal.IsTailnetAdmin(req.Msg.TailnetId) {
-		return nil, connect.NewError(connect.CodePermissionDenied, errors.New("permission denied"))
+		return nil, connect.NewError(connect.CodePermissionDenied, fmt.Errorf("permission denied"))
 	}
 
 	tailnet, err := s.repository.GetTailnet(ctx, req.Msg.TailnetId)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, 0)
 	}
 
 	if tailnet == nil {
-		return nil, connect.NewError(connect.CodeNotFound, errors.New("tailnet not found"))
+		return nil, connect.NewError(connect.CodeNotFound, fmt.Errorf("tailnet not found"))
 	}
 
 	response := api.ListAuthKeysResponse{}
@@ -91,7 +92,7 @@ func (s *Service) ListAuthKeys(ctx context.Context, req *connect.Request[api.Lis
 	if principal.IsSystemAdmin() {
 		authKeys, err := s.repository.ListAuthKeys(ctx, req.Msg.TailnetId)
 		if err != nil {
-			return nil, err
+			return nil, errors.Wrap(err, 0)
 		}
 
 		response.AuthKeys = mapAuthKeysToApi(authKeys)
@@ -101,7 +102,7 @@ func (s *Service) ListAuthKeys(ctx context.Context, req *connect.Request[api.Lis
 	if principal.User != nil {
 		authKeys, err := s.repository.ListAuthKeysByTailnetAndUser(ctx, req.Msg.TailnetId, principal.User.ID)
 		if err != nil {
-			return nil, err
+			return nil, errors.Wrap(err, 0)
 		}
 
 		response.AuthKeys = mapAuthKeysToApi(authKeys)
@@ -114,11 +115,11 @@ func (s *Service) ListAuthKeys(ctx context.Context, req *connect.Request[api.Lis
 func (s *Service) CreateAuthKey(ctx context.Context, req *connect.Request[api.CreateAuthKeyRequest]) (*connect.Response[api.CreateAuthKeyResponse], error) {
 	principal := CurrentPrincipal(ctx)
 	if !principal.IsSystemAdmin() && !principal.IsTailnetAdmin(req.Msg.TailnetId) {
-		return nil, connect.NewError(connect.CodePermissionDenied, errors.New("permission denied"))
+		return nil, connect.NewError(connect.CodePermissionDenied, fmt.Errorf("permission denied"))
 	}
 
 	if principal.User == nil && len(req.Msg.Tags) == 0 {
-		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("at least one tag is required when creating an auth key"))
+		return nil, connect.NewError(connect.CodeInvalidArgument, fmt.Errorf("at least one tag is required when creating an auth key"))
 	}
 
 	if err := domain.CheckTags(req.Msg.Tags); err != nil {
@@ -127,11 +128,11 @@ func (s *Service) CreateAuthKey(ctx context.Context, req *connect.Request[api.Cr
 
 	tailnet, err := s.repository.GetTailnet(ctx, req.Msg.TailnetId)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, 0)
 	}
 
 	if tailnet == nil {
-		return nil, connect.NewError(connect.CodeNotFound, errors.New("tailnet not found"))
+		return nil, connect.NewError(connect.CodeNotFound, fmt.Errorf("tailnet not found"))
 	}
 
 	if !principal.IsSystemAdmin() {
@@ -154,7 +155,7 @@ func (s *Service) CreateAuthKey(ctx context.Context, req *connect.Request[api.Cr
 	if user == nil {
 		u, _, err := s.repository.GetOrCreateServiceUser(ctx, tailnet)
 		if err != nil {
-			return nil, err
+			return nil, errors.Wrap(err, 0)
 		}
 		user = u
 	}
@@ -164,7 +165,7 @@ func (s *Service) CreateAuthKey(ctx context.Context, req *connect.Request[api.Cr
 	v, authKey := domain.CreateAuthKey(tailnet, user, req.Msg.Ephemeral, req.Msg.PreAuthorized, tags, expiresAt)
 
 	if err := s.repository.SaveAuthKey(ctx, authKey); err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, 0)
 	}
 
 	response := api.CreateAuthKeyResponse{
@@ -190,19 +191,19 @@ func (s *Service) DeleteAuthKey(ctx context.Context, req *connect.Request[api.De
 
 	key, err := s.repository.GetAuthKey(ctx, req.Msg.AuthKeyId)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, 0)
 	}
 
 	if key == nil {
-		return nil, connect.NewError(connect.CodeNotFound, errors.New("auth key not found"))
+		return nil, connect.NewError(connect.CodeNotFound, fmt.Errorf("auth key not found"))
 	}
 
 	if !principal.IsSystemAdmin() && !principal.IsTailnetAdmin(key.UserID) {
-		return nil, connect.NewError(connect.CodePermissionDenied, errors.New("permission denied"))
+		return nil, connect.NewError(connect.CodePermissionDenied, fmt.Errorf("permission denied"))
 	}
 
 	if _, err := s.repository.DeleteAuthKey(ctx, req.Msg.AuthKeyId); err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, 0)
 	}
 	return connect.NewResponse(&api.DeleteAuthKeyResponse{}), nil
 }

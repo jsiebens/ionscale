@@ -92,16 +92,22 @@ func Start(c *config.Config) error {
 		return err
 	}
 
-	createPeerHandler := func(p key.MachinePublic) http.Handler {
-		registrationHandlers := handlers.NewRegistrationHandlers(bind.DefaultBinder(p), c, brokers, repository)
-		pollNetMapHandler := handlers.NewPollNetMapHandler(bind.DefaultBinder(p), brokers, repository, offlineTimers)
-		dnsHandlers := handlers.NewDNSHandlers(bind.DefaultBinder(p), dnsProvider)
-		idTokenHandlers := handlers.NewIDTokenHandlers(bind.DefaultBinder(p), c, repository)
-		sshActionHandlers := handlers.NewSSHActionHandlers(bind.DefaultBinder(p), c, repository)
+	p := echo_prometheus.NewPrometheus("http", nil)
+
+	metricsHandler := echo.New()
+	p.SetMetricsPath(metricsHandler)
+
+	createPeerHandler := func(machinePublicKey key.MachinePublic) http.Handler {
+		binder := bind.DefaultBinder(machinePublicKey)
+
+		registrationHandlers := handlers.NewRegistrationHandlers(binder, c, brokers, repository)
+		pollNetMapHandler := handlers.NewPollNetMapHandler(binder, brokers, repository, offlineTimers)
+		dnsHandlers := handlers.NewDNSHandlers(binder, dnsProvider)
+		idTokenHandlers := handlers.NewIDTokenHandlers(binder, c, repository)
+		sshActionHandlers := handlers.NewSSHActionHandlers(binder, c, repository)
 
 		e := echo.New()
-		e.Use(EchoLogger(logger))
-		e.Use(EchoRecover(logger))
+		e.Use(EchoMetrics(p), EchoLogger(logger), EchoErrorHandler(logger), EchoRecover(logger))
 		e.POST("/machine/register", registrationHandlers.Register)
 		e.POST("/machine/map", pollNetMapHandler.PollNetMap)
 		e.POST("/machine/set-dns", dnsHandlers.SetDNS)
@@ -125,22 +131,17 @@ func Start(c *config.Config) error {
 	)
 
 	rpcService := service.NewService(c, authProvider, repository, brokers)
-	rpcPath, rpcHandler := NewRpcHandler(serverKey.SystemAdminKey, repository, rpcService)
-
-	p := echo_prometheus.NewPrometheus("http", nil)
-
-	metricsHandler := echo.New()
-	p.SetMetricsPath(metricsHandler)
+	rpcPath, rpcHandler := NewRpcHandler(serverKey.SystemAdminKey, repository, logger, rpcService)
 
 	nonTlsAppHandler := echo.New()
-	nonTlsAppHandler.Use(EchoMetrics(p), EchoLogger(logger), EchoRecover(logger))
+	nonTlsAppHandler.Use(EchoMetrics(p), EchoLogger(logger), EchoErrorHandler(logger), EchoRecover(logger))
 	nonTlsAppHandler.POST("/ts2021", noiseHandlers.Upgrade)
 	nonTlsAppHandler.Any("/*", handlers.HttpRedirectHandler(c.Tls))
 
 	tlsAppHandler := echo.New()
 	tlsAppHandler.Renderer = templates.NewTemplates()
 	tlsAppHandler.Pre(handlers.HttpsRedirect(c.Tls))
-	tlsAppHandler.Use(EchoMetrics(p), EchoLogger(logger), EchoRecover(logger))
+	tlsAppHandler.Use(EchoMetrics(p), EchoLogger(logger), EchoErrorHandler(logger), EchoRecover(logger))
 
 	tlsAppHandler.Any("/*", handlers.IndexHandler(http.StatusNotFound))
 	tlsAppHandler.Any("/", handlers.IndexHandler(http.StatusOK))

@@ -5,6 +5,7 @@ import (
 	"github.com/jsiebens/ionscale/internal/bind"
 	"github.com/jsiebens/ionscale/internal/config"
 	"github.com/jsiebens/ionscale/internal/domain"
+	"github.com/jsiebens/ionscale/internal/errors"
 	"github.com/jsiebens/ionscale/internal/util"
 	"github.com/labstack/echo/v4"
 	"net/http"
@@ -36,12 +37,12 @@ func (h *SSHActionHandlers) StartAuth(c echo.Context) error {
 
 	binder, err := h.createBinder(c)
 	if err != nil {
-		return err
+		return errors.Wrap(err, 0)
 	}
 
 	data := new(sshActionRequestData)
 	if err = c.Bind(data); err != nil {
-		return c.String(http.StatusBadRequest, "bad request")
+		return errors.Wrap(err, 0)
 	}
 
 	key := util.RandStringBytes(8)
@@ -55,7 +56,7 @@ func (h *SSHActionHandlers) StartAuth(c echo.Context) error {
 	authUrl := h.config.CreateUrl("/a/s/%s", key)
 
 	if err := h.repository.SaveSSHActionRequest(ctx, request); err != nil {
-		return err
+		return errors.Wrap(err, 0)
 	}
 
 	resp := &tailcfg.SSHAction{
@@ -73,7 +74,7 @@ func (h *SSHActionHandlers) CheckAuth(c echo.Context) error {
 
 	binder, err := h.createBinder(c)
 	if err != nil {
-		return err
+		return errors.Wrap(err, 0)
 	}
 
 	tick := time.NewTicker(2 * time.Second)

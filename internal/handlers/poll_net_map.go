@@ -6,6 +6,7 @@ import (
 	"github.com/jsiebens/ionscale/internal/broker"
 	"github.com/jsiebens/ionscale/internal/config"
 	"github.com/jsiebens/ionscale/internal/domain"
+	"github.com/jsiebens/ionscale/internal/errors"
 	"github.com/jsiebens/ionscale/internal/mapping"
 	"github.com/labstack/echo/v4"
 	"net/http"
@@ -41,12 +42,12 @@ func (h *PollNetMapHandler) PollNetMap(c echo.Context) error {
 	ctx := c.Request().Context()
 	binder, err := h.createBinder(c)
 	if err != nil {
-		return err
+		return errors.Wrap(err, 0)
 	}
 
 	req := &tailcfg.MapRequest{}
 	if err := binder.BindRequest(c, req); err != nil {
-		return err
+		return errors.Wrap(err, 0)
 	}
 
 	machineKey := binder.Peer().String()
@@ -55,7 +56,7 @@ func (h *PollNetMapHandler) PollNetMap(c echo.Context) error {
 	var m *domain.Machine
 	m, err = h.repository.GetMachineByKeys(ctx, machineKey, nodeKey)
 	if err != nil {
-		return err
+		return errors.Wrap(err, 0)
 	}
 
 	if m == nil {
@@ -80,7 +81,7 @@ func (h *PollNetMapHandler) handleUpdate(c echo.Context, binder bind.Binder, m *
 	m.LastSeen = &now
 
 	if err := h.repository.SaveMachine(ctx, m); err != nil {
-		return err
+		return errors.Wrap(err, 0)
 	}
 
 	tailnetID := m.TailnetID
@@ -97,14 +98,14 @@ func (h *PollNetMapHandler) handleUpdate(c echo.Context, binder bind.Binder, m *
 
 	response, syncedPeers, derpMapChecksum, err := h.createMapResponse(m, binder, mapRequest, false, make(map[uint64]bool), derpMapChecksum)
 	if err != nil {
-		return err
+		return errors.Wrap(err, 0)
 	}
 
 	updateChan := make(chan *broker.Signal, 20)
 
 	unsubscribe, err := h.brokers.Subscribe(tailnetID, updateChan)
 	if err != nil {
-		return err
+		return errors.Wrap(err, 0)
 	}
 	h.cancelOfflineMessage(machineID)
 
@@ -113,7 +114,7 @@ func (h *PollNetMapHandler) handleUpdate(c echo.Context, binder bind.Binder, m *
 
 	keepAliveResponse, err := h.createKeepAliveResponse(binder, mapRequest)
 	if err != nil {
-		return err
+		return errors.Wrap(err, 0)
 	}
 	keepAliveTicker := time.NewTicker(config.KeepAliveInterval())
 	syncTicker := time.NewTicker(5 * time.Second)
@@ -121,7 +122,7 @@ func (h *PollNetMapHandler) handleUpdate(c echo.Context, binder bind.Binder, m *
 	c.Response().WriteHeader(http.StatusOK)
 
 	if _, err := c.Response().Write(response); err != nil {
-		return err
+		return errors.Wrap(err, 0)
 	}
 	c.Response().Flush()
 
@@ -146,7 +147,7 @@ func (h *PollNetMapHandler) handleUpdate(c echo.Context, binder bind.Binder, m *
 		case <-keepAliveTicker.C:
 			if mapRequest.KeepAlive {
 				if _, err := c.Response().Write(keepAliveResponse); err != nil {
-					return err
+					return errors.Wrap(err, 0)
 				}
 				_ = h.repository.SetMachineLastSeen(ctx, machineID)
 				c.Response().Flush()
@@ -155,7 +156,7 @@ func (h *PollNetMapHandler) handleUpdate(c echo.Context, binder bind.Binder, m *
 			if latestSync.Before(latestUpdate) {
 				machine, err := h.repository.GetMachine(ctx, machineID)
 				if err != nil {
-					return err
+					return errors.Wrap(err, 0)
 				}
 				if machine == nil {
 					return nil
@@ -171,7 +172,7 @@ func (h *PollNetMapHandler) handleUpdate(c echo.Context, binder bind.Binder, m *
 				}
 
 				if _, err := c.Response().Write(payload); err != nil {
-					return err
+					return errors.Wrap(err, 0)
 				}
 				c.Response().Flush()
 
@@ -190,16 +191,16 @@ func (h *PollNetMapHandler) handleReadOnly(c echo.Context, binder bind.Binder, m
 	m.DiscoKey = request.DiscoKey.String()
 
 	if err := h.repository.SaveMachine(ctx, m); err != nil {
-		return err
+		return errors.Wrap(err, 0)
 	}
 
 	response, _, _, err := h.createMapResponse(m, binder, request, false, map[uint64]bool{}, "")
 	if err != nil {
-		return err
+		return errors.Wrap(err, 0)
 	}
 
 	_, err = c.Response().Write(response)
-	return err
+	return errors.Wrap(err, 0)
 }
 
 func (h *PollNetMapHandler) scheduleOfflineMessage(tailnetID, machineID uint64) {

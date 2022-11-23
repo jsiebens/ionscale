@@ -4,7 +4,9 @@ import (
 	"context"
 	"fmt"
 	"github.com/bufbuild/connect-go"
+	"github.com/hashicorp/go-hclog"
 	"github.com/jsiebens/ionscale/internal/domain"
+	"github.com/jsiebens/ionscale/internal/errors"
 	"github.com/jsiebens/ionscale/internal/key"
 	"github.com/jsiebens/ionscale/internal/token"
 	"strings"
@@ -74,4 +76,56 @@ func exchangeToken(ctx context.Context, systemAdminKey *key.ServerPrivate, repos
 	}
 
 	return nil
+}
+
+func NewErrorInterceptor(logger hclog.Logger) *ErrorInterceptor {
+	return &ErrorInterceptor{
+		logger: logger,
+	}
+}
+
+type ErrorInterceptor struct {
+	logger hclog.Logger
+}
+
+func (e *ErrorInterceptor) handleError(err error) error {
+	if err == nil {
+		return err
+	}
+
+	switch t := err.(type) {
+	case *connect.Error:
+		return err
+	case *errors.Error:
+		e.logger.Error("error processing grpc request",
+			"err", t.Cause,
+			"location", t.Location,
+		)
+		return connect.NewError(connect.CodeInternal, fmt.Errorf("internal server error"))
+	default:
+		e.logger.Error("error processing grpc request",
+			"err", err,
+		)
+		return connect.NewError(connect.CodeInternal, fmt.Errorf("internal server error"))
+	}
+
+}
+func (e *ErrorInterceptor) WrapUnary(next connect.UnaryFunc) connect.UnaryFunc {
+	return func(ctx context.Context, request connect.AnyRequest) (connect.AnyResponse, error) {
+		response, err := next(ctx, request)
+		return response, e.handleError(err)
+	}
+}
+
+func (e *ErrorInterceptor) WrapStreamingClient(next connect.StreamingClientFunc) connect.StreamingClientFunc {
+	return func(ctx context.Context, spec connect.Spec) connect.StreamingClientConn {
+		return next(ctx, spec)
+	}
+}
+
+func (e *ErrorInterceptor) WrapStreamingHandler(next connect.StreamingHandlerFunc) connect.StreamingHandlerFunc {
+	return func(ctx context.Context, conn connect.StreamingHandlerConn) error {
+		err := next(ctx, conn)
+		return e.handleError(err)
+	}
 }

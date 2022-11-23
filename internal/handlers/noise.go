@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"github.com/jsiebens/ionscale/internal/errors"
 	"github.com/labstack/echo/v4"
 	"golang.org/x/net/http2"
 	"golang.org/x/net/http2/h2c"
@@ -27,7 +28,7 @@ func NewNoiseHandlers(controlKey key.MachinePrivate, createPeerHandler CreatePee
 func (h *NoiseHandlers) Upgrade(c echo.Context) error {
 	conn, err := controlhttp.AcceptHTTP(c.Request().Context(), c.Response(), c.Request(), h.controlKey)
 	if err != nil {
-		return err
+		return errors.Wrap(err, 0)
 	}
 
 	handler := h.createPeerHandler(conn.Peer())
