@@ -2,22 +2,22 @@ package service
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"github.com/bufbuild/connect-go"
 	"github.com/jsiebens/ionscale/internal/domain"
+	"github.com/jsiebens/ionscale/internal/errors"
 	api "github.com/jsiebens/ionscale/pkg/gen/ionscale/v1"
 )
 
 func (s *Service) GetIAMPolicy(ctx context.Context, req *connect.Request[api.GetIAMPolicyRequest]) (*connect.Response[api.GetIAMPolicyResponse], error) {
 	principal := CurrentPrincipal(ctx)
 	if !principal.IsSystemAdmin() && !principal.IsTailnetAdmin(req.Msg.TailnetId) {
-		return nil, connect.NewError(connect.CodePermissionDenied, errors.New("permission denied"))
+		return nil, connect.NewError(connect.CodePermissionDenied, fmt.Errorf("permission denied"))
 	}
 
 	tailnet, err := s.repository.GetTailnet(ctx, req.Msg.TailnetId)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, 0)
 	}
 	if tailnet == nil {
 		return nil, connect.NewError(connect.CodeNotFound, fmt.Errorf("tailnet does not exist"))
@@ -36,12 +36,12 @@ func (s *Service) GetIAMPolicy(ctx context.Context, req *connect.Request[api.Get
 func (s *Service) SetIAMPolicy(ctx context.Context, req *connect.Request[api.SetIAMPolicyRequest]) (*connect.Response[api.SetIAMPolicyResponse], error) {
 	principal := CurrentPrincipal(ctx)
 	if !principal.IsSystemAdmin() && !principal.IsTailnetAdmin(req.Msg.TailnetId) {
-		return nil, connect.NewError(connect.CodePermissionDenied, errors.New("permission denied"))
+		return nil, connect.NewError(connect.CodePermissionDenied, fmt.Errorf("permission denied"))
 	}
 
 	tailnet, err := s.repository.GetTailnet(ctx, req.Msg.TailnetId)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, 0)
 	}
 	if tailnet == nil {
 		return nil, connect.NewError(connect.CodeNotFound, fmt.Errorf("tailnet does not exist"))
@@ -55,7 +55,7 @@ func (s *Service) SetIAMPolicy(ctx context.Context, req *connect.Request[api.Set
 	}
 
 	if err := s.repository.SaveTailnet(ctx, tailnet); err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, 0)
 	}
 
 	return connect.NewResponse(&api.SetIAMPolicyResponse{}), nil

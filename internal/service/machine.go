@@ -2,12 +2,12 @@ package service
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"github.com/bufbuild/connect-go"
 	"github.com/jsiebens/ionscale/internal/broker"
 	"github.com/jsiebens/ionscale/internal/config"
 	"github.com/jsiebens/ionscale/internal/domain"
+	"github.com/jsiebens/ionscale/internal/errors"
 	api "github.com/jsiebens/ionscale/pkg/gen/ionscale/v1"
 	"google.golang.org/protobuf/types/known/timestamppb"
 	"net/netip"
@@ -64,20 +64,20 @@ func (s *Service) machineToApi(m *domain.Machine) *api.Machine {
 func (s *Service) ListMachines(ctx context.Context, req *connect.Request[api.ListMachinesRequest]) (*connect.Response[api.ListMachinesResponse], error) {
 	principal := CurrentPrincipal(ctx)
 	if !principal.IsSystemAdmin() && !principal.IsTailnetAdmin(req.Msg.TailnetId) {
-		return nil, connect.NewError(connect.CodePermissionDenied, errors.New("permission denied"))
+		return nil, connect.NewError(connect.CodePermissionDenied, fmt.Errorf("permission denied"))
 	}
 
 	tailnet, err := s.repository.GetTailnet(ctx, req.Msg.TailnetId)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, 0)
 	}
 	if tailnet == nil {
-		return nil, connect.NewError(connect.CodeNotFound, errors.New("tailnet not found"))
+		return nil, connect.NewError(connect.CodeNotFound, fmt.Errorf("tailnet not found"))
 	}
 
 	machines, err := s.repository.ListMachineByTailnet(ctx, tailnet.ID)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, 0)
 	}
 
 	response := &api.ListMachinesResponse{}
@@ -93,15 +93,15 @@ func (s *Service) GetMachine(ctx context.Context, req *connect.Request[api.GetMa
 
 	m, err := s.repository.GetMachine(ctx, req.Msg.MachineId)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, 0)
 	}
 
 	if m == nil {
-		return nil, connect.NewError(connect.CodeNotFound, errors.New("machine not found"))
+		return nil, connect.NewError(connect.CodeNotFound, fmt.Errorf("machine not found"))
 	}
 
 	if !principal.IsSystemAdmin() && !principal.IsTailnetAdmin(m.TailnetID) {
-		return nil, connect.NewError(connect.CodePermissionDenied, errors.New("permission denied"))
+		return nil, connect.NewError(connect.CodePermissionDenied, fmt.Errorf("permission denied"))
 	}
 
 	return connect.NewResponse(&api.GetMachineResponse{Machine: s.machineToApi(m)}), nil
@@ -112,19 +112,19 @@ func (s *Service) DeleteMachine(ctx context.Context, req *connect.Request[api.De
 
 	m, err := s.repository.GetMachine(ctx, req.Msg.MachineId)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, 0)
 	}
 
 	if m == nil {
-		return nil, connect.NewError(connect.CodeNotFound, errors.New("machine not found"))
+		return nil, connect.NewError(connect.CodeNotFound, fmt.Errorf("machine not found"))
 	}
 
 	if !principal.IsSystemAdmin() && !principal.IsTailnetAdmin(m.TailnetID) {
-		return nil, connect.NewError(connect.CodePermissionDenied, errors.New("permission denied"))
+		return nil, connect.NewError(connect.CodePermissionDenied, fmt.Errorf("permission denied"))
 	}
 
 	if _, err := s.repository.DeleteMachine(ctx, req.Msg.MachineId); err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, 0)
 	}
 
 	s.pubsub.Publish(m.TailnetID, &broker.Signal{PeersRemoved: []uint64{m.ID}})
@@ -137,15 +137,15 @@ func (s *Service) ExpireMachine(ctx context.Context, req *connect.Request[api.Ex
 
 	m, err := s.repository.GetMachine(ctx, req.Msg.MachineId)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, 0)
 	}
 
 	if m == nil {
-		return nil, connect.NewError(connect.CodeNotFound, errors.New("machine not found"))
+		return nil, connect.NewError(connect.CodeNotFound, fmt.Errorf("machine not found"))
 	}
 
 	if !principal.IsSystemAdmin() && !principal.IsTailnetAdmin(m.TailnetID) {
-		return nil, connect.NewError(connect.CodePermissionDenied, errors.New("permission denied"))
+		return nil, connect.NewError(connect.CodePermissionDenied, fmt.Errorf("permission denied"))
 	}
 
 	timestamp := time.Unix(123, 0)
@@ -153,7 +153,7 @@ func (s *Service) ExpireMachine(ctx context.Context, req *connect.Request[api.Ex
 	m.KeyExpiryDisabled = false
 
 	if err := s.repository.SaveMachine(ctx, m); err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, 0)
 	}
 
 	s.pubsub.Publish(m.TailnetID, &broker.Signal{PeerUpdated: &m.ID})
@@ -166,21 +166,21 @@ func (s *Service) AuthorizeMachine(ctx context.Context, req *connect.Request[api
 
 	m, err := s.repository.GetMachine(ctx, req.Msg.MachineId)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, 0)
 	}
 
 	if m == nil {
-		return nil, connect.NewError(connect.CodeNotFound, errors.New("machine not found"))
+		return nil, connect.NewError(connect.CodeNotFound, fmt.Errorf("machine not found"))
 	}
 
 	if !principal.IsSystemAdmin() && !principal.IsTailnetAdmin(m.TailnetID) {
-		return nil, connect.NewError(connect.CodePermissionDenied, errors.New("permission denied"))
+		return nil, connect.NewError(connect.CodePermissionDenied, fmt.Errorf("permission denied"))
 	}
 
 	if !m.Authorized {
 		m.Authorized = true
 		if err := s.repository.SaveMachine(ctx, m); err != nil {
-			return nil, err
+			return nil, errors.Wrap(err, 0)
 		}
 	}
 
@@ -194,15 +194,15 @@ func (s *Service) GetMachineRoutes(ctx context.Context, req *connect.Request[api
 
 	m, err := s.repository.GetMachine(ctx, req.Msg.MachineId)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, 0)
 	}
 
 	if m == nil {
-		return nil, connect.NewError(connect.CodeNotFound, errors.New("machine not found"))
+		return nil, connect.NewError(connect.CodeNotFound, fmt.Errorf("machine not found"))
 	}
 
 	if !principal.IsSystemAdmin() && !principal.IsTailnetAdmin(m.TailnetID) {
-		return nil, connect.NewError(connect.CodePermissionDenied, errors.New("permission denied"))
+		return nil, connect.NewError(connect.CodePermissionDenied, fmt.Errorf("permission denied"))
 	}
 
 	response := api.GetMachineRoutesResponse{
@@ -223,15 +223,15 @@ func (s *Service) EnableMachineRoutes(ctx context.Context, req *connect.Request[
 
 	m, err := s.repository.GetMachine(ctx, req.Msg.MachineId)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, 0)
 	}
 
 	if m == nil {
-		return nil, connect.NewError(connect.CodeNotFound, errors.New("machine not found"))
+		return nil, connect.NewError(connect.CodeNotFound, fmt.Errorf("machine not found"))
 	}
 
 	if !principal.IsSystemAdmin() && !principal.IsTailnetAdmin(m.TailnetID) {
-		return nil, connect.NewError(connect.CodePermissionDenied, errors.New("permission denied"))
+		return nil, connect.NewError(connect.CodePermissionDenied, fmt.Errorf("permission denied"))
 	}
 
 	var allowIPs = domain.NewAllowIPsSet(m.AllowIPs)
@@ -245,7 +245,7 @@ func (s *Service) EnableMachineRoutes(ctx context.Context, req *connect.Request[
 	for _, r := range req.Msg.Routes {
 		prefix, err := netip.ParsePrefix(r)
 		if err != nil {
-			return nil, err
+			return nil, errors.Wrap(err, 0)
 		}
 		allowIPs.Add(prefix)
 	}
@@ -253,7 +253,7 @@ func (s *Service) EnableMachineRoutes(ctx context.Context, req *connect.Request[
 	m.AllowIPs = allowIPs.Items()
 	m.AutoAllowIPs = autoAllowIPs.Items()
 	if err := s.repository.SaveMachine(ctx, m); err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, 0)
 	}
 
 	s.pubsub.Publish(m.TailnetID, &broker.Signal{PeerUpdated: &m.ID})
@@ -276,15 +276,15 @@ func (s *Service) DisableMachineRoutes(ctx context.Context, req *connect.Request
 
 	m, err := s.repository.GetMachine(ctx, req.Msg.MachineId)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, 0)
 	}
 
 	if m == nil {
-		return nil, connect.NewError(connect.CodeNotFound, errors.New("machine not found"))
+		return nil, connect.NewError(connect.CodeNotFound, fmt.Errorf("machine not found"))
 	}
 
 	if !principal.IsSystemAdmin() && !principal.IsTailnetAdmin(m.TailnetID) {
-		return nil, connect.NewError(connect.CodePermissionDenied, errors.New("permission denied"))
+		return nil, connect.NewError(connect.CodePermissionDenied, fmt.Errorf("permission denied"))
 	}
 
 	allowIPs := domain.NewAllowIPsSet(m.AllowIPs)
@@ -293,7 +293,7 @@ func (s *Service) DisableMachineRoutes(ctx context.Context, req *connect.Request
 	for _, r := range req.Msg.Routes {
 		prefix, err := netip.ParsePrefix(r)
 		if err != nil {
-			return nil, err
+			return nil, errors.Wrap(err, 0)
 		}
 		allowIPs.Remove(prefix)
 		autoAllowIPs.Remove(prefix)
@@ -302,7 +302,7 @@ func (s *Service) DisableMachineRoutes(ctx context.Context, req *connect.Request
 	m.AllowIPs = allowIPs.Items()
 	m.AutoAllowIPs = autoAllowIPs.Items()
 	if err := s.repository.SaveMachine(ctx, m); err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, 0)
 	}
 
 	s.pubsub.Publish(m.TailnetID, &broker.Signal{PeerUpdated: &m.ID})
@@ -325,19 +325,19 @@ func (s *Service) EnableExitNode(ctx context.Context, req *connect.Request[api.E
 
 	m, err := s.repository.GetMachine(ctx, req.Msg.MachineId)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, 0)
 	}
 
 	if m == nil {
-		return nil, connect.NewError(connect.CodeNotFound, errors.New("machine not found"))
+		return nil, connect.NewError(connect.CodeNotFound, fmt.Errorf("machine not found"))
 	}
 
 	if !principal.IsSystemAdmin() && !principal.IsTailnetAdmin(m.TailnetID) {
-		return nil, connect.NewError(connect.CodePermissionDenied, errors.New("permission denied"))
+		return nil, connect.NewError(connect.CodePermissionDenied, fmt.Errorf("permission denied"))
 	}
 
 	if !m.IsAdvertisedExitNode() {
-		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("machine is not a valid exit node"))
+		return nil, connect.NewError(connect.CodeInvalidArgument, fmt.Errorf("machine is not a valid exit node"))
 	}
 
 	prefix4 := netip.MustParsePrefix("0.0.0.0/0")
@@ -349,7 +349,7 @@ func (s *Service) EnableExitNode(ctx context.Context, req *connect.Request[api.E
 	m.AllowIPs = allowIPs.Items()
 
 	if err := s.repository.SaveMachine(ctx, m); err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, 0)
 	}
 
 	s.pubsub.Publish(m.TailnetID, &broker.Signal{PeerUpdated: &m.ID})
@@ -372,19 +372,19 @@ func (s *Service) DisableExitNode(ctx context.Context, req *connect.Request[api.
 
 	m, err := s.repository.GetMachine(ctx, req.Msg.MachineId)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, 0)
 	}
 
 	if m == nil {
-		return nil, connect.NewError(connect.CodeNotFound, errors.New("machine not found"))
+		return nil, connect.NewError(connect.CodeNotFound, fmt.Errorf("machine not found"))
 	}
 
 	if !principal.IsSystemAdmin() && !principal.IsTailnetAdmin(m.TailnetID) {
-		return nil, connect.NewError(connect.CodePermissionDenied, errors.New("permission denied"))
+		return nil, connect.NewError(connect.CodePermissionDenied, fmt.Errorf("permission denied"))
 	}
 
 	if !m.IsAdvertisedExitNode() {
-		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("machine is not a valid exit node"))
+		return nil, connect.NewError(connect.CodeInvalidArgument, fmt.Errorf("machine is not a valid exit node"))
 	}
 
 	prefix4 := netip.MustParsePrefix("0.0.0.0/0")
@@ -400,7 +400,7 @@ func (s *Service) DisableExitNode(ctx context.Context, req *connect.Request[api.
 	m.AutoAllowIPs = autoAllowIPs.Items()
 
 	if err := s.repository.SaveMachine(ctx, m); err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, 0)
 	}
 
 	s.pubsub.Publish(m.TailnetID, &broker.Signal{PeerUpdated: &m.ID})
@@ -423,21 +423,21 @@ func (s *Service) SetMachineKeyExpiry(ctx context.Context, req *connect.Request[
 
 	m, err := s.repository.GetMachine(ctx, req.Msg.MachineId)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, 0)
 	}
 
 	if m == nil {
-		return nil, connect.NewError(connect.CodeNotFound, errors.New("machine not found"))
+		return nil, connect.NewError(connect.CodeNotFound, fmt.Errorf("machine not found"))
 	}
 
 	if !principal.IsSystemAdmin() && !principal.IsTailnetAdmin(m.TailnetID) {
-		return nil, connect.NewError(connect.CodePermissionDenied, errors.New("permission denied"))
+		return nil, connect.NewError(connect.CodePermissionDenied, fmt.Errorf("permission denied"))
 	}
 
 	m.KeyExpiryDisabled = req.Msg.Disabled
 
 	if err := s.repository.SaveMachine(ctx, m); err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, 0)
 	}
 
 	s.pubsub.Publish(m.TailnetID, &broker.Signal{PeerUpdated: &m.ID})

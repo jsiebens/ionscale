@@ -22,7 +22,7 @@ func KeyHandler(keys *config.ServerKeys) echo.HandlerFunc {
 		if v != "" {
 			clientCapabilityVersion, err := strconv.Atoi(v)
 			if err != nil {
-				return c.String(http.StatusBadRequest, "Invalid version")
+				return echo.NewHTTPError(http.StatusBadRequest, "Invalid version")
 			}
 
 			if clientCapabilityVersion >= NoiseCapabilityVersion {

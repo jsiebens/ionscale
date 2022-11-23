@@ -157,21 +157,23 @@ func (g *GormLoggerAdapter) Error(ctx context.Context, s string, i ...interface{
 }
 
 func (g *GormLoggerAdapter) Trace(ctx context.Context, begin time.Time, fc func() (sql string, rowsAffected int64), err error) {
-	elapsed := time.Since(begin)
-	switch {
-	case err != nil && !errors.Is(err, gorm.ErrRecordNotFound):
-		sql, rows := fc()
-		if rows == -1 {
-			g.logger.Error("Error executing query", "sql", sql, "start_time", begin.Format(time.RFC3339), "duration", elapsed, "err", err)
-		} else {
-			g.logger.Error("Error executing query", "sql", sql, "start_time", begin.Format(time.RFC3339), "duration", elapsed, "rows", rows, "err", err)
-		}
-	case g.logger.IsTrace():
-		sql, rows := fc()
-		if rows == -1 {
-			g.logger.Trace("Statement executed", "sql", sql, "start_time", begin.Format(time.RFC3339), "duration", elapsed)
-		} else {
-			g.logger.Trace("Statement executed", "sql", sql, "start_time", begin.Format(time.RFC3339), "duration", elapsed, "rows", rows)
+	if g.logger.IsTrace() {
+		elapsed := time.Since(begin)
+		switch {
+		case err != nil && !errors.Is(err, gorm.ErrRecordNotFound):
+			sql, rows := fc()
+			if rows == -1 {
+				g.logger.Trace("Error executing query", "sql", sql, "start_time", begin.Format(time.RFC3339), "duration", elapsed, "err", err)
+			} else {
+				g.logger.Trace("Error executing query", "sql", sql, "start_time", begin.Format(time.RFC3339), "duration", elapsed, "rows", rows, "err", err)
+			}
+		default:
+			sql, rows := fc()
+			if rows == -1 {
+				g.logger.Trace("Statement executed", "sql", sql, "start_time", begin.Format(time.RFC3339), "duration", elapsed)
+			} else {
+				g.logger.Trace("Statement executed", "sql", sql, "start_time", begin.Format(time.RFC3339), "duration", elapsed, "rows", rows)
+			}
 		}
 	}
 }

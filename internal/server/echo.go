@@ -3,10 +3,47 @@ package server
 import (
 	"fmt"
 	"github.com/hashicorp/go-hclog"
+	"github.com/jsiebens/ionscale/internal/errors"
 	"github.com/labstack/echo-contrib/prometheus"
 	"github.com/labstack/echo/v4"
+	"net/http"
+	"strings"
 	"time"
 )
+
+func EchoErrorHandler(logger hclog.Logger) echo.MiddlewareFunc {
+	return func(next echo.HandlerFunc) echo.HandlerFunc {
+		return func(c echo.Context) error {
+			request := c.Request()
+
+			if err := next(c); err != nil {
+				switch t := err.(type) {
+				case *echo.HTTPError:
+					return err
+				case *errors.Error:
+					logger.Error("error processing request",
+						"err", t.Cause,
+						"location", t.Location,
+						"http.method", request.Method,
+						"http.uri", request.RequestURI,
+					)
+				default:
+					logger.Error("error processing request",
+						"err", err,
+						"http.method", request.Method,
+						"http.uri", request.RequestURI,
+					)
+				}
+
+				if strings.HasPrefix(request.RequestURI, "/a/") {
+					return c.Render(http.StatusInternalServerError, "error.html", nil)
+				}
+			}
+
+			return nil
+		}
+	}
+}
 
 func EchoLogger(logger hclog.Logger) echo.MiddlewareFunc {
 	httpLogger := logger.Named("http")
@@ -51,6 +88,15 @@ func EchoRecover(logger hclog.Logger) echo.MiddlewareFunc {
 				return next(c)
 			}
 			return apply()
+		}
+	}
+}
+
+func ErrorRedirect() echo.MiddlewareFunc {
+	return func(next echo.HandlerFunc) echo.HandlerFunc {
+		return func(c echo.Context) error {
+			c.Set("redirect_on_error", true)
+			return next(c)
 		}
 	}
 }
