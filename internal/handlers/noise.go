@@ -1,10 +1,12 @@
 package handlers
 
 import (
+	stderrors "errors"
 	"github.com/jsiebens/ionscale/internal/errors"
 	"github.com/labstack/echo/v4"
 	"golang.org/x/net/http2"
 	"golang.org/x/net/http2/h2c"
+	"io"
 	"net/http"
 	"tailscale.com/control/controlhttp"
 	"tailscale.com/net/netutil"
@@ -35,5 +37,8 @@ func (h *NoiseHandlers) Upgrade(c echo.Context) error {
 
 	server := http.Server{}
 	server.Handler = h2c.NewHandler(handler, &http2.Server{})
-	return server.Serve(netutil.NewOneConnListener(conn, nil))
+	if err := server.Serve(netutil.NewOneConnListener(conn, nil)); err != nil && !stderrors.Is(err, io.EOF) {
+		return err
+	}
+	return nil
 }
