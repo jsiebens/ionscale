@@ -70,8 +70,6 @@ type IonscaleServiceClient interface {
 	DisableMachineRoutes(context.Context, *connect_go.Request[v1.DisableMachineRoutesRequest]) (*connect_go.Response[v1.DisableMachineRoutesResponse], error)
 	EnableExitNode(context.Context, *connect_go.Request[v1.EnableExitNodeRequest]) (*connect_go.Response[v1.EnableExitNodeResponse], error)
 	DisableExitNode(context.Context, *connect_go.Request[v1.DisableExitNodeRequest]) (*connect_go.Response[v1.DisableExitNodeResponse], error)
-	EnableHttpsCertificates(context.Context, *connect_go.Request[v1.EnableHttpsCertificatesRequest]) (*connect_go.Response[v1.EnableHttpsCertificatesResponse], error)
-	DisableHttpsCertificates(context.Context, *connect_go.Request[v1.DisableHttpsCertificatesRequest]) (*connect_go.Response[v1.DisableHttpsCertificatesResponse], error)
 }
 
 // NewIonscaleServiceClient constructs a client for the ionscale.v1.IonscaleService service. By
@@ -299,16 +297,6 @@ func NewIonscaleServiceClient(httpClient connect_go.HTTPClient, baseURL string, 
 			baseURL+"/ionscale.v1.IonscaleService/DisableExitNode",
 			opts...,
 		),
-		enableHttpsCertificates: connect_go.NewClient[v1.EnableHttpsCertificatesRequest, v1.EnableHttpsCertificatesResponse](
-			httpClient,
-			baseURL+"/ionscale.v1.IonscaleService/EnableHttpsCertificates",
-			opts...,
-		),
-		disableHttpsCertificates: connect_go.NewClient[v1.DisableHttpsCertificatesRequest, v1.DisableHttpsCertificatesResponse](
-			httpClient,
-			baseURL+"/ionscale.v1.IonscaleService/DisableHttpsCertificates",
-			opts...,
-		),
 	}
 }
 
@@ -357,8 +345,6 @@ type ionscaleServiceClient struct {
 	disableMachineRoutes        *connect_go.Client[v1.DisableMachineRoutesRequest, v1.DisableMachineRoutesResponse]
 	enableExitNode              *connect_go.Client[v1.EnableExitNodeRequest, v1.EnableExitNodeResponse]
 	disableExitNode             *connect_go.Client[v1.DisableExitNodeRequest, v1.DisableExitNodeResponse]
-	enableHttpsCertificates     *connect_go.Client[v1.EnableHttpsCertificatesRequest, v1.EnableHttpsCertificatesResponse]
-	disableHttpsCertificates    *connect_go.Client[v1.DisableHttpsCertificatesRequest, v1.DisableHttpsCertificatesResponse]
 }
 
 // GetVersion calls ionscale.v1.IonscaleService.GetVersion.
@@ -576,16 +562,6 @@ func (c *ionscaleServiceClient) DisableExitNode(ctx context.Context, req *connec
 	return c.disableExitNode.CallUnary(ctx, req)
 }
 
-// EnableHttpsCertificates calls ionscale.v1.IonscaleService.EnableHttpsCertificates.
-func (c *ionscaleServiceClient) EnableHttpsCertificates(ctx context.Context, req *connect_go.Request[v1.EnableHttpsCertificatesRequest]) (*connect_go.Response[v1.EnableHttpsCertificatesResponse], error) {
-	return c.enableHttpsCertificates.CallUnary(ctx, req)
-}
-
-// DisableHttpsCertificates calls ionscale.v1.IonscaleService.DisableHttpsCertificates.
-func (c *ionscaleServiceClient) DisableHttpsCertificates(ctx context.Context, req *connect_go.Request[v1.DisableHttpsCertificatesRequest]) (*connect_go.Response[v1.DisableHttpsCertificatesResponse], error) {
-	return c.disableHttpsCertificates.CallUnary(ctx, req)
-}
-
 // IonscaleServiceHandler is an implementation of the ionscale.v1.IonscaleService service.
 type IonscaleServiceHandler interface {
 	GetVersion(context.Context, *connect_go.Request[v1.GetVersionRequest]) (*connect_go.Response[v1.GetVersionResponse], error)
@@ -631,8 +607,6 @@ type IonscaleServiceHandler interface {
 	DisableMachineRoutes(context.Context, *connect_go.Request[v1.DisableMachineRoutesRequest]) (*connect_go.Response[v1.DisableMachineRoutesResponse], error)
 	EnableExitNode(context.Context, *connect_go.Request[v1.EnableExitNodeRequest]) (*connect_go.Response[v1.EnableExitNodeResponse], error)
 	DisableExitNode(context.Context, *connect_go.Request[v1.DisableExitNodeRequest]) (*connect_go.Response[v1.DisableExitNodeResponse], error)
-	EnableHttpsCertificates(context.Context, *connect_go.Request[v1.EnableHttpsCertificatesRequest]) (*connect_go.Response[v1.EnableHttpsCertificatesResponse], error)
-	DisableHttpsCertificates(context.Context, *connect_go.Request[v1.DisableHttpsCertificatesRequest]) (*connect_go.Response[v1.DisableHttpsCertificatesResponse], error)
 }
 
 // NewIonscaleServiceHandler builds an HTTP handler from the service implementation. It returns the
@@ -857,16 +831,6 @@ func NewIonscaleServiceHandler(svc IonscaleServiceHandler, opts ...connect_go.Ha
 		svc.DisableExitNode,
 		opts...,
 	))
-	mux.Handle("/ionscale.v1.IonscaleService/EnableHttpsCertificates", connect_go.NewUnaryHandler(
-		"/ionscale.v1.IonscaleService/EnableHttpsCertificates",
-		svc.EnableHttpsCertificates,
-		opts...,
-	))
-	mux.Handle("/ionscale.v1.IonscaleService/DisableHttpsCertificates", connect_go.NewUnaryHandler(
-		"/ionscale.v1.IonscaleService/DisableHttpsCertificates",
-		svc.DisableHttpsCertificates,
-		opts...,
-	))
 	return "/ionscale.v1.IonscaleService/", mux
 }
 
@@ -1043,12 +1007,4 @@ func (UnimplementedIonscaleServiceHandler) EnableExitNode(context.Context, *conn
 
 func (UnimplementedIonscaleServiceHandler) DisableExitNode(context.Context, *connect_go.Request[v1.DisableExitNodeRequest]) (*connect_go.Response[v1.DisableExitNodeResponse], error) {
 	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("ionscale.v1.IonscaleService.DisableExitNode is not implemented"))
-}
-
-func (UnimplementedIonscaleServiceHandler) EnableHttpsCertificates(context.Context, *connect_go.Request[v1.EnableHttpsCertificatesRequest]) (*connect_go.Response[v1.EnableHttpsCertificatesResponse], error) {
-	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("ionscale.v1.IonscaleService.EnableHttpsCertificates is not implemented"))
-}
-
-func (UnimplementedIonscaleServiceHandler) DisableHttpsCertificates(context.Context, *connect_go.Request[v1.DisableHttpsCertificatesRequest]) (*connect_go.Response[v1.DisableHttpsCertificatesResponse], error) {
-	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("ionscale.v1.IonscaleService.DisableHttpsCertificates is not implemented"))
 }

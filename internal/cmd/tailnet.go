@@ -33,8 +33,6 @@ func tailnetCommand() *coral.Command {
 	command.AddCommand(getIAMPolicyCommand())
 	command.AddCommand(setIAMPolicyCommand())
 	command.AddCommand(editIAMPolicyCommand())
-	command.AddCommand(enableHttpsCommand())
-	command.AddCommand(disableHttpsCommand())
 	command.AddCommand(enableServiceCollectionCommand())
 	command.AddCommand(disableServiceCollectionCommand())
 	command.AddCommand(enableFileSharingCommand())

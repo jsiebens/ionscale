@@ -21,24 +21,13 @@ message SetDNSConfigResponse {
   DNSConfig config = 1;
 }
 
-message EnableHttpsCertificatesRequest {
-  uint64 tailnet_id = 1;
-}
-
-message EnableHttpsCertificatesResponse {}
-
-message DisableHttpsCertificatesRequest {
-  uint64 tailnet_id = 1;
-}
-
-message DisableHttpsCertificatesResponse {}
-
 message DNSConfig {
   bool magic_dns = 1;
   bool override_local_dns = 2;
   repeated string nameservers = 3;
   map<string, Routes> routes = 4;
   string magic_dns_suffix = 5;
+  bool https_certs = 6;
 }
 
 message Routes {

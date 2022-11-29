@@ -31,6 +31,7 @@ func (s *Service) GetDNSConfig(ctx context.Context, req *connect.Request[api.Get
 	resp := &api.GetDNSConfigResponse{
 		Config: &api.DNSConfig{
 			MagicDns:         dnsConfig.MagicDNS,
+			HttpsCerts:       dnsConfig.HttpsCertsEnabled,
 			MagicDnsSuffix:   fmt.Sprintf("%s.%s", tailnetDomain, config.MagicDNSSuffix()),
 			OverrideLocalDns: dnsConfig.OverrideLocalDNS,
 			Nameservers:      dnsConfig.Nameservers,
@@ -49,6 +50,10 @@ func (s *Service) SetDNSConfig(ctx context.Context, req *connect.Request[api.Set
 
 	dnsConfig := req.Msg.Config
 
+	if dnsConfig.HttpsCerts && !dnsConfig.MagicDns {
+		return nil, connect.NewError(connect.CodeFailedPrecondition, fmt.Errorf("MagicDNS must be enabled when enabling HTTPS Certs"))
+	}
+
 	tailnet, err := s.repository.GetTailnet(ctx, req.Msg.TailnetId)
 	if err != nil {
 		return nil, errors.Wrap(err, 0)
@@ -58,10 +63,11 @@ func (s *Service) SetDNSConfig(ctx context.Context, req *connect.Request[api.Set
 	}
 
 	tailnet.DNSConfig = domain.DNSConfig{
-		MagicDNS:         dnsConfig.MagicDns,
-		OverrideLocalDNS: dnsConfig.OverrideLocalDns,
-		Nameservers:      dnsConfig.Nameservers,
-		Routes:           apiRoutesToDomainRoutes(dnsConfig.Routes),
+		MagicDNS:          dnsConfig.MagicDns,
+		HttpsCertsEnabled: dnsConfig.HttpsCerts,
+		OverrideLocalDNS:  dnsConfig.OverrideLocalDns,
+		Nameservers:       dnsConfig.Nameservers,
+		Routes:            apiRoutesToDomainRoutes(dnsConfig.Routes),
 	}
 
 	if err := s.repository.SaveTailnet(ctx, tailnet); err != nil {
@@ -73,59 +79,6 @@ func (s *Service) SetDNSConfig(ctx context.Context, req *connect.Request[api.Set
 	resp := &api.SetDNSConfigResponse{Config: dnsConfig}
 
 	return connect.NewResponse(resp), nil
-}
-
-func (s *Service) EnableHttpsCertificates(ctx context.Context, req *connect.Request[api.EnableHttpsCertificatesRequest]) (*connect.Response[api.EnableHttpsCertificatesResponse], error) {
-	principal := CurrentPrincipal(ctx)
-	if !principal.IsSystemAdmin() && !principal.IsTailnetAdmin(req.Msg.TailnetId) {
-		return nil, connect.NewError(connect.CodePermissionDenied, fmt.Errorf("permission denied"))
-	}
-
-	tailnet, err := s.repository.GetTailnet(ctx, req.Msg.TailnetId)
-	if err != nil {
-		return nil, errors.Wrap(err, 0)
-	}
-	if tailnet == nil {
-		return nil, connect.NewError(connect.CodeNotFound, fmt.Errorf("tailnet not found"))
-	}
-
-	if !tailnet.DNSConfig.MagicDNS {
-		return nil, connect.NewError(connect.CodeFailedPrecondition, fmt.Errorf("MagicDNS must be enabled for this tailnet"))
-	}
-
-	tailnet.DNSConfig.HttpsCertsEnabled = true
-	if err := s.repository.SaveTailnet(ctx, tailnet); err != nil {
-		return nil, errors.Wrap(err, 0)
-	}
-
-	s.pubsub.Publish(tailnet.ID, &broker.Signal{DNSUpdated: true})
-
-	return connect.NewResponse(&api.EnableHttpsCertificatesResponse{}), nil
-}
-
-func (s *Service) DisableHttpsCertificates(ctx context.Context, req *connect.Request[api.DisableHttpsCertificatesRequest]) (*connect.Response[api.DisableHttpsCertificatesResponse], error) {
-	principal := CurrentPrincipal(ctx)
-	if !principal.IsSystemAdmin() && !principal.IsTailnetAdmin(req.Msg.TailnetId) {
-		return nil, connect.NewError(connect.CodePermissionDenied, fmt.Errorf("permission denied"))
-	}
-
-	tailnet, err := s.repository.GetTailnet(ctx, req.Msg.TailnetId)
-	if err != nil {
-		return nil, errors.Wrap(err, 0)
-	}
-	if tailnet == nil {
-		return nil, connect.NewError(connect.CodeNotFound, fmt.Errorf("tailnet not found"))
-	}
-
-	tailnet.DNSConfig.HttpsCertsEnabled = false
-
-	if err := s.repository.SaveTailnet(ctx, tailnet); err != nil {
-		return nil, errors.Wrap(err, 0)
-	}
-
-	s.pubsub.Publish(tailnet.ID, &broker.Signal{DNSUpdated: true})
-
-	return connect.NewResponse(&api.DisableHttpsCertificatesResponse{}), nil
 }
 
 func domainRoutesToApiRoutes(routes map[string][]string) map[string]*api.Routes {
