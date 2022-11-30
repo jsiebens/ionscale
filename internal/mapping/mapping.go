@@ -27,7 +27,7 @@ func CopyViaJson[F any, T any](f F, t T) error {
 	return nil
 }
 
-func ToDNSConfig(m *domain.Machine, peers []domain.Machine, tailnet *domain.Tailnet, c *domain.DNSConfig) *tailcfg.DNSConfig {
+func ToDNSConfig(m *domain.Machine, tailnet *domain.Tailnet, c *domain.DNSConfig) *tailcfg.DNSConfig {
 	certsEnabled := c.HttpsCertsEnabled && config.DNSProviderConfigured()
 
 	sanitizeTailnetName := domain.SanitizeTailnetName(tailnet.Name)
@@ -197,8 +197,10 @@ func ToNode(m *domain.Machine, tailnet *domain.Tailnet, peer bool) (*tailcfg.Nod
 	if m.LastSeen != nil {
 		l := m.LastSeen.UTC()
 		online := m.LastSeen.After(time.Now().Add(-config.KeepAliveInterval()))
-		n.LastSeen = &l
 		n.Online = &online
+		if !online {
+			n.LastSeen = &l
+		}
 	}
 
 	var user = ToUserProfile(m.User)
