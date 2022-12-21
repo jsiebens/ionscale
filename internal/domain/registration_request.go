@@ -19,6 +19,7 @@ type RegistrationRequest struct {
 	CreatedAt     time.Time
 	Authenticated bool
 	Error         string
+	UserID        uint64
 }
 
 func (r *RegistrationRequest) IsFinished() bool {

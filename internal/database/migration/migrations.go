@@ -14,6 +14,7 @@ func Migrations() []*gormigrate.Migration {
 		m202210070814_add_filesharing_and_servicecollection_columns(),
 		m202210080700_ssh_action_request(),
 		m202211031100_add_authorized_column(),
+		m202212201300_add_user_id_column(),
 	}
 	return migrations
 }

@@ -226,6 +226,23 @@ func ToUserProfile(u domain.User) tailcfg.UserProfile {
 	return profile
 }
 
+func ToUser(u domain.User) (tailcfg.User, tailcfg.Login) {
+	user := tailcfg.User{
+		ID:          tailcfg.UserID(u.ID),
+		LoginName:   u.Name,
+		DisplayName: u.Name,
+		Logins:      []tailcfg.LoginID{tailcfg.LoginID(u.ID)},
+		Domain:      u.Tailnet.Name,
+	}
+	login := tailcfg.Login{
+		ID:          tailcfg.LoginID(u.ID),
+		LoginName:   u.Name,
+		DisplayName: u.Name,
+		Domain:      u.Tailnet.Name,
+	}
+	return user, login
+}
+
 func filterServices(services []tailcfg.Service) []tailcfg.Service {
 	result := []tailcfg.Service{}
 	for _, s := range services {

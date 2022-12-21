@@ -515,6 +515,7 @@ func (h *AuthenticationHandlers) endMachineRegistrationFlow(c echo.Context, regi
 	err = h.repository.Transaction(func(rp domain.Repository) error {
 		registrationRequest.Authenticated = true
 		registrationRequest.Error = ""
+		registrationRequest.UserID = user.ID
 
 		if err := rp.SaveMachine(ctx, m); err != nil {
 			return err

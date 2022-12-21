@@ -47,7 +47,7 @@ func (s *Service) DeleteUser(ctx context.Context, req *connect.Request[api.Delet
 	principal := CurrentPrincipal(ctx)
 
 	if !principal.IsSystemAdmin() && principal.UserMatches(req.Msg.UserId) {
-		return nil, connect.NewError(connect.CodeInvalidArgument, fmt.Errorf("unable delete yourself"))
+		return nil, connect.NewError(connect.CodeInvalidArgument, fmt.Errorf("unable to delete yourself"))
 	}
 
 	user, err := s.repository.GetUser(ctx, req.Msg.UserId)
@@ -61,6 +61,10 @@ func (s *Service) DeleteUser(ctx context.Context, req *connect.Request[api.Delet
 
 	if !principal.IsSystemAdmin() && !principal.IsTailnetAdmin(user.TailnetID) {
 		return nil, connect.NewError(connect.CodePermissionDenied, fmt.Errorf("permission denied"))
+	}
+
+	if user.UserType == domain.UserTypeService {
+		return nil, connect.NewError(connect.CodeInvalidArgument, fmt.Errorf("unable delete service account"))
 	}
 
 	err = s.repository.Transaction(func(tx domain.Repository) error {

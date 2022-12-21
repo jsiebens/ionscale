@@ -8,6 +8,7 @@ import (
 	"github.com/jsiebens/ionscale/internal/config"
 	"github.com/jsiebens/ionscale/internal/domain"
 	"github.com/jsiebens/ionscale/internal/errors"
+	"github.com/jsiebens/ionscale/internal/mapping"
 	"github.com/jsiebens/ionscale/internal/util"
 	"github.com/labstack/echo/v4"
 	"net/http"
@@ -103,7 +104,14 @@ func (h *RegistrationHandlers) Register(c echo.Context) error {
 			return errors.Wrap(err, 0)
 		}
 
-		response := tailcfg.RegisterResponse{MachineAuthorized: true}
+		tUser, tLogin := mapping.ToUser(m.User)
+
+		response := tailcfg.RegisterResponse{
+			MachineAuthorized: m.Authorized,
+			User:              tUser,
+			Login:             tLogin,
+		}
+
 		return binder.WriteResponse(c, http.StatusOK, response)
 	}
 
@@ -240,7 +248,13 @@ func (h *RegistrationHandlers) authenticateMachineWithAuthKey(c echo.Context, bi
 		return errors.Wrap(err, 0)
 	}
 
-	response := tailcfg.RegisterResponse{MachineAuthorized: true}
+	tUser, tLogin := mapping.ToUser(m.User)
+	response := tailcfg.RegisterResponse{
+		MachineAuthorized: true,
+		User:              tUser,
+		Login:             tLogin,
+	}
+
 	return binder.WriteResponse(c, http.StatusOK, response)
 }
 
@@ -265,7 +279,19 @@ func (h *RegistrationHandlers) followup(c echo.Context, binder bind.Binder, req 
 			}
 
 			if m != nil && m.IsFinished() {
-				response := tailcfg.RegisterResponse{MachineAuthorized: len(m.Error) != 0, Error: m.Error}
+				user, err := h.repository.GetUser(ctx, m.UserID)
+				if err != nil {
+					return err
+				}
+
+				u, l := mapping.ToUser(*user)
+
+				response := tailcfg.RegisterResponse{
+					MachineAuthorized: len(m.Error) != 0,
+					Error:             m.Error,
+					User:              u,
+					Login:             l,
+				}
 				return binder.WriteResponse(c, http.StatusOK, response)
 			}
 		case <-notify:
