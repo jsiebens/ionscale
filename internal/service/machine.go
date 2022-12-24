@@ -4,8 +4,6 @@ import (
 	"context"
 	"fmt"
 	"github.com/bufbuild/connect-go"
-	"github.com/jsiebens/ionscale/internal/broker"
-	"github.com/jsiebens/ionscale/internal/config"
 	"github.com/jsiebens/ionscale/internal/domain"
 	"github.com/jsiebens/ionscale/internal/errors"
 	api "github.com/jsiebens/ionscale/pkg/gen/ionscale/v1"
@@ -22,10 +20,9 @@ func (s *Service) machineToApi(m *domain.Machine) *api.Machine {
 		name = fmt.Sprintf("%s-%d", m.Name, m.NameIdx)
 	}
 
-	online := false
+	online := s.sessionManager.HasSession(m.TailnetID, m.ID)
 	if m.LastSeen != nil {
 		lastSeen = timestamppb.New(*m.LastSeen)
-		online = m.LastSeen.After(time.Now().Add(-config.KeepAliveInterval()))
 	}
 
 	return &api.Machine{
@@ -127,7 +124,7 @@ func (s *Service) DeleteMachine(ctx context.Context, req *connect.Request[api.De
 		return nil, errors.Wrap(err, 0)
 	}
 
-	s.pubsub.Publish(m.TailnetID, &broker.Signal{PeersRemoved: []uint64{m.ID}})
+	s.sessionManager.NotifyAll(m.TailnetID)
 
 	return connect.NewResponse(&api.DeleteMachineResponse{}), nil
 }
@@ -156,7 +153,7 @@ func (s *Service) ExpireMachine(ctx context.Context, req *connect.Request[api.Ex
 		return nil, errors.Wrap(err, 0)
 	}
 
-	s.pubsub.Publish(m.TailnetID, &broker.Signal{PeerUpdated: &m.ID})
+	s.sessionManager.NotifyAll(m.TailnetID)
 
 	return connect.NewResponse(&api.ExpireMachineResponse{}), nil
 }
@@ -184,7 +181,7 @@ func (s *Service) AuthorizeMachine(ctx context.Context, req *connect.Request[api
 		}
 	}
 
-	s.pubsub.Publish(m.TailnetID, &broker.Signal{PeerUpdated: &m.ID})
+	s.sessionManager.NotifyAll(m.TailnetID)
 
 	return connect.NewResponse(&api.AuthorizeMachineResponse{}), nil
 }
@@ -256,7 +253,7 @@ func (s *Service) EnableMachineRoutes(ctx context.Context, req *connect.Request[
 		return nil, errors.Wrap(err, 0)
 	}
 
-	s.pubsub.Publish(m.TailnetID, &broker.Signal{PeerUpdated: &m.ID})
+	s.sessionManager.NotifyAll(m.TailnetID)
 
 	response := api.EnableMachineRoutesResponse{
 		MachineId: m.ID,
@@ -305,7 +302,7 @@ func (s *Service) DisableMachineRoutes(ctx context.Context, req *connect.Request
 		return nil, errors.Wrap(err, 0)
 	}
 
-	s.pubsub.Publish(m.TailnetID, &broker.Signal{PeerUpdated: &m.ID})
+	s.sessionManager.NotifyAll(m.TailnetID)
 
 	response := api.DisableMachineRoutesResponse{
 		MachineId: m.ID,
@@ -352,7 +349,7 @@ func (s *Service) EnableExitNode(ctx context.Context, req *connect.Request[api.E
 		return nil, errors.Wrap(err, 0)
 	}
 
-	s.pubsub.Publish(m.TailnetID, &broker.Signal{PeerUpdated: &m.ID})
+	s.sessionManager.NotifyAll(m.TailnetID)
 
 	response := api.EnableExitNodeResponse{
 		MachineId: m.ID,
@@ -403,7 +400,7 @@ func (s *Service) DisableExitNode(ctx context.Context, req *connect.Request[api.
 		return nil, errors.Wrap(err, 0)
 	}
 
-	s.pubsub.Publish(m.TailnetID, &broker.Signal{PeerUpdated: &m.ID})
+	s.sessionManager.NotifyAll(m.TailnetID)
 
 	response := api.DisableExitNodeResponse{
 		MachineId: m.ID,
@@ -440,7 +437,7 @@ func (s *Service) SetMachineKeyExpiry(ctx context.Context, req *connect.Request[
 		return nil, errors.Wrap(err, 0)
 	}
 
-	s.pubsub.Publish(m.TailnetID, &broker.Signal{PeerUpdated: &m.ID})
+	s.sessionManager.NotifyAll(m.TailnetID)
 
 	return connect.NewResponse(&api.SetMachineKeyExpiryResponse{}), nil
 }

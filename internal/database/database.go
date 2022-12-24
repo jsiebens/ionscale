@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"github.com/go-gormigrate/gormigrate/v2"
 	"github.com/hashicorp/go-hclog"
-	"github.com/jsiebens/ionscale/internal/broker"
 	"github.com/jsiebens/ionscale/internal/database/migration"
 	"github.com/jsiebens/ionscale/internal/util"
 	"tailscale.com/types/key"
@@ -25,51 +24,38 @@ type db interface {
 	UnlockErr(error) error
 }
 
-func OpenDB(config *config.Database, logger hclog.Logger) (domain.Repository, broker.Pubsub, error) {
-	db, pubsub, err := createDB(config, logger)
+func OpenDB(config *config.Database, logger hclog.Logger) (domain.Repository, error) {
+	db, err := createDB(config, logger)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
 	repository := domain.NewRepository(db.DB())
 
 	if err := db.Lock(); err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
 	if err := db.UnlockErr(migrate(db.DB())); err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
-	return repository, pubsub, nil
+	return repository, nil
 }
 
-func createDB(config *config.Database, logger hclog.Logger) (db, broker.Pubsub, error) {
+func createDB(config *config.Database, logger hclog.Logger) (db, error) {
 	gormConfig := &gorm.Config{
 		Logger: &GormLoggerAdapter{logger: logger.Named("db")},
 	}
 
 	switch config.Type {
 	case "sqlite", "sqlite3":
-		db, err := newSqliteDB(config, gormConfig)
-		return db, broker.NewPubsubInMemory(), err
+		return newSqliteDB(config, gormConfig)
 	case "postgres", "postgresql":
-		db, err := newPostgresDB(config, gormConfig)
-		if err != nil {
-			return nil, nil, err
-		}
-		stdDB, err := db.DB().DB()
-		if err != nil {
-			return nil, nil, err
-		}
-		pubsub, err := broker.NewPubsub(context.TODO(), stdDB, config.Url)
-		if err != nil {
-			return nil, nil, err
-		}
-		return db, pubsub, err
+		return newPostgresDB(config, gormConfig)
 	}
 
-	return nil, nil, fmt.Errorf("invalid database type '%s'", config.Type)
+	return nil, fmt.Errorf("invalid database type '%s'", config.Type)
 }
 
 func migrate(db *gorm.DB) error {

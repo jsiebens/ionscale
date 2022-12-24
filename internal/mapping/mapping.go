@@ -82,7 +82,7 @@ func ToDNSConfig(m *domain.Machine, tailnet *domain.Tailnet, c *domain.DNSConfig
 	return dnsConfig
 }
 
-func ToNode(m *domain.Machine, tailnet *domain.Tailnet, peer bool) (*tailcfg.Node, *tailcfg.UserProfile, error) {
+func ToNode(m *domain.Machine, tailnet *domain.Tailnet, peer bool, connected bool) (*tailcfg.Node, *tailcfg.UserProfile, error) {
 	role := tailnet.IAMPolicy.GetRole(m.User)
 
 	var capabilities []string
@@ -194,13 +194,9 @@ func ToNode(m *domain.Machine, tailnet *domain.Tailnet, peer bool) (*tailcfg.Nod
 		n.KeyExpiry = time.Time{}
 	}
 
-	if m.LastSeen != nil {
-		l := m.LastSeen.UTC()
-		online := m.LastSeen.After(time.Now().Add(-config.KeepAliveInterval()))
-		n.Online = &online
-		if !online {
-			n.LastSeen = &l
-		}
+	n.Online = &connected
+	if !connected && m.LastSeen != nil {
+		n.LastSeen = m.LastSeen
 	}
 
 	var user = ToUserProfile(m.User)

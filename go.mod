@@ -11,7 +11,6 @@ require (
 	github.com/glebarez/sqlite v1.5.0
 	github.com/go-gormigrate/gormigrate/v2 v2.0.2
 	github.com/golang-jwt/jwt/v4 v4.4.2
-	github.com/google/uuid v1.3.0
 	github.com/hashicorp/go-bexpr v0.1.11
 	github.com/hashicorp/go-hclog v1.3.0
 	github.com/hashicorp/go-multierror v1.1.1
@@ -20,7 +19,6 @@ require (
 	github.com/klauspost/compress v1.15.9
 	github.com/labstack/echo-contrib v0.13.0
 	github.com/labstack/echo/v4 v4.9.0
-	github.com/lib/pq v1.10.6
 	github.com/libdns/azure v0.2.0
 	github.com/libdns/cloudflare v0.1.0
 	github.com/libdns/digitalocean v0.0.0-20220518195853-a541bc8aa80f
@@ -90,6 +88,7 @@ require (
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/google/go-cmp v0.5.9 // indirect
 	github.com/google/go-querystring v1.0.0 // indirect
+	github.com/google/uuid v1.3.0 // indirect
 	github.com/googleapis/enterprise-certificate-proxy v0.0.0-20220520183353-fd19c99a87aa // indirect
 	github.com/googleapis/gax-go/v2 v2.4.0 // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect
@@ -109,6 +108,7 @@ require (
 	github.com/jsimonetti/rtnetlink v1.2.2 // indirect
 	github.com/klauspost/cpuid/v2 v2.1.1 // indirect
 	github.com/labstack/gommon v0.4.0 // indirect
+	github.com/lib/pq v1.10.6 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.16 // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.1 // indirect

@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"github.com/bufbuild/connect-go"
-	"github.com/jsiebens/ionscale/internal/broker"
 	"github.com/jsiebens/ionscale/internal/config"
 	"github.com/jsiebens/ionscale/internal/domain"
 	"github.com/jsiebens/ionscale/internal/errors"
@@ -74,7 +73,7 @@ func (s *Service) SetDNSConfig(ctx context.Context, req *connect.Request[api.Set
 		return nil, errors.Wrap(err, 0)
 	}
 
-	s.pubsub.Publish(tailnet.ID, &broker.Signal{DNSUpdated: true})
+	s.sessionManager.NotifyAll(tailnet.ID)
 
 	resp := &api.SetDNSConfigResponse{Config: dnsConfig}
 

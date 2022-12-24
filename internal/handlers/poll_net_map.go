@@ -3,8 +3,8 @@ package handlers
 import (
 	"context"
 	"github.com/jsiebens/ionscale/internal/bind"
-	"github.com/jsiebens/ionscale/internal/broker"
 	"github.com/jsiebens/ionscale/internal/config"
+	"github.com/jsiebens/ionscale/internal/core"
 	"github.com/jsiebens/ionscale/internal/domain"
 	"github.com/jsiebens/ionscale/internal/errors"
 	"github.com/jsiebens/ionscale/internal/mapping"
@@ -17,25 +17,22 @@ import (
 
 func NewPollNetMapHandler(
 	createBinder bind.Factory,
-	brokers broker.Pubsub,
-	repository domain.Repository,
-	offlineTimers *OfflineTimers) *PollNetMapHandler {
+	sessionManager core.PollMapSessionManager,
+	repository domain.Repository) *PollNetMapHandler {
 
 	handler := &PollNetMapHandler{
-		createBinder:  createBinder,
-		brokers:       brokers,
-		repository:    repository,
-		offlineTimers: offlineTimers,
+		createBinder:   createBinder,
+		sessionManager: sessionManager,
+		repository:     repository,
 	}
 
 	return handler
 }
 
 type PollNetMapHandler struct {
-	createBinder  bind.Factory
-	repository    domain.Repository
-	brokers       broker.Pubsub
-	offlineTimers *OfflineTimers
+	createBinder   bind.Factory
+	repository     domain.Repository
+	sessionManager core.PollMapSessionManager
 }
 
 func (h *PollNetMapHandler) PollNetMap(c echo.Context) error {
@@ -87,7 +84,7 @@ func (h *PollNetMapHandler) handleUpdate(c echo.Context, binder bind.Binder, m *
 	tailnetID := m.TailnetID
 	machineID := m.ID
 
-	h.brokers.Publish(tailnetID, &broker.Signal{PeerUpdated: &machineID})
+	h.sessionManager.NotifyAll(tailnetID)
 
 	if !mapRequest.Stream {
 		return c.String(http.StatusOK, "")
@@ -101,13 +98,8 @@ func (h *PollNetMapHandler) handleUpdate(c echo.Context, binder bind.Binder, m *
 		return errors.Wrap(err, 0)
 	}
 
-	updateChan := make(chan *broker.Signal, 20)
-
-	unsubscribe, err := h.brokers.Subscribe(tailnetID, updateChan)
-	if err != nil {
-		return errors.Wrap(err, 0)
-	}
-	h.cancelOfflineMessage(machineID)
+	updateChan := make(chan *core.Ping, 20)
+	h.sessionManager.Register(m.TailnetID, m.ID, updateChan)
 
 	// Listen to connection close
 	notify := c.Request().Context().Done()
@@ -116,8 +108,6 @@ func (h *PollNetMapHandler) handleUpdate(c echo.Context, binder bind.Binder, m *
 	if err != nil {
 		return errors.Wrap(err, 0)
 	}
-	keepAliveTicker := time.NewTicker(config.KeepAliveInterval())
-	syncTicker := time.NewTicker(5 * time.Second)
 
 	c.Response().WriteHeader(http.StatusOK)
 
@@ -128,13 +118,15 @@ func (h *PollNetMapHandler) handleUpdate(c echo.Context, binder bind.Binder, m *
 
 	connectedDevices.WithLabelValues(m.Tailnet.Name).Inc()
 
+	keepAliveTicker := time.NewTicker(config.KeepAliveInterval())
+	syncTicker := time.NewTicker(5 * time.Second)
+
 	defer func() {
 		connectedDevices.WithLabelValues(m.Tailnet.Name).Dec()
-		unsubscribe()
+		h.sessionManager.Deregister(m.TailnetID, m.ID)
 		keepAliveTicker.Stop()
 		syncTicker.Stop()
 		_ = h.repository.SetMachineLastSeen(ctx, machineID)
-		h.scheduleOfflineMessage(tailnetID, machineID)
 	}()
 
 	var latestSync = time.Now()
@@ -203,14 +195,6 @@ func (h *PollNetMapHandler) handleReadOnly(c echo.Context, binder bind.Binder, m
 	return errors.Wrap(err, 0)
 }
 
-func (h *PollNetMapHandler) scheduleOfflineMessage(tailnetID, machineID uint64) {
-	h.offlineTimers.startCh <- [2]uint64{tailnetID, machineID}
-}
-
-func (h *PollNetMapHandler) cancelOfflineMessage(machineID uint64) {
-	h.offlineTimers.stopCh <- machineID
-}
-
 func (h *PollNetMapHandler) createKeepAliveResponse(binder bind.Binder, request *tailcfg.MapRequest) ([]byte, error) {
 	mapResponse := &tailcfg.MapResponse{
 		KeepAlive: true,
@@ -228,7 +212,7 @@ func (h *PollNetMapHandler) createMapResponse(m *domain.Machine, binder bind.Bin
 	}
 
 	hostinfo := tailcfg.Hostinfo(m.HostInfo)
-	node, user, err := mapping.ToNode(m, tailnet, false)
+	node, user, err := mapping.ToNode(m, tailnet, false, true)
 	if err != nil {
 		return nil, nil, "", err
 	}
@@ -251,7 +235,7 @@ func (h *PollNetMapHandler) createMapResponse(m *domain.Machine, binder bind.Bin
 			continue
 		}
 		if policies.IsValidPeer(m, &peer) || policies.IsValidPeer(&peer, m) {
-			n, u, err := mapping.ToNode(&peer, tailnet, true)
+			n, u, err := mapping.ToNode(&peer, tailnet, true, h.sessionManager.HasSession(peer.TailnetID, peer.ID))
 			if err != nil {
 				return nil, nil, "", err
 			}
@@ -329,60 +313,6 @@ func (h *PollNetMapHandler) createMapResponse(m *domain.Machine, binder bind.Bin
 	payload, err := binder.Marshal(request.Compress, mapResponse)
 
 	return payload, syncedPeerIDs, derpMap.Checksum, nil
-}
-
-func NewOfflineTimers(repository domain.Repository, pubsub broker.Pubsub) *OfflineTimers {
-	return &OfflineTimers{
-		repository: repository,
-		pubsub:     pubsub,
-		data:       make(map[uint64]*time.Timer),
-		startCh:    make(chan [2]uint64),
-		stopCh:     make(chan uint64),
-	}
-}
-
-type OfflineTimers struct {
-	repository domain.Repository
-	pubsub     broker.Pubsub
-	data       map[uint64]*time.Timer
-	stopCh     chan uint64
-	startCh    chan [2]uint64
-}
-
-func (o *OfflineTimers) Start() {
-	for {
-		select {
-		case i := <-o.startCh:
-			o.scheduleOfflineMessage(i[0], i[1])
-		case m := <-o.stopCh:
-			o.cancelOfflineMessage(m)
-		}
-	}
-}
-
-func (o *OfflineTimers) scheduleOfflineMessage(tailnetID, machineID uint64) {
-	t, ok := o.data[machineID]
-	if ok {
-		t.Stop()
-		delete(o.data, machineID)
-	}
-
-	timer := time.NewTimer(config.KeepAliveInterval())
-	go func() {
-		<-timer.C
-		o.pubsub.Publish(tailnetID, &broker.Signal{PeerUpdated: &machineID})
-		o.stopCh <- machineID
-	}()
-
-	o.data[machineID] = timer
-}
-
-func (o *OfflineTimers) cancelOfflineMessage(machineID uint64) {
-	t, ok := o.data[machineID]
-	if ok {
-		t.Stop()
-		delete(o.data, machineID)
-	}
 }
 
 func optBool(v bool) opt.Bool {

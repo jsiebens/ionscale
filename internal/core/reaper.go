@@ -1,8 +1,7 @@
-package handlers
+package core
 
 import (
 	"context"
-	"github.com/jsiebens/ionscale/internal/broker"
 	"github.com/jsiebens/ionscale/internal/domain"
 	"time"
 )
@@ -12,26 +11,28 @@ const (
 	inactivityTimeout = 30 * time.Minute
 )
 
-func NewReaper(brokers broker.Pubsub, repository domain.Repository) *Reaper {
-	return &Reaper{
-		pubsub:     brokers,
-		repository: repository,
+func StartReaper(repository domain.Repository, sessionManager PollMapSessionManager) {
+	r := &reaper{
+		sessionManager: sessionManager,
+		repository:     repository,
 	}
+
+	go r.start()
 }
 
-type Reaper struct {
-	pubsub     broker.Pubsub
-	repository domain.Repository
+type reaper struct {
+	sessionManager PollMapSessionManager
+	repository     domain.Repository
 }
 
-func (r *Reaper) Start() {
+func (r *reaper) start() {
 	t := time.NewTicker(ticker)
 	for range t.C {
 		r.reapInactiveEphemeralNodes()
 	}
 }
 
-func (r *Reaper) reapInactiveEphemeralNodes() {
+func (r *reaper) reapInactiveEphemeralNodes() {
 	ctx := context.Background()
 
 	now := time.Now().UTC()
@@ -54,8 +55,8 @@ func (r *Reaper) reapInactiveEphemeralNodes() {
 	}
 
 	if len(removedNodes) != 0 {
-		for i, p := range removedNodes {
-			r.pubsub.Publish(i, &broker.Signal{PeersRemoved: p})
+		for i, _ := range removedNodes {
+			r.sessionManager.NotifyAll(i)
 		}
 	}
 }

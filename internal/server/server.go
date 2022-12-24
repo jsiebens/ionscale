@@ -9,6 +9,7 @@ import (
 	"github.com/jsiebens/ionscale/internal/auth"
 	"github.com/jsiebens/ionscale/internal/bind"
 	"github.com/jsiebens/ionscale/internal/config"
+	"github.com/jsiebens/ionscale/internal/core"
 	"github.com/jsiebens/ionscale/internal/database"
 	"github.com/jsiebens/ionscale/internal/dns"
 	"github.com/jsiebens/ionscale/internal/domain"
@@ -38,10 +39,12 @@ func Start(c *config.Config) error {
 
 	logger.Info("Starting ionscale server")
 
-	repository, brokers, err := database.OpenDB(&c.Database, logger)
+	repository, err := database.OpenDB(&c.Database, logger)
 	if err != nil {
 		return err
 	}
+
+	sessionManager := core.NewPollMapSessionManager()
 
 	defaultControlKeys, err := repository.GetControlKeys(context.Background())
 	if err != nil {
@@ -53,11 +56,7 @@ func Start(c *config.Config) error {
 		return err
 	}
 
-	offlineTimers := handlers.NewOfflineTimers(repository, brokers)
-	reaper := handlers.NewReaper(brokers, repository)
-
-	go offlineTimers.Start()
-	go reaper.Start()
+	core.StartReaper(repository, sessionManager)
 
 	serverUrl, err := url.Parse(c.ServerUrl)
 	if err != nil {
@@ -100,8 +99,8 @@ func Start(c *config.Config) error {
 	createPeerHandler := func(machinePublicKey key.MachinePublic) http.Handler {
 		binder := bind.DefaultBinder(machinePublicKey)
 
-		registrationHandlers := handlers.NewRegistrationHandlers(binder, c, brokers, repository)
-		pollNetMapHandler := handlers.NewPollNetMapHandler(binder, brokers, repository, offlineTimers)
+		registrationHandlers := handlers.NewRegistrationHandlers(binder, c, sessionManager, repository)
+		pollNetMapHandler := handlers.NewPollNetMapHandler(binder, sessionManager, repository)
 		dnsHandlers := handlers.NewDNSHandlers(binder, dnsProvider)
 		idTokenHandlers := handlers.NewIDTokenHandlers(binder, c, repository)
 		sshActionHandlers := handlers.NewSSHActionHandlers(binder, c, repository)
@@ -119,8 +118,8 @@ func Start(c *config.Config) error {
 	}
 
 	noiseHandlers := handlers.NewNoiseHandlers(serverKey.ControlKey, createPeerHandler)
-	registrationHandlers := handlers.NewRegistrationHandlers(bind.BoxBinder(serverKey.LegacyControlKey), c, brokers, repository)
-	pollNetMapHandler := handlers.NewPollNetMapHandler(bind.BoxBinder(serverKey.LegacyControlKey), brokers, repository, offlineTimers)
+	registrationHandlers := handlers.NewRegistrationHandlers(bind.BoxBinder(serverKey.LegacyControlKey), c, sessionManager, repository)
+	pollNetMapHandler := handlers.NewPollNetMapHandler(bind.BoxBinder(serverKey.LegacyControlKey), sessionManager, repository)
 	dnsHandlers := handlers.NewDNSHandlers(bind.BoxBinder(serverKey.LegacyControlKey), dnsProvider)
 	idTokenHandlers := handlers.NewIDTokenHandlers(bind.BoxBinder(serverKey.LegacyControlKey), c, repository)
 	authenticationHandlers := handlers.NewAuthenticationHandlers(
@@ -130,7 +129,7 @@ func Start(c *config.Config) error {
 		repository,
 	)
 
-	rpcService := service.NewService(c, authProvider, repository, brokers)
+	rpcService := service.NewService(c, authProvider, repository, sessionManager)
 	rpcPath, rpcHandler := NewRpcHandler(serverKey.SystemAdminKey, repository, logger, rpcService)
 
 	nonTlsAppHandler := echo.New()

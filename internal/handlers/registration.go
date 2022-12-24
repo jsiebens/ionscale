@@ -4,8 +4,8 @@ import (
 	"context"
 	"github.com/jsiebens/ionscale/internal/addr"
 	"github.com/jsiebens/ionscale/internal/bind"
-	"github.com/jsiebens/ionscale/internal/broker"
 	"github.com/jsiebens/ionscale/internal/config"
+	"github.com/jsiebens/ionscale/internal/core"
 	"github.com/jsiebens/ionscale/internal/domain"
 	"github.com/jsiebens/ionscale/internal/errors"
 	"github.com/jsiebens/ionscale/internal/mapping"
@@ -21,21 +21,21 @@ import (
 func NewRegistrationHandlers(
 	createBinder bind.Factory,
 	config *config.Config,
-	brokers broker.Pubsub,
+	sessionManager core.PollMapSessionManager,
 	repository domain.Repository) *RegistrationHandlers {
 	return &RegistrationHandlers{
-		createBinder: createBinder,
-		pubsub:       brokers,
-		repository:   repository,
-		config:       config,
+		createBinder:   createBinder,
+		sessionManager: sessionManager,
+		repository:     repository,
+		config:         config,
 	}
 }
 
 type RegistrationHandlers struct {
-	createBinder bind.Factory
-	repository   domain.Repository
-	pubsub       broker.Pubsub
-	config       *config.Config
+	createBinder   bind.Factory
+	repository     domain.Repository
+	sessionManager core.PollMapSessionManager
+	config         *config.Config
 }
 
 func (h *RegistrationHandlers) Register(c echo.Context) error {
@@ -74,12 +74,12 @@ func (h *RegistrationHandlers) Register(c echo.Context) error {
 				if _, err := h.repository.DeleteMachine(ctx, m.ID); err != nil {
 					return errors.Wrap(err, 0)
 				}
-				h.pubsub.Publish(m.TailnetID, &broker.Signal{PeersRemoved: []uint64{m.ID}})
+				h.sessionManager.NotifyAll(m.TailnetID)
 			} else {
 				if err := h.repository.SaveMachine(ctx, m); err != nil {
 					return errors.Wrap(err, 0)
 				}
-				h.pubsub.Publish(m.TailnetID, &broker.Signal{PeerUpdated: &m.ID})
+				h.sessionManager.NotifyAll(m.TailnetID)
 			}
 
 			response := tailcfg.RegisterResponse{NodeKeyExpired: true}

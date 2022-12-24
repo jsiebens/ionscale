@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/bufbuild/connect-go"
-	"github.com/jsiebens/ionscale/internal/broker"
 	"github.com/jsiebens/ionscale/internal/domain"
 	"github.com/jsiebens/ionscale/internal/errors"
 	"github.com/jsiebens/ionscale/internal/util"
@@ -58,7 +57,7 @@ func (s *Service) SetDefaultDERPMap(ctx context.Context, req *connect.Request[ap
 	}
 
 	for _, t := range tailnets {
-		s.pubsub.Publish(t.ID, &broker.Signal{})
+		s.sessionManager.NotifyAll(t.ID)
 	}
 
 	return connect.NewResponse(&api.SetDefaultDERPMapResponse{Value: req.Msg.Value}), nil
@@ -82,7 +81,7 @@ func (s *Service) ResetDefaultDERPMap(ctx context.Context, req *connect.Request[
 	}
 
 	for _, t := range tailnets {
-		s.pubsub.Publish(t.ID, &broker.Signal{})
+		s.sessionManager.NotifyAll(t.ID)
 	}
 
 	return connect.NewResponse(&api.ResetDefaultDERPMapResponse{}), nil

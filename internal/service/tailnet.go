@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/bufbuild/connect-go"
-	"github.com/jsiebens/ionscale/internal/broker"
 	"github.com/jsiebens/ionscale/internal/domain"
 	"github.com/jsiebens/ionscale/internal/errors"
 	"github.com/jsiebens/ionscale/internal/util"
@@ -141,7 +140,7 @@ func (s *Service) DeleteTailnet(ctx context.Context, req *connect.Request[api.De
 		return nil, errors.Wrap(err, 0)
 	}
 
-	s.pubsub.Publish(req.Msg.TailnetId, &broker.Signal{})
+	s.sessionManager.NotifyAll(req.Msg.TailnetId)
 
 	return connect.NewResponse(&api.DeleteTailnetResponse{}), nil
 }
@@ -174,7 +173,7 @@ func (s *Service) SetDERPMap(ctx context.Context, req *connect.Request[api.SetDE
 		return nil, errors.Wrap(err, 0)
 	}
 
-	s.pubsub.Publish(tailnet.ID, &broker.Signal{})
+	s.sessionManager.NotifyAll(tailnet.ID)
 
 	raw, err := json.Marshal(derpMap)
 	if err != nil {
@@ -204,7 +203,7 @@ func (s *Service) ResetDERPMap(ctx context.Context, req *connect.Request[api.Res
 		return nil, errors.Wrap(err, 0)
 	}
 
-	s.pubsub.Publish(tailnet.ID, &broker.Signal{})
+	s.sessionManager.NotifyAll(tailnet.ID)
 
 	return connect.NewResponse(&api.ResetDERPMapResponse{}), nil
 }
@@ -256,7 +255,7 @@ func (s *Service) EnableFileSharing(ctx context.Context, req *connect.Request[ap
 			return nil, errors.Wrap(err, 0)
 		}
 
-		s.pubsub.Publish(tailnet.ID, &broker.Signal{})
+		s.sessionManager.NotifyAll(tailnet.ID)
 	}
 
 	return connect.NewResponse(&api.EnableFileSharingResponse{}), nil
@@ -282,7 +281,7 @@ func (s *Service) DisableFileSharing(ctx context.Context, req *connect.Request[a
 			return nil, errors.Wrap(err, 0)
 		}
 
-		s.pubsub.Publish(tailnet.ID, &broker.Signal{})
+		s.sessionManager.NotifyAll(tailnet.ID)
 	}
 
 	return connect.NewResponse(&api.DisableFileSharingResponse{}), nil
@@ -308,7 +307,7 @@ func (s *Service) EnableServiceCollection(ctx context.Context, req *connect.Requ
 			return nil, errors.Wrap(err, 0)
 		}
 
-		s.pubsub.Publish(tailnet.ID, &broker.Signal{})
+		s.sessionManager.NotifyAll(tailnet.ID)
 	}
 
 	return connect.NewResponse(&api.EnableServiceCollectionResponse{}), nil
@@ -334,7 +333,7 @@ func (s *Service) DisableServiceCollection(ctx context.Context, req *connect.Req
 			return nil, errors.Wrap(err, 0)
 		}
 
-		s.pubsub.Publish(tailnet.ID, &broker.Signal{})
+		s.sessionManager.NotifyAll(tailnet.ID)
 	}
 
 	return connect.NewResponse(&api.DisableServiceCollectionResponse{}), nil
@@ -360,7 +359,7 @@ func (s *Service) EnableSSH(ctx context.Context, req *connect.Request[api.Enable
 			return nil, errors.Wrap(err, 0)
 		}
 
-		s.pubsub.Publish(tailnet.ID, &broker.Signal{})
+		s.sessionManager.NotifyAll(tailnet.ID)
 	}
 
 	return connect.NewResponse(&api.EnableSSHResponse{}), nil
@@ -386,7 +385,7 @@ func (s *Service) DisableSSH(ctx context.Context, req *connect.Request[api.Disab
 			return nil, errors.Wrap(err, 0)
 		}
 
-		s.pubsub.Publish(tailnet.ID, &broker.Signal{})
+		s.sessionManager.NotifyAll(tailnet.ID)
 	}
 
 	return connect.NewResponse(&api.DisableSSHResponse{}), nil
