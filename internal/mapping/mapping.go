@@ -82,7 +82,7 @@ func ToDNSConfig(m *domain.Machine, tailnet *domain.Tailnet, c *domain.DNSConfig
 	return dnsConfig
 }
 
-func ToNode(m *domain.Machine, tailnet *domain.Tailnet, peer bool, connected bool) (*tailcfg.Node, *tailcfg.UserProfile, error) {
+func ToNode(m *domain.Machine, tailnet *domain.Tailnet, peer bool, connected bool, routeFilter func(m *domain.Machine) []netip.Prefix) (*tailcfg.Node, *tailcfg.UserProfile, error) {
 	role := tailnet.IAMPolicy.GetRole(m.User)
 
 	var capabilities []string
@@ -144,8 +144,9 @@ func ToNode(m *domain.Machine, tailnet *domain.Tailnet, peer bool, connected boo
 		allowedIPs = append(allowedIPs, ipv6)
 	}
 
-	allowedIPs = append(allowedIPs, m.AllowIPs...)
-	allowedIPs = append(allowedIPs, m.AutoAllowIPs...)
+	if connected {
+		allowedIPs = append(allowedIPs, routeFilter(m)...)
+	}
 
 	var derp string
 	if hostinfo.NetInfo != nil {

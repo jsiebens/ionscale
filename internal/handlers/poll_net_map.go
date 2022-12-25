@@ -10,6 +10,7 @@ import (
 	"github.com/jsiebens/ionscale/internal/mapping"
 	"github.com/labstack/echo/v4"
 	"net/http"
+	"net/netip"
 	"tailscale.com/tailcfg"
 	"tailscale.com/types/opt"
 	"time"
@@ -206,13 +207,15 @@ func (h *PollNetMapHandler) createKeepAliveResponse(binder bind.Binder, request 
 func (h *PollNetMapHandler) createMapResponse(m *domain.Machine, binder bind.Binder, request *tailcfg.MapRequest, delta bool, prevSyncedPeerIDs map[uint64]bool, prevDerpMapChecksum string) ([]byte, map[uint64]bool, string, error) {
 	ctx := context.TODO()
 
+	prc := &primaryRoutesCollector{flagged: map[netip.Prefix]bool{}}
+
 	tailnet, err := h.repository.GetTailnet(ctx, m.TailnetID)
 	if err != nil {
 		return nil, nil, "", err
 	}
 
 	hostinfo := tailcfg.Hostinfo(m.HostInfo)
-	node, user, err := mapping.ToNode(m, tailnet, false, true)
+	node, user, err := mapping.ToNode(m, tailnet, false, true, prc.filter)
 	if err != nil {
 		return nil, nil, "", err
 	}
@@ -235,7 +238,9 @@ func (h *PollNetMapHandler) createMapResponse(m *domain.Machine, binder bind.Bin
 			continue
 		}
 		if policies.IsValidPeer(m, &peer) || policies.IsValidPeer(&peer, m) {
-			n, u, err := mapping.ToNode(&peer, tailnet, true, h.sessionManager.HasSession(peer.TailnetID, peer.ID))
+			isConnected := h.sessionManager.HasSession(peer.TailnetID, peer.ID)
+
+			n, u, err := mapping.ToNode(&peer, tailnet, true, isConnected, prc.filter)
 			if err != nil {
 				return nil, nil, "", err
 			}
@@ -319,4 +324,25 @@ func optBool(v bool) opt.Bool {
 	b := opt.Bool("")
 	b.Set(v)
 	return b
+}
+
+type primaryRoutesCollector struct {
+	flagged map[netip.Prefix]bool
+}
+
+func (p *primaryRoutesCollector) filter(m *domain.Machine) []netip.Prefix {
+	var result = []netip.Prefix{}
+	for _, r := range m.AllowIPs {
+		if _, ok := p.flagged[r]; r.Bits() != 0 && !ok {
+			result = append(result, r)
+			p.flagged[r] = true
+		}
+	}
+	for _, r := range m.AutoAllowIPs {
+		if _, ok := p.flagged[r]; r.Bits() != 0 && !ok {
+			result = append(result, r)
+			p.flagged[r] = true
+		}
+	}
+	return result
 }
