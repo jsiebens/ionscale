@@ -65,7 +65,7 @@ func (r *repository) LoadApiKey(ctx context.Context, key string) (*ApiKey, error
 	}
 
 	var m ApiKey
-	tx := r.withContext(ctx).Preload("User").Preload("Tailnet").First(&m, "key = ?", split[0])
+	tx := r.withContext(ctx).Preload("User").Preload("Tailnet").Take(&m, "key = ?", split[0])
 
 	if errors.Is(tx.Error, gorm.ErrRecordNotFound) {
 		return nil, nil

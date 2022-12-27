@@ -100,7 +100,7 @@ func (r *repository) GetOrCreateUserWithAccount(ctx context.Context, tailnet *Ta
 
 func (r *repository) GetUser(ctx context.Context, userID uint64) (*User, error) {
 	var m User
-	tx := r.withContext(ctx).Preload("Tailnet").Preload("Account").First(&m, "id = ?", userID)
+	tx := r.withContext(ctx).Preload("Tailnet").Preload("Account").Take(&m, "id = ?", userID)
 
 	if errors.Is(tx.Error, gorm.ErrRecordNotFound) {
 		return nil, nil

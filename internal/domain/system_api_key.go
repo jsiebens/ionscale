@@ -69,7 +69,7 @@ func (r *repository) LoadSystemApiKey(ctx context.Context, token string) (*Syste
 	}
 
 	var m SystemApiKey
-	tx := r.withContext(ctx).Preload("Account").First(&m, "key = ?", key)
+	tx := r.withContext(ctx).Preload("Account").Take(&m, "key = ?", key)
 
 	if errors.Is(tx.Error, gorm.ErrRecordNotFound) {
 		return nil, nil

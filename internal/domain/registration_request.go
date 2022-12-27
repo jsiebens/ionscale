@@ -68,7 +68,7 @@ func (r *repository) SaveRegistrationRequest(ctx context.Context, request *Regis
 
 func (r *repository) GetRegistrationRequestByKey(ctx context.Context, key string) (*RegistrationRequest, error) {
 	var m RegistrationRequest
-	tx := r.withContext(ctx).First(&m, "key = ?", key)
+	tx := r.withContext(ctx).Take(&m, "key = ?", key)
 
 	if errors.Is(tx.Error, gorm.ErrRecordNotFound) {
 		return nil, nil
@@ -83,7 +83,7 @@ func (r *repository) GetRegistrationRequestByKey(ctx context.Context, key string
 
 func (r *repository) GetRegistrationRequestByMachineKey(ctx context.Context, key string) (*RegistrationRequest, error) {
 	var m RegistrationRequest
-	tx := r.withContext(ctx).First(&m, "machine_key = ?", key)
+	tx := r.withContext(ctx).Take(&m, "machine_key = ?", key)
 
 	if errors.Is(tx.Error, gorm.ErrRecordNotFound) {
 		return nil, nil

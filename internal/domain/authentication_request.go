@@ -27,7 +27,7 @@ func (r *repository) SaveAuthenticationRequest(ctx context.Context, session *Aut
 
 func (r *repository) GetAuthenticationRequest(ctx context.Context, key string) (*AuthenticationRequest, error) {
 	var m AuthenticationRequest
-	tx := r.withContext(ctx).First(&m, "key = ?", key)
+	tx := r.withContext(ctx).Take(&m, "key = ?", key)
 
 	if errors.Is(tx.Error, gorm.ErrRecordNotFound) {
 		return nil, nil

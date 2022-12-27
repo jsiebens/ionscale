@@ -27,7 +27,7 @@ func (r *repository) SaveSSHActionRequest(ctx context.Context, session *SSHActio
 
 func (r *repository) GetSSHActionRequest(ctx context.Context, key string) (*SSHActionRequest, error) {
 	var m SSHActionRequest
-	tx := r.withContext(ctx).First(&m, "key = ?", key)
+	tx := r.withContext(ctx).Take(&m, "key = ?", key)
 
 	if errors.Is(tx.Error, gorm.ErrRecordNotFound) {
 		return nil, nil

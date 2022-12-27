@@ -136,7 +136,7 @@ func (r *repository) LoadAuthKey(ctx context.Context, key string) (*AuthKey, err
 	}
 
 	var m AuthKey
-	tx := r.withContext(ctx).Preload("User").Preload("Tailnet").First(&m, "key = ?", split[0])
+	tx := r.withContext(ctx).Preload("User").Preload("Tailnet").Take(&m, "key = ?", split[0])
 
 	if errors.Is(tx.Error, gorm.ErrRecordNotFound) {
 		return nil, nil
