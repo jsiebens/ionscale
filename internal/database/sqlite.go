@@ -6,33 +6,21 @@ import (
 	"gorm.io/gorm"
 )
 
-func newSqliteDB(config *config.Database, g *gorm.Config) (db, error) {
+func newSqliteDB(config *config.Database, g *gorm.Config) (*gorm.DB, dbLock, error) {
 	db, err := gorm.Open(sqlite.Open(config.Url), g)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
-
-	return &Sqlite{
-		db: db,
-	}, nil
+	return db, &sqliteLock{}, nil
 }
 
-type Sqlite struct {
-	db *gorm.DB
+type sqliteLock struct {
 }
 
-func (s *Sqlite) DB() *gorm.DB {
-	return s.db
-}
-
-func (s *Sqlite) Lock() error {
+func (s *sqliteLock) Lock() error {
 	return nil
 }
 
-func (s *Sqlite) Unlock() error {
-	return nil
-}
-
-func (s *Sqlite) UnlockErr(prevErr error) error {
+func (s *sqliteLock) UnlockErr(prevErr error) error {
 	return prevErr
 }

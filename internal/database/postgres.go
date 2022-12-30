@@ -11,26 +11,20 @@ import (
 	"gorm.io/gorm"
 )
 
-func newPostgresDB(config *config.Database, g *gorm.Config) (db, error) {
+func newPostgresDB(config *config.Database, g *gorm.Config) (*gorm.DB, dbLock, error) {
 	db, err := gorm.Open(postgres.Open(config.Url), g)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
-	return &Postgres{
-		db: db,
-	}, nil
+	return db, &pgLock{db: db}, nil
 }
 
-type Postgres struct {
+type pgLock struct {
 	db *gorm.DB
 }
 
-func (s *Postgres) DB() *gorm.DB {
-	return s.db
-}
-
-func (s *Postgres) Lock() error {
+func (s *pgLock) Lock() error {
 	d, _ := s.db.DB()
 
 	query := `SELECT pg_advisory_lock($1)`
@@ -42,7 +36,14 @@ func (s *Postgres) Lock() error {
 	return nil
 }
 
-func (s *Postgres) Unlock() error {
+func (s *pgLock) UnlockErr(prevErr error) error {
+	if err := s.unlock(); err != nil {
+		return multierror.Append(prevErr, err)
+	}
+	return prevErr
+}
+
+func (s *pgLock) unlock() error {
 	d, _ := s.db.DB()
 
 	query := `SELECT pg_advisory_unlock($1)`
@@ -53,16 +54,9 @@ func (s *Postgres) Unlock() error {
 	return nil
 }
 
-func (s *Postgres) UnlockErr(prevErr error) error {
-	if err := s.Unlock(); err != nil {
-		return multierror.Append(prevErr, err)
-	}
-	return prevErr
-}
-
 const advisoryLockIDSalt uint = 1486364155
 
-func (s *Postgres) generateAdvisoryLockId() string {
+func (s *pgLock) generateAdvisoryLockId() string {
 	sum := crc32.ChecksumIEEE([]byte("ionscale_migration"))
 	sum = sum * uint32(advisoryLockIDSalt)
 	return fmt.Sprint(sum)

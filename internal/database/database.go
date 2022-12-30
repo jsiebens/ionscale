@@ -18,35 +18,43 @@ import (
 	"gorm.io/plugin/prometheus"
 )
 
-type db interface {
-	DB() *gorm.DB
+type dbLock interface {
 	Lock() error
-	Unlock() error
 	UnlockErr(error) error
 }
 
 func OpenDB(config *config.Database, logger hclog.Logger) (domain.Repository, error) {
-	db, err := createDB(config, logger)
+	db, lock, err := createDB(config, logger)
 	if err != nil {
 		return nil, err
 	}
 
-	_ = db.DB().Use(prometheus.New(prometheus.Config{StartServer: false}))
+	_ = db.Use(prometheus.New(prometheus.Config{StartServer: false}))
 
-	repository := domain.NewRepository(db.DB())
-
-	if err := db.Lock(); err != nil {
+	sqlDB, err := db.DB()
+	if err != nil {
 		return nil, err
 	}
 
-	if err := db.UnlockErr(migrate(db.DB())); err != nil {
+	sqlDB.SetMaxOpenConns(config.MaxOpenConns)
+	sqlDB.SetMaxIdleConns(config.MaxIdleConns)
+	sqlDB.SetConnMaxLifetime(config.ConnMaxLifetime)
+	sqlDB.SetConnMaxIdleTime(config.ConnMaxIdleTime)
+
+	repository := domain.NewRepository(db)
+
+	if err := lock.Lock(); err != nil {
+		return nil, err
+	}
+
+	if err := lock.UnlockErr(migrate(db)); err != nil {
 		return nil, err
 	}
 
 	return repository, nil
 }
 
-func createDB(config *config.Database, logger hclog.Logger) (db, error) {
+func createDB(config *config.Database, logger hclog.Logger) (*gorm.DB, dbLock, error) {
 	gormConfig := &gorm.Config{
 		Logger: &GormLoggerAdapter{logger: logger.Named("db")},
 	}
@@ -58,7 +66,7 @@ func createDB(config *config.Database, logger hclog.Logger) (db, error) {
 		return newPostgresDB(config, gormConfig)
 	}
 
-	return nil, fmt.Errorf("invalid database type '%s'", config.Type)
+	return nil, nil, fmt.Errorf("invalid database type '%s'", config.Type)
 }
 
 func migrate(db *gorm.DB) error {

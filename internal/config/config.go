@@ -105,8 +105,10 @@ func defaultConfig() *Config {
 		MetricsListenAddr: ":9091",
 		ServerUrl:         "https://localhost:8843",
 		Database: Database{
-			Type: "sqlite",
-			Url:  "./ionscale.db?_pragma=busy_timeout(5000)&_pragma=journal_mode(WAL)&_pragma=foreign_keys(ON)",
+			Type:         "sqlite",
+			Url:          "./ionscale.db?_pragma=busy_timeout(5000)&_pragma=journal_mode(WAL)&_pragma=foreign_keys(ON)",
+			MaxOpenConns: 0,
+			MaxIdleConns: 2,
 		},
 		Tls: Tls{
 			Disable:     false,
@@ -169,8 +171,12 @@ type Logging struct {
 }
 
 type Database struct {
-	Type string `yaml:"type,omitempty" env:"TYPE"`
-	Url  string `yaml:"url,omitempty" env:"URL"`
+	Type            string        `yaml:"type,omitempty" env:"TYPE"`
+	Url             string        `yaml:"url,omitempty" env:"URL"`
+	MaxOpenConns    int           `yaml:"max_open_conns,omitempty" env:"MAX_OPEN_CONNS"`
+	MaxIdleConns    int           `yaml:"max_idle_conns,omitempty" env:"MAX_IDLE_CONNS"`
+	ConnMaxLifetime time.Duration `yaml:"conn_max_life_time,omitempty" env:"CONN_MAX_LIFE_TIME"`
+	ConnMaxIdleTime time.Duration `yaml:"conn_max_idle_time,omitempty" env:"CONN_MAX_IDLE_TIME"`
 }
 
 type Keys struct {
