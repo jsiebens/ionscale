@@ -15,6 +15,7 @@ import (
 	"github.com/jsiebens/ionscale/internal/domain"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
+	"gorm.io/plugin/prometheus"
 )
 
 type db interface {
@@ -29,6 +30,8 @@ func OpenDB(config *config.Database, logger hclog.Logger) (domain.Repository, er
 	if err != nil {
 		return nil, err
 	}
+
+	_ = db.DB().Use(prometheus.New(prometheus.Config{StartServer: false}))
 
 	repository := domain.NewRepository(db.DB())
 

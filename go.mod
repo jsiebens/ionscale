@@ -45,6 +45,7 @@ require (
 	gopkg.in/yaml.v3 v3.0.1
 	gorm.io/driver/postgres v1.4.4
 	gorm.io/gorm v1.24.0
+	gorm.io/plugin/prometheus v0.0.0-20221204031128-799a96c40bf9
 	inet.af/netaddr v0.0.0-20220811202034-502d2d690317
 	tailscale.com v1.32.0
 )
@@ -111,7 +112,7 @@ require (
 	github.com/lib/pq v1.10.6 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.16 // indirect
-	github.com/matttproud/golang_protobuf_extensions v1.0.1 // indirect
+	github.com/matttproud/golang_protobuf_extensions v1.0.2 // indirect
 	github.com/mdlayher/netlink v1.6.0 // indirect
 	github.com/mdlayher/socket v0.2.3 // indirect
 	github.com/mholt/acmez v1.0.4 // indirect
