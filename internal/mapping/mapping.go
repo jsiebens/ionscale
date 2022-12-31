@@ -82,7 +82,7 @@ func ToDNSConfig(m *domain.Machine, tailnet *domain.Tailnet, c *domain.DNSConfig
 	return dnsConfig
 }
 
-func ToNode(m *domain.Machine, tailnet *domain.Tailnet, peer bool, connected bool, routeFilter func(m *domain.Machine) []netip.Prefix) (*tailcfg.Node, *tailcfg.UserProfile, error) {
+func ToNode(m *domain.Machine, tailnet *domain.Tailnet, taggedDevicesUser *domain.User, peer bool, connected bool, routeFilter func(m *domain.Machine) []netip.Prefix) (*tailcfg.Node, *tailcfg.UserProfile, error) {
 	role := tailnet.IAMPolicy.GetRole(m.User)
 
 	var capabilities []string
@@ -203,9 +203,9 @@ func ToNode(m *domain.Machine, tailnet *domain.Tailnet, peer bool, connected boo
 	var user = ToUserProfile(m.User)
 
 	if m.HasTags() {
-		n.User = tailcfg.UserID(m.ID)
+		n.User = tailcfg.UserID(taggedDevicesUser.ID)
 		user = tailcfg.UserProfile{
-			ID:          tailcfg.UserID(m.ID),
+			ID:          tailcfg.UserID(taggedDevicesUser.ID),
 			LoginName:   "tagged-devices",
 			DisplayName: "Tagged Devices",
 		}

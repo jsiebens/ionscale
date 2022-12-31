@@ -214,8 +214,13 @@ func (h *PollNetMapHandler) createMapResponse(m *domain.Machine, binder bind.Bin
 		return nil, nil, "", err
 	}
 
+	serviceUser, _, err := h.repository.GetOrCreateServiceUser(ctx, tailnet)
+	if err != nil {
+		return nil, nil, "", err
+	}
+
 	hostinfo := tailcfg.Hostinfo(m.HostInfo)
-	node, user, err := mapping.ToNode(m, tailnet, false, true, prc.filter)
+	node, user, err := mapping.ToNode(m, tailnet, serviceUser, false, true, prc.filter)
 	if err != nil {
 		return nil, nil, "", err
 	}
@@ -240,7 +245,7 @@ func (h *PollNetMapHandler) createMapResponse(m *domain.Machine, binder bind.Bin
 		if policies.IsValidPeer(m, &peer) || policies.IsValidPeer(&peer, m) {
 			isConnected := h.sessionManager.HasSession(peer.TailnetID, peer.ID)
 
-			n, u, err := mapping.ToNode(&peer, tailnet, true, isConnected, prc.filter)
+			n, u, err := mapping.ToNode(&peer, tailnet, serviceUser, true, isConnected, prc.filter)
 			if err != nil {
 				return nil, nil, "", err
 			}
