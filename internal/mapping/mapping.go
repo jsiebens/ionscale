@@ -148,6 +148,10 @@ func ToNode(m *domain.Machine, tailnet *domain.Tailnet, taggedDevicesUser *domai
 		allowedIPs = append(allowedIPs, routeFilter(m)...)
 	}
 
+	if m.IsAllowedExitNode() {
+		allowedIPs = append(allowedIPs, netip.MustParsePrefix("0.0.0.0/0"), netip.MustParsePrefix("::/0"))
+	}
+
 	var derp string
 	if hostinfo.NetInfo != nil {
 		derp = fmt.Sprintf("127.3.3.40:%d", hostinfo.NetInfo.PreferredDERP)
