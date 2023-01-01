@@ -8,6 +8,8 @@ import (
 	"github.com/klauspost/compress/zstd"
 	"github.com/labstack/echo/v4"
 	"io/ioutil"
+	"sync"
+	"tailscale.com/smallzstd"
 	"tailscale.com/types/key"
 )
 
@@ -77,12 +79,7 @@ func (d *defaultBinder) Marshal(compress string, v interface{}) ([]byte, error) 
 	}
 
 	if compress == "zstd" {
-		encoder, err := zstd.NewWriter(nil)
-		if err != nil {
-			return nil, err
-		}
-
-		payload = encoder.EncodeAll(marshalled, nil)
+		payload = zstdEncode(marshalled)
 	} else {
 		payload = marshalled
 	}
@@ -140,12 +137,7 @@ func (b *boxBinder) Marshal(compress string, v interface{}) ([]byte, error) {
 	}
 
 	if compress == "zstd" {
-		encoder, err := zstd.NewWriter(nil)
-		if err != nil {
-			return nil, err
-		}
-
-		encoded := encoder.EncodeAll(marshalled, nil)
+		encoded := zstdEncode(marshalled)
 		payload = b.controlKey.SealTo(b.machineKey, encoded)
 	} else {
 		payload = b.controlKey.SealTo(b.machineKey, marshalled)
@@ -160,4 +152,22 @@ func (b *boxBinder) Marshal(compress string, v interface{}) ([]byte, error) {
 
 func (b *boxBinder) Peer() key.MachinePublic {
 	return b.machineKey
+}
+
+func zstdEncode(in []byte) []byte {
+	encoder := zstdEncoderPool.Get().(*zstd.Encoder)
+	out := encoder.EncodeAll(in, nil)
+	encoder.Close()
+	zstdEncoderPool.Put(encoder)
+	return out
+}
+
+var zstdEncoderPool = &sync.Pool{
+	New: func() any {
+		encoder, err := smallzstd.NewEncoder(nil, zstd.WithEncoderLevel(zstd.SpeedFastest))
+		if err != nil {
+			panic(err)
+		}
+		return encoder
+	},
 }
