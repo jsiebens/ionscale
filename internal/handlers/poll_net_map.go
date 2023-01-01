@@ -236,7 +236,7 @@ func (h *PollNetMapHandler) createMapResponse(m *domain.Machine, binder bind.Bin
 	}
 
 	syncedPeerIDs := map[uint64]bool{}
-	syncedUserIDs := map[tailcfg.UserID]bool{}
+	syncedUserIDs := map[tailcfg.UserID]bool{user.ID: true}
 
 	for _, peer := range candidatePeers {
 		if peer.IsExpired() {
