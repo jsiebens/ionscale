@@ -1,0 +1,16 @@
+http_listen_addr: ":8080"
+server_url: "http://localhost:8080"
+
+tls:
+  disable: true
+  force_https: false
+
+keys:
+  system_admin_key: "804ecd57365342254ce6647da5c249e85c10a0e51e74856bfdf292a2136b4249"
+
+database:
+  type: sqlite
+  url: /opt/ionscale.db?_pragma=busy_timeout(5000)&_pragma=journal_mode(WAL)&_pragma=foreign_keys(ON)
+
+logging:
+  level: trace
