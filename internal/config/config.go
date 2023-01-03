@@ -67,7 +67,7 @@ func LoadConfig(path string) (*Config, error) {
 
 	envCfgB64 := os.Getenv("IONSCALE_CONFIG_BASE64")
 	if len(envCfgB64) != 0 {
-		b, err := base64.RawStdEncoding.DecodeString(envCfgB64)
+		b, err := base64.StdEncoding.DecodeString(envCfgB64)
 		if err != nil {
 			return nil, err
 		}
