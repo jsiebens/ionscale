@@ -7,10 +7,35 @@ import (
 	"github.com/bufbuild/connect-go"
 	"github.com/jsiebens/ionscale/internal/domain"
 	"github.com/jsiebens/ionscale/internal/errors"
+	"github.com/jsiebens/ionscale/internal/mapping"
 	"github.com/jsiebens/ionscale/internal/util"
 	api "github.com/jsiebens/ionscale/pkg/gen/ionscale/v1"
 	"tailscale.com/tailcfg"
 )
+
+func domainTailnetToApiTailnet(tailnet *domain.Tailnet) (*api.Tailnet, error) {
+	t := &api.Tailnet{
+		Id:                          tailnet.ID,
+		Name:                        tailnet.Name,
+		IamPolicy:                   new(api.IAMPolicy),
+		AclPolicy:                   new(api.ACLPolicy),
+		DnsConfig:                   domainDNSConfigToApiDNSConfig(tailnet),
+		ServiceCollectionEnabled:    tailnet.ServiceCollectionEnabled,
+		FileSharingEnabled:          tailnet.FileSharingEnabled,
+		SshEnabled:                  tailnet.SSHEnabled,
+		MachineAuthorizationEnabled: tailnet.MachineAuthorizationEnabled,
+	}
+
+	if err := mapping.CopyViaJson(tailnet.IAMPolicy, t.IamPolicy); err != nil {
+		return nil, err
+	}
+
+	if err := mapping.CopyViaJson(tailnet.ACLPolicy, t.AclPolicy); err != nil {
+		return nil, err
+	}
+
+	return t, nil
+}
 
 func (s *Service) CreateTailnet(ctx context.Context, req *connect.Request[api.CreateTailnetRequest]) (*connect.Response[api.CreateTailnetResponse], error) {
 	principal := CurrentPrincipal(ctx)
@@ -18,32 +43,94 @@ func (s *Service) CreateTailnet(ctx context.Context, req *connect.Request[api.Cr
 		return nil, connect.NewError(connect.CodePermissionDenied, fmt.Errorf("permission denied"))
 	}
 
-	name := req.Msg.Name
-	iamPolicy := domain.IAMPolicy{}
-
-	if req.Msg.IamPolicy != nil {
-		iamPolicy.Subs = req.Msg.IamPolicy.Subs
-		iamPolicy.Emails = req.Msg.IamPolicy.Emails
-		iamPolicy.Filters = req.Msg.IamPolicy.Filters
-		iamPolicy.Roles = apiRolesMapToDomainRolesMap(req.Msg.IamPolicy.Roles)
+	tailnet := &domain.Tailnet{
+		ID:                          util.NextID(),
+		Name:                        req.Msg.Name,
+		IAMPolicy:                   domain.IAMPolicy{},
+		ACLPolicy:                   domain.ACLPolicy{},
+		DNSConfig:                   apiDNSConfigToDomainDNSConfig(req.Msg.DnsConfig),
+		ServiceCollectionEnabled:    req.Msg.ServiceCollectionEnabled,
+		FileSharingEnabled:          req.Msg.FileSharingEnabled,
+		SSHEnabled:                  req.Msg.SshEnabled,
+		MachineAuthorizationEnabled: req.Msg.MachineAuthorizationEnabled,
 	}
 
-	tailnet := &domain.Tailnet{
-		ID:        util.NextID(),
-		Name:      name,
-		IAMPolicy: iamPolicy,
-		ACLPolicy: domain.DefaultPolicy(),
-		DNSConfig: domain.DNSConfig{MagicDNS: true},
+	if req.Msg.IamPolicy != nil {
+		if err := mapping.CopyViaJson(req.Msg.IamPolicy, &tailnet.IAMPolicy); err != nil {
+			return nil, errors.Wrap(err, 0)
+		}
+	}
+
+	if req.Msg.AclPolicy != nil {
+		if err := mapping.CopyViaJson(req.Msg.AclPolicy, &tailnet.ACLPolicy); err != nil {
+			return nil, errors.Wrap(err, 0)
+		}
 	}
 
 	if err := s.repository.SaveTailnet(ctx, tailnet); err != nil {
 		return nil, errors.Wrap(err, 0)
 	}
 
-	resp := &api.CreateTailnetResponse{Tailnet: &api.Tailnet{
-		Id:   tailnet.ID,
-		Name: tailnet.Name,
-	}}
+	t, err := domainTailnetToApiTailnet(tailnet)
+	if err != nil {
+		return nil, errors.Wrap(err, 0)
+	}
+
+	resp := &api.CreateTailnetResponse{Tailnet: t}
+
+	return connect.NewResponse(resp), nil
+}
+
+func (s *Service) UpdateTailnet(ctx context.Context, req *connect.Request[api.UpdateTailnetRequest]) (*connect.Response[api.UpdateTailnetResponse], error) {
+	principal := CurrentPrincipal(ctx)
+	if !principal.IsSystemAdmin() && !principal.IsTailnetAdmin(req.Msg.TailnetId) {
+		return nil, connect.NewError(connect.CodePermissionDenied, fmt.Errorf("permission denied"))
+	}
+
+	tailnet, err := s.repository.GetTailnet(ctx, req.Msg.TailnetId)
+	if err != nil {
+		return nil, errors.Wrap(err, 0)
+	}
+
+	if tailnet == nil {
+		return nil, connect.NewError(connect.CodeNotFound, fmt.Errorf("tailnet not found"))
+	}
+
+	if req.Msg.IamPolicy != nil {
+		tailnet.IAMPolicy = domain.IAMPolicy{}
+		if err := mapping.CopyViaJson(req.Msg.IamPolicy, &tailnet.IAMPolicy); err != nil {
+			return nil, errors.Wrap(err, 0)
+		}
+	}
+
+	if req.Msg.AclPolicy != nil {
+		tailnet.ACLPolicy = domain.ACLPolicy{}
+		if err := mapping.CopyViaJson(req.Msg.AclPolicy, &tailnet.ACLPolicy); err != nil {
+			return nil, errors.Wrap(err, 0)
+		}
+	}
+
+	if req.Msg.DnsConfig != nil {
+		tailnet.DNSConfig = apiDNSConfigToDomainDNSConfig(req.Msg.DnsConfig)
+	}
+
+	tailnet.ServiceCollectionEnabled = req.Msg.ServiceCollectionEnabled
+	tailnet.FileSharingEnabled = req.Msg.FileSharingEnabled
+	tailnet.SSHEnabled = req.Msg.SshEnabled
+	tailnet.MachineAuthorizationEnabled = req.Msg.MachineAuthorizationEnabled
+
+	if err := s.repository.SaveTailnet(ctx, tailnet); err != nil {
+		return nil, errors.Wrap(err, 0)
+	}
+
+	s.sessionManager.NotifyAll(tailnet.ID)
+
+	t, err := domainTailnetToApiTailnet(tailnet)
+	if err != nil {
+		return nil, errors.Wrap(err, 0)
+	}
+
+	resp := &api.UpdateTailnetResponse{Tailnet: t}
 
 	return connect.NewResponse(resp), nil
 }
@@ -63,10 +150,12 @@ func (s *Service) GetTailnet(ctx context.Context, req *connect.Request[api.GetTa
 		return nil, connect.NewError(connect.CodeNotFound, fmt.Errorf("tailnet not found"))
 	}
 
-	return connect.NewResponse(&api.GetTailnetResponse{Tailnet: &api.Tailnet{
-		Id:   tailnet.ID,
-		Name: tailnet.Name,
-	}}), nil
+	t, err := domainTailnetToApiTailnet(tailnet)
+	if err != nil {
+		return nil, errors.Wrap(err, 0)
+	}
+
+	return connect.NewResponse(&api.GetTailnetResponse{Tailnet: t}), nil
 }
 
 func (s *Service) ListTailnets(ctx context.Context, req *connect.Request[api.ListTailnetsRequest]) (*connect.Response[api.ListTailnetsResponse], error) {

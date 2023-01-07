@@ -26,6 +26,7 @@ service IonscaleService {
   rpc ResetDefaultDERPMap(ResetDefaultDERPMapRequest) returns (ResetDefaultDERPMapResponse) {}
 
   rpc CreateTailnet(CreateTailnetRequest) returns (CreateTailnetResponse) {}
+  rpc UpdateTailnet(UpdateTailnetRequest) returns (UpdateTailnetResponse) {}
   rpc GetTailnet(GetTailnetRequest) returns (GetTailnetResponse) {}
   rpc ListTailnets(ListTailnetsRequest) returns (ListTailnetsResponse) {}
   rpc DeleteTailnet(DeleteTailnetRequest) returns (DeleteTailnetResponse) {}

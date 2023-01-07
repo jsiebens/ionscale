@@ -21,17 +21,17 @@ const (
 )
 
 type AutoApprovers struct {
-	Routes   map[string][]string `json:"routes"`
-	ExitNode []string            `json:"exitNode"`
+	Routes   map[string][]string `json:"routes,omitempty"`
+	ExitNode []string            `json:"exitNode,omitempty"`
 }
 
 type ACLPolicy struct {
 	Groups        map[string][]string `json:"groups,omitempty"`
 	Hosts         map[string]string   `json:"hosts,omitempty"`
-	ACLs          []ACL               `json:"acls"`
-	TagOwners     map[string][]string `json:"tagowners"`
-	AutoApprovers *AutoApprovers      `json:"autoApprovers"`
-	SSHRules      []SSHRule           `json:"ssh"`
+	ACLs          []ACL               `json:"acls,omitempty"`
+	TagOwners     map[string][]string `json:"tagowners,omitempty"`
+	AutoApprovers *AutoApprovers      `json:"autoApprovers,omitempty"`
+	SSHRules      []SSHRule           `json:"ssh,omitempty"`
 }
 
 type ACL struct {
@@ -45,18 +45,6 @@ type SSHRule struct {
 	Src    []string `json:"src"`
 	Dst    []string `json:"dst"`
 	Users  []string `json:"users"`
-}
-
-func DefaultPolicy() ACLPolicy {
-	return ACLPolicy{
-		ACLs: []ACL{
-			{
-				Action: "accept",
-				Src:    []string{"*"},
-				Dst:    []string{"*:*"},
-			},
-		},
-	}
 }
 
 func (a ACLPolicy) FindAutoApprovedIPs(routableIPs []netip.Prefix, tags []string, u *User) []netip.Prefix {

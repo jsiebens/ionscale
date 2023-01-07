@@ -2,21 +2,54 @@ syntax = "proto3";
 
 package ionscale.v1;
 
+import "ionscale/v1/acl.proto";
 import "ionscale/v1/iam.proto";
+import "ionscale/v1/dns.proto";
 
 option go_package = "github.com/jsiebens/ionscale/pkg/gen/ionscale/v1;ionscalev1";
 
 message Tailnet {
   uint64 id = 1;
   string name = 2;
+  IAMPolicy iam_policy = 3;
+  ACLPolicy acl_policy = 4;
+  DNSConfig dns_config = 5;
+
+  bool service_collection_enabled = 6;
+  bool file_sharing_enabled = 7;
+  bool ssh_enabled = 8;
+  bool machine_authorization_enabled = 9;
 }
 
 message CreateTailnetRequest {
   string name = 1;
   IAMPolicy iam_policy = 2;
+  ACLPolicy acl_policy = 3;
+  DNSConfig dns_config = 4;
+
+  bool service_collection_enabled = 5;
+  bool file_sharing_enabled = 6;
+  bool ssh_enabled = 7;
+  bool machine_authorization_enabled = 8;
 }
 
 message CreateTailnetResponse {
+  Tailnet tailnet = 1;
+}
+
+message UpdateTailnetRequest {
+  uint64 tailnet_id = 1;
+  IAMPolicy iam_policy = 2;
+  ACLPolicy acl_policy = 3;
+  DNSConfig dns_config = 4;
+
+  bool service_collection_enabled = 5;
+  bool file_sharing_enabled = 6;
+  bool ssh_enabled = 7;
+  bool machine_authorization_enabled = 8;
+}
+
+message UpdateTailnetResponse {
   Tailnet tailnet = 1;
 }
 

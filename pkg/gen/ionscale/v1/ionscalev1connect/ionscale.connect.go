@@ -33,6 +33,7 @@ type IonscaleServiceClient interface {
 	SetDefaultDERPMap(context.Context, *connect_go.Request[v1.SetDefaultDERPMapRequest]) (*connect_go.Response[v1.SetDefaultDERPMapResponse], error)
 	ResetDefaultDERPMap(context.Context, *connect_go.Request[v1.ResetDefaultDERPMapRequest]) (*connect_go.Response[v1.ResetDefaultDERPMapResponse], error)
 	CreateTailnet(context.Context, *connect_go.Request[v1.CreateTailnetRequest]) (*connect_go.Response[v1.CreateTailnetResponse], error)
+	UpdateTailnet(context.Context, *connect_go.Request[v1.UpdateTailnetRequest]) (*connect_go.Response[v1.UpdateTailnetResponse], error)
 	GetTailnet(context.Context, *connect_go.Request[v1.GetTailnetRequest]) (*connect_go.Response[v1.GetTailnetResponse], error)
 	ListTailnets(context.Context, *connect_go.Request[v1.ListTailnetsRequest]) (*connect_go.Response[v1.ListTailnetsResponse], error)
 	DeleteTailnet(context.Context, *connect_go.Request[v1.DeleteTailnetRequest]) (*connect_go.Response[v1.DeleteTailnetResponse], error)
@@ -110,6 +111,11 @@ func NewIonscaleServiceClient(httpClient connect_go.HTTPClient, baseURL string, 
 		createTailnet: connect_go.NewClient[v1.CreateTailnetRequest, v1.CreateTailnetResponse](
 			httpClient,
 			baseURL+"/ionscale.v1.IonscaleService/CreateTailnet",
+			opts...,
+		),
+		updateTailnet: connect_go.NewClient[v1.UpdateTailnetRequest, v1.UpdateTailnetResponse](
+			httpClient,
+			baseURL+"/ionscale.v1.IonscaleService/UpdateTailnet",
 			opts...,
 		),
 		getTailnet: connect_go.NewClient[v1.GetTailnetRequest, v1.GetTailnetResponse](
@@ -308,6 +314,7 @@ type ionscaleServiceClient struct {
 	setDefaultDERPMap           *connect_go.Client[v1.SetDefaultDERPMapRequest, v1.SetDefaultDERPMapResponse]
 	resetDefaultDERPMap         *connect_go.Client[v1.ResetDefaultDERPMapRequest, v1.ResetDefaultDERPMapResponse]
 	createTailnet               *connect_go.Client[v1.CreateTailnetRequest, v1.CreateTailnetResponse]
+	updateTailnet               *connect_go.Client[v1.UpdateTailnetRequest, v1.UpdateTailnetResponse]
 	getTailnet                  *connect_go.Client[v1.GetTailnetRequest, v1.GetTailnetResponse]
 	listTailnets                *connect_go.Client[v1.ListTailnetsRequest, v1.ListTailnetsResponse]
 	deleteTailnet               *connect_go.Client[v1.DeleteTailnetRequest, v1.DeleteTailnetResponse]
@@ -375,6 +382,11 @@ func (c *ionscaleServiceClient) ResetDefaultDERPMap(ctx context.Context, req *co
 // CreateTailnet calls ionscale.v1.IonscaleService.CreateTailnet.
 func (c *ionscaleServiceClient) CreateTailnet(ctx context.Context, req *connect_go.Request[v1.CreateTailnetRequest]) (*connect_go.Response[v1.CreateTailnetResponse], error) {
 	return c.createTailnet.CallUnary(ctx, req)
+}
+
+// UpdateTailnet calls ionscale.v1.IonscaleService.UpdateTailnet.
+func (c *ionscaleServiceClient) UpdateTailnet(ctx context.Context, req *connect_go.Request[v1.UpdateTailnetRequest]) (*connect_go.Response[v1.UpdateTailnetResponse], error) {
+	return c.updateTailnet.CallUnary(ctx, req)
 }
 
 // GetTailnet calls ionscale.v1.IonscaleService.GetTailnet.
@@ -570,6 +582,7 @@ type IonscaleServiceHandler interface {
 	SetDefaultDERPMap(context.Context, *connect_go.Request[v1.SetDefaultDERPMapRequest]) (*connect_go.Response[v1.SetDefaultDERPMapResponse], error)
 	ResetDefaultDERPMap(context.Context, *connect_go.Request[v1.ResetDefaultDERPMapRequest]) (*connect_go.Response[v1.ResetDefaultDERPMapResponse], error)
 	CreateTailnet(context.Context, *connect_go.Request[v1.CreateTailnetRequest]) (*connect_go.Response[v1.CreateTailnetResponse], error)
+	UpdateTailnet(context.Context, *connect_go.Request[v1.UpdateTailnetRequest]) (*connect_go.Response[v1.UpdateTailnetResponse], error)
 	GetTailnet(context.Context, *connect_go.Request[v1.GetTailnetRequest]) (*connect_go.Response[v1.GetTailnetResponse], error)
 	ListTailnets(context.Context, *connect_go.Request[v1.ListTailnetsRequest]) (*connect_go.Response[v1.ListTailnetsResponse], error)
 	DeleteTailnet(context.Context, *connect_go.Request[v1.DeleteTailnetRequest]) (*connect_go.Response[v1.DeleteTailnetResponse], error)
@@ -644,6 +657,11 @@ func NewIonscaleServiceHandler(svc IonscaleServiceHandler, opts ...connect_go.Ha
 	mux.Handle("/ionscale.v1.IonscaleService/CreateTailnet", connect_go.NewUnaryHandler(
 		"/ionscale.v1.IonscaleService/CreateTailnet",
 		svc.CreateTailnet,
+		opts...,
+	))
+	mux.Handle("/ionscale.v1.IonscaleService/UpdateTailnet", connect_go.NewUnaryHandler(
+		"/ionscale.v1.IonscaleService/UpdateTailnet",
+		svc.UpdateTailnet,
 		opts...,
 	))
 	mux.Handle("/ionscale.v1.IonscaleService/GetTailnet", connect_go.NewUnaryHandler(
@@ -859,6 +877,10 @@ func (UnimplementedIonscaleServiceHandler) ResetDefaultDERPMap(context.Context, 
 
 func (UnimplementedIonscaleServiceHandler) CreateTailnet(context.Context, *connect_go.Request[v1.CreateTailnetRequest]) (*connect_go.Response[v1.CreateTailnetResponse], error) {
 	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("ionscale.v1.IonscaleService.CreateTailnet is not implemented"))
+}
+
+func (UnimplementedIonscaleServiceHandler) UpdateTailnet(context.Context, *connect_go.Request[v1.UpdateTailnetRequest]) (*connect_go.Response[v1.UpdateTailnetResponse], error) {
+	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("ionscale.v1.IonscaleService.UpdateTailnet is not implemented"))
 }
 
 func (UnimplementedIonscaleServiceHandler) GetTailnet(context.Context, *connect_go.Request[v1.GetTailnetRequest]) (*connect_go.Response[v1.GetTailnetResponse], error) {

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/bufbuild/connect-go"
 	idomain "github.com/jsiebens/ionscale/internal/domain"
+	"github.com/jsiebens/ionscale/pkg/defaults"
 	api "github.com/jsiebens/ionscale/pkg/gen/ionscale/v1"
 	"github.com/muesli/coral"
 	"github.com/rodaine/table"
@@ -112,18 +113,20 @@ func createTailnetsCommand() *coral.Command {
 
 	command.RunE = func(command *coral.Command, args []string) error {
 
-		var iamPolicy = api.IAMPolicy{}
+		dnsConfig := defaults.DefaultDNSConfig()
+		aclPolicy := defaults.DefaultACLPolicy()
+		iamPolicy := &api.IAMPolicy{}
 
 		if len(domain) != 0 {
 			domainToLower := strings.ToLower(domain)
-			iamPolicy = api.IAMPolicy{
+			iamPolicy = &api.IAMPolicy{
 				Filters: []string{fmt.Sprintf("domain == %s", domainToLower)},
 			}
 		}
 
 		if len(email) != 0 {
 			emailToLower := strings.ToLower(email)
-			iamPolicy = api.IAMPolicy{
+			iamPolicy = &api.IAMPolicy{
 				Emails: []string{emailToLower},
 				Roles: map[string]string{
 					emailToLower: string(idomain.UserRoleAdmin),
@@ -138,7 +141,9 @@ func createTailnetsCommand() *coral.Command {
 
 		resp, err := client.CreateTailnet(context.Background(), connect.NewRequest(&api.CreateTailnetRequest{
 			Name:      name,
-			IamPolicy: &iamPolicy,
+			IamPolicy: iamPolicy,
+			AclPolicy: aclPolicy,
+			DnsConfig: dnsConfig,
 		}))
 
 		if err != nil {

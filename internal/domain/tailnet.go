@@ -3,7 +3,6 @@ package domain
 import (
 	"context"
 	"errors"
-	"github.com/jsiebens/ionscale/internal/util"
 	"gorm.io/gorm"
 	"net/mail"
 	"strings"
@@ -56,22 +55,6 @@ func (r *repository) SaveTailnet(ctx context.Context, tailnet *Tailnet) error {
 	}
 
 	return nil
-}
-
-func (r *repository) GetOrCreateTailnet(ctx context.Context, name string, iamPolicy IAMPolicy) (*Tailnet, bool, error) {
-	tailnet := &Tailnet{}
-	id := util.NextID()
-
-	tx := r.withContext(ctx).
-		Where(Tailnet{Name: name}).
-		Attrs(Tailnet{ID: id, ACLPolicy: DefaultPolicy(), IAMPolicy: iamPolicy}).
-		FirstOrCreate(tailnet)
-
-	if tx.Error != nil {
-		return nil, false, tx.Error
-	}
-
-	return tailnet, tailnet.ID == id, nil
 }
 
 func (r *repository) GetTailnet(ctx context.Context, id uint64) (*Tailnet, error) {

@@ -24,18 +24,8 @@ func (s *Service) GetDNSConfig(ctx context.Context, req *connect.Request[api.Get
 		return nil, connect.NewError(connect.CodeNotFound, fmt.Errorf("tailnet not found"))
 	}
 
-	dnsConfig := tailnet.DNSConfig
-	tailnetDomain := domain.SanitizeTailnetName(tailnet.Name)
-
 	resp := &api.GetDNSConfigResponse{
-		Config: &api.DNSConfig{
-			MagicDns:         dnsConfig.MagicDNS,
-			HttpsCerts:       dnsConfig.HttpsCertsEnabled,
-			MagicDnsSuffix:   fmt.Sprintf("%s.%s", tailnetDomain, config.MagicDNSSuffix()),
-			OverrideLocalDns: dnsConfig.OverrideLocalDNS,
-			Nameservers:      dnsConfig.Nameservers,
-			Routes:           domainRoutesToApiRoutes(dnsConfig.Routes),
-		},
+		Config: domainDNSConfigToApiDNSConfig(tailnet),
 	}
 
 	return connect.NewResponse(resp), nil
@@ -94,4 +84,31 @@ func apiRoutesToDomainRoutes(routes map[string]*api.Routes) map[string][]string 
 		result[k] = v.Routes
 	}
 	return result
+}
+
+func apiDNSConfigToDomainDNSConfig(dnsConfig *api.DNSConfig) domain.DNSConfig {
+	if dnsConfig == nil {
+		return domain.DNSConfig{}
+	}
+
+	return domain.DNSConfig{
+		MagicDNS:          dnsConfig.MagicDns,
+		HttpsCertsEnabled: dnsConfig.HttpsCerts,
+		OverrideLocalDNS:  dnsConfig.OverrideLocalDns,
+		Nameservers:       dnsConfig.Nameservers,
+		Routes:            apiRoutesToDomainRoutes(dnsConfig.Routes),
+	}
+}
+
+func domainDNSConfigToApiDNSConfig(tailnet *domain.Tailnet) *api.DNSConfig {
+	tailnetDomain := domain.SanitizeTailnetName(tailnet.Name)
+	dnsConfig := tailnet.DNSConfig
+	return &api.DNSConfig{
+		MagicDns:         dnsConfig.MagicDNS,
+		HttpsCerts:       dnsConfig.HttpsCertsEnabled,
+		MagicDnsSuffix:   fmt.Sprintf("%s.%s", tailnetDomain, config.MagicDNSSuffix()),
+		OverrideLocalDns: dnsConfig.OverrideLocalDNS,
+		Nameservers:      dnsConfig.Nameservers,
+		Routes:           domainRoutesToApiRoutes(dnsConfig.Routes),
+	}
 }

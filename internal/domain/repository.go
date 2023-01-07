@@ -25,7 +25,6 @@ type Repository interface {
 	GetOrCreateAccount(ctx context.Context, externalID, loginName string) (*Account, bool, error)
 
 	SaveTailnet(ctx context.Context, tailnet *Tailnet) error
-	GetOrCreateTailnet(ctx context.Context, name string, iamPolicy IAMPolicy) (*Tailnet, bool, error)
 	GetTailnet(ctx context.Context, id uint64) (*Tailnet, error)
 	GetTailnetByAlias(ctx context.Context, alias string) (*Tailnet, error)
 	ListTailnets(ctx context.Context) ([]Tailnet, error)

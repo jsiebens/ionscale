@@ -11,6 +11,10 @@ import (
 	"gorm.io/gorm/schema"
 )
 
+func DefaultIAMPolicy() IAMPolicy {
+	return IAMPolicy{}
+}
+
 type Identity struct {
 	UserID   string
 	Username string
