@@ -59,12 +59,16 @@ func (s *Service) CreateTailnet(ctx context.Context, req *connect.Request[api.Cr
 		if err := mapping.CopyViaJson(req.Msg.IamPolicy, &tailnet.IAMPolicy); err != nil {
 			return nil, errors.Wrap(err, 0)
 		}
+	} else {
+		tailnet.IAMPolicy = domain.DefaultIAMPolicy()
 	}
 
 	if req.Msg.AclPolicy != nil {
 		if err := mapping.CopyViaJson(req.Msg.AclPolicy, &tailnet.ACLPolicy); err != nil {
 			return nil, errors.Wrap(err, 0)
 		}
+	} else {
+		tailnet.ACLPolicy = domain.DefaultACLPolicy()
 	}
 
 	if err := s.repository.SaveTailnet(ctx, tailnet); err != nil {
