@@ -21,7 +21,7 @@ import (
 	"time"
 )
 
-const DefaultTargetVersion = "1.34.1"
+const DefaultTargetVersion = "1.36.0"
 
 var (
 	setupOnce     sync.Once
