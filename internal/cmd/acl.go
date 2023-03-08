@@ -8,13 +8,13 @@ import (
 	"github.com/bufbuild/connect-go"
 	"github.com/jsiebens/go-edit/editor"
 	api "github.com/jsiebens/ionscale/pkg/gen/ionscale/v1"
-	"github.com/muesli/coral"
+	"github.com/spf13/cobra"
 	"io/ioutil"
 	"os"
 )
 
-func getACLConfigCommand() *coral.Command {
-	command := &coral.Command{
+func getACLConfigCommand() *cobra.Command {
+	command := &cobra.Command{
 		Use:          "get-acl-policy",
 		Short:        "Get the ACL policy",
 		SilenceUsage: true,
@@ -29,7 +29,7 @@ func getACLConfigCommand() *coral.Command {
 	command.Flags().Uint64Var(&tailnetID, "tailnet-id", 0, "Tailnet ID. Mutually exclusive with --tailnet.")
 
 	command.PreRunE = checkRequiredTailnetAndTailnetIdFlags
-	command.RunE = func(cmd *coral.Command, args []string) error {
+	command.RunE = func(cmd *cobra.Command, args []string) error {
 		client, err := target.createGRPCClient()
 		if err != nil {
 			return err
@@ -58,8 +58,8 @@ func getACLConfigCommand() *coral.Command {
 	return command
 }
 
-func editACLConfigCommand() *coral.Command {
-	command := &coral.Command{
+func editACLConfigCommand() *cobra.Command {
+	command := &cobra.Command{
 		Use:          "edit-acl-policy",
 		Short:        "Edit the ACL policy",
 		SilenceUsage: true,
@@ -74,7 +74,7 @@ func editACLConfigCommand() *coral.Command {
 	command.Flags().Uint64Var(&tailnetID, "tailnet-id", 0, "Tailnet ID. Mutually exclusive with --tailnet.")
 
 	command.PreRunE = checkRequiredTailnetAndTailnetIdFlags
-	command.RunE = func(cmd *coral.Command, args []string) error {
+	command.RunE = func(cmd *cobra.Command, args []string) error {
 		edit := editor.NewDefaultEditor([]string{"IONSCALE_EDITOR", "EDITOR"})
 
 		client, err := target.createGRPCClient()
@@ -122,8 +122,8 @@ func editACLConfigCommand() *coral.Command {
 	return command
 }
 
-func setACLConfigCommand() *coral.Command {
-	command := &coral.Command{
+func setACLConfigCommand() *cobra.Command {
+	command := &cobra.Command{
 		Use:          "set-acl-policy",
 		Short:        "Set ACL policy",
 		SilenceUsage: true,
@@ -140,7 +140,7 @@ func setACLConfigCommand() *coral.Command {
 	command.Flags().StringVar(&file, "file", "", "Path to json file with the acl configuration")
 
 	command.PreRunE = checkRequiredTailnetAndTailnetIdFlags
-	command.RunE = func(cmd *coral.Command, args []string) error {
+	command.RunE = func(cmd *cobra.Command, args []string) error {
 		rawJson, err := ioutil.ReadFile(file)
 		if err != nil {
 			return err

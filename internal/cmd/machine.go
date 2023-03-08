@@ -5,17 +5,17 @@ import (
 	"fmt"
 	"github.com/bufbuild/connect-go"
 	api "github.com/jsiebens/ionscale/pkg/gen/ionscale/v1"
-	"github.com/muesli/coral"
 	"github.com/nleeper/goment"
 	"github.com/rodaine/table"
+	"github.com/spf13/cobra"
 	"inet.af/netaddr"
 	"os"
 	"strings"
 	"text/tabwriter"
 )
 
-func machineCommands() *coral.Command {
-	command := &coral.Command{
+func machineCommands() *cobra.Command {
+	command := &cobra.Command{
 		Use:          "machines",
 		Aliases:      []string{"machine"},
 		Short:        "Manage ionscale machines",
@@ -38,8 +38,8 @@ func machineCommands() *coral.Command {
 	return command
 }
 
-func getMachineCommand() *coral.Command {
-	command := &coral.Command{
+func getMachineCommand() *cobra.Command {
+	command := &cobra.Command{
 		Use:          "get",
 		Short:        "Retrieve detailed information for a machine",
 		SilenceUsage: true,
@@ -52,7 +52,7 @@ func getMachineCommand() *coral.Command {
 
 	_ = command.MarkFlagRequired("machine-id")
 
-	command.RunE = func(command *coral.Command, args []string) error {
+	command.RunE = func(command *cobra.Command, args []string) error {
 		client, err := target.createGRPCClient()
 		if err != nil {
 			return err
@@ -150,8 +150,8 @@ func getMachineCommand() *coral.Command {
 	return command
 }
 
-func deleteMachineCommand() *coral.Command {
-	command := &coral.Command{
+func deleteMachineCommand() *cobra.Command {
+	command := &cobra.Command{
 		Use:          "delete",
 		Short:        "Deletes a machine",
 		SilenceUsage: true,
@@ -164,7 +164,7 @@ func deleteMachineCommand() *coral.Command {
 
 	_ = command.MarkFlagRequired("machine-id")
 
-	command.RunE = func(command *coral.Command, args []string) error {
+	command.RunE = func(command *cobra.Command, args []string) error {
 		client, err := target.createGRPCClient()
 		if err != nil {
 			return err
@@ -183,8 +183,8 @@ func deleteMachineCommand() *coral.Command {
 	return command
 }
 
-func expireMachineCommand() *coral.Command {
-	command := &coral.Command{
+func expireMachineCommand() *cobra.Command {
+	command := &cobra.Command{
 		Use:          "expire",
 		Short:        "Expires a machine",
 		SilenceUsage: true,
@@ -197,7 +197,7 @@ func expireMachineCommand() *coral.Command {
 
 	_ = command.MarkFlagRequired("machine-id")
 
-	command.RunE = func(command *coral.Command, args []string) error {
+	command.RunE = func(command *cobra.Command, args []string) error {
 		client, err := target.createGRPCClient()
 		if err != nil {
 			return err
@@ -216,8 +216,8 @@ func expireMachineCommand() *coral.Command {
 	return command
 }
 
-func authorizeMachineCommand() *coral.Command {
-	command := &coral.Command{
+func authorizeMachineCommand() *cobra.Command {
+	command := &cobra.Command{
 		Use:          "authorize",
 		Short:        "Authorizes a machine",
 		SilenceUsage: true,
@@ -230,7 +230,7 @@ func authorizeMachineCommand() *coral.Command {
 
 	_ = command.MarkFlagRequired("machine-id")
 
-	command.RunE = func(command *coral.Command, args []string) error {
+	command.RunE = func(command *cobra.Command, args []string) error {
 		client, err := target.createGRPCClient()
 		if err != nil {
 			return err
@@ -249,8 +249,8 @@ func authorizeMachineCommand() *coral.Command {
 	return command
 }
 
-func listMachinesCommand() *coral.Command {
-	command := &coral.Command{
+func listMachinesCommand() *cobra.Command {
+	command := &cobra.Command{
 		Use:          "list",
 		Short:        "List machines",
 		SilenceUsage: true,
@@ -265,7 +265,7 @@ func listMachinesCommand() *coral.Command {
 	command.Flags().Uint64Var(&tailnetID, "tailnet-id", 0, "Tailnet ID. Mutually exclusive with --tailnet.")
 
 	command.PreRunE = checkRequiredTailnetAndTailnetIdFlags
-	command.RunE = func(command *coral.Command, args []string) error {
+	command.RunE = func(command *cobra.Command, args []string) error {
 		client, err := target.createGRPCClient()
 		if err != nil {
 			return err
@@ -304,8 +304,8 @@ func listMachinesCommand() *coral.Command {
 	return command
 }
 
-func getMachineRoutesCommand() *coral.Command {
-	command := &coral.Command{
+func getMachineRoutesCommand() *cobra.Command {
+	command := &cobra.Command{
 		Use:          "get-routes",
 		Short:        "Show routes advertised and enabled by a given machine",
 		SilenceUsage: true,
@@ -318,7 +318,7 @@ func getMachineRoutesCommand() *coral.Command {
 
 	_ = command.MarkFlagRequired("machine-id")
 
-	command.RunE = func(command *coral.Command, args []string) error {
+	command.RunE = func(command *cobra.Command, args []string) error {
 		grpcClient, err := target.createGRPCClient()
 		if err != nil {
 			return err
@@ -338,8 +338,8 @@ func getMachineRoutesCommand() *coral.Command {
 	return command
 }
 
-func enableMachineRoutesCommand() *coral.Command {
-	command := &coral.Command{
+func enableMachineRoutesCommand() *cobra.Command {
+	command := &cobra.Command{
 		Use:          "enable-routes",
 		Short:        "Enable routes for a given machine",
 		SilenceUsage: true,
@@ -356,7 +356,7 @@ func enableMachineRoutesCommand() *coral.Command {
 
 	_ = command.MarkFlagRequired("machine-id")
 
-	command.RunE = func(command *coral.Command, args []string) error {
+	command.RunE = func(command *cobra.Command, args []string) error {
 		client, err := target.createGRPCClient()
 		if err != nil {
 			return err
@@ -382,8 +382,8 @@ func enableMachineRoutesCommand() *coral.Command {
 	return command
 }
 
-func disableMachineRoutesCommand() *coral.Command {
-	command := &coral.Command{
+func disableMachineRoutesCommand() *cobra.Command {
+	command := &cobra.Command{
 		Use:          "disable-routes",
 		Short:        "Disable routes for a given machine",
 		SilenceUsage: true,
@@ -398,7 +398,7 @@ func disableMachineRoutesCommand() *coral.Command {
 
 	_ = command.MarkFlagRequired("machine-id")
 
-	command.RunE = func(command *coral.Command, args []string) error {
+	command.RunE = func(command *cobra.Command, args []string) error {
 		client, err := target.createGRPCClient()
 		if err != nil {
 			return err
@@ -424,8 +424,8 @@ func disableMachineRoutesCommand() *coral.Command {
 	return command
 }
 
-func enableExitNodeCommand() *coral.Command {
-	command := &coral.Command{
+func enableExitNodeCommand() *cobra.Command {
+	command := &cobra.Command{
 		Use:          "enable-exit-node",
 		Short:        "Enable given machine as an exit node",
 		SilenceUsage: true,
@@ -438,7 +438,7 @@ func enableExitNodeCommand() *coral.Command {
 
 	_ = command.MarkFlagRequired("machine-id")
 
-	command.RunE = func(command *coral.Command, args []string) error {
+	command.RunE = func(command *cobra.Command, args []string) error {
 		client, err := target.createGRPCClient()
 		if err != nil {
 			return err
@@ -458,8 +458,8 @@ func enableExitNodeCommand() *coral.Command {
 	return command
 }
 
-func disableExitNodeCommand() *coral.Command {
-	command := &coral.Command{
+func disableExitNodeCommand() *cobra.Command {
+	command := &cobra.Command{
 		Use:          "disable-exit-node",
 		Short:        "Disable given machine as an exit node",
 		SilenceUsage: true,
@@ -472,7 +472,7 @@ func disableExitNodeCommand() *coral.Command {
 
 	_ = command.MarkFlagRequired("machine-id")
 
-	command.RunE = func(command *coral.Command, args []string) error {
+	command.RunE = func(command *cobra.Command, args []string) error {
 		client, err := target.createGRPCClient()
 		if err != nil {
 			return err
@@ -492,8 +492,8 @@ func disableExitNodeCommand() *coral.Command {
 	return command
 }
 
-func enableMachineKeyExpiryCommand() *coral.Command {
-	command := &coral.Command{
+func enableMachineKeyExpiryCommand() *cobra.Command {
+	command := &cobra.Command{
 		Use:          "enable-key-expiry",
 		Short:        "Enable machine key expiry",
 		SilenceUsage: true,
@@ -502,8 +502,8 @@ func enableMachineKeyExpiryCommand() *coral.Command {
 	return configureSetMachineKeyExpiryCommand(command, false)
 }
 
-func disableMachineKeyExpiryCommand() *coral.Command {
-	command := &coral.Command{
+func disableMachineKeyExpiryCommand() *cobra.Command {
+	command := &cobra.Command{
 		Use:          "disable-key-expiry",
 		Short:        "Disable machine key expiry",
 		SilenceUsage: true,
@@ -512,7 +512,7 @@ func disableMachineKeyExpiryCommand() *coral.Command {
 	return configureSetMachineKeyExpiryCommand(command, true)
 }
 
-func configureSetMachineKeyExpiryCommand(command *coral.Command, v bool) *coral.Command {
+func configureSetMachineKeyExpiryCommand(command *cobra.Command, v bool) *cobra.Command {
 	var machineID uint64
 	var target = Target{}
 	target.prepareCommand(command)
@@ -520,7 +520,7 @@ func configureSetMachineKeyExpiryCommand(command *coral.Command, v bool) *coral.
 
 	_ = command.MarkFlagRequired("machine-id")
 
-	command.RunE = func(command *coral.Command, args []string) error {
+	command.RunE = func(command *cobra.Command, args []string) error {
 		client, err := target.createGRPCClient()
 		if err != nil {
 			return err

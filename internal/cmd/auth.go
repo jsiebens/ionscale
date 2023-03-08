@@ -6,11 +6,11 @@ import (
 	"github.com/bufbuild/connect-go"
 	"github.com/jsiebens/ionscale/pkg/client/ionscale"
 	api "github.com/jsiebens/ionscale/pkg/gen/ionscale/v1"
-	"github.com/muesli/coral"
+	"github.com/spf13/cobra"
 )
 
-func authCommand() *coral.Command {
-	command := &coral.Command{
+func authCommand() *cobra.Command {
+	command := &cobra.Command{
 		Use: "auth",
 	}
 
@@ -19,8 +19,8 @@ func authCommand() *coral.Command {
 	return command
 }
 
-func authLoginCommand() *coral.Command {
-	command := &coral.Command{
+func authLoginCommand() *cobra.Command {
+	command := &cobra.Command{
 		Use:          "login",
 		SilenceUsage: true,
 	}
@@ -29,7 +29,7 @@ func authLoginCommand() *coral.Command {
 
 	target.prepareCommand(command)
 
-	command.RunE = func(command *coral.Command, args []string) error {
+	command.RunE = func(command *cobra.Command, args []string) error {
 
 		client, err := target.createGRPCClient()
 		if err != nil {

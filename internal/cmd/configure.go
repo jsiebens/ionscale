@@ -5,13 +5,13 @@ import (
 	"fmt"
 	"github.com/jsiebens/ionscale/internal/config"
 	"github.com/jsiebens/ionscale/internal/key"
-	"github.com/muesli/coral"
+	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v2"
 	"path/filepath"
 )
 
-func configureCommand() *coral.Command {
-	command := &coral.Command{
+func configureCommand() *cobra.Command {
+	command := &cobra.Command{
 		Use:          "configure",
 		Short:        "Generate a simple config file to get started.",
 		SilenceUsage: true,
@@ -33,7 +33,7 @@ func configureCommand() *coral.Command {
 
 	command.MarkFlagRequired("domain")
 
-	command.PreRunE = func(cmd *coral.Command, args []string) error {
+	command.PreRunE = func(cmd *cobra.Command, args []string) error {
 		if domain == "" {
 			return errors.New("required flag 'domain' is missing")
 		}
@@ -49,7 +49,7 @@ func configureCommand() *coral.Command {
 		return nil
 	}
 
-	command.RunE = func(command *coral.Command, args []string) error {
+	command.RunE = func(command *cobra.Command, args []string) error {
 		c := &config.Config{}
 
 		c.HttpListenAddr = "0.0.0.0:80"

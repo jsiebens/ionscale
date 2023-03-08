@@ -8,13 +8,13 @@ import (
 	"github.com/bufbuild/connect-go"
 	"github.com/jsiebens/go-edit/editor"
 	api "github.com/jsiebens/ionscale/pkg/gen/ionscale/v1"
-	"github.com/muesli/coral"
+	"github.com/spf13/cobra"
 	"io/ioutil"
 	"os"
 )
 
-func getIAMPolicyCommand() *coral.Command {
-	command := &coral.Command{
+func getIAMPolicyCommand() *cobra.Command {
+	command := &cobra.Command{
 		Use:          "get-iam-policy",
 		Short:        "Get the IAM policy",
 		SilenceUsage: true,
@@ -29,7 +29,7 @@ func getIAMPolicyCommand() *coral.Command {
 	command.Flags().Uint64Var(&tailnetID, "tailnet-id", 0, "Tailnet ID. Mutually exclusive with --tailnet.")
 
 	command.PreRunE = checkRequiredTailnetAndTailnetIdFlags
-	command.RunE = func(cmd *coral.Command, args []string) error {
+	command.RunE = func(cmd *cobra.Command, args []string) error {
 		client, err := target.createGRPCClient()
 		if err != nil {
 			return err
@@ -58,8 +58,8 @@ func getIAMPolicyCommand() *coral.Command {
 	return command
 }
 
-func editIAMPolicyCommand() *coral.Command {
-	command := &coral.Command{
+func editIAMPolicyCommand() *cobra.Command {
+	command := &cobra.Command{
 		Use:          "edit-iam-policy",
 		Short:        "Edit the IAM policy",
 		SilenceUsage: true,
@@ -74,7 +74,7 @@ func editIAMPolicyCommand() *coral.Command {
 	command.Flags().Uint64Var(&tailnetID, "tailnet-id", 0, "Tailnet ID. Mutually exclusive with --tailnet.")
 
 	command.PreRunE = checkRequiredTailnetAndTailnetIdFlags
-	command.RunE = func(cmd *coral.Command, args []string) error {
+	command.RunE = func(cmd *cobra.Command, args []string) error {
 		edit := editor.NewDefaultEditor([]string{"IONSCALE_EDITOR", "EDITOR"})
 
 		client, err := target.createGRPCClient()
@@ -122,8 +122,8 @@ func editIAMPolicyCommand() *coral.Command {
 	return command
 }
 
-func setIAMPolicyCommand() *coral.Command {
-	command := &coral.Command{
+func setIAMPolicyCommand() *cobra.Command {
+	command := &cobra.Command{
 		Use:          "set-iam-policy",
 		Short:        "Set IAM policy",
 		SilenceUsage: true,
@@ -140,7 +140,7 @@ func setIAMPolicyCommand() *coral.Command {
 	command.Flags().StringVar(&file, "file", "", "Path to json file with the acl configuration")
 
 	command.PreRunE = checkRequiredTailnetAndTailnetIdFlags
-	command.RunE = func(cmd *coral.Command, args []string) error {
+	command.RunE = func(cmd *cobra.Command, args []string) error {
 		rawJson, err := ioutil.ReadFile(file)
 		if err != nil {
 			return err

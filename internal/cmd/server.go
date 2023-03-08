@@ -3,11 +3,11 @@ package cmd
 import (
 	"github.com/jsiebens/ionscale/internal/config"
 	"github.com/jsiebens/ionscale/internal/server"
-	"github.com/muesli/coral"
+	"github.com/spf13/cobra"
 )
 
-func serverCommand() *coral.Command {
-	command := &coral.Command{
+func serverCommand() *cobra.Command {
+	command := &cobra.Command{
 		Use:          "server",
 		Short:        "Start an ionscale server",
 		SilenceUsage: true,
@@ -17,7 +17,7 @@ func serverCommand() *coral.Command {
 
 	command.Flags().StringVarP(&configFile, "config", "c", "", "Path to the configuration file.")
 
-	command.RunE = func(command *coral.Command, args []string) error {
+	command.RunE = func(command *cobra.Command, args []string) error {
 
 		c, err := config.LoadConfig(configFile)
 		if err != nil {

@@ -5,12 +5,12 @@ import (
 	"fmt"
 	"github.com/bufbuild/connect-go"
 	api "github.com/jsiebens/ionscale/pkg/gen/ionscale/v1"
-	"github.com/muesli/coral"
 	"github.com/rodaine/table"
+	"github.com/spf13/cobra"
 )
 
-func userCommands() *coral.Command {
-	command := &coral.Command{
+func userCommands() *cobra.Command {
+	command := &cobra.Command{
 		Use:          "users",
 		Aliases:      []string{"user"},
 		Short:        "Manage ionscale users",
@@ -23,8 +23,8 @@ func userCommands() *coral.Command {
 	return command
 }
 
-func listUsersCommand() *coral.Command {
-	command := &coral.Command{
+func listUsersCommand() *cobra.Command {
+	command := &cobra.Command{
 		Use:          "list",
 		Short:        "List users",
 		SilenceUsage: true,
@@ -39,7 +39,7 @@ func listUsersCommand() *coral.Command {
 	command.Flags().Uint64Var(&tailnetID, "tailnet-id", 0, "Tailnet ID. Mutually exclusive with --tailnet.")
 
 	command.PreRunE = checkRequiredTailnetAndTailnetIdFlags
-	command.RunE = func(command *coral.Command, args []string) error {
+	command.RunE = func(command *cobra.Command, args []string) error {
 		client, err := target.createGRPCClient()
 		if err != nil {
 			return err
@@ -69,8 +69,8 @@ func listUsersCommand() *coral.Command {
 	return command
 }
 
-func deleteUserCommand() *coral.Command {
-	command := &coral.Command{
+func deleteUserCommand() *cobra.Command {
+	command := &cobra.Command{
 		Use:          "delete",
 		Short:        "Deletes a user",
 		SilenceUsage: true,
@@ -83,7 +83,7 @@ func deleteUserCommand() *coral.Command {
 
 	_ = command.MarkFlagRequired("user-id")
 
-	command.RunE = func(command *coral.Command, args []string) error {
+	command.RunE = func(command *cobra.Command, args []string) error {
 		client, err := target.createGRPCClient()
 		if err != nil {
 			return err

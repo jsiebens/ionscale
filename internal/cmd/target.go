@@ -4,7 +4,7 @@ import (
 	"github.com/jsiebens/ionscale/internal/config"
 	"github.com/jsiebens/ionscale/pkg/client/ionscale"
 	api "github.com/jsiebens/ionscale/pkg/gen/ionscale/v1/ionscalev1connect"
-	"github.com/muesli/coral"
+	"github.com/spf13/cobra"
 )
 
 const (
@@ -19,7 +19,7 @@ type Target struct {
 	systemAdminKey     string
 }
 
-func (t *Target) prepareCommand(cmd *coral.Command) {
+func (t *Target) prepareCommand(cmd *cobra.Command) {
 	cmd.Flags().StringVar(&t.addr, "addr", "", "Addr of the ionscale server, as a complete URL")
 	cmd.Flags().BoolVar(&t.insecureSkipVerify, "tls-skip-verify", false, "Disable verification of TLS certificates")
 	cmd.Flags().StringVar(&t.systemAdminKey, "system-admin-key", "", "If specified, the given value will be used as the key to generate a Bearer token for the call. This can also be specified via the IONSCALE_ADMIN_KEY environment variable.")

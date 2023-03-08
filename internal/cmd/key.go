@@ -3,11 +3,11 @@ package cmd
 import (
 	"fmt"
 	"github.com/jsiebens/ionscale/internal/key"
-	"github.com/muesli/coral"
+	"github.com/spf13/cobra"
 )
 
-func keyCommand() *coral.Command {
-	command := &coral.Command{
+func keyCommand() *cobra.Command {
+	command := &cobra.Command{
 		Use:          "genkey",
 		SilenceUsage: true,
 	}
@@ -16,7 +16,7 @@ func keyCommand() *coral.Command {
 
 	command.Flags().BoolVarP(&disableNewLine, "no-newline", "n", false, "do not output a trailing newline")
 
-	command.RunE = func(command *coral.Command, args []string) error {
+	command.RunE = func(command *cobra.Command, args []string) error {
 		serverKey := key.NewServerKey()
 		if disableNewLine {
 			fmt.Print(serverKey.String())

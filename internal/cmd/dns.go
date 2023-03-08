@@ -5,14 +5,14 @@ import (
 	"fmt"
 	"github.com/bufbuild/connect-go"
 	api "github.com/jsiebens/ionscale/pkg/gen/ionscale/v1"
-	"github.com/muesli/coral"
+	"github.com/spf13/cobra"
 	"os"
 	"strings"
 	"text/tabwriter"
 )
 
-func getDNSConfigCommand() *coral.Command {
-	command := &coral.Command{
+func getDNSConfigCommand() *cobra.Command {
+	command := &cobra.Command{
 		Use:          "get-dns",
 		Short:        "Get DNS configuration",
 		SilenceUsage: true,
@@ -27,7 +27,7 @@ func getDNSConfigCommand() *coral.Command {
 	command.Flags().Uint64Var(&tailnetID, "tailnet-id", 0, "Tailnet ID. Mutually exclusive with --tailnet.")
 
 	command.PreRunE = checkRequiredTailnetAndTailnetIdFlags
-	command.RunE = func(command *coral.Command, args []string) error {
+	command.RunE = func(command *cobra.Command, args []string) error {
 		client, err := target.createGRPCClient()
 		if err != nil {
 			return err
@@ -82,8 +82,8 @@ func getDNSConfigCommand() *coral.Command {
 	return command
 }
 
-func setDNSConfigCommand() *coral.Command {
-	command := &coral.Command{
+func setDNSConfigCommand() *cobra.Command {
+	command := &cobra.Command{
 		Use:          "set-dns",
 		Short:        "Set DNS config",
 		SilenceUsage: true,
@@ -105,7 +105,7 @@ func setDNSConfigCommand() *coral.Command {
 	command.Flags().BoolVarP(&overrideLocalDNS, "override-local-dns", "", false, "When enabled, connected clients ignore local DNS settings and always use the nameservers specified for this Tailnet")
 
 	command.PreRunE = checkRequiredTailnetAndTailnetIdFlags
-	command.RunE = func(command *coral.Command, args []string) error {
+	command.RunE = func(command *cobra.Command, args []string) error {
 		client, err := target.createGRPCClient()
 		if err != nil {
 			return err

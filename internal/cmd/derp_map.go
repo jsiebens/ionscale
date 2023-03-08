@@ -6,14 +6,14 @@ import (
 	"fmt"
 	"github.com/bufbuild/connect-go"
 	api "github.com/jsiebens/ionscale/pkg/gen/ionscale/v1"
-	"github.com/muesli/coral"
+	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v2"
 	"os"
 	"tailscale.com/tailcfg"
 )
 
-func systemCommand() *coral.Command {
-	command := &coral.Command{
+func systemCommand() *cobra.Command {
+	command := &cobra.Command{
 		Use:   "system",
 		Short: "Manage global system configurations",
 	}
@@ -25,8 +25,8 @@ func systemCommand() *coral.Command {
 	return command
 }
 
-func getDefaultDERPMap() *coral.Command {
-	command := &coral.Command{
+func getDefaultDERPMap() *cobra.Command {
+	command := &cobra.Command{
 		Use:          "get-derp-map",
 		Short:        "Get the DERP Map configuration",
 		SilenceUsage: true,
@@ -38,7 +38,7 @@ func getDefaultDERPMap() *coral.Command {
 	target.prepareCommand(command)
 	command.Flags().BoolVar(&asJson, "json", false, "When enabled, render output as json otherwise yaml")
 
-	command.RunE = func(command *coral.Command, args []string) error {
+	command.RunE = func(command *cobra.Command, args []string) error {
 		client, err := target.createGRPCClient()
 		if err != nil {
 			return err
@@ -80,8 +80,8 @@ func getDefaultDERPMap() *coral.Command {
 	return command
 }
 
-func setDefaultDERPMap() *coral.Command {
-	command := &coral.Command{
+func setDefaultDERPMap() *cobra.Command {
+	command := &cobra.Command{
 		Use:          "set-derp-map",
 		Short:        "Set the DERP Map configuration",
 		SilenceUsage: true,
@@ -92,7 +92,7 @@ func setDefaultDERPMap() *coral.Command {
 	target.prepareCommand(command)
 	command.Flags().StringVar(&file, "file", "", "Path to json file with the DERP Map configuration")
 
-	command.RunE = func(command *coral.Command, args []string) error {
+	command.RunE = func(command *cobra.Command, args []string) error {
 		grpcClient, err := target.createGRPCClient()
 		if err != nil {
 			return err
@@ -121,8 +121,8 @@ func setDefaultDERPMap() *coral.Command {
 	return command
 }
 
-func resetDefaultDERPMap() *coral.Command {
-	command := &coral.Command{
+func resetDefaultDERPMap() *cobra.Command {
+	command := &cobra.Command{
 		Use:          "reset-derp-map",
 		Short:        "Reset the DERP Map to the default configuration",
 		SilenceUsage: true,
@@ -131,7 +131,7 @@ func resetDefaultDERPMap() *coral.Command {
 	var target = Target{}
 	target.prepareCommand(command)
 
-	command.RunE = func(command *coral.Command, args []string) error {
+	command.RunE = func(command *cobra.Command, args []string) error {
 		grpcClient, err := target.createGRPCClient()
 		if err != nil {
 			return err

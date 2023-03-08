@@ -28,11 +28,12 @@ require (
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/mitchellh/pointerstructure v1.2.1
 	github.com/mr-tron/base58 v1.2.0
-	github.com/muesli/coral v1.0.0
 	github.com/nleeper/goment v1.4.4
+	github.com/ory/dockertest/v3 v3.9.1
 	github.com/prometheus/client_golang v1.13.0
 	github.com/rodaine/table v1.0.1
 	github.com/sony/sonyflake v1.1.0
+	github.com/spf13/cobra v1.6.1
 	github.com/stretchr/testify v1.8.0
 	github.com/xhit/go-str2duration/v2 v2.0.0
 	golang.org/x/crypto v0.1.0
@@ -103,7 +104,7 @@ require (
 	github.com/googleapis/enterprise-certificate-proxy v0.0.0-20220520183353-fd19c99a87aa // indirect
 	github.com/googleapis/gax-go/v2 v2.4.0 // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect
-	github.com/inconshreveable/mousetrap v1.0.1 // indirect
+	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/jackc/chunkreader/v2 v2.0.1 // indirect
 	github.com/jackc/pgconn v1.13.0 // indirect
 	github.com/jackc/pgio v1.0.0 // indirect
@@ -132,7 +133,6 @@ require (
 	github.com/opencontainers/go-digest v1.0.0 // indirect
 	github.com/opencontainers/image-spec v1.0.3-0.20220114050600-8b9d41f48198 // indirect
 	github.com/opencontainers/runc v1.1.2 // indirect
-	github.com/ory/dockertest/v3 v3.9.1 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/prometheus/client_model v0.2.0 // indirect

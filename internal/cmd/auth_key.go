@@ -5,16 +5,16 @@ import (
 	"fmt"
 	"github.com/bufbuild/connect-go"
 	api "github.com/jsiebens/ionscale/pkg/gen/ionscale/v1"
-	"github.com/muesli/coral"
 	"github.com/rodaine/table"
+	"github.com/spf13/cobra"
 	str2dur "github.com/xhit/go-str2duration/v2"
 	"google.golang.org/protobuf/types/known/durationpb"
 	"strings"
 	"time"
 )
 
-func authkeysCommand() *coral.Command {
-	command := &coral.Command{
+func authkeysCommand() *cobra.Command {
+	command := &cobra.Command{
 		Use:     "auth-keys",
 		Aliases: []string{"auth-key"},
 		Short:   "Manage ionscale auth keys",
@@ -27,8 +27,8 @@ func authkeysCommand() *coral.Command {
 	return command
 }
 
-func createAuthkeysCommand() *coral.Command {
-	command := &coral.Command{
+func createAuthkeysCommand() *cobra.Command {
+	command := &cobra.Command{
 		Use:          "create",
 		Short:        "Creates a new auth key in the specified tailnet",
 		SilenceUsage: true,
@@ -51,7 +51,7 @@ func createAuthkeysCommand() *coral.Command {
 	command.Flags().BoolVar(&preAuthorized, "pre-authorized", false, "Generate an auth key which is pre-authorized.")
 
 	command.PreRunE = checkRequiredTailnetAndTailnetIdFlags
-	command.RunE = func(command *coral.Command, args []string) error {
+	command.RunE = func(command *cobra.Command, args []string) error {
 		client, err := target.createGRPCClient()
 		if err != nil {
 			return err
@@ -98,8 +98,8 @@ func createAuthkeysCommand() *coral.Command {
 	return command
 }
 
-func deleteAuthKeyCommand() *coral.Command {
-	command := &coral.Command{
+func deleteAuthKeyCommand() *cobra.Command {
+	command := &cobra.Command{
 		Use:          "delete",
 		Short:        "Delete a specified auth key",
 		SilenceUsage: true,
@@ -110,7 +110,7 @@ func deleteAuthKeyCommand() *coral.Command {
 	target.prepareCommand(command)
 	command.Flags().Uint64Var(&authKeyId, "id", 0, "Auth Key ID")
 
-	command.RunE = func(command *coral.Command, args []string) error {
+	command.RunE = func(command *cobra.Command, args []string) error {
 		grpcClient, err := target.createGRPCClient()
 		if err != nil {
 			return err
@@ -129,8 +129,8 @@ func deleteAuthKeyCommand() *coral.Command {
 	return command
 }
 
-func listAuthkeysCommand() *coral.Command {
-	command := &coral.Command{
+func listAuthkeysCommand() *cobra.Command {
+	command := &cobra.Command{
 		Use:          "list",
 		Short:        "List all auth keys for a given tailnet",
 		SilenceUsage: true,
@@ -145,7 +145,7 @@ func listAuthkeysCommand() *coral.Command {
 	command.Flags().Uint64Var(&tailnetID, "tailnet-id", 0, "Tailnet ID. Mutually exclusive with --tailnet.")
 
 	command.PreRunE = checkRequiredTailnetAndTailnetIdFlags
-	command.RunE = func(command *coral.Command, args []string) error {
+	command.RunE = func(command *cobra.Command, args []string) error {
 		client, err := target.createGRPCClient()
 		if err != nil {
 			return err

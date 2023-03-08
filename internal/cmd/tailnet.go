@@ -8,16 +8,16 @@ import (
 	idomain "github.com/jsiebens/ionscale/internal/domain"
 	"github.com/jsiebens/ionscale/pkg/defaults"
 	api "github.com/jsiebens/ionscale/pkg/gen/ionscale/v1"
-	"github.com/muesli/coral"
 	"github.com/rodaine/table"
+	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v3"
 	"os"
 	"strings"
 	"tailscale.com/tailcfg"
 )
 
-func tailnetCommand() *coral.Command {
-	command := &coral.Command{
+func tailnetCommand() *cobra.Command {
+	command := &cobra.Command{
 		Use:     "tailnets",
 		Aliases: []string{"tailnet"},
 		Short:   "Manage ionscale tailnets",
@@ -49,8 +49,8 @@ func tailnetCommand() *coral.Command {
 	return command
 }
 
-func listTailnetsCommand() *coral.Command {
-	command := &coral.Command{
+func listTailnetsCommand() *cobra.Command {
+	command := &cobra.Command{
 		Use:          "list",
 		Short:        "List available Tailnets",
 		SilenceUsage: true,
@@ -59,7 +59,7 @@ func listTailnetsCommand() *coral.Command {
 	var target = Target{}
 	target.prepareCommand(command)
 
-	command.RunE = func(command *coral.Command, args []string) error {
+	command.RunE = func(command *cobra.Command, args []string) error {
 
 		client, err := target.createGRPCClient()
 		if err != nil {
@@ -84,8 +84,8 @@ func listTailnetsCommand() *coral.Command {
 	return command
 }
 
-func createTailnetsCommand() *coral.Command {
-	command := &coral.Command{
+func createTailnetsCommand() *cobra.Command {
+	command := &cobra.Command{
 		Use:          "create",
 		Short:        "Create a new Tailnet",
 		SilenceUsage: true,
@@ -101,7 +101,7 @@ func createTailnetsCommand() *coral.Command {
 	command.Flags().StringVar(&domain, "domain", "", "")
 	command.Flags().StringVar(&email, "email", "", "")
 
-	command.PreRunE = func(cmd *coral.Command, args []string) error {
+	command.PreRunE = func(cmd *cobra.Command, args []string) error {
 		if name == "" {
 			return fmt.Errorf("flag --name is required")
 		}
@@ -111,7 +111,7 @@ func createTailnetsCommand() *coral.Command {
 		return nil
 	}
 
-	command.RunE = func(command *coral.Command, args []string) error {
+	command.RunE = func(command *cobra.Command, args []string) error {
 
 		dnsConfig := defaults.DefaultDNSConfig()
 		aclPolicy := defaults.DefaultACLPolicy()
@@ -160,8 +160,8 @@ func createTailnetsCommand() *coral.Command {
 	return command
 }
 
-func deleteTailnetCommand() *coral.Command {
-	command := &coral.Command{
+func deleteTailnetCommand() *cobra.Command {
+	command := &cobra.Command{
 		Use:          "delete",
 		Short:        "Delete a tailnet",
 		SilenceUsage: true,
@@ -178,7 +178,7 @@ func deleteTailnetCommand() *coral.Command {
 	command.Flags().BoolVar(&force, "force", false, "When enabled, force delete the specified Tailnet even when machines are still available.")
 
 	command.PreRunE = checkRequiredTailnetAndTailnetIdFlags
-	command.RunE = func(command *coral.Command, args []string) error {
+	command.RunE = func(command *cobra.Command, args []string) error {
 
 		client, err := target.createGRPCClient()
 		if err != nil {
@@ -204,8 +204,8 @@ func deleteTailnetCommand() *coral.Command {
 	return command
 }
 
-func getDERPMap() *coral.Command {
-	command := &coral.Command{
+func getDERPMap() *cobra.Command {
+	command := &cobra.Command{
 		Use:          "get-derp-map",
 		Short:        "Get the DERP Map configuration",
 		SilenceUsage: true,
@@ -223,7 +223,7 @@ func getDERPMap() *coral.Command {
 	command.Flags().BoolVar(&asJson, "json", false, "When enabled, render output as json otherwise yaml")
 
 	command.PreRunE = checkRequiredTailnetAndTailnetIdFlags
-	command.RunE = func(command *coral.Command, args []string) error {
+	command.RunE = func(command *cobra.Command, args []string) error {
 		client, err := target.createGRPCClient()
 		if err != nil {
 			return err
@@ -270,8 +270,8 @@ func getDERPMap() *coral.Command {
 	return command
 }
 
-func setDERPMap() *coral.Command {
-	command := &coral.Command{
+func setDERPMap() *cobra.Command {
+	command := &cobra.Command{
 		Use:          "set-derp-map",
 		Short:        "Set the DERP Map configuration",
 		SilenceUsage: true,
@@ -288,7 +288,7 @@ func setDERPMap() *coral.Command {
 	command.Flags().StringVar(&file, "file", "", "Path to json file with the DERP Map configuration")
 
 	command.PreRunE = checkRequiredTailnetAndTailnetIdFlags
-	command.RunE = func(command *coral.Command, args []string) error {
+	command.RunE = func(command *cobra.Command, args []string) error {
 		client, err := target.createGRPCClient()
 		if err != nil {
 			return err
@@ -322,8 +322,8 @@ func setDERPMap() *coral.Command {
 	return command
 }
 
-func resetDERPMap() *coral.Command {
-	command := &coral.Command{
+func resetDERPMap() *cobra.Command {
+	command := &cobra.Command{
 		Use:          "reset-derp-map",
 		Short:        "Reset the DERP Map to the default configuration",
 		SilenceUsage: true,
@@ -338,7 +338,7 @@ func resetDERPMap() *coral.Command {
 	command.Flags().Uint64Var(&tailnetID, "tailnet-id", 0, "Tailnet ID. Mutually exclusive with --tailnet.")
 
 	command.PreRunE = checkRequiredTailnetAndTailnetIdFlags
-	command.RunE = func(command *coral.Command, args []string) error {
+	command.RunE = func(command *cobra.Command, args []string) error {
 		client, err := target.createGRPCClient()
 		if err != nil {
 			return err
@@ -361,8 +361,8 @@ func resetDERPMap() *coral.Command {
 	return command
 }
 
-func enableFileSharingCommand() *coral.Command {
-	command := &coral.Command{
+func enableFileSharingCommand() *cobra.Command {
+	command := &cobra.Command{
 		Use:          "enable-file-sharing",
 		Aliases:      []string{"enable-taildrop"},
 		Short:        "Enable Taildrop, the file sharing feature",
@@ -378,7 +378,7 @@ func enableFileSharingCommand() *coral.Command {
 	command.Flags().Uint64Var(&tailnetID, "tailnet-id", 0, "Tailnet ID. Mutually exclusive with --tailnet.")
 
 	command.PreRunE = checkRequiredTailnetAndTailnetIdFlags
-	command.RunE = func(command *coral.Command, args []string) error {
+	command.RunE = func(command *cobra.Command, args []string) error {
 		client, err := target.createGRPCClient()
 		if err != nil {
 			return err
@@ -403,8 +403,8 @@ func enableFileSharingCommand() *coral.Command {
 	return command
 }
 
-func disableFileSharingCommand() *coral.Command {
-	command := &coral.Command{
+func disableFileSharingCommand() *cobra.Command {
+	command := &cobra.Command{
 		Use:          "disable-file-sharing",
 		Aliases:      []string{"disable-taildrop"},
 		Short:        "Disable Taildrop, the file sharing feature",
@@ -420,7 +420,7 @@ func disableFileSharingCommand() *coral.Command {
 	command.Flags().Uint64Var(&tailnetID, "tailnet-id", 0, "Tailnet ID. Mutually exclusive with --tailnet.")
 
 	command.PreRunE = checkRequiredTailnetAndTailnetIdFlags
-	command.RunE = func(command *coral.Command, args []string) error {
+	command.RunE = func(command *cobra.Command, args []string) error {
 		client, err := target.createGRPCClient()
 		if err != nil {
 			return err
@@ -445,8 +445,8 @@ func disableFileSharingCommand() *coral.Command {
 	return command
 }
 
-func enableServiceCollectionCommand() *coral.Command {
-	command := &coral.Command{
+func enableServiceCollectionCommand() *cobra.Command {
+	command := &cobra.Command{
 		Use:          "enable-service-collection",
 		Short:        "Enable monitoring live services running on your network’s machines.",
 		SilenceUsage: true,
@@ -461,7 +461,7 @@ func enableServiceCollectionCommand() *coral.Command {
 	command.Flags().Uint64Var(&tailnetID, "tailnet-id", 0, "Tailnet ID. Mutually exclusive with --tailnet.")
 
 	command.PreRunE = checkRequiredTailnetAndTailnetIdFlags
-	command.RunE = func(command *coral.Command, args []string) error {
+	command.RunE = func(command *cobra.Command, args []string) error {
 		client, err := target.createGRPCClient()
 		if err != nil {
 			return err
@@ -486,8 +486,8 @@ func enableServiceCollectionCommand() *coral.Command {
 	return command
 }
 
-func disableServiceCollectionCommand() *coral.Command {
-	command := &coral.Command{
+func disableServiceCollectionCommand() *cobra.Command {
+	command := &cobra.Command{
 		Use:          "disable-service-collection",
 		Short:        "Disable monitoring live services running on your network’s machines.",
 		SilenceUsage: true,
@@ -502,7 +502,7 @@ func disableServiceCollectionCommand() *coral.Command {
 	command.Flags().Uint64Var(&tailnetID, "tailnet-id", 0, "Tailnet ID. Mutually exclusive with --tailnet.")
 
 	command.PreRunE = checkRequiredTailnetAndTailnetIdFlags
-	command.RunE = func(command *coral.Command, args []string) error {
+	command.RunE = func(command *cobra.Command, args []string) error {
 		client, err := target.createGRPCClient()
 		if err != nil {
 			return err
@@ -527,8 +527,8 @@ func disableServiceCollectionCommand() *coral.Command {
 	return command
 }
 
-func enableSSHCommand() *coral.Command {
-	command := &coral.Command{
+func enableSSHCommand() *cobra.Command {
+	command := &cobra.Command{
 		Use:          "enable-ssh",
 		Short:        "Enable ssh access using tailnet and ACLs.",
 		SilenceUsage: true,
@@ -543,7 +543,7 @@ func enableSSHCommand() *coral.Command {
 	command.Flags().Uint64Var(&tailnetID, "tailnet-id", 0, "Tailnet ID. Mutually exclusive with --tailnet.")
 
 	command.PreRunE = checkRequiredTailnetAndTailnetIdFlags
-	command.RunE = func(command *coral.Command, args []string) error {
+	command.RunE = func(command *cobra.Command, args []string) error {
 		client, err := target.createGRPCClient()
 		if err != nil {
 			return err
@@ -568,8 +568,8 @@ func enableSSHCommand() *coral.Command {
 	return command
 }
 
-func disableSSHCommand() *coral.Command {
-	command := &coral.Command{
+func disableSSHCommand() *cobra.Command {
+	command := &cobra.Command{
 		Use:          "disable-ssh",
 		Short:        "Disable ssh access using tailnet and ACLs.",
 		SilenceUsage: true,
@@ -584,7 +584,7 @@ func disableSSHCommand() *coral.Command {
 	command.Flags().Uint64Var(&tailnetID, "tailnet-id", 0, "Tailnet ID. Mutually exclusive with --tailnet.")
 
 	command.PreRunE = checkRequiredTailnetAndTailnetIdFlags
-	command.RunE = func(command *coral.Command, args []string) error {
+	command.RunE = func(command *cobra.Command, args []string) error {
 		client, err := target.createGRPCClient()
 		if err != nil {
 			return err
@@ -609,8 +609,8 @@ func disableSSHCommand() *coral.Command {
 	return command
 }
 
-func enableMachineAuthorizationCommand() *coral.Command {
-	command := &coral.Command{
+func enableMachineAuthorizationCommand() *cobra.Command {
+	command := &cobra.Command{
 		Use:          "enable-machine-authorization",
 		Short:        "Enable machine authorization.",
 		SilenceUsage: true,
@@ -625,7 +625,7 @@ func enableMachineAuthorizationCommand() *coral.Command {
 	command.Flags().Uint64Var(&tailnetID, "tailnet-id", 0, "Tailnet ID. Mutually exclusive with --tailnet.")
 
 	command.PreRunE = checkRequiredTailnetAndTailnetIdFlags
-	command.RunE = func(command *coral.Command, args []string) error {
+	command.RunE = func(command *cobra.Command, args []string) error {
 		client, err := target.createGRPCClient()
 		if err != nil {
 			return err
@@ -650,8 +650,8 @@ func enableMachineAuthorizationCommand() *coral.Command {
 	return command
 }
 
-func disableMachineAuthorizationCommand() *coral.Command {
-	command := &coral.Command{
+func disableMachineAuthorizationCommand() *cobra.Command {
+	command := &cobra.Command{
 		Use:          "disable-machine-authorization",
 		Short:        "Disable machine authorization.",
 		SilenceUsage: true,
@@ -666,7 +666,7 @@ func disableMachineAuthorizationCommand() *coral.Command {
 	command.Flags().Uint64Var(&tailnetID, "tailnet-id", 0, "Tailnet ID. Mutually exclusive with --tailnet.")
 
 	command.PreRunE = checkRequiredTailnetAndTailnetIdFlags
-	command.RunE = func(command *coral.Command, args []string) error {
+	command.RunE = func(command *cobra.Command, args []string) error {
 		client, err := target.createGRPCClient()
 		if err != nil {
 			return err

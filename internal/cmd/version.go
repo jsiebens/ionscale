@@ -6,11 +6,11 @@ import (
 	"github.com/bufbuild/connect-go"
 	"github.com/jsiebens/ionscale/internal/version"
 	api "github.com/jsiebens/ionscale/pkg/gen/ionscale/v1"
-	"github.com/muesli/coral"
+	"github.com/spf13/cobra"
 )
 
-func versionCommand() *coral.Command {
-	var command = &coral.Command{
+func versionCommand() *cobra.Command {
+	var command = &cobra.Command{
 		Use:          "version",
 		Short:        "Display version information",
 		SilenceUsage: true,
@@ -19,7 +19,7 @@ func versionCommand() *coral.Command {
 	var target = Target{}
 	target.prepareCommand(command)
 
-	command.Run = func(cmd *coral.Command, args []string) {
+	command.Run = func(cmd *cobra.Command, args []string) {
 		clientVersion, clientRevision := version.GetReleaseInfo()
 		fmt.Printf(`
 Client:

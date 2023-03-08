@@ -1,10 +1,10 @@
 package cmd
 
 import (
-	"github.com/muesli/coral"
+	"github.com/spf13/cobra"
 )
 
-func Command() *coral.Command {
+func Command() *cobra.Command {
 	rootCmd := rootCommand()
 	rootCmd.AddCommand(configureCommand())
 	rootCmd.AddCommand(keyCommand())
@@ -24,8 +24,8 @@ func Execute() error {
 	return Command().Execute()
 }
 
-func rootCommand() *coral.Command {
-	return &coral.Command{
+func rootCommand() *cobra.Command {
+	return &cobra.Command{
 		Use: "ionscale",
 	}
 }

@@ -7,10 +7,10 @@ import (
 	"github.com/jsiebens/ionscale/pkg/client/ionscale"
 	api "github.com/jsiebens/ionscale/pkg/gen/ionscale/v1"
 	apiconnect "github.com/jsiebens/ionscale/pkg/gen/ionscale/v1/ionscalev1connect"
-	"github.com/muesli/coral"
+	"github.com/spf13/cobra"
 )
 
-func checkRequiredTailnetAndTailnetIdFlags(cmd *coral.Command, args []string) error {
+func checkRequiredTailnetAndTailnetIdFlags(cmd *cobra.Command, args []string) error {
 	savedTailnetID, err := ionscale.TailnetFromFile()
 	if err != nil {
 		return err
