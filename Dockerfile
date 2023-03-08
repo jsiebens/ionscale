@@ -1,4 +1,4 @@
-FROM --platform=${BUILDPLATFORM:-linux/amd64} alpine:3.16.2
+FROM --platform=${BUILDPLATFORM:-linux/amd64} alpine:3.17.2
 
 COPY ionscale /usr/local/bin/ionscale
 
