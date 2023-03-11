@@ -35,7 +35,7 @@ tls:
   # The URL to the ACME CA's directory.
   acme_ca: "https://acme-v02.api.letsencrypt.org/directory"
   # Path to store certificates and metadata needed by ACME
-  amce_path: "./data"
+  acme_path: "./data"
 
 database:
   # Type of databas to use, supported values are sqlite or postgres
