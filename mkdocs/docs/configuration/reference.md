@@ -29,7 +29,7 @@ tls:
   # Required when TLS is enabled and ACME disabled
   key_file: ""
   # Enable automatic TLS certificates provisioning with Let's Encrypt
-  acme_enabled: false
+  acme: false
   # An email address, used when creating an ACME account and keeping you up-to-date regarding your certificates
   acme_email: ""
   # The URL to the ACME CA's directory.
