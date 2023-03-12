@@ -28,7 +28,7 @@ func NewNoiseHandlers(controlKey key.MachinePrivate, createPeerHandler CreatePee
 }
 
 func (h *NoiseHandlers) Upgrade(c echo.Context) error {
-	conn, err := controlhttp.AcceptHTTP(c.Request().Context(), c.Response(), c.Request(), h.controlKey)
+	conn, err := controlhttp.AcceptHTTP(c.Request().Context(), c.Response(), c.Request(), h.controlKey, nil)
 	if err != nil {
 		return errors.Wrap(err, 0)
 	}
