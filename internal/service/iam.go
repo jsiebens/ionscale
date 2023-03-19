@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/bufbuild/connect-go"
 	"github.com/jsiebens/ionscale/internal/domain"
-	"github.com/jsiebens/ionscale/internal/errors"
 	api "github.com/jsiebens/ionscale/pkg/gen/ionscale/v1"
 )
 
@@ -17,7 +16,7 @@ func (s *Service) GetIAMPolicy(ctx context.Context, req *connect.Request[api.Get
 
 	tailnet, err := s.repository.GetTailnet(ctx, req.Msg.TailnetId)
 	if err != nil {
-		return nil, errors.Wrap(err, 0)
+		return nil, logError(err)
 	}
 	if tailnet == nil {
 		return nil, connect.NewError(connect.CodeNotFound, fmt.Errorf("tailnet does not exist"))
@@ -41,7 +40,7 @@ func (s *Service) SetIAMPolicy(ctx context.Context, req *connect.Request[api.Set
 
 	tailnet, err := s.repository.GetTailnet(ctx, req.Msg.TailnetId)
 	if err != nil {
-		return nil, errors.Wrap(err, 0)
+		return nil, logError(err)
 	}
 	if tailnet == nil {
 		return nil, connect.NewError(connect.CodeNotFound, fmt.Errorf("tailnet does not exist"))
@@ -55,7 +54,7 @@ func (s *Service) SetIAMPolicy(ctx context.Context, req *connect.Request[api.Set
 	}
 
 	if err := s.repository.SaveTailnet(ctx, tailnet); err != nil {
-		return nil, errors.Wrap(err, 0)
+		return nil, logError(err)
 	}
 
 	return connect.NewResponse(&api.SetIAMPolicyResponse{}), nil

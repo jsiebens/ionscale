@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"github.com/jsiebens/ionscale/internal/addr"
 	"github.com/jsiebens/ionscale/internal/auth"
-	"github.com/jsiebens/ionscale/internal/errors"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/mr-tron/base58"
 	"net/http"
@@ -66,7 +65,7 @@ func (h *AuthenticationHandlers) StartAuth(c echo.Context) error {
 	// machine registration auth flow
 	if flow == "r" || flow == "" {
 		if req, err := h.repository.GetRegistrationRequestByKey(ctx, key); err != nil || req == nil {
-			return errors.Wrap(err, 0)
+			return logError(err)
 		}
 
 		csrf := c.Get(middleware.DefaultCSRFConfig.ContextKey).(string)
@@ -76,24 +75,24 @@ func (h *AuthenticationHandlers) StartAuth(c echo.Context) error {
 	// cli auth flow
 	if flow == "c" {
 		if s, err := h.repository.GetAuthenticationRequest(ctx, key); err != nil || s == nil {
-			return errors.Wrap(err, 0)
+			return logError(err)
 		}
 	}
 
 	// ssh check auth flow
 	if flow == "s" {
 		if s, err := h.repository.GetSSHActionRequest(ctx, key); err != nil || s == nil {
-			return errors.Wrap(err, 0)
+			return logError(err)
 		}
 	}
 
 	if h.authProvider == nil {
-		return errors.Wrap(fmt.Errorf("unable to start auth flow as no auth provider is configured"), 0)
+		return logError(fmt.Errorf("unable to start auth flow as no auth provider is configured"))
 	}
 
 	state, err := h.createState(flow, key)
 	if err != nil {
-		return errors.Wrap(err, 0)
+		return logError(err)
 	}
 
 	redirectUrl := h.authProvider.GetLoginURL(h.config.CreateUrl("/a/callback"), state)
@@ -110,7 +109,7 @@ func (h *AuthenticationHandlers) ProcessAuth(c echo.Context) error {
 
 	req, err := h.repository.GetRegistrationRequestByKey(ctx, key)
 	if err != nil || req == nil {
-		return errors.Wrap(err, 0)
+		return logError(err)
 	}
 
 	if authKey != "" {
@@ -120,7 +119,7 @@ func (h *AuthenticationHandlers) ProcessAuth(c echo.Context) error {
 	if interactive != "" {
 		state, err := h.createState("r", key)
 		if err != nil {
-			return errors.Wrap(err, 0)
+			return logError(err)
 		}
 
 		redirectUrl := h.authProvider.GetLoginURL(h.config.CreateUrl("/a/callback"), state)
@@ -142,12 +141,12 @@ func (h *AuthenticationHandlers) Callback(c echo.Context) error {
 
 	user, err := h.exchangeUser(code)
 	if err != nil {
-		return errors.Wrap(err, 0)
+		return logError(err)
 	}
 
 	account, _, err := h.repository.GetOrCreateAccount(ctx, user.ID, user.Name)
 	if err != nil {
-		return errors.Wrap(err, 0)
+		return logError(err)
 	}
 
 	if state.Flow == "s" {
@@ -158,27 +157,27 @@ func (h *AuthenticationHandlers) Callback(c echo.Context) error {
 
 		machine, err := h.repository.GetMachine(ctx, sshActionReq.SrcMachineID)
 		if err != nil || sshActionReq == nil {
-			return errors.Wrap(err, 0)
+			return logError(err)
 		}
 
 		if !machine.HasTags() && machine.User.AccountID != nil && *machine.User.AccountID == account.ID {
 			sshActionReq.Action = "accept"
 			if err := h.repository.SaveSSHActionRequest(ctx, sshActionReq); err != nil {
-				return errors.Wrap(err, 0)
+				return logError(err)
 			}
 			return c.Redirect(http.StatusFound, "/a/success")
 		}
 
 		sshActionReq.Action = "reject"
 		if err := h.repository.SaveSSHActionRequest(ctx, sshActionReq); err != nil {
-			return errors.Wrap(err, 0)
+			return logError(err)
 		}
 		return c.Redirect(http.StatusFound, "/a/error?e=nmo")
 	}
 
 	tailnets, err := h.listAvailableTailnets(ctx, user)
 	if err != nil {
-		return errors.Wrap(err, 0)
+		return logError(err)
 	}
 
 	csrf := c.Get(middleware.DefaultCSRFConfig.ContextKey).(string)
@@ -203,7 +202,7 @@ func (h *AuthenticationHandlers) Callback(c echo.Context) error {
 	if state.Flow == "c" {
 		isSystemAdmin, err := h.isSystemAdmin(ctx, user)
 		if err != nil {
-			return errors.Wrap(err, 0)
+			return logError(err)
 		}
 
 		if !isSystemAdmin && len(tailnets) == 0 {
@@ -258,7 +257,7 @@ func (h *AuthenticationHandlers) EndOAuth(c echo.Context) error {
 	if state.Flow == "r" {
 		req, err := h.repository.GetRegistrationRequestByKey(ctx, state.Key)
 		if err != nil || req == nil {
-			return errors.Wrap(err, 0)
+			return logError(err)
 		}
 
 		return h.endMachineRegistrationFlow(c, req, state)
@@ -266,7 +265,7 @@ func (h *AuthenticationHandlers) EndOAuth(c echo.Context) error {
 
 	req, err := h.repository.GetAuthenticationRequest(ctx, state.Key)
 	if err != nil || req == nil {
-		return errors.Wrap(err, 0)
+		return logError(err)
 	}
 
 	return h.endCliAuthenticationFlow(c, req, state)
@@ -308,12 +307,12 @@ func (h *AuthenticationHandlers) endCliAuthenticationFlow(c echo.Context, req *d
 
 	var form TailnetSelectionForm
 	if err := c.Bind(&form); err != nil {
-		return errors.Wrap(err, 0)
+		return logError(err)
 	}
 
 	account, err := h.repository.GetAccount(ctx, form.AccountID)
 	if err != nil {
-		return errors.Wrap(err, 0)
+		return logError(err)
 	}
 
 	// continue as system admin?
@@ -324,27 +323,27 @@ func (h *AuthenticationHandlers) endCliAuthenticationFlow(c echo.Context, req *d
 
 		err := h.repository.Transaction(func(rp domain.Repository) error {
 			if err := rp.SaveSystemApiKey(ctx, apiKey); err != nil {
-				return errors.Wrap(err, 0)
+				return logError(err)
 			}
 			if err := rp.SaveAuthenticationRequest(ctx, req); err != nil {
-				return errors.Wrap(err, 0)
+				return logError(err)
 			}
 			return nil
 		})
 		if err != nil {
-			return errors.Wrap(err, 0)
+			return logError(err)
 		}
 		return c.Redirect(http.StatusFound, "/a/success")
 	}
 
 	tailnet, err := h.repository.GetTailnet(ctx, form.TailnetID)
 	if err != nil {
-		return errors.Wrap(err, 0)
+		return logError(err)
 	}
 
 	user, _, err := h.repository.GetOrCreateUserWithAccount(ctx, tailnet, account)
 	if err != nil {
-		return errors.Wrap(err, 0)
+		return logError(err)
 	}
 
 	expiresAt := time.Now().Add(24 * time.Hour)
@@ -362,7 +361,7 @@ func (h *AuthenticationHandlers) endCliAuthenticationFlow(c echo.Context, req *d
 		return nil
 	})
 	if err != nil {
-		return errors.Wrap(err, 0)
+		return logError(err)
 	}
 
 	return c.Redirect(http.StatusFound, "/a/success")
@@ -373,7 +372,7 @@ func (h *AuthenticationHandlers) endMachineRegistrationFlow(c echo.Context, regi
 
 	var form TailnetSelectionForm
 	if err := c.Bind(&form); err != nil {
-		return errors.Wrap(err, 0)
+		return logError(err)
 	}
 
 	req := tailcfg.RegisterRequest(registrationRequest.Data)
@@ -389,7 +388,7 @@ func (h *AuthenticationHandlers) endMachineRegistrationFlow(c echo.Context, regi
 	if form.AuthKey != "" {
 		authKey, err := h.repository.LoadAuthKey(ctx, form.AuthKey)
 		if err != nil {
-			return errors.Wrap(err, 0)
+			return logError(err)
 		}
 
 		if authKey == nil {
@@ -398,7 +397,7 @@ func (h *AuthenticationHandlers) endMachineRegistrationFlow(c echo.Context, regi
 			registrationRequest.Error = "invalid auth key"
 
 			if err := h.repository.SaveRegistrationRequest(ctx, registrationRequest); err != nil {
-				return errors.Wrap(err, 0)
+				return logError(err)
 			}
 
 			return c.Redirect(http.StatusFound, "/a/error?e=iak")
@@ -412,17 +411,17 @@ func (h *AuthenticationHandlers) endMachineRegistrationFlow(c echo.Context, regi
 	} else {
 		selectedTailnet, err := h.repository.GetTailnet(ctx, form.TailnetID)
 		if err != nil {
-			return errors.Wrap(err, 0)
+			return logError(err)
 		}
 
 		account, err := h.repository.GetAccount(ctx, form.AccountID)
 		if err != nil {
-			return errors.Wrap(err, 0)
+			return logError(err)
 		}
 
 		selectedUser, _, err := h.repository.GetOrCreateUserWithAccount(ctx, selectedTailnet, account)
 		if err != nil {
-			return errors.Wrap(err, 0)
+			return logError(err)
 		}
 
 		user = selectedUser
@@ -434,7 +433,7 @@ func (h *AuthenticationHandlers) endMachineRegistrationFlow(c echo.Context, regi
 		registrationRequest.Authenticated = false
 		registrationRequest.Error = err.Error()
 		if err := h.repository.SaveRegistrationRequest(ctx, registrationRequest); err != nil {
-			return errors.Wrap(err, 0)
+			return logError(err)
 		}
 		return c.Redirect(http.StatusFound, "/a/error?e=nto")
 	}
@@ -445,7 +444,7 @@ func (h *AuthenticationHandlers) endMachineRegistrationFlow(c echo.Context, regi
 
 	m, err := h.repository.GetMachineByKey(ctx, tailnet.ID, machineKey)
 	if err != nil {
-		return errors.Wrap(err, 0)
+		return logError(err)
 	}
 
 	now := time.Now().UTC()
@@ -458,7 +457,7 @@ func (h *AuthenticationHandlers) endMachineRegistrationFlow(c echo.Context, regi
 		sanitizeHostname := dnsname.SanitizeHostname(req.Hostinfo.Hostname)
 		nameIdx, err := h.repository.GetNextMachineNameIndex(ctx, tailnet.ID, sanitizeHostname)
 		if err != nil {
-			return errors.Wrap(err, 0)
+			return logError(err)
 		}
 
 		m = &domain.Machine{
@@ -482,7 +481,7 @@ func (h *AuthenticationHandlers) endMachineRegistrationFlow(c echo.Context, regi
 
 		ipv4, ipv6, err := addr.SelectIP(checkIP(ctx, h.repository.CountMachinesWithIPv4))
 		if err != nil {
-			return errors.Wrap(err, 0)
+			return logError(err)
 		}
 		m.IPv4 = domain.IP{Addr: ipv4}
 		m.IPv6 = domain.IP{Addr: ipv6}
@@ -495,7 +494,7 @@ func (h *AuthenticationHandlers) endMachineRegistrationFlow(c echo.Context, regi
 		if m.Name != sanitizeHostname {
 			nameIdx, err := h.repository.GetNextMachineNameIndex(ctx, tailnet.ID, sanitizeHostname)
 			if err != nil {
-				return errors.Wrap(err, 0)
+				return logError(err)
 			}
 			m.Name = sanitizeHostname
 			m.NameIdx = nameIdx
@@ -529,7 +528,7 @@ func (h *AuthenticationHandlers) endMachineRegistrationFlow(c echo.Context, regi
 	})
 
 	if err != nil {
-		return errors.Wrap(err, 0)
+		return logError(err)
 	}
 
 	if m.Authorized {

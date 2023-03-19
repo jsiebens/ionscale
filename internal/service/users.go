@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/bufbuild/connect-go"
 	"github.com/jsiebens/ionscale/internal/domain"
-	"github.com/jsiebens/ionscale/internal/errors"
 	api "github.com/jsiebens/ionscale/pkg/gen/ionscale/v1"
 )
 
@@ -14,7 +13,7 @@ func (s *Service) ListUsers(ctx context.Context, req *connect.Request[api.ListUs
 
 	tailnet, err := s.repository.GetTailnet(ctx, req.Msg.TailnetId)
 	if err != nil {
-		return nil, errors.Wrap(err, 0)
+		return nil, logError(err)
 	}
 
 	if tailnet == nil {
@@ -27,7 +26,7 @@ func (s *Service) ListUsers(ctx context.Context, req *connect.Request[api.ListUs
 
 	users, err := s.repository.ListUsers(ctx, tailnet.ID)
 	if err != nil {
-		return nil, errors.Wrap(err, 0)
+		return nil, logError(err)
 	}
 
 	resp := &api.ListUsersResponse{}
@@ -51,7 +50,7 @@ func (s *Service) DeleteUser(ctx context.Context, req *connect.Request[api.Delet
 
 	user, err := s.repository.GetUser(ctx, req.Msg.UserId)
 	if err != nil {
-		return nil, errors.Wrap(err, 0)
+		return nil, logError(err)
 	}
 
 	if user == nil {
@@ -87,7 +86,7 @@ func (s *Service) DeleteUser(ctx context.Context, req *connect.Request[api.Delet
 	})
 
 	if err != nil {
-		return nil, errors.Wrap(err, 0)
+		return nil, logError(err)
 	}
 
 	s.sessionManager.NotifyAll(user.TailnetID)

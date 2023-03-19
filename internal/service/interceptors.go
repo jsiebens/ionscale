@@ -4,11 +4,10 @@ import (
 	"context"
 	"fmt"
 	"github.com/bufbuild/connect-go"
-	"github.com/hashicorp/go-hclog"
 	"github.com/jsiebens/ionscale/internal/domain"
-	"github.com/jsiebens/ionscale/internal/errors"
 	"github.com/jsiebens/ionscale/internal/key"
 	"github.com/jsiebens/ionscale/internal/token"
+	"go.uber.org/zap"
 	"strings"
 )
 
@@ -78,14 +77,11 @@ func exchangeToken(ctx context.Context, systemAdminKey *key.ServerPrivate, repos
 	return nil
 }
 
-func NewErrorInterceptor(logger hclog.Logger) *ErrorInterceptor {
-	return &ErrorInterceptor{
-		logger: logger,
-	}
+func NewErrorInterceptor() *ErrorInterceptor {
+	return &ErrorInterceptor{}
 }
 
 type ErrorInterceptor struct {
-	logger hclog.Logger
 }
 
 func (e *ErrorInterceptor) handleError(err error) error {
@@ -93,23 +89,14 @@ func (e *ErrorInterceptor) handleError(err error) error {
 		return err
 	}
 
-	switch t := err.(type) {
+	switch err.(type) {
 	case *connect.Error:
 		return err
-	case *errors.Error:
-		e.logger.Error("error processing grpc request",
-			"err", t.Cause,
-			"location", t.Location,
-		)
-		return connect.NewError(connect.CodeInternal, fmt.Errorf("internal server error"))
 	default:
-		e.logger.Error("error processing grpc request",
-			"err", err,
-		)
 		return connect.NewError(connect.CodeInternal, fmt.Errorf("internal server error"))
 	}
-
 }
+
 func (e *ErrorInterceptor) WrapUnary(next connect.UnaryFunc) connect.UnaryFunc {
 	return func(ctx context.Context, request connect.AnyRequest) (connect.AnyResponse, error) {
 		response, err := next(ctx, request)
@@ -128,4 +115,9 @@ func (e *ErrorInterceptor) WrapStreamingHandler(next connect.StreamingHandlerFun
 		err := next(ctx, conn)
 		return e.handleError(err)
 	}
+}
+
+func logError(err error) error {
+	zap.L().WithOptions(zap.AddCallerSkip(1)).Error("error processing request", zap.Error(err))
+	return err
 }

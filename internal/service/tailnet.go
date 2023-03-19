@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"github.com/bufbuild/connect-go"
 	"github.com/jsiebens/ionscale/internal/domain"
-	"github.com/jsiebens/ionscale/internal/errors"
 	"github.com/jsiebens/ionscale/internal/mapping"
 	"github.com/jsiebens/ionscale/internal/util"
 	api "github.com/jsiebens/ionscale/pkg/gen/ionscale/v1"
@@ -57,7 +56,7 @@ func (s *Service) CreateTailnet(ctx context.Context, req *connect.Request[api.Cr
 
 	if req.Msg.IamPolicy != nil {
 		if err := mapping.CopyViaJson(req.Msg.IamPolicy, &tailnet.IAMPolicy); err != nil {
-			return nil, errors.Wrap(err, 0)
+			return nil, logError(err)
 		}
 	} else {
 		tailnet.IAMPolicy = domain.DefaultIAMPolicy()
@@ -65,19 +64,19 @@ func (s *Service) CreateTailnet(ctx context.Context, req *connect.Request[api.Cr
 
 	if req.Msg.AclPolicy != nil {
 		if err := mapping.CopyViaJson(req.Msg.AclPolicy, &tailnet.ACLPolicy); err != nil {
-			return nil, errors.Wrap(err, 0)
+			return nil, logError(err)
 		}
 	} else {
 		tailnet.ACLPolicy = domain.DefaultACLPolicy()
 	}
 
 	if err := s.repository.SaveTailnet(ctx, tailnet); err != nil {
-		return nil, errors.Wrap(err, 0)
+		return nil, logError(err)
 	}
 
 	t, err := domainTailnetToApiTailnet(tailnet)
 	if err != nil {
-		return nil, errors.Wrap(err, 0)
+		return nil, logError(err)
 	}
 
 	resp := &api.CreateTailnetResponse{Tailnet: t}
@@ -93,7 +92,7 @@ func (s *Service) UpdateTailnet(ctx context.Context, req *connect.Request[api.Up
 
 	tailnet, err := s.repository.GetTailnet(ctx, req.Msg.TailnetId)
 	if err != nil {
-		return nil, errors.Wrap(err, 0)
+		return nil, logError(err)
 	}
 
 	if tailnet == nil {
@@ -103,14 +102,14 @@ func (s *Service) UpdateTailnet(ctx context.Context, req *connect.Request[api.Up
 	if req.Msg.IamPolicy != nil {
 		tailnet.IAMPolicy = domain.IAMPolicy{}
 		if err := mapping.CopyViaJson(req.Msg.IamPolicy, &tailnet.IAMPolicy); err != nil {
-			return nil, errors.Wrap(err, 0)
+			return nil, logError(err)
 		}
 	}
 
 	if req.Msg.AclPolicy != nil {
 		tailnet.ACLPolicy = domain.ACLPolicy{}
 		if err := mapping.CopyViaJson(req.Msg.AclPolicy, &tailnet.ACLPolicy); err != nil {
-			return nil, errors.Wrap(err, 0)
+			return nil, logError(err)
 		}
 	}
 
@@ -124,14 +123,14 @@ func (s *Service) UpdateTailnet(ctx context.Context, req *connect.Request[api.Up
 	tailnet.MachineAuthorizationEnabled = req.Msg.MachineAuthorizationEnabled
 
 	if err := s.repository.SaveTailnet(ctx, tailnet); err != nil {
-		return nil, errors.Wrap(err, 0)
+		return nil, logError(err)
 	}
 
 	s.sessionManager.NotifyAll(tailnet.ID)
 
 	t, err := domainTailnetToApiTailnet(tailnet)
 	if err != nil {
-		return nil, errors.Wrap(err, 0)
+		return nil, logError(err)
 	}
 
 	resp := &api.UpdateTailnetResponse{Tailnet: t}
@@ -147,7 +146,7 @@ func (s *Service) GetTailnet(ctx context.Context, req *connect.Request[api.GetTa
 
 	tailnet, err := s.repository.GetTailnet(ctx, req.Msg.Id)
 	if err != nil {
-		return nil, errors.Wrap(err, 0)
+		return nil, logError(err)
 	}
 
 	if tailnet == nil {
@@ -156,7 +155,7 @@ func (s *Service) GetTailnet(ctx context.Context, req *connect.Request[api.GetTa
 
 	t, err := domainTailnetToApiTailnet(tailnet)
 	if err != nil {
-		return nil, errors.Wrap(err, 0)
+		return nil, logError(err)
 	}
 
 	return connect.NewResponse(&api.GetTailnetResponse{Tailnet: t}), nil
@@ -170,7 +169,7 @@ func (s *Service) ListTailnets(ctx context.Context, req *connect.Request[api.Lis
 	if principal.IsSystemAdmin() {
 		tailnets, err := s.repository.ListTailnets(ctx)
 		if err != nil {
-			return nil, errors.Wrap(err, 0)
+			return nil, logError(err)
 		}
 		for _, t := range tailnets {
 			gt := api.Tailnet{Id: t.ID, Name: t.Name}
@@ -181,7 +180,7 @@ func (s *Service) ListTailnets(ctx context.Context, req *connect.Request[api.Lis
 	if principal.User != nil {
 		tailnet, err := s.repository.GetTailnet(ctx, principal.User.TailnetID)
 		if err != nil {
-			return nil, errors.Wrap(err, 0)
+			return nil, logError(err)
 		}
 		gt := api.Tailnet{Id: tailnet.ID, Name: tailnet.Name}
 		resp.Tailnet = append(resp.Tailnet, &gt)
@@ -198,7 +197,7 @@ func (s *Service) DeleteTailnet(ctx context.Context, req *connect.Request[api.De
 
 	count, err := s.repository.CountMachineByTailnet(ctx, req.Msg.TailnetId)
 	if err != nil {
-		return nil, errors.Wrap(err, 0)
+		return nil, logError(err)
 	}
 
 	if !req.Msg.Force && count > 0 {
@@ -230,7 +229,7 @@ func (s *Service) DeleteTailnet(ctx context.Context, req *connect.Request[api.De
 	})
 
 	if err != nil {
-		return nil, errors.Wrap(err, 0)
+		return nil, logError(err)
 	}
 
 	s.sessionManager.NotifyAll(req.Msg.TailnetId)
@@ -246,12 +245,12 @@ func (s *Service) SetDERPMap(ctx context.Context, req *connect.Request[api.SetDE
 
 	derpMap := tailcfg.DERPMap{}
 	if err := json.Unmarshal(req.Msg.Value, &derpMap); err != nil {
-		return nil, errors.Wrap(err, 0)
+		return nil, logError(err)
 	}
 
 	tailnet, err := s.repository.GetTailnet(ctx, req.Msg.TailnetId)
 	if err != nil {
-		return nil, errors.Wrap(err, 0)
+		return nil, logError(err)
 	}
 	if tailnet == nil {
 		return nil, connect.NewError(connect.CodeNotFound, fmt.Errorf("tailnet not found"))
@@ -263,14 +262,14 @@ func (s *Service) SetDERPMap(ctx context.Context, req *connect.Request[api.SetDE
 	}
 
 	if err := s.repository.SaveTailnet(ctx, tailnet); err != nil {
-		return nil, errors.Wrap(err, 0)
+		return nil, logError(err)
 	}
 
 	s.sessionManager.NotifyAll(tailnet.ID)
 
 	raw, err := json.Marshal(derpMap)
 	if err != nil {
-		return nil, errors.Wrap(err, 0)
+		return nil, logError(err)
 	}
 
 	return connect.NewResponse(&api.SetDERPMapResponse{Value: raw}), nil
@@ -284,7 +283,7 @@ func (s *Service) ResetDERPMap(ctx context.Context, req *connect.Request[api.Res
 
 	tailnet, err := s.repository.GetTailnet(ctx, req.Msg.TailnetId)
 	if err != nil {
-		return nil, errors.Wrap(err, 0)
+		return nil, logError(err)
 	}
 	if tailnet == nil {
 		return nil, connect.NewError(connect.CodeNotFound, fmt.Errorf("tailnet not found"))
@@ -293,7 +292,7 @@ func (s *Service) ResetDERPMap(ctx context.Context, req *connect.Request[api.Res
 	tailnet.DERPMap = domain.DERPMap{}
 
 	if err := s.repository.SaveTailnet(ctx, tailnet); err != nil {
-		return nil, errors.Wrap(err, 0)
+		return nil, logError(err)
 	}
 
 	s.sessionManager.NotifyAll(tailnet.ID)
@@ -309,7 +308,7 @@ func (s *Service) GetDERPMap(ctx context.Context, req *connect.Request[api.GetDE
 
 	tailnet, err := s.repository.GetTailnet(ctx, req.Msg.TailnetId)
 	if err != nil {
-		return nil, errors.Wrap(err, 0)
+		return nil, logError(err)
 	}
 	if tailnet == nil {
 		return nil, connect.NewError(connect.CodeNotFound, fmt.Errorf("tailnet not found"))
@@ -317,12 +316,12 @@ func (s *Service) GetDERPMap(ctx context.Context, req *connect.Request[api.GetDE
 
 	derpMap, err := tailnet.GetDERPMap(ctx, s.repository)
 	if err != nil {
-		return nil, errors.Wrap(err, 0)
+		return nil, logError(err)
 	}
 
 	raw, err := json.Marshal(derpMap.DERPMap)
 	if err != nil {
-		return nil, errors.Wrap(err, 0)
+		return nil, logError(err)
 	}
 
 	return connect.NewResponse(&api.GetDERPMapResponse{Value: raw}), nil
@@ -336,7 +335,7 @@ func (s *Service) EnableFileSharing(ctx context.Context, req *connect.Request[ap
 
 	tailnet, err := s.repository.GetTailnet(ctx, req.Msg.TailnetId)
 	if err != nil {
-		return nil, errors.Wrap(err, 0)
+		return nil, logError(err)
 	}
 	if tailnet == nil {
 		return nil, connect.NewError(connect.CodeNotFound, fmt.Errorf("tailnet not found"))
@@ -345,7 +344,7 @@ func (s *Service) EnableFileSharing(ctx context.Context, req *connect.Request[ap
 	if !tailnet.FileSharingEnabled {
 		tailnet.FileSharingEnabled = true
 		if err := s.repository.SaveTailnet(ctx, tailnet); err != nil {
-			return nil, errors.Wrap(err, 0)
+			return nil, logError(err)
 		}
 
 		s.sessionManager.NotifyAll(tailnet.ID)
@@ -362,7 +361,7 @@ func (s *Service) DisableFileSharing(ctx context.Context, req *connect.Request[a
 
 	tailnet, err := s.repository.GetTailnet(ctx, req.Msg.TailnetId)
 	if err != nil {
-		return nil, errors.Wrap(err, 0)
+		return nil, logError(err)
 	}
 	if tailnet == nil {
 		return nil, connect.NewError(connect.CodeNotFound, fmt.Errorf("tailnet not found"))
@@ -371,7 +370,7 @@ func (s *Service) DisableFileSharing(ctx context.Context, req *connect.Request[a
 	if tailnet.FileSharingEnabled {
 		tailnet.FileSharingEnabled = false
 		if err := s.repository.SaveTailnet(ctx, tailnet); err != nil {
-			return nil, errors.Wrap(err, 0)
+			return nil, logError(err)
 		}
 
 		s.sessionManager.NotifyAll(tailnet.ID)
@@ -388,7 +387,7 @@ func (s *Service) EnableServiceCollection(ctx context.Context, req *connect.Requ
 
 	tailnet, err := s.repository.GetTailnet(ctx, req.Msg.TailnetId)
 	if err != nil {
-		return nil, errors.Wrap(err, 0)
+		return nil, logError(err)
 	}
 	if tailnet == nil {
 		return nil, connect.NewError(connect.CodeNotFound, fmt.Errorf("tailnet not found"))
@@ -397,7 +396,7 @@ func (s *Service) EnableServiceCollection(ctx context.Context, req *connect.Requ
 	if !tailnet.ServiceCollectionEnabled {
 		tailnet.ServiceCollectionEnabled = true
 		if err := s.repository.SaveTailnet(ctx, tailnet); err != nil {
-			return nil, errors.Wrap(err, 0)
+			return nil, logError(err)
 		}
 
 		s.sessionManager.NotifyAll(tailnet.ID)
@@ -414,7 +413,7 @@ func (s *Service) DisableServiceCollection(ctx context.Context, req *connect.Req
 
 	tailnet, err := s.repository.GetTailnet(ctx, req.Msg.TailnetId)
 	if err != nil {
-		return nil, errors.Wrap(err, 0)
+		return nil, logError(err)
 	}
 	if tailnet == nil {
 		return nil, connect.NewError(connect.CodeNotFound, fmt.Errorf("tailnet not found"))
@@ -423,7 +422,7 @@ func (s *Service) DisableServiceCollection(ctx context.Context, req *connect.Req
 	if tailnet.ServiceCollectionEnabled {
 		tailnet.ServiceCollectionEnabled = false
 		if err := s.repository.SaveTailnet(ctx, tailnet); err != nil {
-			return nil, errors.Wrap(err, 0)
+			return nil, logError(err)
 		}
 
 		s.sessionManager.NotifyAll(tailnet.ID)
@@ -440,7 +439,7 @@ func (s *Service) EnableSSH(ctx context.Context, req *connect.Request[api.Enable
 
 	tailnet, err := s.repository.GetTailnet(ctx, req.Msg.TailnetId)
 	if err != nil {
-		return nil, errors.Wrap(err, 0)
+		return nil, logError(err)
 	}
 	if tailnet == nil {
 		return nil, connect.NewError(connect.CodeNotFound, fmt.Errorf("tailnet not found"))
@@ -449,7 +448,7 @@ func (s *Service) EnableSSH(ctx context.Context, req *connect.Request[api.Enable
 	if !tailnet.SSHEnabled {
 		tailnet.SSHEnabled = true
 		if err := s.repository.SaveTailnet(ctx, tailnet); err != nil {
-			return nil, errors.Wrap(err, 0)
+			return nil, logError(err)
 		}
 
 		s.sessionManager.NotifyAll(tailnet.ID)
@@ -466,7 +465,7 @@ func (s *Service) DisableSSH(ctx context.Context, req *connect.Request[api.Disab
 
 	tailnet, err := s.repository.GetTailnet(ctx, req.Msg.TailnetId)
 	if err != nil {
-		return nil, errors.Wrap(err, 0)
+		return nil, logError(err)
 	}
 	if tailnet == nil {
 		return nil, connect.NewError(connect.CodeNotFound, fmt.Errorf("tailnet not found"))
@@ -475,7 +474,7 @@ func (s *Service) DisableSSH(ctx context.Context, req *connect.Request[api.Disab
 	if tailnet.SSHEnabled {
 		tailnet.SSHEnabled = false
 		if err := s.repository.SaveTailnet(ctx, tailnet); err != nil {
-			return nil, errors.Wrap(err, 0)
+			return nil, logError(err)
 		}
 
 		s.sessionManager.NotifyAll(tailnet.ID)
@@ -492,7 +491,7 @@ func (s *Service) EnableMachineAuthorization(ctx context.Context, req *connect.R
 
 	tailnet, err := s.repository.GetTailnet(ctx, req.Msg.TailnetId)
 	if err != nil {
-		return nil, errors.Wrap(err, 0)
+		return nil, logError(err)
 	}
 	if tailnet == nil {
 		return nil, connect.NewError(connect.CodeNotFound, fmt.Errorf("tailnet not found"))
@@ -501,7 +500,7 @@ func (s *Service) EnableMachineAuthorization(ctx context.Context, req *connect.R
 	if !tailnet.MachineAuthorizationEnabled {
 		tailnet.MachineAuthorizationEnabled = true
 		if err := s.repository.SaveTailnet(ctx, tailnet); err != nil {
-			return nil, errors.Wrap(err, 0)
+			return nil, logError(err)
 		}
 	}
 
@@ -516,7 +515,7 @@ func (s *Service) DisableMachineAuthorization(ctx context.Context, req *connect.
 
 	tailnet, err := s.repository.GetTailnet(ctx, req.Msg.TailnetId)
 	if err != nil {
-		return nil, errors.Wrap(err, 0)
+		return nil, logError(err)
 	}
 	if tailnet == nil {
 		return nil, connect.NewError(connect.CodeNotFound, fmt.Errorf("tailnet not found"))
@@ -525,7 +524,7 @@ func (s *Service) DisableMachineAuthorization(ctx context.Context, req *connect.
 	if tailnet.MachineAuthorizationEnabled {
 		tailnet.MachineAuthorizationEnabled = false
 		if err := s.repository.SaveTailnet(ctx, tailnet); err != nil {
-			return nil, errors.Wrap(err, 0)
+			return nil, logError(err)
 		}
 	}
 

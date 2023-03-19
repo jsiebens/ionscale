@@ -5,9 +5,9 @@ import (
 	"errors"
 	"fmt"
 	"github.com/go-gormigrate/gormigrate/v2"
-	"github.com/hashicorp/go-hclog"
 	"github.com/jsiebens/ionscale/internal/database/migration"
 	"github.com/jsiebens/ionscale/internal/util"
+	"go.uber.org/zap"
 	"tailscale.com/types/key"
 	"time"
 
@@ -23,7 +23,7 @@ type dbLock interface {
 	UnlockErr(error) error
 }
 
-func OpenDB(config *config.Database, logger hclog.Logger) (domain.Repository, error) {
+func OpenDB(config *config.Database, logger *zap.Logger) (domain.Repository, error) {
 	db, lock, err := createDB(config, logger)
 	if err != nil {
 		return nil, err
@@ -54,9 +54,9 @@ func OpenDB(config *config.Database, logger hclog.Logger) (domain.Repository, er
 	return repository, nil
 }
 
-func createDB(config *config.Database, logger hclog.Logger) (*gorm.DB, dbLock, error) {
+func createDB(config *config.Database, logger *zap.Logger) (*gorm.DB, dbLock, error) {
 	gormConfig := &gorm.Config{
-		Logger: &GormLoggerAdapter{logger: logger.Named("db")},
+		Logger: &GormLoggerAdapter{logger: logger.Sugar()},
 	}
 
 	switch config.Type {
@@ -134,7 +134,7 @@ func createJSONWebKeySet(ctx context.Context, repository domain.Repository) erro
 }
 
 type GormLoggerAdapter struct {
-	logger hclog.Logger
+	logger *zap.SugaredLogger
 }
 
 func (g *GormLoggerAdapter) LogMode(level logger.LogLevel) logger.Interface {
@@ -142,11 +142,11 @@ func (g *GormLoggerAdapter) LogMode(level logger.LogLevel) logger.Interface {
 }
 
 func (g *GormLoggerAdapter) Info(ctx context.Context, s string, i ...interface{}) {
-	g.logger.Info(s, i)
+	g.logger.Infow(s, i)
 }
 
 func (g *GormLoggerAdapter) Warn(ctx context.Context, s string, i ...interface{}) {
-	g.logger.Warn(s, i)
+	g.logger.Warnw(s, i)
 }
 
 func (g *GormLoggerAdapter) Error(ctx context.Context, s string, i ...interface{}) {
@@ -154,22 +154,22 @@ func (g *GormLoggerAdapter) Error(ctx context.Context, s string, i ...interface{
 }
 
 func (g *GormLoggerAdapter) Trace(ctx context.Context, begin time.Time, fc func() (sql string, rowsAffected int64), err error) {
-	if g.logger.IsTrace() {
+	if g.logger.Level().Enabled(zap.DebugLevel) {
 		elapsed := time.Since(begin)
 		switch {
 		case err != nil && !errors.Is(err, gorm.ErrRecordNotFound):
 			sql, rows := fc()
 			if rows == -1 {
-				g.logger.Trace("Error executing query", "sql", sql, "start_time", begin.Format(time.RFC3339), "duration", elapsed, "err", err)
+				g.logger.Debugw("Error executing query", "sql", sql, "start_time", begin.Format(time.RFC3339), "duration", elapsed, "err", err)
 			} else {
-				g.logger.Trace("Error executing query", "sql", sql, "start_time", begin.Format(time.RFC3339), "duration", elapsed, "rows", rows, "err", err)
+				g.logger.Debugw("Error executing query", "sql", sql, "start_time", begin.Format(time.RFC3339), "duration", elapsed, "rows", rows, "err", err)
 			}
 		default:
 			sql, rows := fc()
 			if rows == -1 {
-				g.logger.Trace("Statement executed", "sql", sql, "start_time", begin.Format(time.RFC3339), "duration", elapsed)
+				g.logger.Debugw("Statement executed", "sql", sql, "start_time", begin.Format(time.RFC3339), "duration", elapsed)
 			} else {
-				g.logger.Trace("Statement executed", "sql", sql, "start_time", begin.Format(time.RFC3339), "duration", elapsed, "rows", rows)
+				g.logger.Debugw("Statement executed", "sql", sql, "start_time", begin.Format(time.RFC3339), "duration", elapsed, "rows", rows)
 			}
 		}
 	}
