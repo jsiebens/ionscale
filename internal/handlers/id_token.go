@@ -6,7 +6,6 @@ import (
 	"github.com/jsiebens/ionscale/internal/bind"
 	"github.com/jsiebens/ionscale/internal/config"
 	"github.com/jsiebens/ionscale/internal/domain"
-	"github.com/jsiebens/ionscale/internal/errors"
 	"github.com/jsiebens/ionscale/internal/util"
 	"github.com/labstack/echo/v4"
 	"gopkg.in/square/go-jose.v2"
@@ -56,7 +55,7 @@ func (h *IDTokenHandlers) OpenIDConfig(c echo.Context) error {
 func (h *IDTokenHandlers) Jwks(c echo.Context) error {
 	keySet, err := h.repository.GetJSONWebKeySet(c.Request().Context())
 	if err != nil {
-		return errors.Wrap(err, 0)
+		return logError(err)
 	}
 
 	pub := jose.JSONWebKey{Key: keySet.Key.Public(), KeyID: keySet.Key.Id, Algorithm: "RS256", Use: "sig"}
@@ -69,17 +68,17 @@ func (h *IDTokenHandlers) FetchToken(c echo.Context) error {
 
 	keySet, err := h.repository.GetJSONWebKeySet(c.Request().Context())
 	if err != nil {
-		return errors.Wrap(err, 0)
+		return logError(err)
 	}
 
 	binder, err := h.createBinder(c)
 	if err != nil {
-		return errors.Wrap(err, 0)
+		return logError(err)
 	}
 
 	req := &tailcfg.TokenRequest{}
 	if err := binder.BindRequest(c, req); err != nil {
-		return errors.Wrap(err, 0)
+		return logError(err)
 	}
 
 	machineKey := binder.Peer().String()
@@ -88,7 +87,7 @@ func (h *IDTokenHandlers) FetchToken(c echo.Context) error {
 	var m *domain.Machine
 	m, err = h.repository.GetMachineByKeys(ctx, machineKey, nodeKey)
 	if err != nil {
-		return errors.Wrap(err, 0)
+		return logError(err)
 	}
 
 	if m == nil {
@@ -131,7 +130,7 @@ func (h *IDTokenHandlers) FetchToken(c echo.Context) error {
 
 	jwtB64, err := unsignedToken.SignedString(&keySet.Key.PrivateKey)
 	if err != nil {
-		return errors.Wrap(err, 0)
+		return logError(err)
 	}
 
 	resp := tailcfg.TokenResponse{IDToken: jwtB64}

@@ -3,7 +3,6 @@ package handlers
 import (
 	"github.com/jsiebens/ionscale/internal/bind"
 	"github.com/jsiebens/ionscale/internal/dns"
-	"github.com/jsiebens/ionscale/internal/errors"
 	"github.com/labstack/echo/v4"
 	"net"
 	"net/http"
@@ -29,12 +28,12 @@ func (h *DNSHandlers) SetDNS(c echo.Context) error {
 
 	binder, err := h.createBinder(c)
 	if err != nil {
-		return errors.Wrap(err, 0)
+		return logError(err)
 	}
 
 	req := &tailcfg.SetDNSRequest{}
 	if err := binder.BindRequest(c, req); err != nil {
-		return errors.Wrap(err, 0)
+		return logError(err)
 	}
 
 	if h.provider == nil {
@@ -42,7 +41,7 @@ func (h *DNSHandlers) SetDNS(c echo.Context) error {
 	}
 
 	if err := h.provider.SetRecord(ctx, req.Type, req.Name, req.Value); err != nil {
-		return errors.Wrap(err, 0)
+		return logError(err)
 	}
 
 	if strings.HasPrefix(req.Name, "_acme-challenge") && req.Type == "TXT" {

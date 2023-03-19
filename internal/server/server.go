@@ -5,7 +5,6 @@ import (
 	"crypto/tls"
 	"fmt"
 	"github.com/caddyserver/certmagic"
-	"github.com/hashicorp/go-hclog"
 	"github.com/jsiebens/ionscale/internal/auth"
 	"github.com/jsiebens/ionscale/internal/bind"
 	"github.com/jsiebens/ionscale/internal/config"
@@ -19,15 +18,15 @@ import (
 	echo_prometheus "github.com/labstack/echo-contrib/prometheus"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
+	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 	"golang.org/x/net/http2"
 	"golang.org/x/net/http2/h2c"
 	"golang.org/x/sync/errgroup"
-	"log"
 	"net"
 	"net/http"
 	"net/url"
 	"os"
-	"strings"
 	"tailscale.com/types/key"
 )
 
@@ -39,7 +38,10 @@ func Start(c *config.Config) error {
 
 	logger.Info("Starting ionscale server")
 
-	repository, err := database.OpenDB(&c.Database, logger)
+	httpLogger := logger.Named("http")
+	dbLogger := logger.Named("db")
+
+	repository, err := database.OpenDB(&c.Database, dbLogger)
 	if err != nil {
 		return err
 	}
@@ -68,6 +70,7 @@ func Start(c *config.Config) error {
 		certmagic.DefaultACME.Agreed = true
 		certmagic.DefaultACME.Email = c.Tls.AcmeEmail
 		certmagic.DefaultACME.CA = c.Tls.AcmeCA
+		certmagic.Default.Logger = logger.Named("certmagic")
 		if c.Tls.AcmePath != "" {
 			certmagic.Default.Storage = &certmagic.FileStorage{Path: c.Tls.AcmePath}
 		}
@@ -106,7 +109,7 @@ func Start(c *config.Config) error {
 		sshActionHandlers := handlers.NewSSHActionHandlers(binder, c, repository)
 
 		e := echo.New()
-		e.Use(EchoMetrics(p), EchoLogger(logger), EchoErrorHandler(logger), EchoRecover(logger))
+		e.Use(EchoMetrics(p), EchoLogger(httpLogger), EchoErrorHandler(), EchoRecover())
 		e.POST("/machine/register", registrationHandlers.Register)
 		e.POST("/machine/map", pollNetMapHandler.PollNetMap)
 		e.POST("/machine/set-dns", dnsHandlers.SetDNS)
@@ -130,17 +133,17 @@ func Start(c *config.Config) error {
 	)
 
 	rpcService := service.NewService(c, authProvider, repository, sessionManager)
-	rpcPath, rpcHandler := NewRpcHandler(serverKey.SystemAdminKey, repository, logger, rpcService)
+	rpcPath, rpcHandler := NewRpcHandler(serverKey.SystemAdminKey, repository, rpcService)
 
 	nonTlsAppHandler := echo.New()
-	nonTlsAppHandler.Use(EchoMetrics(p), EchoLogger(logger), EchoErrorHandler(logger), EchoRecover(logger))
+	nonTlsAppHandler.Use(EchoMetrics(p), EchoLogger(httpLogger), EchoErrorHandler(), EchoRecover())
 	nonTlsAppHandler.POST("/ts2021", noiseHandlers.Upgrade)
 	nonTlsAppHandler.Any("/*", handlers.HttpRedirectHandler(c.Tls))
 
 	tlsAppHandler := echo.New()
 	tlsAppHandler.Renderer = templates.NewTemplates()
 	tlsAppHandler.Pre(handlers.HttpsRedirect(c.Tls))
-	tlsAppHandler.Use(EchoMetrics(p), EchoLogger(logger), EchoErrorHandler(logger), EchoRecover(logger))
+	tlsAppHandler.Use(EchoMetrics(p), EchoLogger(logger), EchoErrorHandler(), EchoRecover())
 
 	tlsAppHandler.Any("/*", handlers.IndexHandler(http.StatusNotFound))
 	tlsAppHandler.Any("/", handlers.IndexHandler(http.StatusOK))
@@ -192,14 +195,14 @@ func Start(c *config.Config) error {
 	}
 
 	if c.Tls.AcmeEnabled {
-		logger.Info("TLS is enabled with ACME", "domain", serverUrl.Host)
-		logger.Info("Server is running", "http_addr", c.HttpListenAddr, "https_addr", c.HttpsListenAddr, "metrics_addr", c.MetricsListenAddr)
+		logger.Sugar().Infow("TLS is enabled with ACME", "domain", serverUrl.Host)
+		logger.Sugar().Infow("Server is running", "http_addr", c.HttpListenAddr, "https_addr", c.HttpsListenAddr, "metrics_addr", c.MetricsListenAddr)
 	} else if !c.Tls.Disable {
-		logger.Info("TLS is enabled", "cert", c.Tls.CertFile)
-		logger.Info("Server is running", "http_addr", c.HttpListenAddr, "https_addr", c.HttpsListenAddr, "metrics_addr", c.MetricsListenAddr)
+		logger.Sugar().Infow("TLS is enabled", "cert", c.Tls.CertFile)
+		logger.Sugar().Infow("Server is running", "http_addr", c.HttpListenAddr, "https_addr", c.HttpsListenAddr, "metrics_addr", c.MetricsListenAddr)
 	} else {
-		logger.Warn("TLS is disabled")
-		logger.Info("Server is running", "http_addr", c.HttpListenAddr, "metrics_addr", c.MetricsListenAddr)
+		logger.Sugar().Warnw("TLS is disabled")
+		logger.Sugar().Infow("Server is running", "http_addr", c.HttpListenAddr, "metrics_addr", c.MetricsListenAddr)
 	}
 
 	return g.Wait()
@@ -268,32 +271,34 @@ func selectListener(a net.Listener, b net.Listener) net.Listener {
 	return b
 }
 
-func setupLogging(config config.Logging) (hclog.Logger, error) {
-	file, err := createLogFile(config)
+func setupLogging(config config.Logging) (*zap.Logger, error) {
+	level, err := zap.ParseAtomicLevel(config.Level)
 	if err != nil {
 		return nil, err
 	}
-	appLogger := hclog.New(&hclog.LoggerOptions{
-		Name:       "ionscale",
-		Level:      hclog.LevelFromString(config.Level),
-		JSONFormat: strings.ToLower(config.Format) == "json",
-		Output:     file,
-	})
 
-	log.SetOutput(appLogger.StandardWriter(&hclog.StandardLoggerOptions{InferLevels: true}))
-	log.SetPrefix("")
-	log.SetFlags(0)
+	pc := zap.NewProductionConfig()
+	pc.Level = level
+	pc.DisableStacktrace = true
+	pc.OutputPaths = []string{"stdout"}
+	pc.Encoding = "console"
+	pc.EncoderConfig.EncodeLevel = zapcore.CapitalLevelEncoder
+	pc.EncoderConfig.EncodeTime = zapcore.ISO8601TimeEncoder
 
-	return appLogger, nil
-}
-
-func createLogFile(config config.Logging) (*os.File, error) {
 	if config.File != "" {
-		f, err := os.OpenFile(config.File, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0666)
-		if err != nil {
-			return nil, err
-		}
-		return f, nil
+		pc.OutputPaths = []string{config.File}
 	}
-	return os.Stdout, nil
+
+	if config.Format == "json" {
+		pc.Encoding = "json"
+	}
+
+	logger, err := pc.Build()
+	if err != nil {
+		return nil, err
+	}
+
+	zap.ReplaceGlobals(logger)
+
+	return logger, nil
 }

@@ -7,7 +7,6 @@ import (
 	"github.com/jsiebens/ionscale/internal/config"
 	"github.com/jsiebens/ionscale/internal/core"
 	"github.com/jsiebens/ionscale/internal/domain"
-	"github.com/jsiebens/ionscale/internal/errors"
 	"github.com/jsiebens/ionscale/internal/mapping"
 	"github.com/jsiebens/ionscale/internal/util"
 	"github.com/labstack/echo/v4"
@@ -43,12 +42,12 @@ func (h *RegistrationHandlers) Register(c echo.Context) error {
 
 	binder, err := h.createBinder(c)
 	if err != nil {
-		return errors.Wrap(err, 0)
+		return logError(err)
 	}
 
 	req := &tailcfg.RegisterRequest{}
 	if err := binder.BindRequest(c, req); err != nil {
-		return errors.Wrap(err, 0)
+		return logError(err)
 	}
 
 	machineKey := binder.Peer().String()
@@ -58,7 +57,7 @@ func (h *RegistrationHandlers) Register(c echo.Context) error {
 	m, err = h.repository.GetMachineByKeys(ctx, machineKey, nodeKey)
 
 	if err != nil {
-		return errors.Wrap(err, 0)
+		return logError(err)
 	}
 
 	if m != nil {
@@ -72,12 +71,12 @@ func (h *RegistrationHandlers) Register(c echo.Context) error {
 
 			if m.Ephemeral {
 				if _, err := h.repository.DeleteMachine(ctx, m.ID); err != nil {
-					return errors.Wrap(err, 0)
+					return logError(err)
 				}
 				h.sessionManager.NotifyAll(m.TailnetID)
 			} else {
 				if err := h.repository.SaveMachine(ctx, m); err != nil {
-					return errors.Wrap(err, 0)
+					return logError(err)
 				}
 				h.sessionManager.NotifyAll(m.TailnetID)
 			}
@@ -90,7 +89,7 @@ func (h *RegistrationHandlers) Register(c echo.Context) error {
 		if m.Name != sanitizeHostname {
 			nameIdx, err := h.repository.GetNextMachineNameIndex(ctx, m.TailnetID, sanitizeHostname)
 			if err != nil {
-				return errors.Wrap(err, 0)
+				return logError(err)
 			}
 			m.Name = sanitizeHostname
 			m.NameIdx = nameIdx
@@ -101,7 +100,7 @@ func (h *RegistrationHandlers) Register(c echo.Context) error {
 		m.Tags = append(m.RegisteredTags, advertisedTags...)
 
 		if err := h.repository.SaveMachine(ctx, m); err != nil {
-			return errors.Wrap(err, 0)
+			return logError(err)
 		}
 
 		tUser, tLogin := mapping.ToUser(m.User)
@@ -155,7 +154,7 @@ func (h *RegistrationHandlers) authenticateMachineWithAuthKey(c echo.Context, bi
 
 	authKey, err := h.repository.LoadAuthKey(ctx, req.Auth.AuthKey)
 	if err != nil {
-		return errors.Wrap(err, 0)
+		return logError(err)
 	}
 
 	if authKey == nil {
@@ -181,7 +180,7 @@ func (h *RegistrationHandlers) authenticateMachineWithAuthKey(c echo.Context, bi
 
 	m, err = h.repository.GetMachineByKey(ctx, tailnet.ID, machineKey)
 	if err != nil {
-		return errors.Wrap(err, 0)
+		return logError(err)
 	}
 
 	now := time.Now().UTC()
@@ -190,7 +189,7 @@ func (h *RegistrationHandlers) authenticateMachineWithAuthKey(c echo.Context, bi
 		sanitizeHostname := dnsname.SanitizeHostname(req.Hostinfo.Hostname)
 		nameIdx, err := h.repository.GetNextMachineNameIndex(ctx, tailnet.ID, sanitizeHostname)
 		if err != nil {
-			return errors.Wrap(err, 0)
+			return logError(err)
 		}
 
 		m = &domain.Machine{
@@ -218,7 +217,7 @@ func (h *RegistrationHandlers) authenticateMachineWithAuthKey(c echo.Context, bi
 
 		ipv4, ipv6, err := addr.SelectIP(checkIP(ctx, h.repository.CountMachinesWithIPv4))
 		if err != nil {
-			return errors.Wrap(err, 0)
+			return logError(err)
 		}
 		m.IPv4 = domain.IP{Addr: ipv4}
 		m.IPv6 = domain.IP{Addr: ipv6}
@@ -227,7 +226,7 @@ func (h *RegistrationHandlers) authenticateMachineWithAuthKey(c echo.Context, bi
 		if m.Name != sanitizeHostname {
 			nameIdx, err := h.repository.GetNextMachineNameIndex(ctx, tailnet.ID, sanitizeHostname)
 			if err != nil {
-				return errors.Wrap(err, 0)
+				return logError(err)
 			}
 			m.Name = sanitizeHostname
 			m.NameIdx = nameIdx
@@ -245,7 +244,7 @@ func (h *RegistrationHandlers) authenticateMachineWithAuthKey(c echo.Context, bi
 	}
 
 	if err := h.repository.SaveMachine(ctx, m); err != nil {
-		return errors.Wrap(err, 0)
+		return logError(err)
 	}
 
 	tUser, tLogin := mapping.ToUser(m.User)

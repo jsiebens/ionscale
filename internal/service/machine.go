@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/bufbuild/connect-go"
 	"github.com/jsiebens/ionscale/internal/domain"
-	"github.com/jsiebens/ionscale/internal/errors"
 	api "github.com/jsiebens/ionscale/pkg/gen/ionscale/v1"
 	"google.golang.org/protobuf/types/known/timestamppb"
 	"net/netip"
@@ -66,7 +65,7 @@ func (s *Service) ListMachines(ctx context.Context, req *connect.Request[api.Lis
 
 	tailnet, err := s.repository.GetTailnet(ctx, req.Msg.TailnetId)
 	if err != nil {
-		return nil, errors.Wrap(err, 0)
+		return nil, logError(err)
 	}
 	if tailnet == nil {
 		return nil, connect.NewError(connect.CodeNotFound, fmt.Errorf("tailnet not found"))
@@ -74,7 +73,7 @@ func (s *Service) ListMachines(ctx context.Context, req *connect.Request[api.Lis
 
 	machines, err := s.repository.ListMachineByTailnet(ctx, tailnet.ID)
 	if err != nil {
-		return nil, errors.Wrap(err, 0)
+		return nil, logError(err)
 	}
 
 	response := &api.ListMachinesResponse{}
@@ -90,7 +89,7 @@ func (s *Service) GetMachine(ctx context.Context, req *connect.Request[api.GetMa
 
 	m, err := s.repository.GetMachine(ctx, req.Msg.MachineId)
 	if err != nil {
-		return nil, errors.Wrap(err, 0)
+		return nil, logError(err)
 	}
 
 	if m == nil {
@@ -109,7 +108,7 @@ func (s *Service) DeleteMachine(ctx context.Context, req *connect.Request[api.De
 
 	m, err := s.repository.GetMachine(ctx, req.Msg.MachineId)
 	if err != nil {
-		return nil, errors.Wrap(err, 0)
+		return nil, logError(err)
 	}
 
 	if m == nil {
@@ -121,7 +120,7 @@ func (s *Service) DeleteMachine(ctx context.Context, req *connect.Request[api.De
 	}
 
 	if _, err := s.repository.DeleteMachine(ctx, req.Msg.MachineId); err != nil {
-		return nil, errors.Wrap(err, 0)
+		return nil, logError(err)
 	}
 
 	s.sessionManager.NotifyAll(m.TailnetID)
@@ -134,7 +133,7 @@ func (s *Service) ExpireMachine(ctx context.Context, req *connect.Request[api.Ex
 
 	m, err := s.repository.GetMachine(ctx, req.Msg.MachineId)
 	if err != nil {
-		return nil, errors.Wrap(err, 0)
+		return nil, logError(err)
 	}
 
 	if m == nil {
@@ -150,7 +149,7 @@ func (s *Service) ExpireMachine(ctx context.Context, req *connect.Request[api.Ex
 	m.KeyExpiryDisabled = false
 
 	if err := s.repository.SaveMachine(ctx, m); err != nil {
-		return nil, errors.Wrap(err, 0)
+		return nil, logError(err)
 	}
 
 	s.sessionManager.NotifyAll(m.TailnetID)
@@ -163,7 +162,7 @@ func (s *Service) AuthorizeMachine(ctx context.Context, req *connect.Request[api
 
 	m, err := s.repository.GetMachine(ctx, req.Msg.MachineId)
 	if err != nil {
-		return nil, errors.Wrap(err, 0)
+		return nil, logError(err)
 	}
 
 	if m == nil {
@@ -177,7 +176,7 @@ func (s *Service) AuthorizeMachine(ctx context.Context, req *connect.Request[api
 	if !m.Authorized {
 		m.Authorized = true
 		if err := s.repository.SaveMachine(ctx, m); err != nil {
-			return nil, errors.Wrap(err, 0)
+			return nil, logError(err)
 		}
 	}
 
@@ -191,7 +190,7 @@ func (s *Service) GetMachineRoutes(ctx context.Context, req *connect.Request[api
 
 	m, err := s.repository.GetMachine(ctx, req.Msg.MachineId)
 	if err != nil {
-		return nil, errors.Wrap(err, 0)
+		return nil, logError(err)
 	}
 
 	if m == nil {
@@ -220,7 +219,7 @@ func (s *Service) EnableMachineRoutes(ctx context.Context, req *connect.Request[
 
 	m, err := s.repository.GetMachine(ctx, req.Msg.MachineId)
 	if err != nil {
-		return nil, errors.Wrap(err, 0)
+		return nil, logError(err)
 	}
 
 	if m == nil {
@@ -242,7 +241,7 @@ func (s *Service) EnableMachineRoutes(ctx context.Context, req *connect.Request[
 	for _, r := range req.Msg.Routes {
 		prefix, err := netip.ParsePrefix(r)
 		if err != nil {
-			return nil, errors.Wrap(err, 0)
+			return nil, logError(err)
 		}
 		allowIPs.Add(prefix)
 	}
@@ -250,7 +249,7 @@ func (s *Service) EnableMachineRoutes(ctx context.Context, req *connect.Request[
 	m.AllowIPs = allowIPs.Items()
 	m.AutoAllowIPs = autoAllowIPs.Items()
 	if err := s.repository.SaveMachine(ctx, m); err != nil {
-		return nil, errors.Wrap(err, 0)
+		return nil, logError(err)
 	}
 
 	s.sessionManager.NotifyAll(m.TailnetID)
@@ -273,7 +272,7 @@ func (s *Service) DisableMachineRoutes(ctx context.Context, req *connect.Request
 
 	m, err := s.repository.GetMachine(ctx, req.Msg.MachineId)
 	if err != nil {
-		return nil, errors.Wrap(err, 0)
+		return nil, logError(err)
 	}
 
 	if m == nil {
@@ -290,7 +289,7 @@ func (s *Service) DisableMachineRoutes(ctx context.Context, req *connect.Request
 	for _, r := range req.Msg.Routes {
 		prefix, err := netip.ParsePrefix(r)
 		if err != nil {
-			return nil, errors.Wrap(err, 0)
+			return nil, logError(err)
 		}
 		allowIPs.Remove(prefix)
 		autoAllowIPs.Remove(prefix)
@@ -299,7 +298,7 @@ func (s *Service) DisableMachineRoutes(ctx context.Context, req *connect.Request
 	m.AllowIPs = allowIPs.Items()
 	m.AutoAllowIPs = autoAllowIPs.Items()
 	if err := s.repository.SaveMachine(ctx, m); err != nil {
-		return nil, errors.Wrap(err, 0)
+		return nil, logError(err)
 	}
 
 	s.sessionManager.NotifyAll(m.TailnetID)
@@ -322,7 +321,7 @@ func (s *Service) EnableExitNode(ctx context.Context, req *connect.Request[api.E
 
 	m, err := s.repository.GetMachine(ctx, req.Msg.MachineId)
 	if err != nil {
-		return nil, errors.Wrap(err, 0)
+		return nil, logError(err)
 	}
 
 	if m == nil {
@@ -346,7 +345,7 @@ func (s *Service) EnableExitNode(ctx context.Context, req *connect.Request[api.E
 	m.AllowIPs = allowIPs.Items()
 
 	if err := s.repository.SaveMachine(ctx, m); err != nil {
-		return nil, errors.Wrap(err, 0)
+		return nil, logError(err)
 	}
 
 	s.sessionManager.NotifyAll(m.TailnetID)
@@ -369,7 +368,7 @@ func (s *Service) DisableExitNode(ctx context.Context, req *connect.Request[api.
 
 	m, err := s.repository.GetMachine(ctx, req.Msg.MachineId)
 	if err != nil {
-		return nil, errors.Wrap(err, 0)
+		return nil, logError(err)
 	}
 
 	if m == nil {
@@ -397,7 +396,7 @@ func (s *Service) DisableExitNode(ctx context.Context, req *connect.Request[api.
 	m.AutoAllowIPs = autoAllowIPs.Items()
 
 	if err := s.repository.SaveMachine(ctx, m); err != nil {
-		return nil, errors.Wrap(err, 0)
+		return nil, logError(err)
 	}
 
 	s.sessionManager.NotifyAll(m.TailnetID)
@@ -420,7 +419,7 @@ func (s *Service) SetMachineKeyExpiry(ctx context.Context, req *connect.Request[
 
 	m, err := s.repository.GetMachine(ctx, req.Msg.MachineId)
 	if err != nil {
-		return nil, errors.Wrap(err, 0)
+		return nil, logError(err)
 	}
 
 	if m == nil {
@@ -434,7 +433,7 @@ func (s *Service) SetMachineKeyExpiry(ctx context.Context, req *connect.Request[
 	m.KeyExpiryDisabled = req.Msg.Disabled
 
 	if err := s.repository.SaveMachine(ctx, m); err != nil {
-		return nil, errors.Wrap(err, 0)
+		return nil, logError(err)
 	}
 
 	s.sessionManager.NotifyAll(m.TailnetID)

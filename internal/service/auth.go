@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/bufbuild/connect-go"
 	"github.com/jsiebens/ionscale/internal/domain"
-	"github.com/jsiebens/ionscale/internal/errors"
 	"github.com/jsiebens/ionscale/internal/util"
 	api "github.com/jsiebens/ionscale/pkg/gen/ionscale/v1"
 	"time"
@@ -25,11 +24,11 @@ func (s *Service) Authenticate(ctx context.Context, req *connect.Request[api.Aut
 	}
 
 	if err := s.repository.SaveAuthenticationRequest(ctx, session); err != nil {
-		return errors.Wrap(err, 0)
+		return logError(err)
 	}
 
 	if err := stream.Send(&api.AuthenticateResponse{AuthUrl: authUrl}); err != nil {
-		return errors.Wrap(err, 0)
+		return logError(err)
 	}
 
 	notify := ctx.Done()
@@ -45,7 +44,7 @@ func (s *Service) Authenticate(ctx context.Context, req *connect.Request[api.Aut
 		case <-tick.C:
 			m, err := s.repository.GetAuthenticationRequest(ctx, key)
 			if err != nil {
-				return errors.Wrap(err, 0)
+				return logError(err)
 			}
 
 			if m == nil {
@@ -54,7 +53,7 @@ func (s *Service) Authenticate(ctx context.Context, req *connect.Request[api.Aut
 
 			if len(m.Token) != 0 {
 				if err := stream.Send(&api.AuthenticateResponse{Token: m.Token, TailnetId: m.TailnetID}); err != nil {
-					return errors.Wrap(err, 0)
+					return logError(err)
 				}
 				return nil
 			}
@@ -64,7 +63,7 @@ func (s *Service) Authenticate(ctx context.Context, req *connect.Request[api.Aut
 			}
 
 			if err := stream.Send(&api.AuthenticateResponse{AuthUrl: authUrl}); err != nil {
-				return errors.Wrap(err, 0)
+				return logError(err)
 			}
 
 		case <-notify:

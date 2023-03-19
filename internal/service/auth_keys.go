@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/bufbuild/connect-go"
 	"github.com/jsiebens/ionscale/internal/domain"
-	"github.com/jsiebens/ionscale/internal/errors"
 	api "github.com/jsiebens/ionscale/pkg/gen/ionscale/v1"
 	"google.golang.org/protobuf/types/known/timestamppb"
 	"time"
@@ -16,7 +15,7 @@ func (s *Service) GetAuthKey(ctx context.Context, req *connect.Request[api.GetAu
 
 	key, err := s.repository.GetAuthKey(ctx, req.Msg.AuthKeyId)
 	if err != nil {
-		return nil, errors.Wrap(err, 0)
+		return nil, logError(err)
 	}
 
 	if key == nil {
@@ -80,7 +79,7 @@ func (s *Service) ListAuthKeys(ctx context.Context, req *connect.Request[api.Lis
 
 	tailnet, err := s.repository.GetTailnet(ctx, req.Msg.TailnetId)
 	if err != nil {
-		return nil, errors.Wrap(err, 0)
+		return nil, logError(err)
 	}
 
 	if tailnet == nil {
@@ -92,7 +91,7 @@ func (s *Service) ListAuthKeys(ctx context.Context, req *connect.Request[api.Lis
 	if principal.IsSystemAdmin() {
 		authKeys, err := s.repository.ListAuthKeys(ctx, req.Msg.TailnetId)
 		if err != nil {
-			return nil, errors.Wrap(err, 0)
+			return nil, logError(err)
 		}
 
 		response.AuthKeys = mapAuthKeysToApi(authKeys)
@@ -102,7 +101,7 @@ func (s *Service) ListAuthKeys(ctx context.Context, req *connect.Request[api.Lis
 	if principal.User != nil {
 		authKeys, err := s.repository.ListAuthKeysByTailnetAndUser(ctx, req.Msg.TailnetId, principal.User.ID)
 		if err != nil {
-			return nil, errors.Wrap(err, 0)
+			return nil, logError(err)
 		}
 
 		response.AuthKeys = mapAuthKeysToApi(authKeys)
@@ -128,7 +127,7 @@ func (s *Service) CreateAuthKey(ctx context.Context, req *connect.Request[api.Cr
 
 	tailnet, err := s.repository.GetTailnet(ctx, req.Msg.TailnetId)
 	if err != nil {
-		return nil, errors.Wrap(err, 0)
+		return nil, logError(err)
 	}
 
 	if tailnet == nil {
@@ -155,7 +154,7 @@ func (s *Service) CreateAuthKey(ctx context.Context, req *connect.Request[api.Cr
 	if user == nil {
 		u, _, err := s.repository.GetOrCreateServiceUser(ctx, tailnet)
 		if err != nil {
-			return nil, errors.Wrap(err, 0)
+			return nil, logError(err)
 		}
 		user = u
 	}
@@ -165,7 +164,7 @@ func (s *Service) CreateAuthKey(ctx context.Context, req *connect.Request[api.Cr
 	v, authKey := domain.CreateAuthKey(tailnet, user, req.Msg.Ephemeral, req.Msg.PreAuthorized, tags, expiresAt)
 
 	if err := s.repository.SaveAuthKey(ctx, authKey); err != nil {
-		return nil, errors.Wrap(err, 0)
+		return nil, logError(err)
 	}
 
 	response := api.CreateAuthKeyResponse{
@@ -191,7 +190,7 @@ func (s *Service) DeleteAuthKey(ctx context.Context, req *connect.Request[api.De
 
 	key, err := s.repository.GetAuthKey(ctx, req.Msg.AuthKeyId)
 	if err != nil {
-		return nil, errors.Wrap(err, 0)
+		return nil, logError(err)
 	}
 
 	if key == nil {
@@ -203,7 +202,7 @@ func (s *Service) DeleteAuthKey(ctx context.Context, req *connect.Request[api.De
 	}
 
 	if _, err := s.repository.DeleteAuthKey(ctx, req.Msg.AuthKeyId); err != nil {
-		return nil, errors.Wrap(err, 0)
+		return nil, logError(err)
 	}
 	return connect.NewResponse(&api.DeleteAuthKeyResponse{}), nil
 }

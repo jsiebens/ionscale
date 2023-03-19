@@ -2,54 +2,35 @@ package server
 
 import (
 	"fmt"
-	"github.com/hashicorp/go-hclog"
-	"github.com/jsiebens/ionscale/internal/errors"
 	"github.com/labstack/echo-contrib/prometheus"
 	"github.com/labstack/echo/v4"
+	"go.uber.org/zap"
 	"net/http"
 	"strings"
 	"time"
 )
 
-func EchoErrorHandler(logger hclog.Logger) echo.MiddlewareFunc {
+func EchoErrorHandler() echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
 			request := c.Request()
 
-			if err := next(c); err != nil {
-				switch t := err.(type) {
-				case *echo.HTTPError:
-					return err
-				case *errors.Error:
-					logger.Error("error processing request",
-						"err", t.Cause,
-						"location", t.Location,
-						"http.method", request.Method,
-						"http.uri", request.RequestURI,
-					)
-				default:
-					logger.Error("error processing request",
-						"err", err,
-						"http.method", request.Method,
-						"http.uri", request.RequestURI,
-					)
-				}
+			err := next(c)
 
-				if strings.HasPrefix(request.RequestURI, "/a/") {
-					return c.Render(http.StatusInternalServerError, "error.html", nil)
-				}
+			if err != nil && strings.HasPrefix(request.RequestURI, "/a/") {
+				return c.Render(http.StatusInternalServerError, "error.html", nil)
 			}
 
-			return nil
+			return err
 		}
 	}
 }
 
-func EchoLogger(logger hclog.Logger) echo.MiddlewareFunc {
-	httpLogger := logger.Named("http")
+func EchoLogger(logger *zap.Logger) echo.MiddlewareFunc {
+	httpLogger := logger.Sugar()
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) (err error) {
-			if !httpLogger.IsTrace() {
+			if !httpLogger.Level().Enabled(zap.DebugLevel) {
 				return next(c)
 			}
 
@@ -60,7 +41,7 @@ func EchoLogger(logger hclog.Logger) echo.MiddlewareFunc {
 				c.Error(err)
 			}
 
-			httpLogger.Trace("finished server http call",
+			httpLogger.Debugw("finished server http call",
 				"http.code", response.Status,
 				"http.method", request.Method,
 				"http.uri", request.RequestURI,
@@ -72,7 +53,7 @@ func EchoLogger(logger hclog.Logger) echo.MiddlewareFunc {
 	}
 }
 
-func EchoRecover(logger hclog.Logger) echo.MiddlewareFunc {
+func EchoRecover() echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
 			apply := func() (topErr error) {
@@ -82,21 +63,13 @@ func EchoRecover(logger hclog.Logger) echo.MiddlewareFunc {
 						if !ok {
 							err = fmt.Errorf("%v", r)
 						}
+						zap.L().Error("panic when processing request", zap.Error(err))
 						topErr = err
 					}
 				}()
 				return next(c)
 			}
 			return apply()
-		}
-	}
-}
-
-func ErrorRedirect() echo.MiddlewareFunc {
-	return func(next echo.HandlerFunc) echo.HandlerFunc {
-		return func(c echo.Context) error {
-			c.Set("redirect_on_error", true)
-			return next(c)
 		}
 	}
 }

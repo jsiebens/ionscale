@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/bufbuild/connect-go"
 	"github.com/jsiebens/ionscale/internal/domain"
-	"github.com/jsiebens/ionscale/internal/errors"
 	"github.com/jsiebens/ionscale/internal/mapping"
 	api "github.com/jsiebens/ionscale/pkg/gen/ionscale/v1"
 )
@@ -18,7 +17,7 @@ func (s *Service) GetACLPolicy(ctx context.Context, req *connect.Request[api.Get
 
 	tailnet, err := s.repository.GetTailnet(ctx, req.Msg.TailnetId)
 	if err != nil {
-		return nil, errors.Wrap(err, 0)
+		return nil, logError(err)
 	}
 	if tailnet == nil {
 		return nil, connect.NewError(connect.CodeNotFound, fmt.Errorf("tailnet does not exist"))
@@ -26,7 +25,7 @@ func (s *Service) GetACLPolicy(ctx context.Context, req *connect.Request[api.Get
 
 	var policy api.ACLPolicy
 	if err := mapping.CopyViaJson(&tailnet.ACLPolicy, &policy); err != nil {
-		return nil, errors.Wrap(err, 0)
+		return nil, logError(err)
 	}
 
 	return connect.NewResponse(&api.GetACLPolicyResponse{Policy: &policy}), nil
@@ -40,7 +39,7 @@ func (s *Service) SetACLPolicy(ctx context.Context, req *connect.Request[api.Set
 
 	tailnet, err := s.repository.GetTailnet(ctx, req.Msg.TailnetId)
 	if err != nil {
-		return nil, errors.Wrap(err, 0)
+		return nil, logError(err)
 	}
 	if tailnet == nil {
 		return nil, connect.NewError(connect.CodeNotFound, fmt.Errorf("tailnet does not exist"))
@@ -48,12 +47,12 @@ func (s *Service) SetACLPolicy(ctx context.Context, req *connect.Request[api.Set
 
 	var policy domain.ACLPolicy
 	if err := mapping.CopyViaJson(req.Msg.Policy, &policy); err != nil {
-		return nil, errors.Wrap(err, 0)
+		return nil, logError(err)
 	}
 
 	tailnet.ACLPolicy = policy
 	if err := s.repository.SaveTailnet(ctx, tailnet); err != nil {
-		return nil, errors.Wrap(err, 0)
+		return nil, logError(err)
 	}
 
 	s.sessionManager.NotifyAll(tailnet.ID)
