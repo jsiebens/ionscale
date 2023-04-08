@@ -277,7 +277,7 @@ func (h *RegistrationHandlers) followup(c echo.Context, binder bind.Binder, req 
 				return binder.WriteResponse(c, http.StatusOK, response)
 			}
 
-			if m != nil && m.IsFinished() {
+			if m != nil && m.Authenticated {
 				user, err := h.repository.GetUser(ctx, m.UserID)
 				if err != nil {
 					return err
@@ -290,6 +290,14 @@ func (h *RegistrationHandlers) followup(c echo.Context, binder bind.Binder, req 
 					Error:             m.Error,
 					User:              u,
 					Login:             l,
+				}
+				return binder.WriteResponse(c, http.StatusOK, response)
+			}
+
+			if m != nil && len(m.Error) != 0 {
+				response := tailcfg.RegisterResponse{
+					MachineAuthorized: len(m.Error) != 0,
+					Error:             m.Error,
 				}
 				return binder.WriteResponse(c, http.StatusOK, response)
 			}

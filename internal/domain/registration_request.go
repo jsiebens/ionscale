@@ -22,10 +22,6 @@ type RegistrationRequest struct {
 	UserID        uint64
 }
 
-func (r *RegistrationRequest) IsFinished() bool {
-	return r.Authenticated || len(r.Error) != 0
-}
-
 type RegistrationRequestData tailcfg.RegisterRequest
 
 func (hi *RegistrationRequestData) Scan(destination interface{}) error {
