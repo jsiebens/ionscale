@@ -38,31 +38,38 @@ func Start(c *config.Config) error {
 
 	logger.Info("Starting ionscale server")
 
+	logError := func(err error) error {
+		if err != nil {
+			zap.L().WithOptions(zap.AddCallerSkip(1)).Error("Unable to start server", zap.Error(err))
+		}
+		return err
+	}
+
 	httpLogger := logger.Named("http")
 	dbLogger := logger.Named("db")
 
 	repository, err := database.OpenDB(&c.Database, dbLogger)
 	if err != nil {
-		return err
+		return logError(err)
 	}
 
 	sessionManager := core.NewPollMapSessionManager()
 
 	defaultControlKeys, err := repository.GetControlKeys(context.Background())
 	if err != nil {
-		return err
+		return logError(err)
 	}
 
 	serverKey, err := c.ReadServerKeys(defaultControlKeys)
 	if err != nil {
-		return err
+		return logError(err)
 	}
 
 	core.StartReaper(repository, sessionManager)
 
 	serverUrl, err := url.Parse(c.ServerUrl)
 	if err != nil {
-		return err
+		return logError(err)
 	}
 
 	// prepare CertMagic
@@ -77,7 +84,7 @@ func Start(c *config.Config) error {
 
 		cfg := certmagic.NewDefault()
 		if err := cfg.ManageAsync(context.Background(), []string{serverUrl.Host}); err != nil {
-			return err
+			return logError(err)
 		}
 
 		c.HttpListenAddr = fmt.Sprintf(":%d", certmagic.HTTPPort)
@@ -86,12 +93,12 @@ func Start(c *config.Config) error {
 
 	authProvider, systemIAMPolicy, err := setupAuthProvider(c.Auth)
 	if err != nil {
-		return fmt.Errorf("error configuring OIDC provider: %v", err)
+		return logError(fmt.Errorf("error configuring OIDC provider: %v", err))
 	}
 
 	dnsProvider, err := dns.NewProvider(c.DNS)
 	if err != nil {
-		return err
+		return logError(err)
 	}
 
 	p := echo_prometheus.NewPrometheus("http", nil)
@@ -170,17 +177,17 @@ func Start(c *config.Config) error {
 
 	tlsL, err := tlsListener(c)
 	if err != nil {
-		return err
+		return logError(err)
 	}
 
 	nonTlsL, err := nonTlsListener(c)
 	if err != nil {
-		return err
+		return logError(err)
 	}
 
 	metricsL, err := metricsListener(c)
 	if err != nil {
-		return err
+		return logError(err)
 	}
 
 	httpL := selectListener(tlsL, nonTlsL)

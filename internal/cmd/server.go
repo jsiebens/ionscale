@@ -8,9 +8,10 @@ import (
 
 func serverCommand() *cobra.Command {
 	command := &cobra.Command{
-		Use:          "server",
-		Short:        "Start an ionscale server",
-		SilenceUsage: true,
+		Use:           "server",
+		Short:         "Start an ionscale server",
+		SilenceUsage:  true,
+		SilenceErrors: true,
 	}
 
 	var configFile string
