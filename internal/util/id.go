@@ -6,19 +6,33 @@ import (
 	"net"
 	"os"
 	"strconv"
+	"sync"
 	"time"
 )
 
-var sf *sonyflake.Sonyflake
+var (
+	sf     *sonyflake.Sonyflake
+	sfOnce sync.Once
+)
 
-func init() {
-	sf = sonyflake.NewSonyflake(sonyflake.Settings{
-		MachineID: machineID(),
-		StartTime: time.Date(2022, 05, 01, 00, 0, 0, 0, time.UTC),
+func NextID() uint64 {
+	ensureProvider()
+	id, _ := sf.NextID()
+	return id
+}
+
+func ensureProvider() {
+	sfOnce.Do(func() {
+		sfInstance, err := sonyflake.New(sonyflake.Settings{
+			MachineID: machineID(),
+			StartTime: time.Date(2022, 05, 01, 00, 0, 0, 0, time.UTC),
+		})
+		if err != nil {
+			panic("unable to initialize sonyflake: " + err.Error())
+		}
+
+		sf = sfInstance
 	})
-	if sf == nil {
-		panic("unable to initialize sonyflake")
-	}
 }
 
 func machineID() func() (uint16, error) {
@@ -45,9 +59,4 @@ func machineID() func() (uint16, error) {
 	}
 
 	return nil
-}
-
-func NextID() uint64 {
-	id, _ := sf.NextID()
-	return id
 }
