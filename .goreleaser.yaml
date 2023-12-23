@@ -1,8 +1,5 @@
 project_name: ionscale
 
-nightly:
-  name_template: '{{ incminor .Version }}-dev'
-
 before:
   hooks:
     - go mod tidy
@@ -44,7 +41,7 @@ docker_manifests:
     image_templates:
       - ghcr.io/jsiebens/{{ .ProjectName }}:{{ .Version }}-amd64
       - ghcr.io/jsiebens/{{ .ProjectName }}:{{ .Version }}-arm64
-  - name_template: ghcr.io/jsiebens/{{ .ProjectName }}:{{ if .IsNightly }}dev{{ else }}latest{{ end }}
+  - name_template: ghcr.io/jsiebens/{{ .ProjectName }}:latest
     image_templates:
       - ghcr.io/jsiebens/{{ .ProjectName }}:{{ .Version }}-amd64
       - ghcr.io/jsiebens/{{ .ProjectName }}:{{ .Version }}-arm64
@@ -59,6 +56,7 @@ signs:
       - '--output-certificate=${certificate}'
       - '--output-signature=${signature}'
       - '${artifact}'
+      - '--yes'
     artifacts: checksum
 
 docker_signs:
@@ -70,6 +68,7 @@ docker_signs:
     args:
       - sign
       - '${artifact}'
+      - '--yes'
 
 archives:
   - format: binary
