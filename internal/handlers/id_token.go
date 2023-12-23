@@ -2,13 +2,13 @@ package handlers
 
 import (
 	"fmt"
+	"github.com/go-jose/go-jose/v3"
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/jsiebens/ionscale/internal/bind"
 	"github.com/jsiebens/ionscale/internal/config"
 	"github.com/jsiebens/ionscale/internal/domain"
 	"github.com/jsiebens/ionscale/internal/util"
 	"github.com/labstack/echo/v4"
-	"gopkg.in/square/go-jose.v2"
 	"net/http"
 	"tailscale.com/tailcfg"
 	"time"
