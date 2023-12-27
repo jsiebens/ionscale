@@ -357,7 +357,7 @@ func (r *repository) DeleteMachine(ctx context.Context, id uint64) (bool, error)
 
 func (r *repository) GetMachine(ctx context.Context, machineID uint64) (*Machine, error) {
 	var m Machine
-	tx := r.withContext(ctx).Preload("Tailnet").Preload("User").Take(&m, machineID)
+	tx := r.withContext(ctx).Preload("Tailnet").Preload("User").Preload("User.Account").Take(&m, machineID)
 
 	if errors.Is(tx.Error, gorm.ErrRecordNotFound) {
 		return nil, nil
@@ -458,9 +458,10 @@ func (r *repository) ListMachineByTailnet(ctx context.Context, tailnetID uint64)
 
 	tx := r.withContext(ctx).
 		Preload("Tailnet").
-		Preload("User").
-		Where("tailnet_id = ?", tailnetID).
-		Order("name asc, name_idx asc").
+		Joins("User").
+		Joins("User.Account").
+		Where("machines.tailnet_id = ?", tailnetID).
+		Order("machines.name asc, machines.name_idx asc").
 		Find(&machines)
 
 	if tx.Error != nil {
@@ -475,9 +476,10 @@ func (r *repository) ListMachinePeers(ctx context.Context, tailnetID uint64, key
 
 	tx := r.withContext(ctx).
 		Preload("Tailnet").
-		Preload("User").
-		Where("tailnet_id = ? AND machine_key <> ?", tailnetID, key).
-		Order("id asc").
+		Joins("User").
+		Joins("User.Account").
+		Where("machines.tailnet_id = ? AND machines.machine_key <> ?", tailnetID, key).
+		Order("machines.id asc").
 		Find(&machines)
 
 	if tx.Error != nil {

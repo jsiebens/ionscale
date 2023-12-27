@@ -23,6 +23,7 @@ type Repository interface {
 
 	GetAccount(ctx context.Context, accountID uint64) (*Account, error)
 	GetOrCreateAccount(ctx context.Context, externalID, loginName string) (*Account, bool, error)
+	SetAccountLastAuthenticated(ctx context.Context, accountID uint64) error
 
 	SaveTailnet(ctx context.Context, tailnet *Tailnet) error
 	GetTailnet(ctx context.Context, id uint64) (*Tailnet, error)

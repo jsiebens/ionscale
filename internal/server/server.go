@@ -122,6 +122,7 @@ func Start(c *config.Config) error {
 		e.POST("/machine/set-dns", dnsHandlers.SetDNS)
 		e.POST("/machine/id-token", idTokenHandlers.FetchToken)
 		e.GET("/machine/ssh/action/:src_machine_id/to/:dst_machine_id", sshActionHandlers.StartAuth)
+		e.GET("/machine/ssh/action/:src_machine_id/to/:dst_machine_id/:check_period", sshActionHandlers.StartAuth)
 		e.GET("/machine/ssh/action/check/:key", sshActionHandlers.CheckAuth)
 
 		return e

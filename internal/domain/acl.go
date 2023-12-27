@@ -41,10 +41,11 @@ type ACL struct {
 }
 
 type SSHRule struct {
-	Action string   `json:"action"`
-	Src    []string `json:"src"`
-	Dst    []string `json:"dst"`
-	Users  []string `json:"users"`
+	Action      string   `json:"action"`
+	Src         []string `json:"src"`
+	Dst         []string `json:"dst"`
+	Users       []string `json:"users"`
+	CheckPeriod string   `json:"checkPeriod,omitempty"`
 }
 
 func DefaultACLPolicy() ACLPolicy {

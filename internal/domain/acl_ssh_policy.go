@@ -39,9 +39,15 @@ func (a ACLPolicy) BuildSSHPolicy(srcs []Machine, dst *Machine) *tailcfg.SSHPoli
 			AllowLocalPortForwarding: true,
 		}
 
-		if rule.Action == "check" {
+		if rule.Action == "check" && rule.CheckPeriod == "" {
 			action = &tailcfg.SSHAction{
 				HoldAndDelegate: "https://unused/machine/ssh/action/$SRC_NODE_ID/to/$DST_NODE_ID",
+			}
+		}
+
+		if rule.Action == "check" && rule.CheckPeriod != "" {
+			action = &tailcfg.SSHAction{
+				HoldAndDelegate: "https://unused/machine/ssh/action/$SRC_NODE_ID/to/$DST_NODE_ID/" + rule.CheckPeriod,
 			}
 		}
 
