@@ -164,9 +164,10 @@ func ToNode(m *domain.Machine, tailnet *domain.Tailnet, taggedDevicesUser *domai
 	sanitizedTailnetName := domain.SanitizeTailnetName(m.Tailnet.Name)
 
 	hostInfo := tailcfg.Hostinfo{
-		OS:       hostinfo.OS,
-		Hostname: hostinfo.Hostname,
-		Services: filterServices(hostinfo.Services),
+		OS:           hostinfo.OS,
+		Hostname:     hostinfo.Hostname,
+		Services:     filterServices(hostinfo.Services),
+		SSH_HostKeys: hostinfo.SSH_HostKeys,
 	}
 
 	n := tailcfg.Node{

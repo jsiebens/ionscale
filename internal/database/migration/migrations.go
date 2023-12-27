@@ -16,6 +16,7 @@ func Migrations() []*gormigrate.Migration {
 		m202211031100_add_authorized_column(),
 		m202212201300_add_user_id_column(),
 		m202212270800_machine_indeces(),
+		m202312271200_account_last_authenticated(),
 	}
 	return migrations
 }

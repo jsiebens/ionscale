@@ -29,6 +29,7 @@ type SSHActionHandlers struct {
 type sshActionRequestData struct {
 	SrcMachineID uint64 `param:"src_machine_id"`
 	DstMachineID uint64 `param:"dst_machine_id"`
+	CheckPeriod  string `param:"check_period"`
 }
 
 func (h *SSHActionHandlers) StartAuth(c echo.Context) error {
@@ -42,6 +43,32 @@ func (h *SSHActionHandlers) StartAuth(c echo.Context) error {
 	data := new(sshActionRequestData)
 	if err = c.Bind(data); err != nil {
 		return logError(err)
+	}
+
+	if data.CheckPeriod != "" {
+		checkPeriod, err := time.ParseDuration(data.CheckPeriod)
+		if err != nil {
+			return logError(err)
+		}
+
+		machine, err := h.repository.GetMachine(ctx, data.SrcMachineID)
+		if err != nil {
+			return logError(err)
+		}
+
+		if machine.User.Account != nil && machine.User.Account.LastAuthenticated != nil {
+			sinceLastAuthentication := time.Since(*machine.User.Account.LastAuthenticated)
+
+			if sinceLastAuthentication < checkPeriod {
+				resp := &tailcfg.SSHAction{
+					Accept:                   true,
+					AllowAgentForwarding:     true,
+					AllowLocalPortForwarding: true,
+				}
+
+				return binder.WriteResponse(c, http.StatusOK, resp)
+			}
+		}
 	}
 
 	key := util.RandStringBytes(8)

@@ -149,6 +149,10 @@ func (h *AuthenticationHandlers) Callback(c echo.Context) error {
 		return logError(err)
 	}
 
+	if err := h.repository.SetAccountLastAuthenticated(ctx, account.ID); err != nil {
+		return logError(err)
+	}
+
 	if state.Flow == "s" {
 		sshActionReq, err := h.repository.GetSSHActionRequest(ctx, state.Key)
 		if err != nil || sshActionReq == nil {

@@ -5,12 +5,14 @@ import (
 	"errors"
 	"github.com/jsiebens/ionscale/internal/util"
 	"gorm.io/gorm"
+	"time"
 )
 
 type Account struct {
-	ID         uint64 `gorm:"primary_key"`
-	ExternalID string
-	LoginName  string
+	ID                uint64 `gorm:"primary_key"`
+	ExternalID        string
+	LoginName         string
+	LastAuthenticated *time.Time
 }
 
 func (r *repository) GetOrCreateAccount(ctx context.Context, externalID, loginName string) (*Account, bool, error) {
@@ -42,4 +44,18 @@ func (r *repository) GetAccount(ctx context.Context, id uint64) (*Account, error
 	}
 
 	return &account, nil
+}
+
+func (r *repository) SetAccountLastAuthenticated(ctx context.Context, accountID uint64) error {
+	now := time.Now().UTC()
+	tx := r.withContext(ctx).
+		Model(Account{}).
+		Where("id = ?", accountID).
+		Updates(map[string]interface{}{"last_authenticated": &now})
+
+	if tx.Error != nil {
+		return tx.Error
+	}
+
+	return nil
 }

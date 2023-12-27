@@ -46,4 +46,5 @@ message SSHRule {
   repeated string src = 2;
   repeated string dst = 3;
   repeated string users = 4;
+  string checkperiod = 5;
 }
