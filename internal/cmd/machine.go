@@ -283,7 +283,7 @@ func listMachinesCommand() *cobra.Command {
 			return err
 		}
 
-		tbl := table.New("ID", "TAILNET", "NAME", "IPv4", "IPv6", "AUTHORIZED", "EPHEMERAL", "LAST_SEEN", "TAGS")
+		tbl := table.New("ID", "TAILNET", "NAME", "IPv4", "IPv6", "AUTHORIZED", "EPHEMERAL", "VERSION", "LAST_SEEN", "TAGS")
 		for _, m := range resp.Msg.Machines {
 			var lastSeen = "N/A"
 			if m.Connected {
@@ -294,7 +294,7 @@ func listMachinesCommand() *cobra.Command {
 					lastSeen = mom.FromNow()
 				}
 			}
-			tbl.AddRow(m.Id, m.Tailnet.Name, m.Name, m.Ipv4, m.Ipv6, m.Authorized, m.Ephemeral, lastSeen, strings.Join(m.Tags, ","))
+			tbl.AddRow(m.Id, m.Tailnet.Name, m.Name, m.Ipv4, m.Ipv6, m.Authorized, m.Ephemeral, m.ClientVersion, lastSeen, strings.Join(m.Tags, ","))
 		}
 		tbl.Print()
 
