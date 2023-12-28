@@ -140,7 +140,7 @@ func Start(c *config.Config) error {
 		repository,
 	)
 
-	rpcService := service.NewService(c, authProvider, repository, sessionManager)
+	rpcService := service.NewService(c, authProvider, dnsProvider, repository, sessionManager)
 	rpcPath, rpcHandler := NewRpcHandler(serverKey.SystemAdminKey, repository, rpcService)
 
 	nonTlsAppHandler := echo.New()
