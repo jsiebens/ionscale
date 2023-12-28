@@ -91,6 +91,7 @@ func setDNSConfigCommand() *cobra.Command {
 
 	var nameservers []string
 	var magicDNS bool
+	var httpsCerts bool
 	var overrideLocalDNS bool
 	var tailnetID uint64
 	var tailnetName string
@@ -101,7 +102,7 @@ func setDNSConfigCommand() *cobra.Command {
 	command.Flags().Uint64Var(&tailnetID, "tailnet-id", 0, "Tailnet ID. Mutually exclusive with --tailnet.")
 	command.Flags().StringSliceVarP(&nameservers, "nameserver", "", []string{}, "Machines on your network will use these nameservers to resolve DNS queries.")
 	command.Flags().BoolVarP(&magicDNS, "magic-dns", "", false, "Enable MagicDNS for the specified Tailnet")
-	command.Flags().BoolVarP(&magicDNS, "https-certs", "", false, "Enable HTTPS Certificates for the specified Tailnet")
+	command.Flags().BoolVarP(&httpsCerts, "https-certs", "", false, "Enable HTTPS Certificates for the specified Tailnet")
 	command.Flags().BoolVarP(&overrideLocalDNS, "override-local-dns", "", false, "When enabled, connected clients ignore local DNS settings and always use the nameservers specified for this Tailnet")
 
 	command.PreRunE = checkRequiredTailnetAndTailnetIdFlags
@@ -140,6 +141,7 @@ func setDNSConfigCommand() *cobra.Command {
 				OverrideLocalDns: overrideLocalDNS,
 				Nameservers:      globalNameservers,
 				Routes:           routes,
+				HttpsCerts:       httpsCerts,
 			},
 		}
 		resp, err := client.SetDNSConfig(context.Background(), connect.NewRequest(&req))
@@ -150,17 +152,40 @@ func setDNSConfigCommand() *cobra.Command {
 
 		config := resp.Msg.Config
 
-		var allNameservers = config.Nameservers
+		if resp.Msg.Message != "" {
+			fmt.Println(resp.Msg.Message)
+			fmt.Println()
+		}
 
-		for i, j := range config.Routes {
-			for _, n := range j.Routes {
-				allNameservers = append(allNameservers, fmt.Sprintf("%s:%s", i, n))
+		w := new(tabwriter.Writer)
+		w.Init(os.Stdout, 8, 8, 1, '\t', 0)
+		defer w.Flush()
+
+		fmt.Fprintf(w, "%s\t\t%v\n", "MagicDNS", config.MagicDns)
+		fmt.Fprintf(w, "%s\t\t%v\n", "HTTPS Certs", config.HttpsCerts)
+		fmt.Fprintf(w, "%s\t\t%v\n", "Override Local DNS", config.OverrideLocalDns)
+
+		if config.MagicDns {
+			fmt.Fprintf(w, "MagicDNS\t%s\t%s\n", config.MagicDnsSuffix, "100.100.100.100")
+		}
+
+		for k, r := range config.Routes {
+			for i, t := range r.Routes {
+				if i == 0 {
+					fmt.Fprintf(w, "SplitDNS\t%s\t%s\n", k, t)
+				} else {
+					fmt.Fprintf(w, "%s\t%s\n", "", t)
+				}
 			}
 		}
 
-		fmt.Printf("%-*v%v\n", 25, "Magic DNS Enabled:", config.MagicDns)
-		fmt.Printf("%-*v%v\n", 25, "Override Local DNS:", config.OverrideLocalDns)
-		fmt.Printf("%-*v%v\n", 25, "Nameservers:", strings.Join(allNameservers, ","))
+		for i, t := range config.Nameservers {
+			if i == 0 {
+				fmt.Fprintf(w, "%s\t%s\t%s\n", "Global", "", t)
+			} else {
+				fmt.Fprintf(w, "%s\t%s\t%s\n", "", "", t)
+			}
+		}
 
 		return nil
 	}

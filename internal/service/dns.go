@@ -52,7 +52,7 @@ func (s *Service) SetDNSConfig(ctx context.Context, req *connect.Request[api.Set
 
 	tailnet.DNSConfig = domain.DNSConfig{
 		MagicDNS:          dnsConfig.MagicDns,
-		HttpsCertsEnabled: dnsConfig.HttpsCerts,
+		HttpsCertsEnabled: s.dnsProvider != nil && dnsConfig.HttpsCerts,
 		OverrideLocalDNS:  dnsConfig.OverrideLocalDns,
 		Nameservers:       dnsConfig.Nameservers,
 		Routes:            apiRoutesToDomainRoutes(dnsConfig.Routes),
@@ -64,7 +64,13 @@ func (s *Service) SetDNSConfig(ctx context.Context, req *connect.Request[api.Set
 
 	s.sessionManager.NotifyAll(tailnet.ID)
 
-	resp := &api.SetDNSConfigResponse{Config: dnsConfig}
+	resp := &api.SetDNSConfigResponse{
+		Config: domainDNSConfigToApiDNSConfig(tailnet),
+	}
+
+	if dnsConfig.HttpsCerts && s.dnsProvider == nil {
+		resp.Message = "# HTTPS Certs cannot be enabled because a DNS provider is not properly configured"
+	}
 
 	return connect.NewResponse(resp), nil
 }
