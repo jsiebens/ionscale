@@ -99,6 +99,10 @@ func ToNode(m *domain.Machine, tailnet *domain.Tailnet, taggedDevicesUser *domai
 		if tailnet.SSHEnabled {
 			capabilities = append(capabilities, tailcfg.CapabilitySSH)
 		}
+
+		if tailnet.DNSConfig.HttpsCertsEnabled {
+			capabilities = append(capabilities, tailcfg.CapabilityHTTPS)
+		}
 	}
 
 	nKey, err := util.ParseNodePublicKey(m.NodeKey)
