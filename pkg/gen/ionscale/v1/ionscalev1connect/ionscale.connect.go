@@ -25,6 +25,148 @@ const (
 	IonscaleServiceName = "ionscale.v1.IonscaleService"
 )
 
+// These constants are the fully-qualified names of the RPCs defined in this package. They're
+// exposed at runtime as Spec.Procedure and as the final two segments of the HTTP route.
+//
+// Note that these are different from the fully-qualified method names used by
+// google.golang.org/protobuf/reflect/protoreflect. To convert from these constants to
+// reflection-formatted method names, remove the leading slash and convert the remaining slash to a
+// period.
+const (
+	// IonscaleServiceGetVersionProcedure is the fully-qualified name of the IonscaleService's
+	// GetVersion RPC.
+	IonscaleServiceGetVersionProcedure = "/ionscale.v1.IonscaleService/GetVersion"
+	// IonscaleServiceAuthenticateProcedure is the fully-qualified name of the IonscaleService's
+	// Authenticate RPC.
+	IonscaleServiceAuthenticateProcedure = "/ionscale.v1.IonscaleService/Authenticate"
+	// IonscaleServiceGetDefaultDERPMapProcedure is the fully-qualified name of the IonscaleService's
+	// GetDefaultDERPMap RPC.
+	IonscaleServiceGetDefaultDERPMapProcedure = "/ionscale.v1.IonscaleService/GetDefaultDERPMap"
+	// IonscaleServiceSetDefaultDERPMapProcedure is the fully-qualified name of the IonscaleService's
+	// SetDefaultDERPMap RPC.
+	IonscaleServiceSetDefaultDERPMapProcedure = "/ionscale.v1.IonscaleService/SetDefaultDERPMap"
+	// IonscaleServiceResetDefaultDERPMapProcedure is the fully-qualified name of the IonscaleService's
+	// ResetDefaultDERPMap RPC.
+	IonscaleServiceResetDefaultDERPMapProcedure = "/ionscale.v1.IonscaleService/ResetDefaultDERPMap"
+	// IonscaleServiceCreateTailnetProcedure is the fully-qualified name of the IonscaleService's
+	// CreateTailnet RPC.
+	IonscaleServiceCreateTailnetProcedure = "/ionscale.v1.IonscaleService/CreateTailnet"
+	// IonscaleServiceUpdateTailnetProcedure is the fully-qualified name of the IonscaleService's
+	// UpdateTailnet RPC.
+	IonscaleServiceUpdateTailnetProcedure = "/ionscale.v1.IonscaleService/UpdateTailnet"
+	// IonscaleServiceGetTailnetProcedure is the fully-qualified name of the IonscaleService's
+	// GetTailnet RPC.
+	IonscaleServiceGetTailnetProcedure = "/ionscale.v1.IonscaleService/GetTailnet"
+	// IonscaleServiceListTailnetsProcedure is the fully-qualified name of the IonscaleService's
+	// ListTailnets RPC.
+	IonscaleServiceListTailnetsProcedure = "/ionscale.v1.IonscaleService/ListTailnets"
+	// IonscaleServiceDeleteTailnetProcedure is the fully-qualified name of the IonscaleService's
+	// DeleteTailnet RPC.
+	IonscaleServiceDeleteTailnetProcedure = "/ionscale.v1.IonscaleService/DeleteTailnet"
+	// IonscaleServiceGetDERPMapProcedure is the fully-qualified name of the IonscaleService's
+	// GetDERPMap RPC.
+	IonscaleServiceGetDERPMapProcedure = "/ionscale.v1.IonscaleService/GetDERPMap"
+	// IonscaleServiceSetDERPMapProcedure is the fully-qualified name of the IonscaleService's
+	// SetDERPMap RPC.
+	IonscaleServiceSetDERPMapProcedure = "/ionscale.v1.IonscaleService/SetDERPMap"
+	// IonscaleServiceResetDERPMapProcedure is the fully-qualified name of the IonscaleService's
+	// ResetDERPMap RPC.
+	IonscaleServiceResetDERPMapProcedure = "/ionscale.v1.IonscaleService/ResetDERPMap"
+	// IonscaleServiceEnableFileSharingProcedure is the fully-qualified name of the IonscaleService's
+	// EnableFileSharing RPC.
+	IonscaleServiceEnableFileSharingProcedure = "/ionscale.v1.IonscaleService/EnableFileSharing"
+	// IonscaleServiceDisableFileSharingProcedure is the fully-qualified name of the IonscaleService's
+	// DisableFileSharing RPC.
+	IonscaleServiceDisableFileSharingProcedure = "/ionscale.v1.IonscaleService/DisableFileSharing"
+	// IonscaleServiceEnableServiceCollectionProcedure is the fully-qualified name of the
+	// IonscaleService's EnableServiceCollection RPC.
+	IonscaleServiceEnableServiceCollectionProcedure = "/ionscale.v1.IonscaleService/EnableServiceCollection"
+	// IonscaleServiceDisableServiceCollectionProcedure is the fully-qualified name of the
+	// IonscaleService's DisableServiceCollection RPC.
+	IonscaleServiceDisableServiceCollectionProcedure = "/ionscale.v1.IonscaleService/DisableServiceCollection"
+	// IonscaleServiceEnableSSHProcedure is the fully-qualified name of the IonscaleService's EnableSSH
+	// RPC.
+	IonscaleServiceEnableSSHProcedure = "/ionscale.v1.IonscaleService/EnableSSH"
+	// IonscaleServiceDisableSSHProcedure is the fully-qualified name of the IonscaleService's
+	// DisableSSH RPC.
+	IonscaleServiceDisableSSHProcedure = "/ionscale.v1.IonscaleService/DisableSSH"
+	// IonscaleServiceEnableMachineAuthorizationProcedure is the fully-qualified name of the
+	// IonscaleService's EnableMachineAuthorization RPC.
+	IonscaleServiceEnableMachineAuthorizationProcedure = "/ionscale.v1.IonscaleService/EnableMachineAuthorization"
+	// IonscaleServiceDisableMachineAuthorizationProcedure is the fully-qualified name of the
+	// IonscaleService's DisableMachineAuthorization RPC.
+	IonscaleServiceDisableMachineAuthorizationProcedure = "/ionscale.v1.IonscaleService/DisableMachineAuthorization"
+	// IonscaleServiceGetDNSConfigProcedure is the fully-qualified name of the IonscaleService's
+	// GetDNSConfig RPC.
+	IonscaleServiceGetDNSConfigProcedure = "/ionscale.v1.IonscaleService/GetDNSConfig"
+	// IonscaleServiceSetDNSConfigProcedure is the fully-qualified name of the IonscaleService's
+	// SetDNSConfig RPC.
+	IonscaleServiceSetDNSConfigProcedure = "/ionscale.v1.IonscaleService/SetDNSConfig"
+	// IonscaleServiceGetIAMPolicyProcedure is the fully-qualified name of the IonscaleService's
+	// GetIAMPolicy RPC.
+	IonscaleServiceGetIAMPolicyProcedure = "/ionscale.v1.IonscaleService/GetIAMPolicy"
+	// IonscaleServiceSetIAMPolicyProcedure is the fully-qualified name of the IonscaleService's
+	// SetIAMPolicy RPC.
+	IonscaleServiceSetIAMPolicyProcedure = "/ionscale.v1.IonscaleService/SetIAMPolicy"
+	// IonscaleServiceGetACLPolicyProcedure is the fully-qualified name of the IonscaleService's
+	// GetACLPolicy RPC.
+	IonscaleServiceGetACLPolicyProcedure = "/ionscale.v1.IonscaleService/GetACLPolicy"
+	// IonscaleServiceSetACLPolicyProcedure is the fully-qualified name of the IonscaleService's
+	// SetACLPolicy RPC.
+	IonscaleServiceSetACLPolicyProcedure = "/ionscale.v1.IonscaleService/SetACLPolicy"
+	// IonscaleServiceGetAuthKeyProcedure is the fully-qualified name of the IonscaleService's
+	// GetAuthKey RPC.
+	IonscaleServiceGetAuthKeyProcedure = "/ionscale.v1.IonscaleService/GetAuthKey"
+	// IonscaleServiceCreateAuthKeyProcedure is the fully-qualified name of the IonscaleService's
+	// CreateAuthKey RPC.
+	IonscaleServiceCreateAuthKeyProcedure = "/ionscale.v1.IonscaleService/CreateAuthKey"
+	// IonscaleServiceDeleteAuthKeyProcedure is the fully-qualified name of the IonscaleService's
+	// DeleteAuthKey RPC.
+	IonscaleServiceDeleteAuthKeyProcedure = "/ionscale.v1.IonscaleService/DeleteAuthKey"
+	// IonscaleServiceListAuthKeysProcedure is the fully-qualified name of the IonscaleService's
+	// ListAuthKeys RPC.
+	IonscaleServiceListAuthKeysProcedure = "/ionscale.v1.IonscaleService/ListAuthKeys"
+	// IonscaleServiceListUsersProcedure is the fully-qualified name of the IonscaleService's ListUsers
+	// RPC.
+	IonscaleServiceListUsersProcedure = "/ionscale.v1.IonscaleService/ListUsers"
+	// IonscaleServiceDeleteUserProcedure is the fully-qualified name of the IonscaleService's
+	// DeleteUser RPC.
+	IonscaleServiceDeleteUserProcedure = "/ionscale.v1.IonscaleService/DeleteUser"
+	// IonscaleServiceGetMachineProcedure is the fully-qualified name of the IonscaleService's
+	// GetMachine RPC.
+	IonscaleServiceGetMachineProcedure = "/ionscale.v1.IonscaleService/GetMachine"
+	// IonscaleServiceListMachinesProcedure is the fully-qualified name of the IonscaleService's
+	// ListMachines RPC.
+	IonscaleServiceListMachinesProcedure = "/ionscale.v1.IonscaleService/ListMachines"
+	// IonscaleServiceAuthorizeMachineProcedure is the fully-qualified name of the IonscaleService's
+	// AuthorizeMachine RPC.
+	IonscaleServiceAuthorizeMachineProcedure = "/ionscale.v1.IonscaleService/AuthorizeMachine"
+	// IonscaleServiceExpireMachineProcedure is the fully-qualified name of the IonscaleService's
+	// ExpireMachine RPC.
+	IonscaleServiceExpireMachineProcedure = "/ionscale.v1.IonscaleService/ExpireMachine"
+	// IonscaleServiceDeleteMachineProcedure is the fully-qualified name of the IonscaleService's
+	// DeleteMachine RPC.
+	IonscaleServiceDeleteMachineProcedure = "/ionscale.v1.IonscaleService/DeleteMachine"
+	// IonscaleServiceSetMachineKeyExpiryProcedure is the fully-qualified name of the IonscaleService's
+	// SetMachineKeyExpiry RPC.
+	IonscaleServiceSetMachineKeyExpiryProcedure = "/ionscale.v1.IonscaleService/SetMachineKeyExpiry"
+	// IonscaleServiceGetMachineRoutesProcedure is the fully-qualified name of the IonscaleService's
+	// GetMachineRoutes RPC.
+	IonscaleServiceGetMachineRoutesProcedure = "/ionscale.v1.IonscaleService/GetMachineRoutes"
+	// IonscaleServiceEnableMachineRoutesProcedure is the fully-qualified name of the IonscaleService's
+	// EnableMachineRoutes RPC.
+	IonscaleServiceEnableMachineRoutesProcedure = "/ionscale.v1.IonscaleService/EnableMachineRoutes"
+	// IonscaleServiceDisableMachineRoutesProcedure is the fully-qualified name of the IonscaleService's
+	// DisableMachineRoutes RPC.
+	IonscaleServiceDisableMachineRoutesProcedure = "/ionscale.v1.IonscaleService/DisableMachineRoutes"
+	// IonscaleServiceEnableExitNodeProcedure is the fully-qualified name of the IonscaleService's
+	// EnableExitNode RPC.
+	IonscaleServiceEnableExitNodeProcedure = "/ionscale.v1.IonscaleService/EnableExitNode"
+	// IonscaleServiceDisableExitNodeProcedure is the fully-qualified name of the IonscaleService's
+	// DisableExitNode RPC.
+	IonscaleServiceDisableExitNodeProcedure = "/ionscale.v1.IonscaleService/DisableExitNode"
+)
+
 // IonscaleServiceClient is a client for the ionscale.v1.IonscaleService service.
 type IonscaleServiceClient interface {
 	GetVersion(context.Context, *connect_go.Request[v1.GetVersionRequest]) (*connect_go.Response[v1.GetVersionResponse], error)
@@ -85,222 +227,222 @@ func NewIonscaleServiceClient(httpClient connect_go.HTTPClient, baseURL string, 
 	return &ionscaleServiceClient{
 		getVersion: connect_go.NewClient[v1.GetVersionRequest, v1.GetVersionResponse](
 			httpClient,
-			baseURL+"/ionscale.v1.IonscaleService/GetVersion",
+			baseURL+IonscaleServiceGetVersionProcedure,
 			opts...,
 		),
 		authenticate: connect_go.NewClient[v1.AuthenticateRequest, v1.AuthenticateResponse](
 			httpClient,
-			baseURL+"/ionscale.v1.IonscaleService/Authenticate",
+			baseURL+IonscaleServiceAuthenticateProcedure,
 			opts...,
 		),
 		getDefaultDERPMap: connect_go.NewClient[v1.GetDefaultDERPMapRequest, v1.GetDefaultDERPMapResponse](
 			httpClient,
-			baseURL+"/ionscale.v1.IonscaleService/GetDefaultDERPMap",
+			baseURL+IonscaleServiceGetDefaultDERPMapProcedure,
 			opts...,
 		),
 		setDefaultDERPMap: connect_go.NewClient[v1.SetDefaultDERPMapRequest, v1.SetDefaultDERPMapResponse](
 			httpClient,
-			baseURL+"/ionscale.v1.IonscaleService/SetDefaultDERPMap",
+			baseURL+IonscaleServiceSetDefaultDERPMapProcedure,
 			opts...,
 		),
 		resetDefaultDERPMap: connect_go.NewClient[v1.ResetDefaultDERPMapRequest, v1.ResetDefaultDERPMapResponse](
 			httpClient,
-			baseURL+"/ionscale.v1.IonscaleService/ResetDefaultDERPMap",
+			baseURL+IonscaleServiceResetDefaultDERPMapProcedure,
 			opts...,
 		),
 		createTailnet: connect_go.NewClient[v1.CreateTailnetRequest, v1.CreateTailnetResponse](
 			httpClient,
-			baseURL+"/ionscale.v1.IonscaleService/CreateTailnet",
+			baseURL+IonscaleServiceCreateTailnetProcedure,
 			opts...,
 		),
 		updateTailnet: connect_go.NewClient[v1.UpdateTailnetRequest, v1.UpdateTailnetResponse](
 			httpClient,
-			baseURL+"/ionscale.v1.IonscaleService/UpdateTailnet",
+			baseURL+IonscaleServiceUpdateTailnetProcedure,
 			opts...,
 		),
 		getTailnet: connect_go.NewClient[v1.GetTailnetRequest, v1.GetTailnetResponse](
 			httpClient,
-			baseURL+"/ionscale.v1.IonscaleService/GetTailnet",
+			baseURL+IonscaleServiceGetTailnetProcedure,
 			opts...,
 		),
 		listTailnets: connect_go.NewClient[v1.ListTailnetsRequest, v1.ListTailnetsResponse](
 			httpClient,
-			baseURL+"/ionscale.v1.IonscaleService/ListTailnets",
+			baseURL+IonscaleServiceListTailnetsProcedure,
 			opts...,
 		),
 		deleteTailnet: connect_go.NewClient[v1.DeleteTailnetRequest, v1.DeleteTailnetResponse](
 			httpClient,
-			baseURL+"/ionscale.v1.IonscaleService/DeleteTailnet",
+			baseURL+IonscaleServiceDeleteTailnetProcedure,
 			opts...,
 		),
 		getDERPMap: connect_go.NewClient[v1.GetDERPMapRequest, v1.GetDERPMapResponse](
 			httpClient,
-			baseURL+"/ionscale.v1.IonscaleService/GetDERPMap",
+			baseURL+IonscaleServiceGetDERPMapProcedure,
 			opts...,
 		),
 		setDERPMap: connect_go.NewClient[v1.SetDERPMapRequest, v1.SetDERPMapResponse](
 			httpClient,
-			baseURL+"/ionscale.v1.IonscaleService/SetDERPMap",
+			baseURL+IonscaleServiceSetDERPMapProcedure,
 			opts...,
 		),
 		resetDERPMap: connect_go.NewClient[v1.ResetDERPMapRequest, v1.ResetDERPMapResponse](
 			httpClient,
-			baseURL+"/ionscale.v1.IonscaleService/ResetDERPMap",
+			baseURL+IonscaleServiceResetDERPMapProcedure,
 			opts...,
 		),
 		enableFileSharing: connect_go.NewClient[v1.EnableFileSharingRequest, v1.EnableFileSharingResponse](
 			httpClient,
-			baseURL+"/ionscale.v1.IonscaleService/EnableFileSharing",
+			baseURL+IonscaleServiceEnableFileSharingProcedure,
 			opts...,
 		),
 		disableFileSharing: connect_go.NewClient[v1.DisableFileSharingRequest, v1.DisableFileSharingResponse](
 			httpClient,
-			baseURL+"/ionscale.v1.IonscaleService/DisableFileSharing",
+			baseURL+IonscaleServiceDisableFileSharingProcedure,
 			opts...,
 		),
 		enableServiceCollection: connect_go.NewClient[v1.EnableServiceCollectionRequest, v1.EnableServiceCollectionResponse](
 			httpClient,
-			baseURL+"/ionscale.v1.IonscaleService/EnableServiceCollection",
+			baseURL+IonscaleServiceEnableServiceCollectionProcedure,
 			opts...,
 		),
 		disableServiceCollection: connect_go.NewClient[v1.DisableServiceCollectionRequest, v1.DisableServiceCollectionResponse](
 			httpClient,
-			baseURL+"/ionscale.v1.IonscaleService/DisableServiceCollection",
+			baseURL+IonscaleServiceDisableServiceCollectionProcedure,
 			opts...,
 		),
 		enableSSH: connect_go.NewClient[v1.EnableSSHRequest, v1.EnableSSHResponse](
 			httpClient,
-			baseURL+"/ionscale.v1.IonscaleService/EnableSSH",
+			baseURL+IonscaleServiceEnableSSHProcedure,
 			opts...,
 		),
 		disableSSH: connect_go.NewClient[v1.DisableSSHRequest, v1.DisableSSHResponse](
 			httpClient,
-			baseURL+"/ionscale.v1.IonscaleService/DisableSSH",
+			baseURL+IonscaleServiceDisableSSHProcedure,
 			opts...,
 		),
 		enableMachineAuthorization: connect_go.NewClient[v1.EnableMachineAuthorizationRequest, v1.EnableMachineAuthorizationResponse](
 			httpClient,
-			baseURL+"/ionscale.v1.IonscaleService/EnableMachineAuthorization",
+			baseURL+IonscaleServiceEnableMachineAuthorizationProcedure,
 			opts...,
 		),
 		disableMachineAuthorization: connect_go.NewClient[v1.DisableMachineAuthorizationRequest, v1.DisableMachineAuthorizationResponse](
 			httpClient,
-			baseURL+"/ionscale.v1.IonscaleService/DisableMachineAuthorization",
+			baseURL+IonscaleServiceDisableMachineAuthorizationProcedure,
 			opts...,
 		),
 		getDNSConfig: connect_go.NewClient[v1.GetDNSConfigRequest, v1.GetDNSConfigResponse](
 			httpClient,
-			baseURL+"/ionscale.v1.IonscaleService/GetDNSConfig",
+			baseURL+IonscaleServiceGetDNSConfigProcedure,
 			opts...,
 		),
 		setDNSConfig: connect_go.NewClient[v1.SetDNSConfigRequest, v1.SetDNSConfigResponse](
 			httpClient,
-			baseURL+"/ionscale.v1.IonscaleService/SetDNSConfig",
+			baseURL+IonscaleServiceSetDNSConfigProcedure,
 			opts...,
 		),
 		getIAMPolicy: connect_go.NewClient[v1.GetIAMPolicyRequest, v1.GetIAMPolicyResponse](
 			httpClient,
-			baseURL+"/ionscale.v1.IonscaleService/GetIAMPolicy",
+			baseURL+IonscaleServiceGetIAMPolicyProcedure,
 			opts...,
 		),
 		setIAMPolicy: connect_go.NewClient[v1.SetIAMPolicyRequest, v1.SetIAMPolicyResponse](
 			httpClient,
-			baseURL+"/ionscale.v1.IonscaleService/SetIAMPolicy",
+			baseURL+IonscaleServiceSetIAMPolicyProcedure,
 			opts...,
 		),
 		getACLPolicy: connect_go.NewClient[v1.GetACLPolicyRequest, v1.GetACLPolicyResponse](
 			httpClient,
-			baseURL+"/ionscale.v1.IonscaleService/GetACLPolicy",
+			baseURL+IonscaleServiceGetACLPolicyProcedure,
 			opts...,
 		),
 		setACLPolicy: connect_go.NewClient[v1.SetACLPolicyRequest, v1.SetACLPolicyResponse](
 			httpClient,
-			baseURL+"/ionscale.v1.IonscaleService/SetACLPolicy",
+			baseURL+IonscaleServiceSetACLPolicyProcedure,
 			opts...,
 		),
 		getAuthKey: connect_go.NewClient[v1.GetAuthKeyRequest, v1.GetAuthKeyResponse](
 			httpClient,
-			baseURL+"/ionscale.v1.IonscaleService/GetAuthKey",
+			baseURL+IonscaleServiceGetAuthKeyProcedure,
 			opts...,
 		),
 		createAuthKey: connect_go.NewClient[v1.CreateAuthKeyRequest, v1.CreateAuthKeyResponse](
 			httpClient,
-			baseURL+"/ionscale.v1.IonscaleService/CreateAuthKey",
+			baseURL+IonscaleServiceCreateAuthKeyProcedure,
 			opts...,
 		),
 		deleteAuthKey: connect_go.NewClient[v1.DeleteAuthKeyRequest, v1.DeleteAuthKeyResponse](
 			httpClient,
-			baseURL+"/ionscale.v1.IonscaleService/DeleteAuthKey",
+			baseURL+IonscaleServiceDeleteAuthKeyProcedure,
 			opts...,
 		),
 		listAuthKeys: connect_go.NewClient[v1.ListAuthKeysRequest, v1.ListAuthKeysResponse](
 			httpClient,
-			baseURL+"/ionscale.v1.IonscaleService/ListAuthKeys",
+			baseURL+IonscaleServiceListAuthKeysProcedure,
 			opts...,
 		),
 		listUsers: connect_go.NewClient[v1.ListUsersRequest, v1.ListUsersResponse](
 			httpClient,
-			baseURL+"/ionscale.v1.IonscaleService/ListUsers",
+			baseURL+IonscaleServiceListUsersProcedure,
 			opts...,
 		),
 		deleteUser: connect_go.NewClient[v1.DeleteUserRequest, v1.DeleteUserResponse](
 			httpClient,
-			baseURL+"/ionscale.v1.IonscaleService/DeleteUser",
+			baseURL+IonscaleServiceDeleteUserProcedure,
 			opts...,
 		),
 		getMachine: connect_go.NewClient[v1.GetMachineRequest, v1.GetMachineResponse](
 			httpClient,
-			baseURL+"/ionscale.v1.IonscaleService/GetMachine",
+			baseURL+IonscaleServiceGetMachineProcedure,
 			opts...,
 		),
 		listMachines: connect_go.NewClient[v1.ListMachinesRequest, v1.ListMachinesResponse](
 			httpClient,
-			baseURL+"/ionscale.v1.IonscaleService/ListMachines",
+			baseURL+IonscaleServiceListMachinesProcedure,
 			opts...,
 		),
 		authorizeMachine: connect_go.NewClient[v1.AuthorizeMachineRequest, v1.AuthorizeMachineResponse](
 			httpClient,
-			baseURL+"/ionscale.v1.IonscaleService/AuthorizeMachine",
+			baseURL+IonscaleServiceAuthorizeMachineProcedure,
 			opts...,
 		),
 		expireMachine: connect_go.NewClient[v1.ExpireMachineRequest, v1.ExpireMachineResponse](
 			httpClient,
-			baseURL+"/ionscale.v1.IonscaleService/ExpireMachine",
+			baseURL+IonscaleServiceExpireMachineProcedure,
 			opts...,
 		),
 		deleteMachine: connect_go.NewClient[v1.DeleteMachineRequest, v1.DeleteMachineResponse](
 			httpClient,
-			baseURL+"/ionscale.v1.IonscaleService/DeleteMachine",
+			baseURL+IonscaleServiceDeleteMachineProcedure,
 			opts...,
 		),
 		setMachineKeyExpiry: connect_go.NewClient[v1.SetMachineKeyExpiryRequest, v1.SetMachineKeyExpiryResponse](
 			httpClient,
-			baseURL+"/ionscale.v1.IonscaleService/SetMachineKeyExpiry",
+			baseURL+IonscaleServiceSetMachineKeyExpiryProcedure,
 			opts...,
 		),
 		getMachineRoutes: connect_go.NewClient[v1.GetMachineRoutesRequest, v1.GetMachineRoutesResponse](
 			httpClient,
-			baseURL+"/ionscale.v1.IonscaleService/GetMachineRoutes",
+			baseURL+IonscaleServiceGetMachineRoutesProcedure,
 			opts...,
 		),
 		enableMachineRoutes: connect_go.NewClient[v1.EnableMachineRoutesRequest, v1.EnableMachineRoutesResponse](
 			httpClient,
-			baseURL+"/ionscale.v1.IonscaleService/EnableMachineRoutes",
+			baseURL+IonscaleServiceEnableMachineRoutesProcedure,
 			opts...,
 		),
 		disableMachineRoutes: connect_go.NewClient[v1.DisableMachineRoutesRequest, v1.DisableMachineRoutesResponse](
 			httpClient,
-			baseURL+"/ionscale.v1.IonscaleService/DisableMachineRoutes",
+			baseURL+IonscaleServiceDisableMachineRoutesProcedure,
 			opts...,
 		),
 		enableExitNode: connect_go.NewClient[v1.EnableExitNodeRequest, v1.EnableExitNodeResponse](
 			httpClient,
-			baseURL+"/ionscale.v1.IonscaleService/EnableExitNode",
+			baseURL+IonscaleServiceEnableExitNodeProcedure,
 			opts...,
 		),
 		disableExitNode: connect_go.NewClient[v1.DisableExitNodeRequest, v1.DisableExitNodeResponse](
 			httpClient,
-			baseURL+"/ionscale.v1.IonscaleService/DisableExitNode",
+			baseURL+IonscaleServiceDisableExitNodeProcedure,
 			opts...,
 		),
 	}
@@ -628,228 +770,320 @@ type IonscaleServiceHandler interface {
 // By default, handlers support the Connect, gRPC, and gRPC-Web protocols with the binary Protobuf
 // and JSON codecs. They also support gzip compression.
 func NewIonscaleServiceHandler(svc IonscaleServiceHandler, opts ...connect_go.HandlerOption) (string, http.Handler) {
-	mux := http.NewServeMux()
-	mux.Handle("/ionscale.v1.IonscaleService/GetVersion", connect_go.NewUnaryHandler(
-		"/ionscale.v1.IonscaleService/GetVersion",
+	ionscaleServiceGetVersionHandler := connect_go.NewUnaryHandler(
+		IonscaleServiceGetVersionProcedure,
 		svc.GetVersion,
 		opts...,
-	))
-	mux.Handle("/ionscale.v1.IonscaleService/Authenticate", connect_go.NewServerStreamHandler(
-		"/ionscale.v1.IonscaleService/Authenticate",
+	)
+	ionscaleServiceAuthenticateHandler := connect_go.NewServerStreamHandler(
+		IonscaleServiceAuthenticateProcedure,
 		svc.Authenticate,
 		opts...,
-	))
-	mux.Handle("/ionscale.v1.IonscaleService/GetDefaultDERPMap", connect_go.NewUnaryHandler(
-		"/ionscale.v1.IonscaleService/GetDefaultDERPMap",
+	)
+	ionscaleServiceGetDefaultDERPMapHandler := connect_go.NewUnaryHandler(
+		IonscaleServiceGetDefaultDERPMapProcedure,
 		svc.GetDefaultDERPMap,
 		opts...,
-	))
-	mux.Handle("/ionscale.v1.IonscaleService/SetDefaultDERPMap", connect_go.NewUnaryHandler(
-		"/ionscale.v1.IonscaleService/SetDefaultDERPMap",
+	)
+	ionscaleServiceSetDefaultDERPMapHandler := connect_go.NewUnaryHandler(
+		IonscaleServiceSetDefaultDERPMapProcedure,
 		svc.SetDefaultDERPMap,
 		opts...,
-	))
-	mux.Handle("/ionscale.v1.IonscaleService/ResetDefaultDERPMap", connect_go.NewUnaryHandler(
-		"/ionscale.v1.IonscaleService/ResetDefaultDERPMap",
+	)
+	ionscaleServiceResetDefaultDERPMapHandler := connect_go.NewUnaryHandler(
+		IonscaleServiceResetDefaultDERPMapProcedure,
 		svc.ResetDefaultDERPMap,
 		opts...,
-	))
-	mux.Handle("/ionscale.v1.IonscaleService/CreateTailnet", connect_go.NewUnaryHandler(
-		"/ionscale.v1.IonscaleService/CreateTailnet",
+	)
+	ionscaleServiceCreateTailnetHandler := connect_go.NewUnaryHandler(
+		IonscaleServiceCreateTailnetProcedure,
 		svc.CreateTailnet,
 		opts...,
-	))
-	mux.Handle("/ionscale.v1.IonscaleService/UpdateTailnet", connect_go.NewUnaryHandler(
-		"/ionscale.v1.IonscaleService/UpdateTailnet",
+	)
+	ionscaleServiceUpdateTailnetHandler := connect_go.NewUnaryHandler(
+		IonscaleServiceUpdateTailnetProcedure,
 		svc.UpdateTailnet,
 		opts...,
-	))
-	mux.Handle("/ionscale.v1.IonscaleService/GetTailnet", connect_go.NewUnaryHandler(
-		"/ionscale.v1.IonscaleService/GetTailnet",
+	)
+	ionscaleServiceGetTailnetHandler := connect_go.NewUnaryHandler(
+		IonscaleServiceGetTailnetProcedure,
 		svc.GetTailnet,
 		opts...,
-	))
-	mux.Handle("/ionscale.v1.IonscaleService/ListTailnets", connect_go.NewUnaryHandler(
-		"/ionscale.v1.IonscaleService/ListTailnets",
+	)
+	ionscaleServiceListTailnetsHandler := connect_go.NewUnaryHandler(
+		IonscaleServiceListTailnetsProcedure,
 		svc.ListTailnets,
 		opts...,
-	))
-	mux.Handle("/ionscale.v1.IonscaleService/DeleteTailnet", connect_go.NewUnaryHandler(
-		"/ionscale.v1.IonscaleService/DeleteTailnet",
+	)
+	ionscaleServiceDeleteTailnetHandler := connect_go.NewUnaryHandler(
+		IonscaleServiceDeleteTailnetProcedure,
 		svc.DeleteTailnet,
 		opts...,
-	))
-	mux.Handle("/ionscale.v1.IonscaleService/GetDERPMap", connect_go.NewUnaryHandler(
-		"/ionscale.v1.IonscaleService/GetDERPMap",
+	)
+	ionscaleServiceGetDERPMapHandler := connect_go.NewUnaryHandler(
+		IonscaleServiceGetDERPMapProcedure,
 		svc.GetDERPMap,
 		opts...,
-	))
-	mux.Handle("/ionscale.v1.IonscaleService/SetDERPMap", connect_go.NewUnaryHandler(
-		"/ionscale.v1.IonscaleService/SetDERPMap",
+	)
+	ionscaleServiceSetDERPMapHandler := connect_go.NewUnaryHandler(
+		IonscaleServiceSetDERPMapProcedure,
 		svc.SetDERPMap,
 		opts...,
-	))
-	mux.Handle("/ionscale.v1.IonscaleService/ResetDERPMap", connect_go.NewUnaryHandler(
-		"/ionscale.v1.IonscaleService/ResetDERPMap",
+	)
+	ionscaleServiceResetDERPMapHandler := connect_go.NewUnaryHandler(
+		IonscaleServiceResetDERPMapProcedure,
 		svc.ResetDERPMap,
 		opts...,
-	))
-	mux.Handle("/ionscale.v1.IonscaleService/EnableFileSharing", connect_go.NewUnaryHandler(
-		"/ionscale.v1.IonscaleService/EnableFileSharing",
+	)
+	ionscaleServiceEnableFileSharingHandler := connect_go.NewUnaryHandler(
+		IonscaleServiceEnableFileSharingProcedure,
 		svc.EnableFileSharing,
 		opts...,
-	))
-	mux.Handle("/ionscale.v1.IonscaleService/DisableFileSharing", connect_go.NewUnaryHandler(
-		"/ionscale.v1.IonscaleService/DisableFileSharing",
+	)
+	ionscaleServiceDisableFileSharingHandler := connect_go.NewUnaryHandler(
+		IonscaleServiceDisableFileSharingProcedure,
 		svc.DisableFileSharing,
 		opts...,
-	))
-	mux.Handle("/ionscale.v1.IonscaleService/EnableServiceCollection", connect_go.NewUnaryHandler(
-		"/ionscale.v1.IonscaleService/EnableServiceCollection",
+	)
+	ionscaleServiceEnableServiceCollectionHandler := connect_go.NewUnaryHandler(
+		IonscaleServiceEnableServiceCollectionProcedure,
 		svc.EnableServiceCollection,
 		opts...,
-	))
-	mux.Handle("/ionscale.v1.IonscaleService/DisableServiceCollection", connect_go.NewUnaryHandler(
-		"/ionscale.v1.IonscaleService/DisableServiceCollection",
+	)
+	ionscaleServiceDisableServiceCollectionHandler := connect_go.NewUnaryHandler(
+		IonscaleServiceDisableServiceCollectionProcedure,
 		svc.DisableServiceCollection,
 		opts...,
-	))
-	mux.Handle("/ionscale.v1.IonscaleService/EnableSSH", connect_go.NewUnaryHandler(
-		"/ionscale.v1.IonscaleService/EnableSSH",
+	)
+	ionscaleServiceEnableSSHHandler := connect_go.NewUnaryHandler(
+		IonscaleServiceEnableSSHProcedure,
 		svc.EnableSSH,
 		opts...,
-	))
-	mux.Handle("/ionscale.v1.IonscaleService/DisableSSH", connect_go.NewUnaryHandler(
-		"/ionscale.v1.IonscaleService/DisableSSH",
+	)
+	ionscaleServiceDisableSSHHandler := connect_go.NewUnaryHandler(
+		IonscaleServiceDisableSSHProcedure,
 		svc.DisableSSH,
 		opts...,
-	))
-	mux.Handle("/ionscale.v1.IonscaleService/EnableMachineAuthorization", connect_go.NewUnaryHandler(
-		"/ionscale.v1.IonscaleService/EnableMachineAuthorization",
+	)
+	ionscaleServiceEnableMachineAuthorizationHandler := connect_go.NewUnaryHandler(
+		IonscaleServiceEnableMachineAuthorizationProcedure,
 		svc.EnableMachineAuthorization,
 		opts...,
-	))
-	mux.Handle("/ionscale.v1.IonscaleService/DisableMachineAuthorization", connect_go.NewUnaryHandler(
-		"/ionscale.v1.IonscaleService/DisableMachineAuthorization",
+	)
+	ionscaleServiceDisableMachineAuthorizationHandler := connect_go.NewUnaryHandler(
+		IonscaleServiceDisableMachineAuthorizationProcedure,
 		svc.DisableMachineAuthorization,
 		opts...,
-	))
-	mux.Handle("/ionscale.v1.IonscaleService/GetDNSConfig", connect_go.NewUnaryHandler(
-		"/ionscale.v1.IonscaleService/GetDNSConfig",
+	)
+	ionscaleServiceGetDNSConfigHandler := connect_go.NewUnaryHandler(
+		IonscaleServiceGetDNSConfigProcedure,
 		svc.GetDNSConfig,
 		opts...,
-	))
-	mux.Handle("/ionscale.v1.IonscaleService/SetDNSConfig", connect_go.NewUnaryHandler(
-		"/ionscale.v1.IonscaleService/SetDNSConfig",
+	)
+	ionscaleServiceSetDNSConfigHandler := connect_go.NewUnaryHandler(
+		IonscaleServiceSetDNSConfigProcedure,
 		svc.SetDNSConfig,
 		opts...,
-	))
-	mux.Handle("/ionscale.v1.IonscaleService/GetIAMPolicy", connect_go.NewUnaryHandler(
-		"/ionscale.v1.IonscaleService/GetIAMPolicy",
+	)
+	ionscaleServiceGetIAMPolicyHandler := connect_go.NewUnaryHandler(
+		IonscaleServiceGetIAMPolicyProcedure,
 		svc.GetIAMPolicy,
 		opts...,
-	))
-	mux.Handle("/ionscale.v1.IonscaleService/SetIAMPolicy", connect_go.NewUnaryHandler(
-		"/ionscale.v1.IonscaleService/SetIAMPolicy",
+	)
+	ionscaleServiceSetIAMPolicyHandler := connect_go.NewUnaryHandler(
+		IonscaleServiceSetIAMPolicyProcedure,
 		svc.SetIAMPolicy,
 		opts...,
-	))
-	mux.Handle("/ionscale.v1.IonscaleService/GetACLPolicy", connect_go.NewUnaryHandler(
-		"/ionscale.v1.IonscaleService/GetACLPolicy",
+	)
+	ionscaleServiceGetACLPolicyHandler := connect_go.NewUnaryHandler(
+		IonscaleServiceGetACLPolicyProcedure,
 		svc.GetACLPolicy,
 		opts...,
-	))
-	mux.Handle("/ionscale.v1.IonscaleService/SetACLPolicy", connect_go.NewUnaryHandler(
-		"/ionscale.v1.IonscaleService/SetACLPolicy",
+	)
+	ionscaleServiceSetACLPolicyHandler := connect_go.NewUnaryHandler(
+		IonscaleServiceSetACLPolicyProcedure,
 		svc.SetACLPolicy,
 		opts...,
-	))
-	mux.Handle("/ionscale.v1.IonscaleService/GetAuthKey", connect_go.NewUnaryHandler(
-		"/ionscale.v1.IonscaleService/GetAuthKey",
+	)
+	ionscaleServiceGetAuthKeyHandler := connect_go.NewUnaryHandler(
+		IonscaleServiceGetAuthKeyProcedure,
 		svc.GetAuthKey,
 		opts...,
-	))
-	mux.Handle("/ionscale.v1.IonscaleService/CreateAuthKey", connect_go.NewUnaryHandler(
-		"/ionscale.v1.IonscaleService/CreateAuthKey",
+	)
+	ionscaleServiceCreateAuthKeyHandler := connect_go.NewUnaryHandler(
+		IonscaleServiceCreateAuthKeyProcedure,
 		svc.CreateAuthKey,
 		opts...,
-	))
-	mux.Handle("/ionscale.v1.IonscaleService/DeleteAuthKey", connect_go.NewUnaryHandler(
-		"/ionscale.v1.IonscaleService/DeleteAuthKey",
+	)
+	ionscaleServiceDeleteAuthKeyHandler := connect_go.NewUnaryHandler(
+		IonscaleServiceDeleteAuthKeyProcedure,
 		svc.DeleteAuthKey,
 		opts...,
-	))
-	mux.Handle("/ionscale.v1.IonscaleService/ListAuthKeys", connect_go.NewUnaryHandler(
-		"/ionscale.v1.IonscaleService/ListAuthKeys",
+	)
+	ionscaleServiceListAuthKeysHandler := connect_go.NewUnaryHandler(
+		IonscaleServiceListAuthKeysProcedure,
 		svc.ListAuthKeys,
 		opts...,
-	))
-	mux.Handle("/ionscale.v1.IonscaleService/ListUsers", connect_go.NewUnaryHandler(
-		"/ionscale.v1.IonscaleService/ListUsers",
+	)
+	ionscaleServiceListUsersHandler := connect_go.NewUnaryHandler(
+		IonscaleServiceListUsersProcedure,
 		svc.ListUsers,
 		opts...,
-	))
-	mux.Handle("/ionscale.v1.IonscaleService/DeleteUser", connect_go.NewUnaryHandler(
-		"/ionscale.v1.IonscaleService/DeleteUser",
+	)
+	ionscaleServiceDeleteUserHandler := connect_go.NewUnaryHandler(
+		IonscaleServiceDeleteUserProcedure,
 		svc.DeleteUser,
 		opts...,
-	))
-	mux.Handle("/ionscale.v1.IonscaleService/GetMachine", connect_go.NewUnaryHandler(
-		"/ionscale.v1.IonscaleService/GetMachine",
+	)
+	ionscaleServiceGetMachineHandler := connect_go.NewUnaryHandler(
+		IonscaleServiceGetMachineProcedure,
 		svc.GetMachine,
 		opts...,
-	))
-	mux.Handle("/ionscale.v1.IonscaleService/ListMachines", connect_go.NewUnaryHandler(
-		"/ionscale.v1.IonscaleService/ListMachines",
+	)
+	ionscaleServiceListMachinesHandler := connect_go.NewUnaryHandler(
+		IonscaleServiceListMachinesProcedure,
 		svc.ListMachines,
 		opts...,
-	))
-	mux.Handle("/ionscale.v1.IonscaleService/AuthorizeMachine", connect_go.NewUnaryHandler(
-		"/ionscale.v1.IonscaleService/AuthorizeMachine",
+	)
+	ionscaleServiceAuthorizeMachineHandler := connect_go.NewUnaryHandler(
+		IonscaleServiceAuthorizeMachineProcedure,
 		svc.AuthorizeMachine,
 		opts...,
-	))
-	mux.Handle("/ionscale.v1.IonscaleService/ExpireMachine", connect_go.NewUnaryHandler(
-		"/ionscale.v1.IonscaleService/ExpireMachine",
+	)
+	ionscaleServiceExpireMachineHandler := connect_go.NewUnaryHandler(
+		IonscaleServiceExpireMachineProcedure,
 		svc.ExpireMachine,
 		opts...,
-	))
-	mux.Handle("/ionscale.v1.IonscaleService/DeleteMachine", connect_go.NewUnaryHandler(
-		"/ionscale.v1.IonscaleService/DeleteMachine",
+	)
+	ionscaleServiceDeleteMachineHandler := connect_go.NewUnaryHandler(
+		IonscaleServiceDeleteMachineProcedure,
 		svc.DeleteMachine,
 		opts...,
-	))
-	mux.Handle("/ionscale.v1.IonscaleService/SetMachineKeyExpiry", connect_go.NewUnaryHandler(
-		"/ionscale.v1.IonscaleService/SetMachineKeyExpiry",
+	)
+	ionscaleServiceSetMachineKeyExpiryHandler := connect_go.NewUnaryHandler(
+		IonscaleServiceSetMachineKeyExpiryProcedure,
 		svc.SetMachineKeyExpiry,
 		opts...,
-	))
-	mux.Handle("/ionscale.v1.IonscaleService/GetMachineRoutes", connect_go.NewUnaryHandler(
-		"/ionscale.v1.IonscaleService/GetMachineRoutes",
+	)
+	ionscaleServiceGetMachineRoutesHandler := connect_go.NewUnaryHandler(
+		IonscaleServiceGetMachineRoutesProcedure,
 		svc.GetMachineRoutes,
 		opts...,
-	))
-	mux.Handle("/ionscale.v1.IonscaleService/EnableMachineRoutes", connect_go.NewUnaryHandler(
-		"/ionscale.v1.IonscaleService/EnableMachineRoutes",
+	)
+	ionscaleServiceEnableMachineRoutesHandler := connect_go.NewUnaryHandler(
+		IonscaleServiceEnableMachineRoutesProcedure,
 		svc.EnableMachineRoutes,
 		opts...,
-	))
-	mux.Handle("/ionscale.v1.IonscaleService/DisableMachineRoutes", connect_go.NewUnaryHandler(
-		"/ionscale.v1.IonscaleService/DisableMachineRoutes",
+	)
+	ionscaleServiceDisableMachineRoutesHandler := connect_go.NewUnaryHandler(
+		IonscaleServiceDisableMachineRoutesProcedure,
 		svc.DisableMachineRoutes,
 		opts...,
-	))
-	mux.Handle("/ionscale.v1.IonscaleService/EnableExitNode", connect_go.NewUnaryHandler(
-		"/ionscale.v1.IonscaleService/EnableExitNode",
+	)
+	ionscaleServiceEnableExitNodeHandler := connect_go.NewUnaryHandler(
+		IonscaleServiceEnableExitNodeProcedure,
 		svc.EnableExitNode,
 		opts...,
-	))
-	mux.Handle("/ionscale.v1.IonscaleService/DisableExitNode", connect_go.NewUnaryHandler(
-		"/ionscale.v1.IonscaleService/DisableExitNode",
+	)
+	ionscaleServiceDisableExitNodeHandler := connect_go.NewUnaryHandler(
+		IonscaleServiceDisableExitNodeProcedure,
 		svc.DisableExitNode,
 		opts...,
-	))
-	return "/ionscale.v1.IonscaleService/", mux
+	)
+	return "/ionscale.v1.IonscaleService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch r.URL.Path {
+		case IonscaleServiceGetVersionProcedure:
+			ionscaleServiceGetVersionHandler.ServeHTTP(w, r)
+		case IonscaleServiceAuthenticateProcedure:
+			ionscaleServiceAuthenticateHandler.ServeHTTP(w, r)
+		case IonscaleServiceGetDefaultDERPMapProcedure:
+			ionscaleServiceGetDefaultDERPMapHandler.ServeHTTP(w, r)
+		case IonscaleServiceSetDefaultDERPMapProcedure:
+			ionscaleServiceSetDefaultDERPMapHandler.ServeHTTP(w, r)
+		case IonscaleServiceResetDefaultDERPMapProcedure:
+			ionscaleServiceResetDefaultDERPMapHandler.ServeHTTP(w, r)
+		case IonscaleServiceCreateTailnetProcedure:
+			ionscaleServiceCreateTailnetHandler.ServeHTTP(w, r)
+		case IonscaleServiceUpdateTailnetProcedure:
+			ionscaleServiceUpdateTailnetHandler.ServeHTTP(w, r)
+		case IonscaleServiceGetTailnetProcedure:
+			ionscaleServiceGetTailnetHandler.ServeHTTP(w, r)
+		case IonscaleServiceListTailnetsProcedure:
+			ionscaleServiceListTailnetsHandler.ServeHTTP(w, r)
+		case IonscaleServiceDeleteTailnetProcedure:
+			ionscaleServiceDeleteTailnetHandler.ServeHTTP(w, r)
+		case IonscaleServiceGetDERPMapProcedure:
+			ionscaleServiceGetDERPMapHandler.ServeHTTP(w, r)
+		case IonscaleServiceSetDERPMapProcedure:
+			ionscaleServiceSetDERPMapHandler.ServeHTTP(w, r)
+		case IonscaleServiceResetDERPMapProcedure:
+			ionscaleServiceResetDERPMapHandler.ServeHTTP(w, r)
+		case IonscaleServiceEnableFileSharingProcedure:
+			ionscaleServiceEnableFileSharingHandler.ServeHTTP(w, r)
+		case IonscaleServiceDisableFileSharingProcedure:
+			ionscaleServiceDisableFileSharingHandler.ServeHTTP(w, r)
+		case IonscaleServiceEnableServiceCollectionProcedure:
+			ionscaleServiceEnableServiceCollectionHandler.ServeHTTP(w, r)
+		case IonscaleServiceDisableServiceCollectionProcedure:
+			ionscaleServiceDisableServiceCollectionHandler.ServeHTTP(w, r)
+		case IonscaleServiceEnableSSHProcedure:
+			ionscaleServiceEnableSSHHandler.ServeHTTP(w, r)
+		case IonscaleServiceDisableSSHProcedure:
+			ionscaleServiceDisableSSHHandler.ServeHTTP(w, r)
+		case IonscaleServiceEnableMachineAuthorizationProcedure:
+			ionscaleServiceEnableMachineAuthorizationHandler.ServeHTTP(w, r)
+		case IonscaleServiceDisableMachineAuthorizationProcedure:
+			ionscaleServiceDisableMachineAuthorizationHandler.ServeHTTP(w, r)
+		case IonscaleServiceGetDNSConfigProcedure:
+			ionscaleServiceGetDNSConfigHandler.ServeHTTP(w, r)
+		case IonscaleServiceSetDNSConfigProcedure:
+			ionscaleServiceSetDNSConfigHandler.ServeHTTP(w, r)
+		case IonscaleServiceGetIAMPolicyProcedure:
+			ionscaleServiceGetIAMPolicyHandler.ServeHTTP(w, r)
+		case IonscaleServiceSetIAMPolicyProcedure:
+			ionscaleServiceSetIAMPolicyHandler.ServeHTTP(w, r)
+		case IonscaleServiceGetACLPolicyProcedure:
+			ionscaleServiceGetACLPolicyHandler.ServeHTTP(w, r)
+		case IonscaleServiceSetACLPolicyProcedure:
+			ionscaleServiceSetACLPolicyHandler.ServeHTTP(w, r)
+		case IonscaleServiceGetAuthKeyProcedure:
+			ionscaleServiceGetAuthKeyHandler.ServeHTTP(w, r)
+		case IonscaleServiceCreateAuthKeyProcedure:
+			ionscaleServiceCreateAuthKeyHandler.ServeHTTP(w, r)
+		case IonscaleServiceDeleteAuthKeyProcedure:
+			ionscaleServiceDeleteAuthKeyHandler.ServeHTTP(w, r)
+		case IonscaleServiceListAuthKeysProcedure:
+			ionscaleServiceListAuthKeysHandler.ServeHTTP(w, r)
+		case IonscaleServiceListUsersProcedure:
+			ionscaleServiceListUsersHandler.ServeHTTP(w, r)
+		case IonscaleServiceDeleteUserProcedure:
+			ionscaleServiceDeleteUserHandler.ServeHTTP(w, r)
+		case IonscaleServiceGetMachineProcedure:
+			ionscaleServiceGetMachineHandler.ServeHTTP(w, r)
+		case IonscaleServiceListMachinesProcedure:
+			ionscaleServiceListMachinesHandler.ServeHTTP(w, r)
+		case IonscaleServiceAuthorizeMachineProcedure:
+			ionscaleServiceAuthorizeMachineHandler.ServeHTTP(w, r)
+		case IonscaleServiceExpireMachineProcedure:
+			ionscaleServiceExpireMachineHandler.ServeHTTP(w, r)
+		case IonscaleServiceDeleteMachineProcedure:
+			ionscaleServiceDeleteMachineHandler.ServeHTTP(w, r)
+		case IonscaleServiceSetMachineKeyExpiryProcedure:
+			ionscaleServiceSetMachineKeyExpiryHandler.ServeHTTP(w, r)
+		case IonscaleServiceGetMachineRoutesProcedure:
+			ionscaleServiceGetMachineRoutesHandler.ServeHTTP(w, r)
+		case IonscaleServiceEnableMachineRoutesProcedure:
+			ionscaleServiceEnableMachineRoutesHandler.ServeHTTP(w, r)
+		case IonscaleServiceDisableMachineRoutesProcedure:
+			ionscaleServiceDisableMachineRoutesHandler.ServeHTTP(w, r)
+		case IonscaleServiceEnableExitNodeProcedure:
+			ionscaleServiceEnableExitNodeHandler.ServeHTTP(w, r)
+		case IonscaleServiceDisableExitNodeProcedure:
+			ionscaleServiceDisableExitNodeHandler.ServeHTTP(w, r)
+		default:
+			http.NotFound(w, r)
+		}
+	})
 }
 
 // UnimplementedIonscaleServiceHandler returns CodeUnimplemented from all methods.
