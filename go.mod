@@ -1,6 +1,6 @@
 module github.com/jsiebens/ionscale
 
-go 1.20
+go 1.21
 
 require (
 	github.com/apparentlymart/go-cidr v1.1.0
@@ -14,7 +14,7 @@ require (
 	github.com/golang-jwt/jwt/v4 v4.5.0
 	github.com/hashicorp/go-bexpr v0.1.13
 	github.com/hashicorp/go-multierror v1.1.1
-	github.com/imdario/mergo v0.3.15
+	github.com/imdario/mergo v0.3.16
 	github.com/jsiebens/go-edit v0.1.0
 	github.com/klauspost/compress v1.17.4
 	github.com/labstack/echo-contrib v0.15.0
@@ -47,8 +47,8 @@ require (
 	gorm.io/driver/postgres v1.5.4
 	gorm.io/gorm v1.25.5
 	gorm.io/plugin/prometheus v0.1.0
-	inet.af/netaddr v0.0.0-20220811202034-502d2d690317
-	tailscale.com v1.46.0
+	inet.af/netaddr v0.0.0-20230525184311-b8eac61e914a
+	tailscale.com v1.48.0
 )
 
 require (
@@ -153,10 +153,11 @@ require (
 	github.com/zeebo/blake3 v0.2.3 // indirect
 	go.opencensus.io v0.24.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
-	go4.org/intern v0.0.0-20230205224052-192e9f60865c // indirect
+	go4.org/intern v0.0.0-20230525184215-6c62f75575cb // indirect
 	go4.org/mem v0.0.0-20220726221520-4f986261bf13 // indirect
-	go4.org/unsafe/assume-no-moving-gc v0.0.0-20230221090011-e4bae7ad2296 // indirect
-	golang.org/x/exp v0.0.0-20230425010034-47ecfdc1ba53 // indirect
+	go4.org/netipx v0.0.0-20230728180743-ad4cb58a6516 // indirect
+	go4.org/unsafe/assume-no-moving-gc v0.0.0-20231121144256-b99613f794b6 // indirect
+	golang.org/x/exp v0.0.0-20230725093048-515e97ebf090 // indirect
 	golang.org/x/mod v0.14.0 // indirect
 	golang.org/x/sys v0.15.0 // indirect
 	golang.org/x/text v0.14.0 // indirect
@@ -167,7 +168,7 @@ require (
 	google.golang.org/appengine v1.6.8 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20231212172506-995d672761c0 // indirect
 	google.golang.org/grpc v1.60.1 // indirect
-	gvisor.dev/gvisor v0.0.0-20230504175454-7b0a1988a28f // indirect
+	gotest.tools/v3 v3.4.0 // indirect
 	modernc.org/libc v1.38.0 // indirect
 	modernc.org/mathutil v1.6.0 // indirect
 	modernc.org/memory v1.7.2 // indirect
