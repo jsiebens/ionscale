@@ -114,6 +114,7 @@ func Start(c *config.Config) error {
 		dnsHandlers := handlers.NewDNSHandlers(binder, dnsProvider)
 		idTokenHandlers := handlers.NewIDTokenHandlers(binder, c, repository)
 		sshActionHandlers := handlers.NewSSHActionHandlers(binder, c, repository)
+		queryFeatureHandlers := handlers.NewQueryFeatureHandlers(binder, dnsProvider, repository)
 
 		e := echo.New()
 		e.Use(EchoMetrics(p), EchoLogger(httpLogger), EchoErrorHandler(), EchoRecover())
@@ -124,6 +125,7 @@ func Start(c *config.Config) error {
 		e.GET("/machine/ssh/action/:src_machine_id/to/:dst_machine_id", sshActionHandlers.StartAuth)
 		e.GET("/machine/ssh/action/:src_machine_id/to/:dst_machine_id/:check_period", sshActionHandlers.StartAuth)
 		e.GET("/machine/ssh/action/check/:key", sshActionHandlers.CheckAuth)
+		e.POST("/machine/feature/query", queryFeatureHandlers.QueryFeature)
 
 		return e
 	}
