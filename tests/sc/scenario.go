@@ -105,8 +105,6 @@ func (s *scenario) NewTailscaleNode(hostname string) TailscaleNode {
 }
 
 func Run(t *testing.T, f func(s Scenario)) {
-	t.Parallel()
-
 	if testing.Short() {
 		t.Skip("skipped due to -short flag")
 	}
