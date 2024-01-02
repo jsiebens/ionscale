@@ -193,6 +193,49 @@ func TestACLPolicy_BuildFilterRulesWithAutoGroupMember(t *testing.T) {
 	assert.Equal(t, expectedRules, actualRules)
 }
 
+func TestACLPolicy_BuildFilterRulesWithAutoGroupTagged(t *testing.T) {
+
+	p1 := createMachine("jane@example.com")
+	p2 := createMachine("nick@example.com")
+	p3 := createMachine("joe@example.com", "tag:web")
+
+	policy := ACLPolicy{
+		ACLs: []ACL{
+			{
+				Action: "accept",
+				Src:    []string{"autogroup:tagged"},
+				Dst:    []string{"*:22"},
+			},
+		},
+	}
+
+	dst := createMachine("john@example.com")
+
+	actualRules := policy.BuildFilterRules([]Machine{*p1, *p2, *p3}, dst)
+
+	expectedSrcIPs := []string{
+		p3.IPv4.String(), p3.IPv6.String(),
+	}
+	sort.Strings(expectedSrcIPs)
+
+	expectedRules := []tailcfg.FilterRule{
+		{
+			SrcIPs: expectedSrcIPs,
+			DstPorts: []tailcfg.NetPortRange{
+				{
+					IP: "*",
+					Ports: tailcfg.PortRange{
+						First: 22,
+						Last:  22,
+					},
+				},
+			},
+		},
+	}
+
+	assert.Equal(t, expectedRules, actualRules)
+}
+
 func TestACLPolicy_BuildFilterRulesAutogroupSelf(t *testing.T) {
 	p1 := createMachine("john@example.com")
 	p2 := createMachine("jane@example.com")
