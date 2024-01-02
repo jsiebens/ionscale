@@ -85,7 +85,7 @@ func (a ACLPolicy) expandSSHSrcAlias(m *Machine, alias string, dstUser *User) []
 			return []string{}
 		}
 
-		if alias == AutoGroupMembers {
+		if alias == AutoGroupMember || alias == AutoGroupMembers {
 			return m.IPs()
 		}
 
@@ -100,7 +100,7 @@ func (a ACLPolicy) expandSSHSrcAlias(m *Machine, alias string, dstUser *User) []
 		return []string{}
 	}
 
-	if alias == AutoGroupMembers && !m.HasTags() {
+	if (alias == AutoGroupMember || alias == AutoGroupMembers) && !m.HasTags() {
 		return m.IPs()
 	}
 
