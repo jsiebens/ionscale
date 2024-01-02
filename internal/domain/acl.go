@@ -16,6 +16,7 @@ import (
 
 const (
 	AutoGroupSelf     = "autogroup:self"
+	AutoGroupMember   = "autogroup:member"
 	AutoGroupMembers  = "autogroup:members"
 	AutoGroupInternet = "autogroup:internet"
 )
@@ -308,7 +309,7 @@ func (a ACLPolicy) expandMachineAlias(m *Machine, alias string, src bool, u *Use
 		return []string{"*"}
 	}
 
-	if alias == AutoGroupMembers || alias == AutoGroupSelf {
+	if alias == AutoGroupMember || alias == AutoGroupMembers || alias == AutoGroupSelf {
 		if !m.HasTags() {
 			return m.IPs()
 		} else {

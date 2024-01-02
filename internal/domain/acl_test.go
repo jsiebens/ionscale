@@ -150,6 +150,49 @@ func TestACLPolicy_BuildFilterRulesWithAutoGroupMembers(t *testing.T) {
 	assert.Equal(t, expectedRules, actualRules)
 }
 
+func TestACLPolicy_BuildFilterRulesWithAutoGroupMember(t *testing.T) {
+	p1 := createMachine("jane@example.com")
+	p2 := createMachine("nick@example.com")
+	p3 := createMachine("joe@example.com", "tag:web")
+
+	policy := ACLPolicy{
+		ACLs: []ACL{
+			{
+				Action: "accept",
+				Src:    []string{"autogroup:member"},
+				Dst:    []string{"*:22"},
+			},
+		},
+	}
+
+	dst := createMachine("john@example.com")
+
+	actualRules := policy.BuildFilterRules([]Machine{*p1, *p2, *p3}, dst)
+
+	expectedSrcIPs := []string{
+		p1.IPv4.String(), p1.IPv6.String(),
+		p2.IPv4.String(), p2.IPv6.String(),
+	}
+	sort.Strings(expectedSrcIPs)
+
+	expectedRules := []tailcfg.FilterRule{
+		{
+			SrcIPs: expectedSrcIPs,
+			DstPorts: []tailcfg.NetPortRange{
+				{
+					IP: "*",
+					Ports: tailcfg.PortRange{
+						First: 22,
+						Last:  22,
+					},
+				},
+			},
+		},
+	}
+
+	assert.Equal(t, expectedRules, actualRules)
+}
+
 func TestACLPolicy_BuildFilterRulesAutogroupSelf(t *testing.T) {
 	p1 := createMachine("john@example.com")
 	p2 := createMachine("jane@example.com")
@@ -293,44 +336,6 @@ func TestACLPolicy_BuildFilterRulesAutogroupSelfAndOtherDestinations(t *testing.
 					Ports: tailcfg.PortRange{
 						First: 80,
 						Last:  80,
-					},
-				},
-			},
-		},
-	}
-
-	assert.Equal(t, expectedRules, actualRules)
-}
-
-func TestACLPolicy_BuildFilterRulesAutogroupMember(t *testing.T) {
-	p1 := createMachine("jane@example.com")
-	p2 := createMachine("jane@example.com", "tag:web")
-
-	policy := ACLPolicy{
-		ACLs: []ACL{
-			{
-				Action: "accept",
-				Src:    []string{"autogroup:members"},
-				Dst:    []string{"*:*"},
-			},
-		},
-	}
-
-	dst := createMachine("john@example.com")
-
-	actualRules := policy.BuildFilterRules([]Machine{*p1, *p2}, dst)
-	expectedRules := []tailcfg.FilterRule{
-		{
-			SrcIPs: []string{
-				p1.IPv4.String(),
-				p1.IPv6.String(),
-			},
-			DstPorts: []tailcfg.NetPortRange{
-				{
-					IP: "*",
-					Ports: tailcfg.PortRange{
-						First: 0,
-						Last:  65535,
 					},
 				},
 			},
