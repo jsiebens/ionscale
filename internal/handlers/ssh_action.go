@@ -45,10 +45,11 @@ func (h *SSHActionHandlers) StartAuth(c echo.Context) error {
 		return logError(err)
 	}
 
-	if data.CheckPeriod != "" {
+	if data.CheckPeriod != "" && data.CheckPeriod != "always" {
 		checkPeriod, err := time.ParseDuration(data.CheckPeriod)
 		if err != nil {
-			return logError(err)
+			_ = logError(err)
+			goto check
 		}
 
 		machine, err := h.repository.GetMachine(ctx, data.SrcMachineID)
@@ -71,6 +72,7 @@ func (h *SSHActionHandlers) StartAuth(c echo.Context) error {
 		}
 	}
 
+check:
 	key := util.RandStringBytes(8)
 	request := &domain.SSHActionRequest{
 		Key:          key,
