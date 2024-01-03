@@ -72,21 +72,6 @@ func (r *repository) GetTailnet(ctx context.Context, id uint64) (*Tailnet, error
 	return &t, nil
 }
 
-func (r *repository) GetTailnetByAlias(ctx context.Context, alias string) (*Tailnet, error) {
-	var t Tailnet
-	tx := r.withContext(ctx).Take(&t, "alias = ?", alias)
-
-	if errors.Is(tx.Error, gorm.ErrRecordNotFound) {
-		return nil, nil
-	}
-
-	if tx.Error != nil {
-		return nil, tx.Error
-	}
-
-	return &t, nil
-}
-
 func (r *repository) ListTailnets(ctx context.Context) ([]Tailnet, error) {
 	var tailnets = []Tailnet{}
 	tx := r.withContext(ctx).Find(&tailnets)
