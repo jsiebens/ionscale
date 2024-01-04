@@ -85,7 +85,7 @@ func ToDNSConfig(m *domain.Machine, tailnet *domain.Tailnet, c *domain.DNSConfig
 func ToNode(m *domain.Machine, tailnet *domain.Tailnet, taggedDevicesUser *domain.User, peer bool, connected bool, routeFilter func(m *domain.Machine) []netip.Prefix) (*tailcfg.Node, *tailcfg.UserProfile, error) {
 	role := tailnet.IAMPolicy.GetRole(m.User)
 
-	var capabilities []string
+	var capabilities []tailcfg.NodeCapability
 
 	if !peer {
 		if !m.HasTags() && role == domain.UserRoleAdmin {
@@ -238,13 +238,11 @@ func ToUser(u domain.User) (tailcfg.User, tailcfg.Login) {
 		LoginName:   u.Name,
 		DisplayName: u.Name,
 		Logins:      []tailcfg.LoginID{tailcfg.LoginID(u.ID)},
-		Domain:      u.Tailnet.Name,
 	}
 	login := tailcfg.Login{
 		ID:          tailcfg.LoginID(u.ID),
 		LoginName:   u.Name,
 		DisplayName: u.Name,
-		Domain:      u.Tailnet.Name,
 	}
 	return user, login
 }

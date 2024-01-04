@@ -24,6 +24,11 @@ func (s *Service) machineToApi(m *domain.Machine) *api.Machine {
 		lastSeen = timestamppb.New(*m.LastSeen)
 	}
 
+	var endpoints []string
+	for _, e := range m.Endpoints {
+		endpoints = append(endpoints, e.String())
+	}
+
 	return &api.Machine{
 		Id:                m.ID,
 		Name:              name,
@@ -47,7 +52,7 @@ func (s *Service) machineToApi(m *domain.Machine) *api.Machine {
 			Name: m.User.Name,
 		},
 		ClientConnectivity: &api.ClientConnectivity{
-			Endpoints: m.Endpoints,
+			Endpoints: endpoints,
 		},
 		AdvertisedRoutes:   m.AdvertisedPrefixes(),
 		EnabledRoutes:      m.AllowedPrefixes(),
