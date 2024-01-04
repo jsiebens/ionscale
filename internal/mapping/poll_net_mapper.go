@@ -60,7 +60,7 @@ func (h *PollNetMapper) CreateMapResponse(ctx context.Context, delta bool) (*tai
 
 	prc := &primaryRoutesCollector{flagged: map[netip.Prefix]bool{}}
 
-	node, user, err := ToNode(m, &tailnet, serviceUser, false, true, prc.filter)
+	node, user, err := ToNode(h.req.Version, m, &tailnet, serviceUser, false, true, prc.filter)
 	if err != nil {
 		return nil, err
 	}
@@ -84,7 +84,7 @@ func (h *PollNetMapper) CreateMapResponse(ctx context.Context, delta bool) (*tai
 		if policies.IsValidPeer(m, &peer) || policies.IsValidPeer(&peer, m) {
 			isConnected := h.sessionManager.HasSession(peer.TailnetID, peer.ID)
 
-			n, u, err := ToNode(&peer, &tailnet, serviceUser, true, isConnected, prc.filter)
+			n, u, err := ToNode(h.req.Version, &peer, &tailnet, serviceUser, true, isConnected, prc.filter)
 			if err != nil {
 				return nil, err
 			}

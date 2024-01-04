@@ -82,28 +82,8 @@ func ToDNSConfig(m *domain.Machine, tailnet *domain.Tailnet, c *domain.DNSConfig
 	return dnsConfig
 }
 
-func ToNode(m *domain.Machine, tailnet *domain.Tailnet, taggedDevicesUser *domain.User, peer bool, connected bool, routeFilter func(m *domain.Machine) []netip.Prefix) (*tailcfg.Node, *tailcfg.UserProfile, error) {
+func ToNode(capVer tailcfg.CapabilityVersion, m *domain.Machine, tailnet *domain.Tailnet, taggedDevicesUser *domain.User, peer bool, connected bool, routeFilter func(m *domain.Machine) []netip.Prefix) (*tailcfg.Node, *tailcfg.UserProfile, error) {
 	role := tailnet.IAMPolicy.GetRole(m.User)
-
-	var capabilities []tailcfg.NodeCapability
-
-	if !peer {
-		if !m.HasTags() && role == domain.UserRoleAdmin {
-			capabilities = append(capabilities, tailcfg.CapabilityAdmin)
-		}
-
-		if tailnet.FileSharingEnabled {
-			capabilities = append(capabilities, tailcfg.CapabilityFileSharing)
-		}
-
-		if tailnet.SSHEnabled {
-			capabilities = append(capabilities, tailcfg.CapabilitySSH)
-		}
-
-		if tailnet.DNSConfig.HttpsCertsEnabled {
-			capabilities = append(capabilities, tailcfg.CapabilityHTTPS)
-		}
-	}
 
 	nKey, err := util.ParseNodePublicKey(m.NodeKey)
 	if err != nil {
@@ -186,13 +166,41 @@ func ToNode(m *domain.Machine, tailnet *domain.Tailnet, taggedDevicesUser *domai
 		Endpoints:  endpoints,
 		DERP:       derp,
 
-		Hostinfo:     hostInfo.View(),
-		Capabilities: capabilities,
-
-		Created: m.CreatedAt.UTC(),
+		Hostinfo: hostInfo.View(),
+		Created:  m.CreatedAt.UTC(),
 
 		MachineAuthorized: m.Authorized,
 		User:              tailcfg.UserID(m.UserID),
+	}
+
+	if !peer {
+		var capabilities []tailcfg.NodeCapability
+		capMap := make(tailcfg.NodeCapMap)
+		if !m.HasTags() && role == domain.UserRoleAdmin {
+			capabilities = append(capabilities, tailcfg.CapabilityAdmin)
+			capMap[tailcfg.CapabilityAdmin] = []tailcfg.RawMessage{}
+		}
+
+		if tailnet.FileSharingEnabled {
+			capabilities = append(capabilities, tailcfg.CapabilityFileSharing)
+			capMap[tailcfg.CapabilityFileSharing] = []tailcfg.RawMessage{}
+		}
+
+		if tailnet.SSHEnabled {
+			capabilities = append(capabilities, tailcfg.CapabilitySSH)
+			capMap[tailcfg.CapabilitySSH] = []tailcfg.RawMessage{}
+		}
+
+		if tailnet.DNSConfig.HttpsCertsEnabled {
+			capabilities = append(capabilities, tailcfg.CapabilityHTTPS)
+			capMap[tailcfg.CapabilityHTTPS] = []tailcfg.RawMessage{}
+		}
+
+		if capVer >= 74 {
+			n.CapMap = capMap
+		} else {
+			n.Capabilities = capabilities
+		}
 	}
 
 	if !m.ExpiresAt.IsZero() {
