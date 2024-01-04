@@ -9,6 +9,101 @@ import (
 	"testing"
 )
 
+func TestACLPolicy_NodeAttributesWithWildcards(t *testing.T) {
+	p1 := createMachine("john@example.com")
+
+	policy := ACLPolicy{
+		NodeAttrs: []NodeAttr{
+			{
+				Target: []string{"*"},
+				Attr: []string{
+					"attr1",
+					"attr2",
+				},
+			},
+			{
+				Target: []string{"*"},
+				Attr: []string{
+					"attr3",
+				},
+			},
+		},
+	}
+
+	actualAttrs := policy.NodeCapabilities(p1)
+	expectedAttrs := []tailcfg.NodeCapability{
+		tailcfg.NodeCapability("attr1"),
+		tailcfg.NodeCapability("attr2"),
+		tailcfg.NodeCapability("attr3"),
+	}
+
+	assert.Equal(t, expectedAttrs, actualAttrs)
+}
+
+func TestACLPolicy_NodeAttributesWithUserAndGroups(t *testing.T) {
+	p1 := createMachine("john@example.com")
+
+	policy := ACLPolicy{
+		Groups: map[string][]string{
+			"group:admins": []string{"john@example.com"},
+		},
+		NodeAttrs: []NodeAttr{
+			{
+				Target: []string{"john@example.com"},
+				Attr: []string{
+					"attr1",
+					"attr2",
+				},
+			},
+			{
+				Target: []string{"jane@example.com", "group:analytics", "group:admins"},
+				Attr: []string{
+					"attr3",
+				},
+			},
+		},
+	}
+
+	actualAttrs := policy.NodeCapabilities(p1)
+	expectedAttrs := []tailcfg.NodeCapability{
+		tailcfg.NodeCapability("attr1"),
+		tailcfg.NodeCapability("attr2"),
+		tailcfg.NodeCapability("attr3"),
+	}
+
+	assert.Equal(t, expectedAttrs, actualAttrs)
+}
+
+func TestACLPolicy_NodeAttributesWithUserAndTags(t *testing.T) {
+	p1 := createMachine("john@example.com", "tag:web")
+
+	policy := ACLPolicy{
+		Groups: map[string][]string{
+			"group:admins": []string{"john@example.com"},
+		},
+		NodeAttrs: []NodeAttr{
+			{
+				Target: []string{"john@example.com"},
+				Attr: []string{
+					"attr1",
+					"attr2",
+				},
+			},
+			{
+				Target: []string{"jane@example.com", "tag:web"},
+				Attr: []string{
+					"attr3",
+				},
+			},
+		},
+	}
+
+	actualAttrs := policy.NodeCapabilities(p1)
+	expectedAttrs := []tailcfg.NodeCapability{tailcfg.NodeCapability("attr3")}
+
+	assert.Equal(t, expectedAttrs, actualAttrs)
+}
+
 func TestACLPolicy_BuildFilterRulesWildcards(t *testing.T) {
 	p1 := createMachine("john@example.com")
 	p2 := createMachine("jane@example.com")

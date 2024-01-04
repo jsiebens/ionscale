@@ -35,6 +35,7 @@ type Scenario interface {
 	ListMachines(tailnetID uint64) []*api.Machine
 	CreateAuthKey(tailnetID uint64, ephemeral bool) string
 	CreateTailnet(name string) *api.Tailnet
+	SetAclPolicy(tailnetID uint64, policy *api.ACLPolicy)
 }
 
 type scenario struct {
@@ -68,6 +69,13 @@ func (s *scenario) ListMachines(tailnetID uint64) []*api.Machine {
 		s.t.Fatal(err)
 	}
 	return machines.Msg.Machines
+}
+
+func (s *scenario) SetAclPolicy(tailnetID uint64, policy *api.ACLPolicy) {
+	_, err := s.client.SetACLPolicy(context.Background(), connect.NewRequest(&api.SetACLPolicyRequest{TailnetId: tailnetID, Policy: policy}))
+	if err != nil {
+		s.t.Fatal(err)
+	}
 }
 
 func (s *scenario) NewTailscaleNode(hostname string) TailscaleNode {

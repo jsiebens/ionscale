@@ -17,7 +17,7 @@ func TestPing(t *testing.T) {
 		nodeA.Up(key)
 		nodeB.Up(key)
 
-		nodeA.WaitForPeers(1)
+		nodeA.WaitFor(sc.PeerCount(1))
 		nodeA.Ping("pingtest-b")
 		nodeA.Ping(nodeB.IPv4())
 		nodeA.Ping(nodeB.IPv6())

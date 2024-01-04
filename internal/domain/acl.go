@@ -34,6 +34,7 @@ type ACLPolicy struct {
 	TagOwners     map[string][]string `json:"tagowners,omitempty"`
 	AutoApprovers *AutoApprovers      `json:"autoApprovers,omitempty"`
 	SSHRules      []SSHRule           `json:"ssh,omitempty"`
+	NodeAttrs     []NodeAttr          `json:"nodeAttrs,omitempty"`
 }
 
 type ACL struct {
@@ -48,6 +49,11 @@ type SSHRule struct {
 	Dst         []string `json:"dst"`
 	Users       []string `json:"users"`
 	CheckPeriod string   `json:"checkPeriod,omitempty"`
+}
+
+type NodeAttr struct {
+	Target []string `json:"target"`
+	Attr   []string `json:"attr"`
 }
 
 func DefaultACLPolicy() ACLPolicy {
@@ -199,6 +205,50 @@ func (a ACLPolicy) IsValidPeer(src *Machine, dest *Machine) bool {
 	}
 
 	return false
+}
+
+func (a ACLPolicy) NodeCapabilities(m *Machine) []tailcfg.NodeCapability {
+	var result = &StringSet{}
+
+	matches := func(targets []string) bool {
+		for _, alias := range targets {
+			if alias == "*" {
+				return true
+			}
+
+			if strings.Contains(alias, "@") && !m.HasTags() && m.HasUser(alias) {
+				return true
+			}
+
+			if strings.HasPrefix(alias, "tag:") && m.HasTag(alias) {
+				return true
+			}
+
+			if strings.HasPrefix(alias, "group:") && !m.HasTags() {
+				for _, u := range a.Groups[alias] {
+					if m.HasUser(u) {
+						return true
+					}
+				}
+			}
+		}
+
+		return false
+	}
+
+	for _, nodeAddr := range a.NodeAttrs {
+		if matches(nodeAddr.Target) {
+			result.Add(nodeAddr.Attr...)
+		}
+	}
+
+	items := result.Items()
+	caps := make([]tailcfg.NodeCapability, len(items))
+	for i, c := range items {
+		caps[i] = tailcfg.NodeCapability(c)
+	}
+
+	return caps
 }
 
 func (a ACLPolicy) BuildFilterRules(srcs []Machine, dst *Machine) []tailcfg.FilterRule {

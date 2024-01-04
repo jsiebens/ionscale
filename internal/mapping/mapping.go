@@ -7,6 +7,7 @@ import (
 	"github.com/jsiebens/ionscale/internal/domain"
 	"github.com/jsiebens/ionscale/internal/util"
 	"net/netip"
+	"slices"
 	"strconv"
 	"tailscale.com/tailcfg"
 	"tailscale.com/types/dnstype"
@@ -176,6 +177,12 @@ func ToNode(capVer tailcfg.CapabilityVersion, m *domain.Machine, tailnet *domain
 	if !peer {
 		var capabilities []tailcfg.NodeCapability
 		capMap := make(tailcfg.NodeCapMap)
+
+		for _, c := range tailnet.ACLPolicy.NodeCapabilities(m) {
+			capabilities = append(capabilities, c)
+			capMap[c] = []tailcfg.RawMessage{}
+		}
+
 		if !m.HasTags() && role == domain.UserRoleAdmin {
 			capabilities = append(capabilities, tailcfg.CapabilityAdmin)
 			capMap[tailcfg.CapabilityAdmin] = []tailcfg.RawMessage{}
@@ -194,6 +201,12 @@ func ToNode(capVer tailcfg.CapabilityVersion, m *domain.Machine, tailnet *domain
 		if tailnet.DNSConfig.HttpsCertsEnabled {
 			capabilities = append(capabilities, tailcfg.CapabilityHTTPS)
 			capMap[tailcfg.CapabilityHTTPS] = []tailcfg.RawMessage{}
+		}
+
+		// ionscale has no support for Funnel yet, so remove Funnel attribute if set via ACL policy
+		{
+			slices.DeleteFunc(capabilities, func(c tailcfg.NodeCapability) bool { return c == tailcfg.NodeAttrFunnel })
+			delete(capMap, tailcfg.NodeAttrFunnel)
 		}
 
 		if capVer >= 74 {

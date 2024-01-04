@@ -28,6 +28,7 @@ message ACLPolicy {
   map<string, google.protobuf.ListValue> tagowners = 4;
   optional AutoApprovers autoapprovers = 5;
   repeated SSHRule ssh = 6;
+  repeated NodeAttr nodeattrs = 7;
 }
 
 message ACL {
@@ -47,4 +48,9 @@ message SSHRule {
   repeated string dst = 3;
   repeated string users = 4;
   string checkperiod = 5;
+}
+
+message NodeAttr {
+  repeated string target = 1;
+  repeated string attr = 2;
 }
