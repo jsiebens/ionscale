@@ -310,7 +310,7 @@ func (HostInfo) GormDBDataType(db *gorm.DB, field *schema.Field) string {
 	return ""
 }
 
-type Endpoints []string
+type Endpoints []netip.AddrPort
 
 func (hi *Endpoints) Scan(destination interface{}) error {
 	switch value := destination.(type) {
