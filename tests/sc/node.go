@@ -15,8 +15,8 @@ type TailscaleNode interface {
 	Up(authkey string) ipnstate.Status
 	IPv4() string
 	IPv6() string
-	WaitForPeers(expected int)
 	Ping(target string)
+	WaitFor(func(*ipnstate.Status) bool)
 }
 
 type tailscaleNode struct {
@@ -81,6 +81,29 @@ func (t *tailscaleNode) WaitForPeers(expected int) {
 
 		if len(status.Peers()) != expected {
 			return fmt.Errorf("incorrect peer count")
+		}
+
+		return nil
+	})
+	if err != nil {
+		t.t.Fatal(err)
+	}
+}
+
+func (t *tailscaleNode) WaitFor(check func(status *ipnstate.Status) bool) {
+	err := pool.Retry(func() error {
+		out, err := t.execTailscaleCmd("status", "--json")
+		if err != nil {
+			return err
+		}
+
+		var status ipnstate.Status
+		if err := json.Unmarshal([]byte(out), &status); err != nil {
+			return err
+		}
+
+		if !check(&status) {
+			return fmt.Errorf("condition not met")
 		}
 
 		return nil
