@@ -82,7 +82,7 @@ func (h *PollNetMapHandler) handleUpdate(c echo.Context, binder bind.Binder, m *
 	tailnetID := m.TailnetID
 	machineID := m.ID
 
-	h.sessionManager.NotifyAll(tailnetID)
+	h.sessionManager.NotifyAll(tailnetID, m.ID)
 
 	if !mapRequest.Stream {
 		return c.String(http.StatusOK, "")

@@ -1,6 +1,7 @@
 package core
 
 import (
+	"slices"
 	"sync"
 	"time"
 )
@@ -11,7 +12,7 @@ type PollMapSessionManager interface {
 	Register(tailnetID uint64, machineID uint64, ch chan *Ping)
 	Deregister(tailnetID uint64, machineID uint64)
 	HasSession(tailnetID uint64, machineID uint64) bool
-	NotifyAll(tailnetID uint64)
+	NotifyAll(tailnetID uint64, ignoreMachineIDs ...uint64)
 }
 
 func NewPollMapSessionManager() PollMapSessionManager {
@@ -82,13 +83,15 @@ func (n *pollMapSessionManager) HasSession(tailnetID uint64, machineID uint64) b
 	return false
 }
 
-func (n *pollMapSessionManager) NotifyAll(tailnetID uint64) {
+func (n *pollMapSessionManager) NotifyAll(tailnetID uint64, ignoreMachineIDs ...uint64) {
 	n.RLock()
 	defer n.RUnlock()
 
 	if ss := n.data[tailnetID]; ss != nil {
-		for _, p := range ss {
-			p <- &Ping{}
+		for i, p := range ss {
+			if !slices.Contains(ignoreMachineIDs, i) {
+				p <- &Ping{}
+			}
 		}
 	}
 }
