@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/ory/dockertest/v3"
+	"github.com/stretchr/testify/require"
 	"strings"
 	"tailscale.com/ipn/ipnstate"
 	"testing"
@@ -12,7 +13,7 @@ import (
 
 type TailscaleNode interface {
 	Hostname() string
-	Up(authkey string) ipnstate.Status
+	Up(authkey string)
 	IPv4() string
 	IPv6() string
 	Ping(target string)
@@ -30,9 +31,9 @@ func (t *tailscaleNode) Hostname() string {
 	return t.hostname
 }
 
-func (t *tailscaleNode) Up(authkey string) ipnstate.Status {
+func (t *tailscaleNode) Up(authkey string) {
 	t.mustExecTailscaleCmd("up", "--login-server", t.loginServer, "--authkey", authkey)
-	return t.waitForReady()
+	t.waitForReady()
 }
 
 func (t *tailscaleNode) IPv4() string {
@@ -61,9 +62,7 @@ func (t *tailscaleNode) waitForReady() ipnstate.Status {
 
 		return fmt.Errorf("not connected")
 	})
-	if err != nil {
-		t.t.Fatal(err)
-	}
+	require.NoError(t.t, err)
 	return status
 }
 
@@ -85,9 +84,7 @@ func (t *tailscaleNode) WaitForPeers(expected int) {
 
 		return nil
 	})
-	if err != nil {
-		t.t.Fatal(err)
-	}
+	require.NoError(t.t, err)
 }
 
 func (t *tailscaleNode) WaitFor(check func(status *ipnstate.Status) bool) {
@@ -108,20 +105,13 @@ func (t *tailscaleNode) WaitFor(check func(status *ipnstate.Status) bool) {
 
 		return nil
 	})
-	if err != nil {
-		t.t.Fatal(err)
-	}
+	require.NoError(t.t, err)
 }
 
 func (t *tailscaleNode) Ping(target string) {
 	result, err := t.execTailscaleCmd("ping", "--timeout=1s", "--c=10", "--until-direct=true", target)
-	if err != nil {
-		t.t.Fatal(err)
-	}
-
-	if !strings.Contains(result, "pong") && !strings.Contains(result, "is local") {
-		t.t.Fatal("ping failed")
-	}
+	require.NoError(t.t, err)
+	require.True(t.t, strings.Contains(result, "pong") || strings.Contains(result, "is local"), "ping failed")
 }
 
 func (t *tailscaleNode) execTailscaleCmd(cmd ...string) (string, error) {
@@ -132,9 +122,7 @@ func (t *tailscaleNode) execTailscaleCmd(cmd ...string) (string, error) {
 func (t *tailscaleNode) mustExecTailscaleCmd(cmd ...string) string {
 	i := append([]string{"/app/tailscale", "--socket=/tmp/tailscaled.sock"}, cmd...)
 	s, err := execCmd(t.resource, i...)
-	if err != nil {
-		t.t.Fatal(err)
-	}
+	require.NoError(t.t, err)
 	return s
 }
 

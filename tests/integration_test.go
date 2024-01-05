@@ -56,11 +56,11 @@ func TestNodeWithSameHostname(t *testing.T) {
 
 		tsNode := s.NewTailscaleNode("test")
 
-		_ = tsNode.Up(authKey)
+		tsNode.Up(authKey)
 
 		for i := 0; i < 5; i++ {
 			tc := s.NewTailscaleNode("test")
-			_ = tc.Up(authKey)
+			tc.Up(authKey)
 		}
 
 		machines := make(map[string]bool)

@@ -9,6 +9,7 @@ import (
 	ionscaleconnect "github.com/jsiebens/ionscale/pkg/gen/ionscale/v1/ionscalev1connect"
 	"github.com/ory/dockertest/v3"
 	"github.com/ory/dockertest/v3/docker"
+	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/types/known/durationpb"
 	"io"
 	"log"
@@ -49,33 +50,25 @@ type scenario struct {
 
 func (s *scenario) CreateTailnet(name string) *api.Tailnet {
 	createTailnetResponse, err := s.client.CreateTailnet(context.Background(), connect.NewRequest(&api.CreateTailnetRequest{Name: name}))
-	if err != nil {
-		s.t.Fatal(err)
-	}
+	require.NoError(s.t, err)
 	return createTailnetResponse.Msg.GetTailnet()
 }
 
 func (s *scenario) CreateAuthKey(tailnetID uint64, ephemeral bool) string {
 	key, err := s.client.CreateAuthKey(context.Background(), connect.NewRequest(&api.CreateAuthKeyRequest{TailnetId: tailnetID, Ephemeral: ephemeral, Tags: []string{"tag:test"}, Expiry: durationpb.New(60 * time.Minute)}))
-	if err != nil {
-		s.t.Fatal(err)
-	}
+	require.NoError(s.t, err)
 	return key.Msg.Value
 }
 
 func (s *scenario) ListMachines(tailnetID uint64) []*api.Machine {
 	machines, err := s.client.ListMachines(context.Background(), connect.NewRequest(&api.ListMachinesRequest{TailnetId: tailnetID}))
-	if err != nil {
-		s.t.Fatal(err)
-	}
+	require.NoError(s.t, err)
 	return machines.Msg.Machines
 }
 
 func (s *scenario) SetAclPolicy(tailnetID uint64, policy *api.ACLPolicy) {
 	_, err := s.client.SetACLPolicy(context.Background(), connect.NewRequest(&api.SetACLPolicyRequest{TailnetId: tailnetID, Policy: policy}))
-	if err != nil {
-		s.t.Fatal(err)
-	}
+	require.NoError(s.t, err)
 }
 
 func (s *scenario) NewTailscaleNode(hostname string) TailscaleNode {
@@ -93,14 +86,10 @@ func (s *scenario) NewTailscaleNode(hostname string) TailscaleNode {
 		tailscaleOptions,
 		restartPolicy,
 	)
-	if err != nil {
-		s.t.Fatal(err)
-	}
+	require.NoError(s.t, err)
 
 	err = s.pool.Retry(portCheck(resource.GetPort("1055/tcp")))
-	if err != nil {
-		s.t.Fatal(err)
-	}
+	require.NoError(s.t, err)
 
 	s.resources = append(s.resources, resource)
 
@@ -143,19 +132,14 @@ func Run(t *testing.T, f func(s Scenario)) {
 		s.network = nil
 	}()
 
-	if s.pool, err = dockertest.NewPool(""); err != nil {
-		t.Fatal(err)
-	}
+	s.pool, err = dockertest.NewPool("")
+	require.NoError(t, err)
 
 	s.network, err = pool.CreateNetwork("ionscale-test")
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(s.t, err)
 
 	currentPath, err := os.Getwd()
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(s.t, err)
 
 	ionscale := &dockertest.RunOptions{
 		Hostname:   "ionscale",
@@ -169,26 +153,18 @@ func Run(t *testing.T, f func(s Scenario)) {
 	}
 
 	s.ionscale, err = pool.RunWithOptions(ionscale, restartPolicy)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(s.t, err)
 
 	port := s.ionscale.GetPort("8080/tcp")
 
 	err = pool.Retry(httpCheck(port, "/key"))
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(s.t, err)
 
 	auth, err := ionscaleclt.LoadClientAuth("804ecd57365342254ce6647da5c249e85c10a0e51e74856bfdf292a2136b4249")
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(s.t, err)
 
 	s.client, err = ionscaleclt.NewClient(auth, fmt.Sprintf("http://localhost:%s", port), true)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(s.t, err)
 
 	f(s)
 }
