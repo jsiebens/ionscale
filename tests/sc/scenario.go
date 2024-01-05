@@ -34,7 +34,7 @@ type Scenario interface {
 	NewTailscaleNode(hostname string) TailscaleNode
 
 	ListMachines(tailnetID uint64) []*api.Machine
-	CreateAuthKey(tailnetID uint64, ephemeral bool) string
+	CreateAuthKey(tailnetID uint64, ephemeral bool, tags ...string) string
 	CreateTailnet(name string) *api.Tailnet
 	SetAclPolicy(tailnetID uint64, policy *api.ACLPolicy)
 }
@@ -54,8 +54,11 @@ func (s *scenario) CreateTailnet(name string) *api.Tailnet {
 	return createTailnetResponse.Msg.GetTailnet()
 }
 
-func (s *scenario) CreateAuthKey(tailnetID uint64, ephemeral bool) string {
-	key, err := s.client.CreateAuthKey(context.Background(), connect.NewRequest(&api.CreateAuthKeyRequest{TailnetId: tailnetID, Ephemeral: ephemeral, Tags: []string{"tag:test"}, Expiry: durationpb.New(60 * time.Minute)}))
+func (s *scenario) CreateAuthKey(tailnetID uint64, ephemeral bool, tags ...string) string {
+	if len(tags) == 0 {
+		tags = []string{"tag:test"}
+	}
+	key, err := s.client.CreateAuthKey(context.Background(), connect.NewRequest(&api.CreateAuthKeyRequest{TailnetId: tailnetID, Ephemeral: ephemeral, Tags: tags, Expiry: durationpb.New(60 * time.Minute)}))
 	require.NoError(s.t, err)
 	return key.Msg.Value
 }
