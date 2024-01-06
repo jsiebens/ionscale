@@ -18,6 +18,7 @@ func Migrations() []*gormigrate.Migration {
 		m202212270800_machine_indeces(),
 		m202312271200_account_last_authenticated(),
 		m202312290900_machine_indeces(),
+		m202401061400_machine_indeces(),
 	}
 	return migrations
 }
