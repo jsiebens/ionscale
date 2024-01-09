@@ -1,11 +1,12 @@
-FROM alpine:3.14.0
-
 ARG TAILSCALE_VERSION
 
-RUN apk update && apk add ca-certificates && rm -rf /var/cache/apk/*
+FROM tailscale/tailscale:v${TAILSCALE_VERSION} as src
+FROM alpine:3.14.0
+
+RUN apk update && apk add ca-certificates openssh curl && rm -rf /var/cache/apk/*
 
 WORKDIR /app
+COPY --from=src /usr/local/bin/tailscale .
+COPY --from=src /usr/local/bin/tailscaled .
 
-ENV TSFILE=tailscale_${TAILSCALE_VERSION}_amd64.tgz
-RUN wget https://pkgs.tailscale.com/stable/${TSFILE} && tar xzf ${TSFILE} --strip-components=1
 RUN mkdir -p /var/run/tailscale /var/cache/tailscale /var/lib/tailscale /.cache
