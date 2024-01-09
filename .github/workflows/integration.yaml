@@ -13,15 +13,15 @@ jobs:
       fail-fast: false
       matrix:
         ts_version:
-          - "1.56.1"
-          - "1.54.1"
-          - "1.52.1"
-          - "1.50.1"
-          - "1.48.1"
-          - "1.46.1"
-          - "1.44.2"
-          - "1.42.0"
-          - "1.40.1"
+          - "v1.56"
+          - "v1.54"
+          - "v1.52"
+          - "v1.50"
+          - "v1.48"
+          - "v1.46"
+          - "v1.44"
+          - "v1.42"
+          - "v1.40"
     env:
       IONSCALE_TESTS_TS_TARGET_VERSION:  ${{ matrix.ts_version }}
     steps:

@@ -1,7 +1,7 @@
 ARG TAILSCALE_VERSION
 
-FROM tailscale/tailscale:v${TAILSCALE_VERSION} as src
-FROM alpine:3.14.0
+FROM tailscale/tailscale:${TAILSCALE_VERSION} as src
+FROM alpine:latest
 
 RUN apk update && apk add ca-certificates openssh curl && rm -rf /var/cache/apk/*
 
