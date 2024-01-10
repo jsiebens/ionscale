@@ -1,38 +1,31 @@
 package handlers
 
 import (
-	"github.com/jsiebens/ionscale/internal/bind"
 	"github.com/jsiebens/ionscale/internal/dns"
 	"github.com/labstack/echo/v4"
 	"net"
 	"net/http"
 	"strings"
 	"tailscale.com/tailcfg"
+	"tailscale.com/types/key"
 	"time"
 )
 
-func NewDNSHandlers(createBinder bind.Factory, provider dns.Provider) *DNSHandlers {
+func NewDNSHandlers(_ key.MachinePublic, provider dns.Provider) *DNSHandlers {
 	return &DNSHandlers{
-		createBinder: createBinder,
-		provider:     provider,
+		provider: provider,
 	}
 }
 
 type DNSHandlers struct {
-	createBinder bind.Factory
-	provider     dns.Provider
+	provider dns.Provider
 }
 
 func (h *DNSHandlers) SetDNS(c echo.Context) error {
 	ctx := c.Request().Context()
 
-	binder, err := h.createBinder(c)
-	if err != nil {
-		return logError(err)
-	}
-
 	req := &tailcfg.SetDNSRequest{}
-	if err := binder.BindRequest(c, req); err != nil {
+	if err := c.Bind(req); err != nil {
 		return logError(err)
 	}
 
@@ -58,16 +51,16 @@ func (h *DNSHandlers) SetDNS(c echo.Context) error {
 				txtrecords, _ := net.LookupTXT(req.Name)
 				for _, txt := range txtrecords {
 					if txt == req.Value {
-						return binder.WriteResponse(c, http.StatusOK, tailcfg.SetDNSResponse{})
+						return c.JSON(http.StatusOK, tailcfg.SetDNSResponse{})
 					}
 				}
 			case <-timeout:
-				return binder.WriteResponse(c, http.StatusOK, tailcfg.SetDNSResponse{})
+				return c.JSON(http.StatusOK, tailcfg.SetDNSResponse{})
 			case <-notify:
 				return nil
 			}
 		}
 	}
 
-	return binder.WriteResponse(c, http.StatusOK, tailcfg.SetDNSResponse{})
+	return c.JSON(http.StatusOK, tailcfg.SetDNSResponse{})
 }

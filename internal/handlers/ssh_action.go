@@ -2,28 +2,28 @@ package handlers
 
 import (
 	"fmt"
-	"github.com/jsiebens/ionscale/internal/bind"
 	"github.com/jsiebens/ionscale/internal/config"
 	"github.com/jsiebens/ionscale/internal/domain"
 	"github.com/jsiebens/ionscale/internal/util"
 	"github.com/labstack/echo/v4"
 	"net/http"
 	"tailscale.com/tailcfg"
+	"tailscale.com/types/key"
 	"time"
 )
 
-func NewSSHActionHandlers(createBinder bind.Factory, config *config.Config, repository domain.Repository) *SSHActionHandlers {
+func NewSSHActionHandlers(machineKey key.MachinePublic, config *config.Config, repository domain.Repository) *SSHActionHandlers {
 	return &SSHActionHandlers{
-		createBinder: createBinder,
-		repository:   repository,
-		config:       config,
+		machineKey: machineKey,
+		repository: repository,
+		config:     config,
 	}
 }
 
 type SSHActionHandlers struct {
-	createBinder bind.Factory
-	repository   domain.Repository
-	config       *config.Config
+	machineKey key.MachinePublic
+	repository domain.Repository
+	config     *config.Config
 }
 
 type sshActionRequestData struct {
@@ -35,13 +35,8 @@ type sshActionRequestData struct {
 func (h *SSHActionHandlers) StartAuth(c echo.Context) error {
 	ctx := c.Request().Context()
 
-	binder, err := h.createBinder(c)
-	if err != nil {
-		return logError(err)
-	}
-
 	data := new(sshActionRequestData)
-	if err = c.Bind(data); err != nil {
+	if err := c.Bind(data); err != nil {
 		return logError(err)
 	}
 
@@ -67,7 +62,7 @@ func (h *SSHActionHandlers) StartAuth(c echo.Context) error {
 					AllowLocalPortForwarding: true,
 				}
 
-				return binder.WriteResponse(c, http.StatusOK, resp)
+				return c.JSON(http.StatusOK, resp)
 			}
 		}
 	}
@@ -92,18 +87,13 @@ check:
 		HoldAndDelegate: fmt.Sprintf("https://unused/machine/ssh/action/check/%s", key),
 	}
 
-	return binder.WriteResponse(c, http.StatusOK, resp)
+	return c.JSON(http.StatusOK, resp)
 }
 
 func (h *SSHActionHandlers) CheckAuth(c echo.Context) error {
 	// Listen to connection close
 	ctx := c.Request().Context()
 	notify := ctx.Done()
-
-	binder, err := h.createBinder(c)
-	if err != nil {
-		return logError(err)
-	}
 
 	tick := time.NewTicker(2 * time.Second)
 
@@ -117,7 +107,7 @@ func (h *SSHActionHandlers) CheckAuth(c echo.Context) error {
 			m, err := h.repository.GetSSHActionRequest(ctx, key)
 
 			if err != nil || m == nil {
-				return binder.WriteResponse(c, http.StatusOK, &tailcfg.SSHAction{Reject: true})
+				return c.JSON(http.StatusOK, &tailcfg.SSHAction{Reject: true})
 			}
 
 			if m.Action == "accept" {
@@ -127,13 +117,13 @@ func (h *SSHActionHandlers) CheckAuth(c echo.Context) error {
 					AllowLocalPortForwarding: true,
 				}
 				_ = h.repository.DeleteSSHActionRequest(ctx, key)
-				return binder.WriteResponse(c, http.StatusOK, action)
+				return c.JSON(http.StatusOK, action)
 			}
 
 			if m.Action == "reject" {
 				action := &tailcfg.SSHAction{Reject: true}
 				_ = h.repository.DeleteSSHActionRequest(ctx, key)
-				return binder.WriteResponse(c, http.StatusOK, action)
+				return c.JSON(http.StatusOK, action)
 			}
 		case <-notify:
 			return nil

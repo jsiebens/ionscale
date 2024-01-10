@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"github.com/caddyserver/certmagic"
 	"github.com/jsiebens/ionscale/internal/auth"
-	"github.com/jsiebens/ionscale/internal/bind"
 	"github.com/jsiebens/ionscale/internal/config"
 	"github.com/jsiebens/ionscale/internal/core"
 	"github.com/jsiebens/ionscale/internal/database"
@@ -107,16 +106,15 @@ func Start(c *config.Config) error {
 	p.SetMetricsPath(metricsHandler)
 
 	createPeerHandler := func(machinePublicKey key.MachinePublic) http.Handler {
-		binder := bind.DefaultBinder(machinePublicKey)
-
-		registrationHandlers := handlers.NewRegistrationHandlers(binder, c, sessionManager, repository)
-		pollNetMapHandler := handlers.NewPollNetMapHandler(binder, sessionManager, repository)
-		dnsHandlers := handlers.NewDNSHandlers(binder, dnsProvider)
-		idTokenHandlers := handlers.NewIDTokenHandlers(binder, c, repository)
-		sshActionHandlers := handlers.NewSSHActionHandlers(binder, c, repository)
-		queryFeatureHandlers := handlers.NewQueryFeatureHandlers(binder, dnsProvider, repository)
+		registrationHandlers := handlers.NewRegistrationHandlers(machinePublicKey, c, sessionManager, repository)
+		pollNetMapHandler := handlers.NewPollNetMapHandler(machinePublicKey, sessionManager, repository)
+		dnsHandlers := handlers.NewDNSHandlers(machinePublicKey, dnsProvider)
+		idTokenHandlers := handlers.NewIDTokenHandlers(machinePublicKey, c, repository)
+		sshActionHandlers := handlers.NewSSHActionHandlers(machinePublicKey, c, repository)
+		queryFeatureHandlers := handlers.NewQueryFeatureHandlers(machinePublicKey, dnsProvider, repository)
 
 		e := echo.New()
+		e.Binder = handlers.JsonBinder{}
 		e.Use(EchoMetrics(p), EchoLogger(httpLogger), EchoErrorHandler(), EchoRecover())
 		e.POST("/machine/register", registrationHandlers.Register)
 		e.POST("/machine/map", pollNetMapHandler.PollNetMap)
@@ -131,10 +129,8 @@ func Start(c *config.Config) error {
 	}
 
 	noiseHandlers := handlers.NewNoiseHandlers(serverKey.ControlKey, createPeerHandler)
-	registrationHandlers := handlers.NewRegistrationHandlers(bind.BoxBinder(serverKey.LegacyControlKey), c, sessionManager, repository)
-	pollNetMapHandler := handlers.NewPollNetMapHandler(bind.BoxBinder(serverKey.LegacyControlKey), sessionManager, repository)
-	dnsHandlers := handlers.NewDNSHandlers(bind.BoxBinder(serverKey.LegacyControlKey), dnsProvider)
-	idTokenHandlers := handlers.NewIDTokenHandlers(bind.BoxBinder(serverKey.LegacyControlKey), c, repository)
+	oidcConfigHandlers := handlers.NewOIDCConfigHandlers(c, repository)
+
 	authenticationHandlers := handlers.NewAuthenticationHandlers(
 		c,
 		authProvider,
@@ -161,22 +157,16 @@ func Start(c *config.Config) error {
 	tlsAppHandler.GET("/version", handlers.Version)
 	tlsAppHandler.GET("/key", handlers.KeyHandler(serverKey))
 	tlsAppHandler.POST("/ts2021", noiseHandlers.Upgrade)
-	tlsAppHandler.POST("/machine/:id", registrationHandlers.Register)
-	tlsAppHandler.POST("/machine/:id/map", pollNetMapHandler.PollNetMap)
-	tlsAppHandler.POST("/machine/:id/set-dns", dnsHandlers.SetDNS)
-	tlsAppHandler.GET("/.well-known/jwks", idTokenHandlers.Jwks)
-	tlsAppHandler.GET("/.well-known/openid-configuration", idTokenHandlers.OpenIDConfig)
+	tlsAppHandler.GET("/.well-known/jwks", oidcConfigHandlers.Jwks)
+	tlsAppHandler.GET("/.well-known/openid-configuration", oidcConfigHandlers.OpenIDConfig)
 
-	auth := tlsAppHandler.Group("/a")
-	auth.Use(middleware.CSRFWithConfig(middleware.CSRFConfig{
-		TokenLookup: "form:_csrf",
-	}))
-	auth.GET("/:flow/:key", authenticationHandlers.StartAuth)
-	auth.POST("/:flow/:key", authenticationHandlers.ProcessAuth)
-	auth.GET("/callback", authenticationHandlers.Callback)
-	auth.POST("/callback", authenticationHandlers.EndAuth)
-	auth.GET("/success", authenticationHandlers.Success)
-	auth.GET("/error", authenticationHandlers.Error)
+	csrf := middleware.CSRFWithConfig(middleware.CSRFConfig{TokenLookup: "form:_csrf"})
+	tlsAppHandler.GET("/a/:flow/:key", authenticationHandlers.StartAuth, csrf)
+	tlsAppHandler.POST("/a/:flow/:key", authenticationHandlers.ProcessAuth, csrf)
+	tlsAppHandler.GET("/a/callback", authenticationHandlers.Callback, csrf)
+	tlsAppHandler.POST("/a/callback", authenticationHandlers.EndAuth, csrf)
+	tlsAppHandler.GET("/a/success", authenticationHandlers.Success, csrf)
+	tlsAppHandler.GET("/a/error", authenticationHandlers.Error, csrf)
 
 	tlsL, err := tlsListener(c)
 	if err != nil {

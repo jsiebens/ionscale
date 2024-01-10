@@ -4,63 +4,36 @@ import (
 	"fmt"
 	"github.com/go-jose/go-jose/v3"
 	"github.com/golang-jwt/jwt/v4"
-	"github.com/jsiebens/ionscale/internal/bind"
 	"github.com/jsiebens/ionscale/internal/config"
 	"github.com/jsiebens/ionscale/internal/domain"
 	"github.com/jsiebens/ionscale/internal/util"
 	"github.com/labstack/echo/v4"
 	"net/http"
 	"tailscale.com/tailcfg"
+	"tailscale.com/types/key"
 	"time"
 )
 
-func NewIDTokenHandlers(createBinder bind.Factory, config *config.Config, repository domain.Repository) *IDTokenHandlers {
+func NewIDTokenHandlers(machineKey key.MachinePublic, config *config.Config, repository domain.Repository) *IDTokenHandlers {
 	return &IDTokenHandlers{
-		issuer:       config.ServerUrl,
-		jwksUri:      config.CreateUrl("/.well-known/jwks"),
-		createBinder: createBinder,
-		repository:   repository,
+		machineKey: machineKey,
+		issuer:     config.ServerUrl,
+		repository: repository,
+	}
+}
+
+func NewOIDCConfigHandlers(config *config.Config, repository domain.Repository) *OIDCConfigHandlers {
+	return &OIDCConfigHandlers{
+		issuer:     config.ServerUrl,
+		jwksUri:    config.CreateUrl("/.well-known/jwks"),
+		repository: repository,
 	}
 }
 
 type IDTokenHandlers struct {
-	issuer       string
-	jwksUri      string
-	createBinder bind.Factory
-	repository   domain.Repository
-}
-
-func (h *IDTokenHandlers) OpenIDConfig(c echo.Context) error {
-	v := map[string]interface{}{}
-
-	v["issuer"] = h.issuer
-	v["jwks_uri"] = h.jwksUri
-	v["subject_types_supported"] = []string{"public"}
-	v["response_types_supported"] = []string{"id_token"}
-	v["scopes_supported"] = []string{"openid"}
-	v["id_token_signing_alg_values_supported"] = []string{"RS256"}
-	v["claims_supported"] = []string{
-		"sub",
-		"aud",
-		"exp",
-		"iat",
-		"iss",
-		"jti",
-		"nbf",
-	}
-
-	return c.JSON(http.StatusOK, v)
-}
-
-func (h *IDTokenHandlers) Jwks(c echo.Context) error {
-	keySet, err := h.repository.GetJSONWebKeySet(c.Request().Context())
-	if err != nil {
-		return logError(err)
-	}
-
-	pub := jose.JSONWebKey{Key: keySet.Key.Public(), KeyID: keySet.Key.Id, Algorithm: "RS256", Use: "sig"}
-	set := jose.JSONWebKeySet{Keys: []jose.JSONWebKey{pub}}
-	return c.JSON(http.StatusOK, set)
+	machineKey key.MachinePublic
+	issuer     string
+	repository domain.Repository
 }
 
 func (h *IDTokenHandlers) FetchToken(c echo.Context) error {
@@ -71,17 +44,12 @@ func (h *IDTokenHandlers) FetchToken(c echo.Context) error {
 		return logError(err)
 	}
 
-	binder, err := h.createBinder(c)
-	if err != nil {
-		return logError(err)
-	}
-
 	req := &tailcfg.TokenRequest{}
-	if err := binder.BindRequest(c, req); err != nil {
+	if err := c.Bind(req); err != nil {
 		return logError(err)
 	}
 
-	machineKey := binder.Peer().String()
+	machineKey := h.machineKey.String()
 	nodeKey := req.NodeKey.String()
 
 	var m *domain.Machine
@@ -134,7 +102,46 @@ func (h *IDTokenHandlers) FetchToken(c echo.Context) error {
 	}
 
 	resp := tailcfg.TokenResponse{IDToken: jwtB64}
-	return binder.WriteResponse(c, http.StatusOK, resp)
+	return c.JSON(http.StatusOK, resp)
+}
+
+type OIDCConfigHandlers struct {
+	issuer     string
+	jwksUri    string
+	repository domain.Repository
+}
+
+func (h *OIDCConfigHandlers) OpenIDConfig(c echo.Context) error {
+	v := map[string]interface{}{}
+
+	v["issuer"] = h.issuer
+	v["jwks_uri"] = h.jwksUri
+	v["subject_types_supported"] = []string{"public"}
+	v["response_types_supported"] = []string{"id_token"}
+	v["scopes_supported"] = []string{"openid"}
+	v["id_token_signing_alg_values_supported"] = []string{"RS256"}
+	v["claims_supported"] = []string{
+		"sub",
+		"aud",
+		"exp",
+		"iat",
+		"iss",
+		"jti",
+		"nbf",
+	}
+
+	return c.JSON(http.StatusOK, v)
+}
+
+func (h *OIDCConfigHandlers) Jwks(c echo.Context) error {
+	keySet, err := h.repository.GetJSONWebKeySet(c.Request().Context())
+	if err != nil {
+		return logError(err)
+	}
+
+	pub := jose.JSONWebKey{Key: keySet.Key.Public(), KeyID: keySet.Key.Id, Algorithm: "RS256", Use: "sig"}
+	set := jose.JSONWebKeySet{Keys: []jose.JSONWebKey{pub}}
+	return c.JSON(http.StatusOK, set)
 }
 
 func (h *IDTokenHandlers) names(m *domain.Machine) (string, string, string) {
