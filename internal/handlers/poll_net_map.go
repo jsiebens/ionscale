@@ -2,24 +2,29 @@ package handlers
 
 import (
 	"context"
-	"github.com/jsiebens/ionscale/internal/bind"
+	"encoding/binary"
+	"encoding/json"
 	"github.com/jsiebens/ionscale/internal/config"
 	"github.com/jsiebens/ionscale/internal/core"
 	"github.com/jsiebens/ionscale/internal/domain"
 	"github.com/jsiebens/ionscale/internal/mapping"
+	"github.com/klauspost/compress/zstd"
 	"github.com/labstack/echo/v4"
 	"net/http"
+	"sync"
+	"tailscale.com/smallzstd"
 	"tailscale.com/tailcfg"
+	"tailscale.com/types/key"
 	"time"
 )
 
 func NewPollNetMapHandler(
-	createBinder bind.Factory,
+	machineKey key.MachinePublic,
 	sessionManager core.PollMapSessionManager,
 	repository domain.Repository) *PollNetMapHandler {
 
 	handler := &PollNetMapHandler{
-		createBinder:   createBinder,
+		machineKey:     machineKey,
 		sessionManager: sessionManager,
 		repository:     repository,
 	}
@@ -28,28 +33,24 @@ func NewPollNetMapHandler(
 }
 
 type PollNetMapHandler struct {
-	createBinder   bind.Factory
+	machineKey     key.MachinePublic
 	repository     domain.Repository
 	sessionManager core.PollMapSessionManager
 }
 
 func (h *PollNetMapHandler) PollNetMap(c echo.Context) error {
 	ctx := c.Request().Context()
-	binder, err := h.createBinder(c)
-	if err != nil {
-		return logError(err)
-	}
 
 	req := &tailcfg.MapRequest{}
-	if err := binder.BindRequest(c, req); err != nil {
+	if err := c.Bind(req); err != nil {
 		return logError(err)
 	}
 
-	machineKey := binder.Peer().String()
+	machineKey := h.machineKey.String()
 	nodeKey := req.NodeKey.String()
 
 	var m *domain.Machine
-	m, err = h.repository.GetMachineByKeys(ctx, machineKey, nodeKey)
+	m, err := h.repository.GetMachineByKeys(ctx, machineKey, nodeKey)
 	if err != nil {
 		return logError(err)
 	}
@@ -59,13 +60,13 @@ func (h *PollNetMapHandler) PollNetMap(c echo.Context) error {
 	}
 
 	if req.ReadOnly {
-		return h.handleReadOnly(c, binder, m, req)
+		return h.handleReadOnly(c, m, req)
 	} else {
-		return h.handleUpdate(c, binder, m, req)
+		return h.handleUpdate(c, m, req)
 	}
 }
 
-func (h *PollNetMapHandler) handleUpdate(c echo.Context, binder bind.Binder, m *domain.Machine, mapRequest *tailcfg.MapRequest) error {
+func (h *PollNetMapHandler) handleUpdate(c echo.Context, m *domain.Machine, mapRequest *tailcfg.MapRequest) error {
 	ctx := c.Request().Context()
 
 	now := time.Now().UTC()
@@ -90,7 +91,7 @@ func (h *PollNetMapHandler) handleUpdate(c echo.Context, binder bind.Binder, m *
 
 	mapper := mapping.NewPollNetMapper(mapRequest, m.ID, h.repository, h.sessionManager)
 
-	response, err := createMapResponse(mapper, binder, false, mapRequest.Compress)
+	response, err := h.createMapResponse(mapper, false, mapRequest.Compress)
 	if err != nil {
 		return logError(err)
 	}
@@ -101,7 +102,7 @@ func (h *PollNetMapHandler) handleUpdate(c echo.Context, binder bind.Binder, m *
 	// Listen to connection close
 	notify := c.Request().Context().Done()
 
-	keepAliveResponse, err := createKeepAliveResponse(binder, mapRequest)
+	keepAliveResponse, err := h.createKeepAliveResponse(mapRequest)
 	if err != nil {
 		return logError(err)
 	}
@@ -154,7 +155,7 @@ func (h *PollNetMapHandler) handleUpdate(c echo.Context, binder bind.Binder, m *
 				var payload []byte
 				var payloadErr error
 
-				payload, payloadErr = createMapResponse(mapper, binder, true, mapRequest.Compress)
+				payload, payloadErr = h.createMapResponse(mapper, true, mapRequest.Compress)
 
 				if payloadErr != nil {
 					return payloadErr
@@ -173,7 +174,7 @@ func (h *PollNetMapHandler) handleUpdate(c echo.Context, binder bind.Binder, m *
 	}
 }
 
-func (h *PollNetMapHandler) handleReadOnly(c echo.Context, binder bind.Binder, m *domain.Machine, request *tailcfg.MapRequest) error {
+func (h *PollNetMapHandler) handleReadOnly(c echo.Context, m *domain.Machine, request *tailcfg.MapRequest) error {
 	ctx := c.Request().Context()
 
 	m.HostInfo = domain.HostInfo(*request.Hostinfo)
@@ -184,7 +185,7 @@ func (h *PollNetMapHandler) handleReadOnly(c echo.Context, binder bind.Binder, m
 	}
 
 	mapper := mapping.NewPollNetMapper(request, m.ID, h.repository, h.sessionManager)
-	payload, err := createMapResponse(mapper, binder, false, request.Compress)
+	payload, err := h.createMapResponse(mapper, false, request.Compress)
 	if err != nil {
 		return logError(err)
 	}
@@ -193,18 +194,57 @@ func (h *PollNetMapHandler) handleReadOnly(c echo.Context, binder bind.Binder, m
 	return logError(err)
 }
 
-func createKeepAliveResponse(binder bind.Binder, request *tailcfg.MapRequest) ([]byte, error) {
+func (h *PollNetMapHandler) createKeepAliveResponse(request *tailcfg.MapRequest) ([]byte, error) {
 	mapResponse := &tailcfg.MapResponse{
 		KeepAlive: true,
 	}
 
-	return binder.Marshal(request.Compress, mapResponse)
+	return h.marshalResponse(request.Compress, mapResponse)
 }
 
-func createMapResponse(m *mapping.PollNetMapper, binder bind.Binder, delta bool, compress string) ([]byte, error) {
+func (h *PollNetMapHandler) createMapResponse(m *mapping.PollNetMapper, delta bool, compress string) ([]byte, error) {
 	response, err := m.CreateMapResponse(context.Background(), delta)
 	if err != nil {
 		return nil, err
 	}
-	return binder.Marshal(compress, response)
+	return h.marshalResponse(compress, response)
+}
+
+func (h *PollNetMapHandler) marshalResponse(compress string, v interface{}) ([]byte, error) {
+	var payload []byte
+
+	marshalled, err := json.Marshal(v)
+	if err != nil {
+		return nil, err
+	}
+
+	if compress == "zstd" {
+		payload = zstdEncode(marshalled)
+	} else {
+		payload = marshalled
+	}
+
+	data := make([]byte, 4)
+	binary.LittleEndian.PutUint32(data, uint32(len(payload)))
+	data = append(data, payload...)
+
+	return data, nil
+}
+
+func zstdEncode(in []byte) []byte {
+	encoder := zstdEncoderPool.Get().(*zstd.Encoder)
+	out := encoder.EncodeAll(in, nil)
+	_ = encoder.Close()
+	zstdEncoderPool.Put(encoder)
+	return out
+}
+
+var zstdEncoderPool = &sync.Pool{
+	New: func() any {
+		encoder, err := smallzstd.NewEncoder(nil, zstd.WithEncoderLevel(zstd.SpeedFastest))
+		if err != nil {
+			panic(err)
+		}
+		return encoder
+	},
 }

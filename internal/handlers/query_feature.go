@@ -2,41 +2,37 @@ package handlers
 
 import (
 	"fmt"
-	"github.com/jsiebens/ionscale/internal/bind"
 	"github.com/jsiebens/ionscale/internal/dns"
 	"github.com/jsiebens/ionscale/internal/domain"
 	"github.com/labstack/echo/v4"
 	"net/http"
 	"tailscale.com/tailcfg"
+	"tailscale.com/types/key"
 )
 
-func NewQueryFeatureHandlers(createBinder bind.Factory, dnsProvider dns.Provider, repository domain.Repository) *QueryFeatureHandlers {
+func NewQueryFeatureHandlers(machineKey key.MachinePublic, dnsProvider dns.Provider, repository domain.Repository) *QueryFeatureHandlers {
 	return &QueryFeatureHandlers{
-		createBinder: createBinder,
-		repository:   repository,
+		machineKey:  machineKey,
+		dnsProvider: dnsProvider,
+		repository:  repository,
 	}
 }
 
 type QueryFeatureHandlers struct {
-	createBinder bind.Factory
-	dnsProvider  dns.Provider
-	repository   domain.Repository
+	machineKey  key.MachinePublic
+	dnsProvider dns.Provider
+	repository  domain.Repository
 }
 
 func (h *QueryFeatureHandlers) QueryFeature(c echo.Context) error {
 	ctx := c.Request().Context()
 
-	binder, err := h.createBinder(c)
-	if err != nil {
-		return logError(err)
-	}
-
 	req := new(tailcfg.QueryFeatureRequest)
-	if err := binder.BindRequest(c, req); err != nil {
+	if err := c.Bind(req); err != nil {
 		return logError(err)
 	}
 
-	machineKey := binder.Peer().String()
+	machineKey := h.machineKey.String()
 	nodeKey := req.NodeKey.String()
 
 	resp := tailcfg.QueryFeatureResponse{}
@@ -61,7 +57,7 @@ func (h *QueryFeatureHandlers) QueryFeature(c echo.Context) error {
 		resp.Text = fmt.Sprintf("Unknown feature request '%s'\n", req.Feature)
 	}
 
-	return binder.WriteResponse(c, http.StatusOK, resp)
+	return c.JSON(http.StatusOK, resp)
 }
 
 const serverMessage = `Enabling HTTPS is required to use Serve:

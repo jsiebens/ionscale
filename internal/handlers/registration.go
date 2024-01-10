@@ -3,7 +3,6 @@ package handlers
 import (
 	"context"
 	"github.com/jsiebens/ionscale/internal/addr"
-	"github.com/jsiebens/ionscale/internal/bind"
 	"github.com/jsiebens/ionscale/internal/config"
 	"github.com/jsiebens/ionscale/internal/core"
 	"github.com/jsiebens/ionscale/internal/domain"
@@ -13,17 +12,18 @@ import (
 	"net/http"
 	"net/netip"
 	"tailscale.com/tailcfg"
+	"tailscale.com/types/key"
 	"tailscale.com/util/dnsname"
 	"time"
 )
 
 func NewRegistrationHandlers(
-	createBinder bind.Factory,
+	machineKey key.MachinePublic,
 	config *config.Config,
 	sessionManager core.PollMapSessionManager,
 	repository domain.Repository) *RegistrationHandlers {
 	return &RegistrationHandlers{
-		createBinder:   createBinder,
+		machineKey:     machineKey,
 		sessionManager: sessionManager,
 		repository:     repository,
 		config:         config,
@@ -31,7 +31,7 @@ func NewRegistrationHandlers(
 }
 
 type RegistrationHandlers struct {
-	createBinder   bind.Factory
+	machineKey     key.MachinePublic
 	repository     domain.Repository
 	sessionManager core.PollMapSessionManager
 	config         *config.Config
@@ -40,21 +40,16 @@ type RegistrationHandlers struct {
 func (h *RegistrationHandlers) Register(c echo.Context) error {
 	ctx := c.Request().Context()
 
-	binder, err := h.createBinder(c)
-	if err != nil {
-		return logError(err)
-	}
-
 	req := &tailcfg.RegisterRequest{}
-	if err := binder.BindRequest(c, req); err != nil {
+	if err := c.Bind(req); err != nil {
 		return logError(err)
 	}
 
-	machineKey := binder.Peer().String()
+	machineKey := h.machineKey.String()
 	nodeKey := req.NodeKey.String()
 
 	var m *domain.Machine
-	m, err = h.repository.GetMachineByKeys(ctx, machineKey, nodeKey)
+	m, err := h.repository.GetMachineByKeys(ctx, machineKey, nodeKey)
 
 	if err != nil {
 		return logError(err)
@@ -63,7 +58,7 @@ func (h *RegistrationHandlers) Register(c echo.Context) error {
 	if m != nil {
 		if m.IsExpired() {
 			response := tailcfg.RegisterResponse{NodeKeyExpired: true}
-			return binder.WriteResponse(c, http.StatusOK, response)
+			return c.JSON(http.StatusOK, response)
 		}
 
 		if !req.Expiry.IsZero() && req.Expiry.Before(time.Now()) {
@@ -82,7 +77,7 @@ func (h *RegistrationHandlers) Register(c echo.Context) error {
 			}
 
 			response := tailcfg.RegisterResponse{NodeKeyExpired: true}
-			return binder.WriteResponse(c, http.StatusOK, response)
+			return c.JSON(http.StatusOK, response)
 		}
 
 		sanitizeHostname := dnsname.SanitizeHostname(req.Hostinfo.Hostname)
@@ -111,17 +106,17 @@ func (h *RegistrationHandlers) Register(c echo.Context) error {
 			Login:             tLogin,
 		}
 
-		return binder.WriteResponse(c, http.StatusOK, response)
+		return c.JSON(http.StatusOK, response)
 	}
 
-	return h.authenticateMachine(c, binder, machineKey, req)
+	return h.authenticateMachine(c, machineKey, req)
 }
 
-func (h *RegistrationHandlers) authenticateMachine(c echo.Context, binder bind.Binder, machineKey string, req *tailcfg.RegisterRequest) error {
+func (h *RegistrationHandlers) authenticateMachine(c echo.Context, machineKey string, req *tailcfg.RegisterRequest) error {
 	ctx := c.Request().Context()
 
 	if req.Followup != "" {
-		return h.followup(c, binder, req)
+		return h.followup(c, req)
 	}
 
 	if req.Auth.AuthKey == "" {
@@ -138,17 +133,17 @@ func (h *RegistrationHandlers) authenticateMachine(c echo.Context, binder bind.B
 		err := h.repository.SaveRegistrationRequest(ctx, &request)
 		if err != nil {
 			response := tailcfg.RegisterResponse{MachineAuthorized: false, Error: "something went wrong"}
-			return binder.WriteResponse(c, http.StatusOK, response)
+			return c.JSON(http.StatusOK, response)
 		}
 
 		response := tailcfg.RegisterResponse{AuthURL: authUrl}
-		return binder.WriteResponse(c, http.StatusOK, response)
+		return c.JSON(http.StatusOK, response)
 	} else {
-		return h.authenticateMachineWithAuthKey(c, binder, machineKey, req)
+		return h.authenticateMachineWithAuthKey(c, machineKey, req)
 	}
 }
 
-func (h *RegistrationHandlers) authenticateMachineWithAuthKey(c echo.Context, binder bind.Binder, machineKey string, req *tailcfg.RegisterRequest) error {
+func (h *RegistrationHandlers) authenticateMachineWithAuthKey(c echo.Context, machineKey string, req *tailcfg.RegisterRequest) error {
 	ctx := c.Request().Context()
 	nodeKey := req.NodeKey.String()
 
@@ -159,7 +154,7 @@ func (h *RegistrationHandlers) authenticateMachineWithAuthKey(c echo.Context, bi
 
 	if authKey == nil {
 		response := tailcfg.RegisterResponse{MachineAuthorized: false, Error: "invalid auth key"}
-		return binder.WriteResponse(c, http.StatusOK, response)
+		return c.JSON(http.StatusOK, response)
 	}
 
 	tailnet := authKey.Tailnet
@@ -167,7 +162,7 @@ func (h *RegistrationHandlers) authenticateMachineWithAuthKey(c echo.Context, bi
 
 	if err := tailnet.ACLPolicy.CheckTagOwners(req.Hostinfo.RequestTags, &user); err != nil {
 		response := tailcfg.RegisterResponse{MachineAuthorized: false, Error: err.Error()}
-		return binder.WriteResponse(c, http.StatusOK, response)
+		return c.JSON(http.StatusOK, response)
 	}
 
 	registeredTags := authKey.Tags
@@ -254,10 +249,10 @@ func (h *RegistrationHandlers) authenticateMachineWithAuthKey(c echo.Context, bi
 		Login:             tLogin,
 	}
 
-	return binder.WriteResponse(c, http.StatusOK, response)
+	return c.JSON(http.StatusOK, response)
 }
 
-func (h *RegistrationHandlers) followup(c echo.Context, binder bind.Binder, req *tailcfg.RegisterRequest) error {
+func (h *RegistrationHandlers) followup(c echo.Context, req *tailcfg.RegisterRequest) error {
 	// Listen to connection close
 	ctx := c.Request().Context()
 	notify := ctx.Done()
@@ -265,7 +260,7 @@ func (h *RegistrationHandlers) followup(c echo.Context, binder bind.Binder, req 
 
 	defer func() { tick.Stop() }()
 
-	machineKey := binder.Peer().String()
+	machineKey := h.machineKey.String()
 
 	for {
 		select {
@@ -274,7 +269,7 @@ func (h *RegistrationHandlers) followup(c echo.Context, binder bind.Binder, req 
 
 			if err != nil || m == nil {
 				response := tailcfg.RegisterResponse{MachineAuthorized: false, Error: "something went wrong"}
-				return binder.WriteResponse(c, http.StatusOK, response)
+				return c.JSON(http.StatusOK, response)
 			}
 
 			if m != nil && m.Authenticated {
@@ -291,7 +286,7 @@ func (h *RegistrationHandlers) followup(c echo.Context, binder bind.Binder, req 
 					User:              u,
 					Login:             l,
 				}
-				return binder.WriteResponse(c, http.StatusOK, response)
+				return c.JSON(http.StatusOK, response)
 			}
 
 			if m != nil && len(m.Error) != 0 {
@@ -299,7 +294,7 @@ func (h *RegistrationHandlers) followup(c echo.Context, binder bind.Binder, req 
 					MachineAuthorized: len(m.Error) != 0,
 					Error:             m.Error,
 				}
-				return binder.WriteResponse(c, http.StatusOK, response)
+				return c.JSON(http.StatusOK, response)
 			}
 		case <-notify:
 			return nil

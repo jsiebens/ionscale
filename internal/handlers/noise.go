@@ -41,3 +41,35 @@ func (h *NoiseHandlers) Upgrade(c echo.Context) error {
 	}
 	return nil
 }
+
+type JsonBinder struct {
+	echo.DefaultBinder
+}
+
+func (b JsonBinder) Bind(i interface{}, c echo.Context) error {
+	if err := b.BindPathParams(c, i); err != nil {
+		return err
+	}
+
+	method := c.Request().Method
+	if method == http.MethodGet || method == http.MethodDelete || method == http.MethodHead {
+		if err := b.BindQueryParams(c, i); err != nil {
+			return err
+		}
+	}
+
+	if c.Request().ContentLength == 0 {
+		return nil
+	}
+
+	if err := c.Echo().JSONSerializer.Deserialize(c, i); err != nil {
+		switch err.(type) {
+		case *echo.HTTPError:
+			return err
+		default:
+			return echo.NewHTTPError(http.StatusBadRequest, err.Error()).SetInternal(err)
+		}
+	}
+
+	return nil
+}
