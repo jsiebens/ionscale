@@ -1,5 +1,5 @@
-http_listen_addr: ":8080"
-server_url: "http://localhost:8080"
+http_listen_addr: ":80"
+server_url: "http://ionscale"
 
 tls:
   disable: true
@@ -11,6 +11,12 @@ keys:
 database:
   type: sqlite
   url: /opt/ionscale.db?_pragma=busy_timeout(5000)&_pragma=journal_mode(WAL)&_pragma=foreign_keys(ON)
+
+auth:
+  provider:
+    issuer: http://mockoidc/oidc
+    client_id: "foo"
+    client_secret: "bar"
 
 logging:
   level: debug

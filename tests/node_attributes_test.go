@@ -4,17 +4,19 @@ import (
 	"github.com/jsiebens/ionscale/pkg/defaults"
 	ionscalev1 "github.com/jsiebens/ionscale/pkg/gen/ionscale/v1"
 	"github.com/jsiebens/ionscale/tests/sc"
+	"github.com/jsiebens/ionscale/tests/tsn"
+	"github.com/stretchr/testify/require"
 	"tailscale.com/tailcfg"
 	"testing"
 )
 
 func TestNodeAttrs(t *testing.T) {
-	sc.Run(t, func(s sc.Scenario) {
-		tailnet := s.CreateTailnet("nodeattrs")
+	sc.Run(t, func(s *sc.Scenario) {
+		tailnet := s.CreateTailnet()
 		key := s.CreateAuthKey(tailnet.Id, true)
 
-		nodeA := s.NewTailscaleNode("test-a")
-		nodeA.Up(key)
+		nodeA := s.NewTailscaleNode()
+		require.NoError(t, nodeA.Up(key))
 
 		policy := defaults.DefaultACLPolicy()
 		policy.Nodeattrs = []*ionscalev1.NodeAttr{
@@ -24,19 +26,19 @@ func TestNodeAttrs(t *testing.T) {
 			},
 		}
 
-		s.SetAclPolicy(tailnet.Id, policy)
+		s.SetACLPolicy(tailnet.Id, policy)
 
-		nodeA.WaitFor(sc.HasCapability("ionscale:test"))
+		require.NoError(t, nodeA.WaitFor(tsn.HasCapability("ionscale:test")))
 	})
 }
 
 func TestNodeAttrs_IgnoreFunnelAttr(t *testing.T) {
-	sc.Run(t, func(s sc.Scenario) {
-		tailnet := s.CreateTailnet("nodeattrs")
+	sc.Run(t, func(s *sc.Scenario) {
+		tailnet := s.CreateTailnet()
 		key := s.CreateAuthKey(tailnet.Id, true)
 
-		nodeA := s.NewTailscaleNode("test-a")
-		nodeA.Up(key)
+		nodeA := s.NewTailscaleNode()
+		require.NoError(t, nodeA.Up(key))
 
 		policy := defaults.DefaultACLPolicy()
 		policy.Nodeattrs = []*ionscalev1.NodeAttr{
@@ -46,9 +48,9 @@ func TestNodeAttrs_IgnoreFunnelAttr(t *testing.T) {
 			},
 		}
 
-		s.SetAclPolicy(tailnet.Id, policy)
+		s.SetACLPolicy(tailnet.Id, policy)
 
-		nodeA.WaitFor(sc.HasCapability("ionscale:test"))
-		nodeA.WaitFor(sc.IsMissingCapability(tailcfg.NodeAttrFunnel))
+		require.NoError(t, nodeA.WaitFor(tsn.HasCapability("ionscale:test")))
+		require.NoError(t, nodeA.WaitFor(tsn.IsMissingCapability(tailcfg.NodeAttrFunnel)))
 	})
 }

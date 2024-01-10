@@ -174,7 +174,7 @@ func Start(c *config.Config) error {
 	auth.GET("/:flow/:key", authenticationHandlers.StartAuth)
 	auth.POST("/:flow/:key", authenticationHandlers.ProcessAuth)
 	auth.GET("/callback", authenticationHandlers.Callback)
-	auth.POST("/callback", authenticationHandlers.EndOAuth)
+	auth.POST("/callback", authenticationHandlers.EndAuth)
 	auth.GET("/success", authenticationHandlers.Success)
 	auth.GET("/error", authenticationHandlers.Error)
 
