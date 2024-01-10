@@ -2,12 +2,15 @@ module github.com/jsiebens/ionscale
 
 go 1.21
 
+replace github.com/oauth2-proxy/mockoidc => github.com/jsiebens/mockoidc v0.0.0-20240108082145-5b2747b94b1b
+
 require (
 	github.com/apparentlymart/go-cidr v1.1.0
 	github.com/bufbuild/connect-go v1.10.0
 	github.com/caarlos0/env/v6 v6.10.1
 	github.com/caddyserver/certmagic v0.20.0
 	github.com/coreos/go-oidc/v3 v3.9.0
+	github.com/dustinkirkland/golang-petname v0.0.0-20231002161417-6a283f1aaaf2
 	github.com/glebarez/sqlite v1.10.0
 	github.com/go-gormigrate/gormigrate/v2 v2.0.2
 	github.com/go-jose/go-jose/v3 v3.0.1
@@ -29,6 +32,7 @@ require (
 	github.com/mitchellh/pointerstructure v1.2.1
 	github.com/mr-tron/base58 v1.2.0
 	github.com/nleeper/goment v1.4.4
+	github.com/oauth2-proxy/mockoidc v0.0.0-20220308204021-b9169deeb282
 	github.com/ory/dockertest/v3 v3.9.1
 	github.com/prometheus/client_golang v1.17.0
 	github.com/rodaine/table v1.1.0
@@ -168,6 +172,7 @@ require (
 	google.golang.org/appengine v1.6.8 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20231212172506-995d672761c0 // indirect
 	google.golang.org/grpc v1.60.1 // indirect
+	gopkg.in/square/go-jose.v2 v2.6.0 // indirect
 	gotest.tools/v3 v3.4.0 // indirect
 	modernc.org/libc v1.38.0 // indirect
 	modernc.org/mathutil v1.6.0 // indirect

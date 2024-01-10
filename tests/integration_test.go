@@ -2,36 +2,20 @@ package tests
 
 import (
 	"github.com/jsiebens/ionscale/tests/sc"
+	"github.com/jsiebens/ionscale/tests/tsn"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"testing"
 )
 
-func TestPing(t *testing.T) {
-	sc.Run(t, func(s sc.Scenario) {
-		tailnet := s.CreateTailnet("pingtest")
-		key := s.CreateAuthKey(tailnet.Id, true)
-
-		nodeA := s.NewTailscaleNode("pingtest-a")
-		nodeB := s.NewTailscaleNode("pingtest-b")
-
-		nodeA.Up(key)
-		nodeB.Up(key)
-
-		nodeA.WaitFor(sc.PeerCount(1))
-		nodeA.Ping("pingtest-b")
-		nodeA.Ping(nodeB.IPv4())
-		nodeA.Ping(nodeB.IPv6())
-	})
-}
-
 func TestGetIPs(t *testing.T) {
-	sc.Run(t, func(s sc.Scenario) {
-		tailnet := s.CreateTailnet("tailnet01")
+	sc.Run(t, func(s *sc.Scenario) {
+		tailnet := s.CreateTailnet()
 		authKey := s.CreateAuthKey(tailnet.Id, false)
 
-		tsNode := s.NewTailscaleNode("testip")
+		tsNode := s.NewTailscaleNode()
 
-		tsNode.Up(authKey)
+		require.NoError(t, tsNode.Up(authKey))
 
 		ip4 := tsNode.IPv4()
 		ip6 := tsNode.IPv6()
@@ -49,18 +33,36 @@ func TestGetIPs(t *testing.T) {
 	})
 }
 
+func TestPing(t *testing.T) {
+	sc.Run(t, func(s *sc.Scenario) {
+		tailnet := s.CreateTailnet()
+		key := s.CreateAuthKey(tailnet.Id, true)
+
+		nodeA := s.NewTailscaleNode()
+		nodeB := s.NewTailscaleNode()
+
+		require.NoError(t, nodeA.Up(key))
+		require.NoError(t, nodeB.Up(key))
+
+		require.NoError(t, nodeA.WaitFor(tsn.PeerCount(1)))
+		require.NoError(t, nodeA.Ping(nodeB.Hostname()))
+		require.NoError(t, nodeA.Ping(nodeB.IPv4()))
+		require.NoError(t, nodeA.Ping(nodeB.IPv6()))
+	})
+}
+
 func TestNodeWithSameHostname(t *testing.T) {
-	sc.Run(t, func(s sc.Scenario) {
-		tailnet := s.CreateTailnet("tailnet01")
+	sc.Run(t, func(s *sc.Scenario) {
+		tailnet := s.CreateTailnet()
 		authKey := s.CreateAuthKey(tailnet.Id, false)
 
-		tsNode := s.NewTailscaleNode("test")
+		tsNode := s.NewTailscaleNode(sc.WithName("test"))
 
-		tsNode.Up(authKey)
+		require.NoError(t, tsNode.Up(authKey))
 
 		for i := 0; i < 5; i++ {
-			tc := s.NewTailscaleNode("test")
-			tc.Up(authKey)
+			tc := s.NewTailscaleNode(sc.WithName("test"))
+			require.NoError(t, tc.Up(authKey))
 		}
 
 		machines := make(map[string]bool)

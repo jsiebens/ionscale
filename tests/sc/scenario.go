@@ -4,9 +4,14 @@ import (
 	"context"
 	"fmt"
 	"github.com/bufbuild/connect-go"
+	petname "github.com/dustinkirkland/golang-petname"
 	ionscaleclt "github.com/jsiebens/ionscale/pkg/client/ionscale"
 	api "github.com/jsiebens/ionscale/pkg/gen/ionscale/v1"
 	ionscaleconnect "github.com/jsiebens/ionscale/pkg/gen/ionscale/v1/ionscalev1connect"
+	"github.com/jsiebens/ionscale/tests/tsn"
+	"github.com/oauth2-proxy/mockoidc"
+	mockoidcv1 "github.com/oauth2-proxy/mockoidc/pkg/gen/mockoidc/v1"
+	"github.com/oauth2-proxy/mockoidc/pkg/gen/mockoidc/v1/mockoidcv1connect"
 	"github.com/ory/dockertest/v3"
 	"github.com/ory/dockertest/v3/docker"
 	"github.com/stretchr/testify/require"
@@ -30,54 +35,88 @@ var (
 	pool          *dockertest.Pool
 )
 
-type Scenario interface {
-	NewTailscaleNode(hostname string) TailscaleNode
-
-	ListMachines(tailnetID uint64) []*api.Machine
-	CreateAuthKey(tailnetID uint64, ephemeral bool, tags ...string) string
-	CreateTailnet(name string) *api.Tailnet
-	SetAclPolicy(tailnetID uint64, policy *api.ACLPolicy)
+type Scenario struct {
+	t              *testing.T
+	pool           *dockertest.Pool
+	network        *dockertest.Network
+	mockoidc       *dockertest.Resource
+	ionscale       *dockertest.Resource
+	resources      []*dockertest.Resource
+	ionscaleClient ionscaleconnect.IonscaleServiceClient
+	mockoidcClient mockoidcv1connect.MockOIDCServiceClient
 }
 
-type scenario struct {
-	t         *testing.T
-	pool      *dockertest.Pool
-	network   *dockertest.Network
-	ionscale  *dockertest.Resource
-	resources []*dockertest.Resource
-	client    ionscaleconnect.IonscaleServiceClient
-}
-
-func (s *scenario) CreateTailnet(name string) *api.Tailnet {
-	createTailnetResponse, err := s.client.CreateTailnet(context.Background(), connect.NewRequest(&api.CreateTailnetRequest{Name: name}))
+func (s *Scenario) CreateTailnet() *api.Tailnet {
+	name := petname.Generate(3, "-")
+	createTailnetResponse, err := s.ionscaleClient.CreateTailnet(context.Background(), connect.NewRequest(&api.CreateTailnetRequest{Name: name}))
 	require.NoError(s.t, err)
 	return createTailnetResponse.Msg.GetTailnet()
 }
 
-func (s *scenario) CreateAuthKey(tailnetID uint64, ephemeral bool, tags ...string) string {
+func (s *Scenario) CreateAuthKey(tailnetID uint64, ephemeral bool, tags ...string) string {
 	if len(tags) == 0 {
 		tags = []string{"tag:test"}
 	}
-	key, err := s.client.CreateAuthKey(context.Background(), connect.NewRequest(&api.CreateAuthKeyRequest{TailnetId: tailnetID, Ephemeral: ephemeral, Tags: tags, Expiry: durationpb.New(60 * time.Minute)}))
+	key, err := s.ionscaleClient.CreateAuthKey(context.Background(), connect.NewRequest(&api.CreateAuthKeyRequest{TailnetId: tailnetID, Ephemeral: ephemeral, Tags: tags, Expiry: durationpb.New(60 * time.Minute)}))
 	require.NoError(s.t, err)
 	return key.Msg.Value
 }
 
-func (s *scenario) ListMachines(tailnetID uint64) []*api.Machine {
-	machines, err := s.client.ListMachines(context.Background(), connect.NewRequest(&api.ListMachinesRequest{TailnetId: tailnetID}))
+func (s *Scenario) ListMachines(tailnetID uint64) []*api.Machine {
+	machines, err := s.ionscaleClient.ListMachines(context.Background(), connect.NewRequest(&api.ListMachinesRequest{TailnetId: tailnetID}))
 	require.NoError(s.t, err)
 	return machines.Msg.Machines
 }
 
-func (s *scenario) SetAclPolicy(tailnetID uint64, policy *api.ACLPolicy) {
-	_, err := s.client.SetACLPolicy(context.Background(), connect.NewRequest(&api.SetACLPolicyRequest{TailnetId: tailnetID, Policy: policy}))
+func (s *Scenario) AuthorizeMachines(tailnetID uint64) {
+	machines := s.ListMachines(tailnetID)
+	for _, m := range machines {
+		_, err := s.ionscaleClient.AuthorizeMachine(context.Background(), connect.NewRequest(&api.AuthorizeMachineRequest{MachineId: m.Id}))
+		require.NoError(s.t, err)
+	}
+}
+
+func (s *Scenario) SetACLPolicy(tailnetID uint64, policy *api.ACLPolicy) {
+	_, err := s.ionscaleClient.SetACLPolicy(context.Background(), connect.NewRequest(&api.SetACLPolicyRequest{TailnetId: tailnetID, Policy: policy}))
 	require.NoError(s.t, err)
 }
 
-func (s *scenario) NewTailscaleNode(hostname string) TailscaleNode {
-	tailscaleOptions := &dockertest.RunOptions{
+func (s *Scenario) SetIAMPolicy(tailnetID uint64, policy *api.IAMPolicy) {
+	_, err := s.ionscaleClient.SetIAMPolicy(context.Background(), connect.NewRequest(&api.SetIAMPolicyRequest{TailnetId: tailnetID, Policy: policy}))
+	require.NoError(s.t, err)
+}
+
+func (s *Scenario) EnableMachineAutorization(tailnetID uint64) {
+	_, err := s.ionscaleClient.EnableMachineAuthorization(context.Background(), connect.NewRequest(&api.EnableMachineAuthorizationRequest{TailnetId: tailnetID}))
+	require.NoError(s.t, err)
+}
+
+func (s *Scenario) PushOIDCUser(sub, email, preferredUsername string) {
+	_, err := s.mockoidcClient.PushUser(context.Background(), connect.NewRequest(&mockoidcv1.PushUserRequest{Subject: sub, Email: email, PreferredUsername: preferredUsername}))
+	require.NoError(s.t, err)
+}
+
+type TailscaleNodeConfig struct {
+	Hostname string
+}
+
+type TailscaleNodeOpt = func(*TailscaleNodeConfig)
+
+func WithName(name string) TailscaleNodeOpt {
+	return func(config *TailscaleNodeConfig) {
+		config.Hostname = name
+	}
+}
+
+func (s *Scenario) NewTailscaleNode(opts ...TailscaleNodeOpt) *tsn.TailscaleNode {
+	config := &TailscaleNodeConfig{Hostname: petname.Generate(3, "-")}
+	for _, o := range opts {
+		o(config)
+	}
+
+	runOpts := &dockertest.RunOptions{
 		Repository:   fmt.Sprintf("ts-%s", strings.Replace(targetVersion, ".", "-", -1)),
-		Hostname:     hostname,
+		Hostname:     config.Hostname,
 		Networks:     []*dockertest.Network{s.network},
 		ExposedPorts: []string{"1055"},
 		Cmd: []string{
@@ -86,7 +125,7 @@ func (s *scenario) NewTailscaleNode(hostname string) TailscaleNode {
 	}
 
 	resource, err := s.pool.RunWithOptions(
-		tailscaleOptions,
+		runOpts,
 		restartPolicy,
 	)
 	require.NoError(s.t, err)
@@ -96,15 +135,10 @@ func (s *scenario) NewTailscaleNode(hostname string) TailscaleNode {
 
 	s.resources = append(s.resources, resource)
 
-	return &tailscaleNode{
-		t:           s.t,
-		loginServer: "http://ionscale:8080",
-		hostname:    hostname,
-		resource:    resource,
-	}
+	return tsn.New(s.t, config.Hostname, "http://ionscale", resource, s.pool.Retry)
 }
 
-func Run(t *testing.T, f func(s Scenario)) {
+func Run(t *testing.T, f func(s *Scenario)) {
 	if testing.Short() {
 		t.Skip("skipped due to -short flag")
 	}
@@ -116,7 +150,7 @@ func Run(t *testing.T, f func(s Scenario)) {
 	}
 
 	var err error
-	s := &scenario{t: t}
+	s := &Scenario{t: t}
 
 	defer func() {
 		for _, r := range s.resources {
@@ -125,6 +159,10 @@ func Run(t *testing.T, f func(s Scenario)) {
 
 		if s.ionscale != nil {
 			_ = pool.Purge(s.ionscale)
+		}
+
+		if s.mockoidc != nil {
+			_ = pool.Purge(s.mockoidc)
 		}
 
 		if s.network != nil {
@@ -144,6 +182,26 @@ func Run(t *testing.T, f func(s Scenario)) {
 	currentPath, err := os.Getwd()
 	require.NoError(s.t, err)
 
+	// run mockoidc container
+	{
+		mockoidcOpts := &dockertest.RunOptions{
+			Hostname:     "mockoidc",
+			Repository:   "ghcr.io/jsiebens/mockoidc",
+			Networks:     []*dockertest.Network{s.network},
+			ExposedPorts: []string{"80"},
+			Cmd:          []string{"--listen-addr", ":80", "--server-url", "http://mockoidc"},
+		}
+
+		s.mockoidc, err = pool.RunWithOptions(mockoidcOpts, restartPolicy)
+		require.NoError(s.t, err)
+
+		port := s.mockoidc.GetPort("80/tcp")
+		err = pool.Retry(httpCheck(port, "/oidc/.well-known/openid-configuration"))
+		require.NoError(s.t, err)
+
+		s.mockoidcClient = mockoidc.NewClient(fmt.Sprintf("http://localhost:%s", port), true)
+	}
+
 	ionscale := &dockertest.RunOptions{
 		Hostname:   "ionscale",
 		Repository: "ionscale-test",
@@ -151,14 +209,14 @@ func Run(t *testing.T, f func(s Scenario)) {
 			fmt.Sprintf("%s/config:/etc/ionscale", currentPath),
 		},
 		Networks:     []*dockertest.Network{s.network},
-		ExposedPorts: []string{"8080"},
+		ExposedPorts: []string{"80"},
 		Cmd:          []string{"server", "--config", "/etc/ionscale/config.yaml"},
 	}
 
 	s.ionscale, err = pool.RunWithOptions(ionscale, restartPolicy)
 	require.NoError(s.t, err)
 
-	port := s.ionscale.GetPort("8080/tcp")
+	port := s.ionscale.GetPort("80/tcp")
 
 	err = pool.Retry(httpCheck(port, "/key"))
 	require.NoError(s.t, err)
@@ -166,7 +224,7 @@ func Run(t *testing.T, f func(s Scenario)) {
 	auth, err := ionscaleclt.LoadClientAuth("804ecd57365342254ce6647da5c249e85c10a0e51e74856bfdf292a2136b4249")
 	require.NoError(s.t, err)
 
-	s.client, err = ionscaleclt.NewClient(auth, fmt.Sprintf("http://localhost:%s", port), true)
+	s.ionscaleClient, err = ionscaleclt.NewClient(auth, fmt.Sprintf("http://localhost:%s", port), true)
 	require.NoError(s.t, err)
 
 	f(s)
