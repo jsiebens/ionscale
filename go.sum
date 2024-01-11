@@ -531,8 +531,8 @@ github.com/josharian/native v1.1.1-0.20230202152459-5c7d0dd6ab86/go.mod h1:aFAMt
 github.com/jpillora/backoff v1.0.0/go.mod h1:J/6gKK9jxlEcS3zixgDgUAsiuZ7yrSoa/FX5e0EB2j4=
 github.com/jsiebens/go-edit v0.1.0 h1:62SSGW8Qc2zoBcJx7gV86ImPHmQzlU/DQhwCOR4uilE=
 github.com/jsiebens/go-edit v0.1.0/go.mod h1:m/wuWMv8sNhSl+M2qA35gP/K5jX2J7Aa+g16VwyfxrI=
-github.com/jsiebens/mockoidc v0.0.0-20240108082145-5b2747b94b1b h1:Y/oA8TYORWGvOq5Ynl9tY+eA6IEV/5tjb3ugSU2Khfo=
-github.com/jsiebens/mockoidc v0.0.0-20240108082145-5b2747b94b1b/go.mod h1:5AdBTMDkanoW4IMv51fajiAUEEmKyNza7s8R2D/5pbw=
+github.com/jsiebens/mockoidc v0.1.0-rc2 h1:ifKYhKxfYQMmglcBKkRX9EUuTYmOMnrrOrB6r1zW/gs=
+github.com/jsiebens/mockoidc v0.1.0-rc2/go.mod h1:ym8B5bmE8RQAyxuC3lzqtNvxXyJomwxZZG5CIJGXCtk=
 github.com/jsimonetti/rtnetlink v1.4.0 h1:Z1BF0fRgcETPEa0Kt0MRk3yV5+kF1FWTni6KUFKrq2I=
 github.com/jsimonetti/rtnetlink v1.4.0/go.mod h1:5W1jDvWdnthFJ7fxYX1GMK07BUpI4oskfOqvPteYS6E=
 github.com/json-iterator/go v1.1.6/go.mod h1:+SdeFBvtyEkXs7REEP0seUULqWtbJapLOCVDaaPEHmU=
@@ -1353,8 +1353,6 @@ gopkg.in/check.v1 v1.0.0-20190902080502-41f04d3bba15/go.mod h1:Co6ibVJAznAaIkqp8
 gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c h1:Hei/4ADfdWqJk1ZMxUNpqntNwaWcugrBjAiHlqqRiVk=
 gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c/go.mod h1:JHkPIbrfpd72SG/EVd6muEfDQjcINNoR0C8j2r3qZ4Q=
 gopkg.in/errgo.v2 v2.1.0/go.mod h1:hNsd1EY+bozCKY1Ytp96fpM3vjJbqLJn88ws8XvfDNI=
-gopkg.in/square/go-jose.v2 v2.6.0 h1:NGk74WTnPKBNUhNzQX7PYcTLUjoq7mzKk2OKbvwk2iI=
-gopkg.in/square/go-jose.v2 v2.6.0/go.mod h1:M9dMgbHiYLoDGQrXy7OpJDJWiKiU//h+vD76mk0e1AI=
 gopkg.in/yaml.v2 v2.2.1/go.mod h1:hI93XBmqTisBFMUTm0b8Fm+jr3Dg1NNxqwp+5A1VGuI=
 gopkg.in/yaml.v2 v2.2.2/go.mod h1:hI93XBmqTisBFMUTm0b8Fm+jr3Dg1NNxqwp+5A1VGuI=
 gopkg.in/yaml.v2 v2.2.3/go.mod h1:hI93XBmqTisBFMUTm0b8Fm+jr3Dg1NNxqwp+5A1VGuI=
