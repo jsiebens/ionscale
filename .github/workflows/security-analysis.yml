@@ -15,7 +15,7 @@ jobs:
       security-events: write
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           fetch-depth: 0
       - name: Initialize CodeQL
@@ -33,7 +33,7 @@ jobs:
       security-events: write
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           fetch-depth: 0
       - name: Run Trivy vulnerability scanner
@@ -43,6 +43,6 @@ jobs:
           format: 'sarif'
           output: 'trivy-results.sarif'
       - name: Upload Trivy scan results
-        uses: github/codeql-action/upload-sarif@v1
+        uses: github/codeql-action/upload-sarif@v3
         with:
           sarif_file: 'trivy-results.sarif'
