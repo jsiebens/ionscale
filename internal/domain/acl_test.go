@@ -794,3 +794,39 @@ func TestACLPolicy_FindAutoApprovedIPs(t *testing.T) {
 		})
 	}
 }
+
+func TestACLPolicy_BuildFilterRulesWithAdvertisedRoutes(t *testing.T) {
+	route1 := netip.MustParsePrefix("fd7a:115c:a1e0:b1a:0:1:a3c:0/120")
+	p1 := createMachine("john@example.com", "tag:trusted")
+
+	policy := ACLPolicy{
+		ACLs: []ACL{
+			{
+				Action: "accept",
+				Src:    []string{"tag:trusted"},
+				Dst:    []string{"fd7a:115c:a1e0:b1a:0:1:a3c:0/120:*"},
+			},
+		},
+	}
+
+	dst := createMachine("john@example.com")
+	dst.AllowIPs = []netip.Prefix{route1}
+
+	actualRules := policy.BuildFilterRules([]Machine{*p1}, dst)
+	expectedRules := []tailcfg.FilterRule{
+		{
+			SrcIPs: p1.IPs(),
+			DstPorts: []tailcfg.NetPortRange{
+				{
+					IP: route1.String(),
+					Ports: tailcfg.PortRange{
+						First: 0,
+						Last:  65535,
+					},
+				},
+			},
+		},
+	}
+
+	assert.Equal(t, expectedRules, actualRules)
+}

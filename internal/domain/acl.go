@@ -307,19 +307,15 @@ func (a ACLPolicy) expandMachineToDstPorts(m *Machine, ports []string) ([]tailcf
 }
 
 func (a ACLPolicy) expandMachineDestToNetPortRanges(m *Machine, dest string) (bool, []tailcfg.NetPortRange) {
-	tokens := strings.Split(dest, ":")
-	if len(tokens) < 2 || len(tokens) > 3 {
+	lastInd := strings.LastIndex(dest, ":")
+	if lastInd == -1 {
 		return false, nil
 	}
 
-	var alias string
-	if len(tokens) == 2 {
-		alias = tokens[0]
-	} else {
-		alias = fmt.Sprintf("%s:%s", tokens[0], tokens[1])
-	}
+	alias := dest[:lastInd]
+	portRange := dest[lastInd+1:]
 
-	ports, err := a.expandValuePortToPortRange(tokens[len(tokens)-1])
+	ports, err := a.expandValuePortToPortRange(portRange)
 	if err != nil {
 		return false, nil
 	}
@@ -329,18 +325,18 @@ func (a ACLPolicy) expandMachineDestToNetPortRanges(m *Machine, dest string) (bo
 		return false, nil
 	}
 
-	dests := []tailcfg.NetPortRange{}
+	var netPortRanges []tailcfg.NetPortRange
 	for _, d := range ips {
 		for _, p := range ports {
 			pr := tailcfg.NetPortRange{
 				IP:    d,
 				Ports: p,
 			}
-			dests = append(dests, pr)
+			netPortRanges = append(netPortRanges, pr)
 		}
 	}
 
-	return alias == AutoGroupSelf, dests
+	return alias == AutoGroupSelf, netPortRanges
 }
 
 func (a ACLPolicy) expandMachineAlias(m *Machine, alias string, src bool, u *User) []string {
