@@ -11,6 +11,14 @@ import (
 	"time"
 )
 
+// MapResponse is a custom tailcfg.MapResponse
+// for marshalling non-nil zero-length slices (meaning explicitly now empty)
+// see tailcfg.MapResponse documentation
+type MapResponse struct {
+	tailcfg.MapResponse
+	PacketFilter []tailcfg.FilterRule
+}
+
 func NewPollNetMapper(req *tailcfg.MapRequest, machineID uint64, repository domain.Repository, sessionManager core.PollMapSessionManager) *PollNetMapper {
 	return &PollNetMapper{
 		req:                 req,
@@ -34,7 +42,7 @@ type PollNetMapper struct {
 	sessionManager core.PollMapSessionManager
 }
 
-func (h *PollNetMapper) CreateMapResponse(ctx context.Context, delta bool) (*tailcfg.MapResponse, error) {
+func (h *PollNetMapper) CreateMapResponse(ctx context.Context, delta bool) (*MapResponse, error) {
 	h.Lock()
 	defer h.Unlock()
 
@@ -106,10 +114,10 @@ func (h *PollNetMapper) CreateMapResponse(ctx context.Context, delta bool) (*tai
 	filterRules := policies.BuildFilterRules(candidatePeers, m)
 
 	controlTime := time.Now().UTC()
-	var mapResponse *tailcfg.MapResponse
+	var mapResponse tailcfg.MapResponse
 
 	if !delta {
-		mapResponse = &tailcfg.MapResponse{
+		mapResponse = tailcfg.MapResponse{
 			KeepAlive:       false,
 			Node:            node,
 			DNSConfig:       ToDNSConfig(m, &m.Tailnet, &dnsConfig),
@@ -125,7 +133,7 @@ func (h *PollNetMapper) CreateMapResponse(ctx context.Context, delta bool) (*tai
 			},
 		}
 	} else {
-		mapResponse = &tailcfg.MapResponse{
+		mapResponse = tailcfg.MapResponse{
 			Node:            node,
 			DNSConfig:       ToDNSConfig(m, &m.Tailnet, &dnsConfig),
 			PacketFilter:    filterRules,
@@ -155,7 +163,7 @@ func (h *PollNetMapper) CreateMapResponse(ctx context.Context, delta bool) (*tai
 	h.prevSyncedPeerIDs = syncedPeerIDs
 	h.prevDerpMapChecksum = derpMap.Checksum
 
-	return mapResponse, nil
+	return &MapResponse{MapResponse: mapResponse, PacketFilter: filterRules}, nil
 }
 
 type primaryRoutesCollector struct {

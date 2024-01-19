@@ -252,9 +252,9 @@ func (a ACLPolicy) NodeCapabilities(m *Machine) []tailcfg.NodeCapability {
 }
 
 func (a ACLPolicy) BuildFilterRules(srcs []Machine, dst *Machine) []tailcfg.FilterRule {
-	var rules []tailcfg.FilterRule
+	var rules = make([]tailcfg.FilterRule, 0)
 
-	transform := func(src []string, destPorts []tailcfg.NetPortRange, u *User) tailcfg.FilterRule {
+	appendRules := func(rules []tailcfg.FilterRule, src []string, destPorts []tailcfg.NetPortRange, u *User) []tailcfg.FilterRule {
 		var allSrcIPsSet = &StringSet{}
 		for _, alias := range src {
 			for _, src := range srcs {
@@ -266,27 +266,23 @@ func (a ACLPolicy) BuildFilterRules(srcs []Machine, dst *Machine) []tailcfg.Filt
 		allSrcIPs := allSrcIPsSet.Items()
 
 		if len(allSrcIPs) == 0 {
-			allSrcIPs = nil
+			return rules
 		}
 
-		return tailcfg.FilterRule{
+		return append(rules, tailcfg.FilterRule{
 			SrcIPs:   allSrcIPs,
 			DstPorts: destPorts,
-		}
+		})
 	}
 
 	for _, acl := range a.ACLs {
 		selfDestPorts, allDestPorts := a.expandMachineToDstPorts(dst, acl.Dst)
 		if len(selfDestPorts) != 0 {
-			rules = append(rules, transform(acl.Src, selfDestPorts, &dst.User))
+			rules = appendRules(rules, acl.Src, selfDestPorts, &dst.User)
 		}
 		if len(allDestPorts) != 0 {
-			rules = append(rules, transform(acl.Src, allDestPorts, nil))
+			rules = appendRules(rules, acl.Src, allDestPorts, nil)
 		}
-	}
-
-	if len(rules) == 0 {
-		return []tailcfg.FilterRule{{}}
 	}
 
 	return rules

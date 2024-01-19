@@ -104,6 +104,22 @@ func TestACLPolicy_NodeAttributesWithUserAndTags(t *testing.T) {
 	assert.Equal(t, expectedAttrs, actualAttrs)
 }
 
+func TestACLPolicy_BuildFilterRulesEmptyACL(t *testing.T) {
+	p1 := createMachine("john@example.com")
+	p2 := createMachine("jane@example.com")
+
+	policy := ACLPolicy{
+		ACLs: []ACL{},
+	}
+
+	dst := createMachine("john@example.com")
+
+	actualRules := policy.BuildFilterRules([]Machine{*p1, *p2}, dst)
+	expectedRules := []tailcfg.FilterRule{}
+
+	assert.Equal(t, expectedRules, actualRules)
+}
+
 func TestACLPolicy_BuildFilterRulesWildcards(t *testing.T) {
 	p1 := createMachine("john@example.com")
 	p2 := createMachine("jane@example.com")
