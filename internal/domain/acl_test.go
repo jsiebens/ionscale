@@ -155,6 +155,60 @@ func TestACLPolicy_BuildFilterRulesWildcards(t *testing.T) {
 	assert.Equal(t, expectedRules, actualRules)
 }
 
+func TestACLPolicy_BuildFilterRulesProto(t *testing.T) {
+	p1 := createMachine("john@example.com")
+	p2 := createMachine("jane@example.com")
+
+	policy := ACLPolicy{
+		ACLs: []ACL{
+			{
+				Action: "accept",
+				Src:    []string{"*"},
+				Dst:    []string{"*:22"},
+			},
+			{
+				Action: "accept",
+				Src:    []string{"*"},
+				Dst:    []string{"*:*"},
+				Proto:  "igmp",
+			},
+		},
+	}
+
+	dst := createMachine("john@example.com")
+
+	actualRules := policy.BuildFilterRules([]Machine{*p1, *p2}, dst)
+	expectedRules := []tailcfg.FilterRule{
+		{
+			SrcIPs: []string{"*"},
+			DstPorts: []tailcfg.NetPortRange{
+				{
+					IP: "*",
+					Ports: tailcfg.PortRange{
+						First: 22,
+						Last:  22,
+					},
+				},
+			},
+		},
+		{
+			SrcIPs: []string{"*"},
+			DstPorts: []tailcfg.NetPortRange{
+				{
+					IP: "*",
+					Ports: tailcfg.PortRange{
+						First: 0,
+						Last:  65535,
+					},
+				},
+			},
+			IPProto: []int{protocolIGMP},
+		},
+	}
+
+	assert.Equal(t, expectedRules, actualRules)
+}
+
 func TestACLPolicy_BuildFilterRulesWithGroups(t *testing.T) {
 	p1 := createMachine("jane@example.com")
 	p2 := createMachine("nick@example.com")

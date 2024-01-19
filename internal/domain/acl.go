@@ -39,6 +39,7 @@ type ACLPolicy struct {
 
 type ACL struct {
 	Action string   `json:"action"`
+	Proto  string   `json:"proto"`
 	Src    []string `json:"src"`
 	Dst    []string `json:"dst"`
 }
@@ -254,7 +255,7 @@ func (a ACLPolicy) NodeCapabilities(m *Machine) []tailcfg.NodeCapability {
 func (a ACLPolicy) BuildFilterRules(srcs []Machine, dst *Machine) []tailcfg.FilterRule {
 	var rules = make([]tailcfg.FilterRule, 0)
 
-	appendRules := func(rules []tailcfg.FilterRule, src []string, destPorts []tailcfg.NetPortRange, u *User) []tailcfg.FilterRule {
+	appendRules := func(rules []tailcfg.FilterRule, proto string, src []string, destPorts []tailcfg.NetPortRange, u *User) []tailcfg.FilterRule {
 		var allSrcIPsSet = &StringSet{}
 		for _, alias := range src {
 			for _, src := range srcs {
@@ -272,16 +273,17 @@ func (a ACLPolicy) BuildFilterRules(srcs []Machine, dst *Machine) []tailcfg.Filt
 		return append(rules, tailcfg.FilterRule{
 			SrcIPs:   allSrcIPs,
 			DstPorts: destPorts,
+			IPProto:  parseProtocol(proto),
 		})
 	}
 
 	for _, acl := range a.ACLs {
 		selfDestPorts, allDestPorts := a.expandMachineToDstPorts(dst, acl.Dst)
 		if len(selfDestPorts) != 0 {
-			rules = appendRules(rules, acl.Src, selfDestPorts, &dst.User)
+			rules = appendRules(rules, acl.Proto, acl.Src, selfDestPorts, &dst.User)
 		}
 		if len(allDestPorts) != 0 {
-			rules = appendRules(rules, acl.Src, allDestPorts, nil)
+			rules = appendRules(rules, acl.Proto, acl.Src, allDestPorts, nil)
 		}
 	}
 
@@ -502,6 +504,57 @@ func (ACLPolicy) GormDBDataType(db *gorm.DB, field *schema.Field) string {
 		return "JSON"
 	}
 	return ""
+}
+
+const (
+	protocolICMP     = 1   // Internet Control Message
+	protocolIGMP     = 2   // Internet Group Management
+	protocolIPv4     = 4   // IPv4 encapsulation
+	protocolTCP      = 6   // Transmission Control
+	protocolEGP      = 8   // Exterior Gateway Protocol
+	protocolIGP      = 9   // any private interior gateway (used by Cisco for their IGRP)
+	protocolUDP      = 17  // User Datagram
+	protocolGRE      = 47  // Generic Routing Encapsulation
+	protocolESP      = 50  // Encap Security Payload
+	protocolAH       = 51  // Authentication Header
+	protocolIPv6ICMP = 58  // ICMP for IPv6
+	protocolSCTP     = 132 // Stream Control Transmission Protocol
+)
+
+func parseProtocol(protocol string) []int {
+	switch protocol {
+	case "":
+		return nil
+	case "igmp":
+		return []int{protocolIGMP}
+	case "ipv4", "ip-in-ip":
+		return []int{protocolIPv4}
+	case "tcp":
+		return []int{protocolTCP}
+	case "egp":
+		return []int{protocolEGP}
+	case "igp":
+		return []int{protocolIGP}
+	case "udp":
+		return []int{protocolUDP}
+	case "gre":
+		return []int{protocolGRE}
+	case "esp":
+		return []int{protocolESP}
+	case "ah":
+		return []int{protocolAH}
+	case "sctp":
+		return []int{protocolSCTP}
+	case "icmp":
+		return []int{protocolICMP, protocolIPv6ICMP}
+
+	default:
+		n, err := strconv.Atoi(protocol)
+		if err != nil {
+			return nil
+		}
+		return []int{n}
+	}
 }
 
 type StringSet struct {

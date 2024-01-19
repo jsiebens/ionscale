@@ -35,6 +35,7 @@ message ACL {
   string action = 1;
   repeated string src = 2;
   repeated string dst = 3;
+  string proto = 4;
 }
 
 message AutoApprovers {
