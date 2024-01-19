@@ -35,7 +35,7 @@ func (h *QueryFeatureHandlers) QueryFeature(c echo.Context) error {
 	machineKey := h.machineKey.String()
 	nodeKey := req.NodeKey.String()
 
-	resp := tailcfg.QueryFeatureResponse{}
+	resp := tailcfg.QueryFeatureResponse{Complete: true}
 
 	switch req.Feature {
 	case "serve":
@@ -48,13 +48,16 @@ func (h *QueryFeatureHandlers) QueryFeature(c echo.Context) error {
 			return echo.NewHTTPError(http.StatusBadRequest)
 		}
 
-		if h.dnsProvider == nil || machine.Tailnet.DNSConfig.HttpsCertsEnabled {
+		if h.dnsProvider == nil || !machine.Tailnet.DNSConfig.HttpsCertsEnabled {
 			resp.Text = fmt.Sprintf(serverMessage, machine.Tailnet.Name)
+			resp.Complete = false
 		}
 	case "funnel":
 		resp.Text = fmt.Sprintf("Sorry, ionscale has no support for feature '%s'\n", req.Feature)
+		resp.Complete = false
 	default:
 		resp.Text = fmt.Sprintf("Unknown feature request '%s'\n", req.Feature)
+		resp.Complete = false
 	}
 
 	return c.JSON(http.StatusOK, resp)
