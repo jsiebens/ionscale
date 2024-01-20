@@ -9,7 +9,7 @@ import (
 	"github.com/jsiebens/go-edit/editor"
 	api "github.com/jsiebens/ionscale/pkg/gen/ionscale/v1"
 	"github.com/spf13/cobra"
-	"io/ioutil"
+	"github.com/tailscale/hujson"
 	"os"
 )
 
@@ -104,6 +104,11 @@ func editACLConfigCommand() *cobra.Command {
 
 		defer os.Remove(s)
 
+		next, err = hujson.Standardize(next)
+		if err != nil {
+			return err
+		}
+
 		var policy = &api.ACLPolicy{}
 		if err := json.Unmarshal(next, policy); err != nil {
 			return err
@@ -141,7 +146,12 @@ func setACLConfigCommand() *cobra.Command {
 
 	command.PreRunE = checkRequiredTailnetAndTailnetIdFlags
 	command.RunE = func(cmd *cobra.Command, args []string) error {
-		rawJson, err := ioutil.ReadFile(file)
+		content, err := os.ReadFile(file)
+		if err != nil {
+			return err
+		}
+
+		rawJson, err := hujson.Standardize(content)
 		if err != nil {
 			return err
 		}

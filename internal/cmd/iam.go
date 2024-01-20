@@ -9,7 +9,7 @@ import (
 	"github.com/jsiebens/go-edit/editor"
 	api "github.com/jsiebens/ionscale/pkg/gen/ionscale/v1"
 	"github.com/spf13/cobra"
-	"io/ioutil"
+	"github.com/tailscale/hujson"
 	"os"
 )
 
@@ -102,6 +102,11 @@ func editIAMPolicyCommand() *cobra.Command {
 			return err
 		}
 
+		next, err = hujson.Standardize(next)
+		if err != nil {
+			return err
+		}
+
 		defer os.Remove(s)
 
 		var policy = &api.IAMPolicy{}
@@ -141,7 +146,12 @@ func setIAMPolicyCommand() *cobra.Command {
 
 	command.PreRunE = checkRequiredTailnetAndTailnetIdFlags
 	command.RunE = func(cmd *cobra.Command, args []string) error {
-		rawJson, err := ioutil.ReadFile(file)
+		content, err := os.ReadFile(file)
+		if err != nil {
+			return err
+		}
+
+		rawJson, err := hujson.Standardize(content)
 		if err != nil {
 			return err
 		}

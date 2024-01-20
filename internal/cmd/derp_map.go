@@ -7,6 +7,7 @@ import (
 	"github.com/bufbuild/connect-go"
 	api "github.com/jsiebens/ionscale/pkg/gen/ionscale/v1"
 	"github.com/spf13/cobra"
+	"github.com/tailscale/hujson"
 	"gopkg.in/yaml.v2"
 	"os"
 	"tailscale.com/tailcfg"
@@ -98,7 +99,12 @@ func setDefaultDERPMap() *cobra.Command {
 			return err
 		}
 
-		rawJson, err := os.ReadFile(file)
+		content, err := os.ReadFile(file)
+		if err != nil {
+			return err
+		}
+
+		rawJson, err := hujson.Standardize(content)
 		if err != nil {
 			return err
 		}

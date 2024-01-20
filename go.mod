@@ -37,6 +37,7 @@ require (
 	github.com/sony/sonyflake v1.2.0
 	github.com/spf13/cobra v1.8.0
 	github.com/stretchr/testify v1.8.4
+	github.com/tailscale/hujson v0.0.0-20221223112325-20486734a56a
 	github.com/xhit/go-str2duration/v2 v2.1.0
 	go.uber.org/zap v1.26.0
 	golang.org/x/crypto v0.18.0
