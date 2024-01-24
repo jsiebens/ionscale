@@ -29,6 +29,7 @@ message ACLPolicy {
   optional AutoApprovers autoapprovers = 5;
   repeated SSHRule ssh = 6;
   repeated NodeAttr nodeattrs = 7;
+  repeated ACLGrant grants = 8;
 }
 
 message ACL {
@@ -54,4 +55,11 @@ message SSHRule {
 message NodeAttr {
   repeated string target = 1;
   repeated string attr = 2;
+}
+
+message ACLGrant {
+  repeated string src = 1;
+  repeated string dst = 2;
+  repeated string ip = 3;
+  map<string, google.protobuf.ListValue> app = 4;
 }

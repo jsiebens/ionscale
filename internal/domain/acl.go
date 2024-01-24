@@ -8,6 +8,7 @@ import (
 	"gorm.io/gorm"
 	"gorm.io/gorm/schema"
 	"net/netip"
+	"slices"
 	"sort"
 	"strconv"
 	"strings"
@@ -35,6 +36,7 @@ type ACLPolicy struct {
 	AutoApprovers *AutoApprovers      `json:"autoApprovers,omitempty"`
 	SSHRules      []SSHRule           `json:"ssh,omitempty"`
 	NodeAttrs     []NodeAttr          `json:"nodeAttrs,omitempty"`
+	Grants        []Grant             `json:"grants,omitempty"`
 }
 
 type ACL struct {
@@ -55,6 +57,13 @@ type SSHRule struct {
 type NodeAttr struct {
 	Target []string `json:"target"`
 	Attr   []string `json:"attr"`
+}
+
+type Grant struct {
+	Src []string                 `json:"src"`
+	Dst []string                 `json:"dst"`
+	IP  []tailcfg.ProtoPortRange `json:"ip"`
+	App tailcfg.PeerCapMap       `json:"app"`
 }
 
 func DefaultACLPolicy() ACLPolicy {
@@ -109,7 +118,7 @@ func (a ACLPolicy) FindAutoApprovedIPs(routableIPs []netip.Prefix, tags []string
 		return false
 	}
 
-	autoApprovedIPs := []netip.Prefix{}
+	var autoApprovedIPs []netip.Prefix
 	for route, autoApprovers := range a.AutoApprovers.Routes {
 		candidate, err := netip.ParsePrefix(route)
 		if err != nil {
@@ -121,7 +130,7 @@ func (a ACLPolicy) FindAutoApprovedIPs(routableIPs []netip.Prefix, tags []string
 		}
 	}
 
-	result := []netip.Prefix{}
+	var result []netip.Prefix
 	for _, c := range routableIPs {
 		if c.Bits() == 0 && matches(a.AutoApprovers.ExitNode) {
 			result = append(result, c)
@@ -132,15 +141,6 @@ func (a ACLPolicy) FindAutoApprovedIPs(routableIPs []netip.Prefix, tags []string
 	}
 
 	return result
-}
-
-func (a ACLPolicy) IsTagOwner(tags []string, p *User) bool {
-	for _, t := range tags {
-		if a.isTagOwner(t, p) {
-			return true
-		}
-	}
-	return false
 }
 
 func (a ACLPolicy) CheckTagOwners(tags []string, p *User) error {
@@ -158,53 +158,18 @@ func (a ACLPolicy) isTagOwner(tag string, p *User) bool {
 		return true
 	}
 	if tagOwners, ok := a.TagOwners[tag]; ok {
-		return a.validateTagOwners(tagOwners, p)
-	}
-	return false
-}
-
-func (a ACLPolicy) validateTagOwners(tagOwners []string, p *User) bool {
-	for _, alias := range tagOwners {
-		if strings.HasPrefix(alias, "group:") {
-			if group, ok := a.Groups[alias]; ok {
-				for _, groupMember := range group {
-					if groupMember == p.Name {
-						return true
-					}
+		for _, alias := range tagOwners {
+			if strings.HasPrefix(alias, "group:") {
+				if group, ok := a.Groups[alias]; ok {
+					return slices.Contains(group, p.Name)
 				}
-			}
-		} else {
-			if alias == p.Name {
-				return true
-			}
-		}
-	}
-	return false
-}
-
-func (a ACLPolicy) IsValidPeer(src *Machine, dest *Machine) bool {
-	if !src.HasTags() && !dest.HasTags() && dest.HasUser(src.User.Name) {
-		return true
-	}
-
-	for _, acl := range a.ACLs {
-		selfDestPorts, allDestPorts := a.expandMachineToDstPorts(dest, acl.Dst)
-		if len(selfDestPorts) != 0 {
-			for _, alias := range acl.Src {
-				if len(a.expandMachineAlias(src, alias, true, &dest.User)) != 0 {
-					return true
-				}
-			}
-		}
-		if len(allDestPorts) != 0 {
-			for _, alias := range acl.Src {
-				if len(a.expandMachineAlias(src, alias, true, nil)) != 0 {
+			} else {
+				if alias == p.Name {
 					return true
 				}
 			}
 		}
 	}
-
 	return false
 }
 
@@ -252,182 +217,12 @@ func (a ACLPolicy) NodeCapabilities(m *Machine) []tailcfg.NodeCapability {
 	return caps
 }
 
-func (a ACLPolicy) BuildFilterRules(srcs []Machine, dst *Machine) []tailcfg.FilterRule {
-	var rules = make([]tailcfg.FilterRule, 0)
-
-	appendRules := func(rules []tailcfg.FilterRule, proto string, src []string, destPorts []tailcfg.NetPortRange, u *User) []tailcfg.FilterRule {
-		var allSrcIPsSet = &StringSet{}
-		for _, alias := range src {
-			for _, src := range srcs {
-				srcIPs := a.expandMachineAlias(&src, alias, true, u)
-				allSrcIPsSet.Add(srcIPs...)
-			}
-		}
-
-		allSrcIPs := allSrcIPsSet.Items()
-
-		if len(allSrcIPs) == 0 {
-			return rules
-		}
-
-		return append(rules, tailcfg.FilterRule{
-			SrcIPs:   allSrcIPs,
-			DstPorts: destPorts,
-			IPProto:  parseProtocol(proto),
-		})
-	}
-
-	for _, acl := range a.ACLs {
-		selfDestPorts, allDestPorts := a.expandMachineToDstPorts(dst, acl.Dst)
-		if len(selfDestPorts) != 0 {
-			rules = appendRules(rules, acl.Proto, acl.Src, selfDestPorts, &dst.User)
-		}
-		if len(allDestPorts) != 0 {
-			rules = appendRules(rules, acl.Proto, acl.Src, allDestPorts, nil)
-		}
-	}
-
-	return rules
-}
-
-func (a ACLPolicy) expandMachineToDstPorts(m *Machine, ports []string) ([]tailcfg.NetPortRange, []tailcfg.NetPortRange) {
-	selfDestRanges := []tailcfg.NetPortRange{}
-	otherDestRanges := []tailcfg.NetPortRange{}
-	for _, d := range ports {
-		self, ranges := a.expandMachineDestToNetPortRanges(m, d)
-		if self {
-			selfDestRanges = append(selfDestRanges, ranges...)
-		} else {
-			otherDestRanges = append(otherDestRanges, ranges...)
-		}
-	}
-	return selfDestRanges, otherDestRanges
-}
-
-func (a ACLPolicy) expandMachineDestToNetPortRanges(m *Machine, dest string) (bool, []tailcfg.NetPortRange) {
-	lastInd := strings.LastIndex(dest, ":")
-	if lastInd == -1 {
-		return false, nil
-	}
-
-	alias := dest[:lastInd]
-	portRange := dest[lastInd+1:]
-
-	ports, err := a.expandValuePortToPortRange(portRange)
-	if err != nil {
-		return false, nil
-	}
-
-	ips := a.expandMachineAlias(m, alias, false, nil)
-	if len(ips) == 0 {
-		return false, nil
-	}
-
-	var netPortRanges []tailcfg.NetPortRange
-	for _, d := range ips {
-		for _, p := range ports {
-			pr := tailcfg.NetPortRange{
-				IP:    d,
-				Ports: p,
-			}
-			netPortRanges = append(netPortRanges, pr)
-		}
-	}
-
-	return alias == AutoGroupSelf, netPortRanges
-}
-
-func (a ACLPolicy) expandMachineAlias(m *Machine, alias string, src bool, u *User) []string {
-	if u != nil && m.HasTags() {
-		return []string{}
-	}
-
-	if u != nil && !m.HasUser(u.Name) {
-		return []string{}
-	}
-
-	if alias == "*" && u != nil {
-		return m.IPs()
-	}
-
-	if alias == "*" {
-		return []string{"*"}
-	}
-
-	if alias == AutoGroupMember || alias == AutoGroupMembers || alias == AutoGroupSelf {
-		if !m.HasTags() {
-			return m.IPs()
-		} else {
-			return []string{}
-		}
-	}
-
-	if alias == AutoGroupTagged {
-		if m.HasTags() {
-			return m.IPs()
-		} else {
-			return []string{}
-		}
-	}
-
-	if alias == AutoGroupInternet && m.IsExitNode() {
-		return autogroupInternetRanges()
-	}
-
-	if strings.Contains(alias, "@") && !m.HasTags() && m.HasUser(alias) {
-		return m.IPs()
-	}
-
-	if strings.HasPrefix(alias, "group:") && !m.HasTags() {
-		users, ok := a.Groups[alias]
-
-		if !ok {
-			return []string{}
-		}
-
-		for _, u := range users {
-			if m.HasUser(u) {
-				return m.IPs()
-			}
-		}
-
-		return []string{}
-	}
-
-	if strings.HasPrefix(alias, "tag:") && m.HasTag(alias) {
-		return m.IPs()
-	}
-
-	if h, ok := a.Hosts[alias]; ok {
-		alias = h
-	}
-
-	if src {
-		ip, err := netip.ParseAddr(alias)
-		if err == nil && m.HasIP(ip) {
-			return []string{ip.String()}
-		}
-	} else {
-		ip, err := netip.ParseAddr(alias)
-		if err == nil && m.IsAllowedIP(ip) {
-			return []string{ip.String()}
-		}
-
-		prefix, err := netip.ParsePrefix(alias)
-		if err == nil && m.IsAllowedIPPrefix(prefix) {
-			return []string{prefix.String()}
-		}
-	}
-
-	return []string{}
-}
-
-func (a ACLPolicy) expandValuePortToPortRange(s string) ([]tailcfg.PortRange, error) {
+func (a ACLPolicy) parsePortRanges(s string) ([]tailcfg.PortRange, error) {
 	if s == "*" {
-		return []tailcfg.PortRange{{First: 0, Last: 65535}}, nil
+		return []tailcfg.PortRange{tailcfg.PortRangeAny}, nil
 	}
 
-	ports := []tailcfg.PortRange{}
+	var ports []tailcfg.PortRange
 	for _, p := range strings.Split(s, ",") {
 		rang := strings.Split(p, "-")
 		if len(rang) == 1 {
@@ -580,6 +375,10 @@ func (s *StringSet) Items() []string {
 	}
 	sort.Strings(items)
 	return items
+}
+
+func (s *StringSet) Empty() bool {
+	return len(s.items) == 0
 }
 
 func autogroupInternetRanges() []string {

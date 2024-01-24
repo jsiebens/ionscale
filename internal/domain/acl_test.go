@@ -1,8 +1,10 @@
 package domain
 
 import (
+	"encoding/json"
 	"github.com/jsiebens/ionscale/internal/addr"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"net/netip"
 	"sort"
 	"tailscale.com/tailcfg"
@@ -841,7 +843,7 @@ func TestACLPolicy_FindAutoApprovedIPs(t *testing.T) {
 			name:        "no match",
 			userName:    "nick@example.com",
 			routableIPs: []netip.Prefix{route1, route2, route3},
-			expected:    []netip.Prefix{},
+			expected:    nil,
 		},
 		{
 			name:        "exit",
@@ -853,7 +855,7 @@ func TestACLPolicy_FindAutoApprovedIPs(t *testing.T) {
 			name:        "exit no match",
 			userName:    "john@example.com",
 			routableIPs: []netip.Prefix{netip.MustParsePrefix("0.0.0.0/0")},
-			expected:    []netip.Prefix{},
+			expected:    nil,
 		},
 	}
 
@@ -892,6 +894,90 @@ func TestACLPolicy_BuildFilterRulesWithAdvertisedRoutes(t *testing.T) {
 					Ports: tailcfg.PortRange{
 						First: 0,
 						Last:  65535,
+					},
+				},
+			},
+		},
+	}
+
+	assert.Equal(t, expectedRules, actualRules)
+}
+
+func TestACLPolicy_BuildFilterRulesWildcardGrants(t *testing.T) {
+	ranges, err := tailcfg.ParseProtoPortRanges([]string{"*"})
+	require.NoError(t, err)
+
+	p1 := createMachine("john@example.com")
+	p2 := createMachine("jane@example.com")
+
+	policy := ACLPolicy{
+		Grants: []Grant{
+			{
+				Src: []string{"*"},
+				Dst: []string{"*"},
+				IP:  ranges,
+			},
+		},
+	}
+
+	dst := createMachine("john@example.com")
+
+	actualRules := policy.BuildFilterRules([]Machine{*p1, *p2}, dst)
+	expectedRules := []tailcfg.FilterRule{
+		{
+			SrcIPs: []string{"*"},
+			DstPorts: []tailcfg.NetPortRange{
+				{
+					IP: "*",
+					Ports: tailcfg.PortRange{
+						First: 0,
+						Last:  65535,
+					},
+				},
+			},
+		},
+	}
+
+	assert.Equal(t, expectedRules, actualRules)
+}
+
+func TestACLPolicy_BuildFilterRulesWithAppGrants(t *testing.T) {
+	p1 := createMachine("john@example.com")
+	p2 := createMachine("jane@example.com")
+
+	dst := createMachine("john@example.com")
+
+	mycap := map[string]interface{}{
+		"channel": "alpha",
+		"ids":     []string{"1", "2", "3"},
+	}
+
+	marshal, _ := json.Marshal(mycap)
+
+	policy := ACLPolicy{
+		Grants: []Grant{
+			{
+				Src: []string{"*"},
+				Dst: []string{"*"},
+				App: map[tailcfg.PeerCapability][]tailcfg.RawMessage{
+					tailcfg.PeerCapability("localtest.me/cap/test"): {tailcfg.RawMessage(marshal)},
+				},
+			},
+		},
+	}
+
+	actualRules := policy.BuildFilterRules([]Machine{*p1, *p2}, dst)
+	expectedRules := []tailcfg.FilterRule{
+		{
+			SrcIPs: []string{"*"},
+			CapGrant: []tailcfg.CapGrant{
+				{
+					Dsts: []netip.Prefix{
+						netip.PrefixFrom(*dst.IPv4.Addr, 32),
+						netip.PrefixFrom(*dst.IPv6.Addr, 128),
+					},
+					CapMap: map[tailcfg.PeerCapability][]tailcfg.RawMessage{
+						tailcfg.PeerCapability("localtest.me/cap/test"): {tailcfg.RawMessage(marshal)},
 					},
 				},
 			},
