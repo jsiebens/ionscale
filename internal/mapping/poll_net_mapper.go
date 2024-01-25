@@ -76,42 +76,50 @@ func (h *PollNetMapper) CreateMapResponse(ctx context.Context, delta bool) (*Map
 	var users = []tailcfg.UserProfile{*user}
 	var changedPeers []*tailcfg.Node
 	var removedPeers []tailcfg.NodeID
-
-	candidatePeers, err := h.repository.ListMachinePeers(ctx, m.TailnetID, m.MachineKey)
-	if err != nil {
-		return nil, err
-	}
-
+	var filterRules = make([]tailcfg.FilterRule, 0)
+	var sshPolicy *tailcfg.SSHPolicy
 	syncedPeerIDs := map[uint64]bool{}
-	syncedUserIDs := map[tailcfg.UserID]bool{user.ID: true}
 
-	for _, peer := range candidatePeers {
-		if peer.IsExpired() {
-			continue
+	if !h.req.OmitPeers {
+		candidatePeers, err := h.repository.ListMachinePeers(ctx, m.TailnetID, m.MachineKey)
+		if err != nil {
+			return nil, err
 		}
-		if policies.IsValidPeer(m, &peer) || policies.IsValidPeer(&peer, m) {
-			isConnected := h.sessionManager.HasSession(peer.TailnetID, peer.ID)
 
-			n, u, err := ToNode(h.req.Version, &peer, &tailnet, serviceUser, true, isConnected, prc.filter)
-			if err != nil {
-				return nil, err
-			}
-			changedPeers = append(changedPeers, n)
-			syncedPeerIDs[peer.ID] = true
-			delete(h.prevSyncedPeerIDs, peer.ID)
+		syncedUserIDs := map[tailcfg.UserID]bool{user.ID: true}
 
-			if _, ok := syncedUserIDs[u.ID]; !ok {
-				users = append(users, *u)
-				syncedUserIDs[u.ID] = true
+		for _, peer := range candidatePeers {
+			if peer.IsExpired() {
+				continue
 			}
+			if policies.IsValidPeer(m, &peer) || policies.IsValidPeer(&peer, m) {
+				isConnected := h.sessionManager.HasSession(peer.TailnetID, peer.ID)
+
+				n, u, err := ToNode(h.req.Version, &peer, &tailnet, serviceUser, true, isConnected, prc.filter)
+				if err != nil {
+					return nil, err
+				}
+				changedPeers = append(changedPeers, n)
+				syncedPeerIDs[peer.ID] = true
+				delete(h.prevSyncedPeerIDs, peer.ID)
+
+				if _, ok := syncedUserIDs[u.ID]; !ok {
+					users = append(users, *u)
+					syncedUserIDs[u.ID] = true
+				}
+			}
+		}
+
+		for p, _ := range h.prevSyncedPeerIDs {
+			removedPeers = append(removedPeers, tailcfg.NodeID(p))
+		}
+
+		filterRules = policies.BuildFilterRules(candidatePeers, m)
+
+		if tailnet.SSHEnabled && hostinfo.TailscaleSSHEnabled() {
+			sshPolicy = policies.BuildSSHPolicy(candidatePeers, m)
 		}
 	}
-
-	for p, _ := range h.prevSyncedPeerIDs {
-		removedPeers = append(removedPeers, tailcfg.NodeID(p))
-	}
-
-	filterRules := policies.BuildFilterRules(candidatePeers, m)
 
 	controlTime := time.Now().UTC()
 	var mapResponse tailcfg.MapResponse
@@ -122,6 +130,7 @@ func (h *PollNetMapper) CreateMapResponse(ctx context.Context, delta bool) (*Map
 			Node:            node,
 			DNSConfig:       ToDNSConfig(m, &m.Tailnet, &dnsConfig),
 			PacketFilter:    filterRules,
+			SSHPolicy:       sshPolicy,
 			DERPMap:         &derpMap.DERPMap,
 			Domain:          domain.SanitizeTailnetName(m.Tailnet.Name),
 			Peers:           changedPeers,
@@ -137,6 +146,7 @@ func (h *PollNetMapper) CreateMapResponse(ctx context.Context, delta bool) (*Map
 			Node:            node,
 			DNSConfig:       ToDNSConfig(m, &m.Tailnet, &dnsConfig),
 			PacketFilter:    filterRules,
+			SSHPolicy:       sshPolicy,
 			Domain:          domain.SanitizeTailnetName(m.Tailnet.Name),
 			PeersChanged:    changedPeers,
 			PeersRemoved:    removedPeers,
@@ -148,10 +158,6 @@ func (h *PollNetMapper) CreateMapResponse(ctx context.Context, delta bool) (*Map
 		if h.prevDerpMapChecksum != derpMap.Checksum {
 			mapResponse.DERPMap = &derpMap.DERPMap
 		}
-	}
-
-	if tailnet.SSHEnabled && hostinfo.TailscaleSSHEnabled() {
-		mapResponse.SSHPolicy = policies.BuildSSHPolicy(candidatePeers, m)
 	}
 
 	if h.req.OmitPeers {
