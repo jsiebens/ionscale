@@ -1,0 +1,43 @@
+package templates
+
+import "strconv"
+import "github.com/jsiebens/ionscale/internal/domain"
+
+templ Tailnets(accountID uint64, isSystemAdmin bool, tailnets []domain.Tailnet, csrf string) {
+    if isSystemAdmin {
+        <div style="text-align: left; padding-bottom: 10px">
+            <p><b>System Admin</b></p>
+            <small>You are a member of the System Admin group:</small>
+        </div>
+        <form method="post">
+            <input type="hidden" name="aid" value={ strconv.FormatUint(accountID, 10) } />
+            <input type="hidden" name="_csrf" value={ csrf } />
+            <ul class="selectionList">
+                <li><button type="submit" name="sad" value="true">OK, continue as System Admin</button></li>
+            </ul>
+        </form>
+    }
+
+    if len(tailnets) != 0 {
+        if isSystemAdmin {
+            <div style="text-align: left; padding-bottom: 10px; padding-top: 20px">
+                <small>Or select your <b>tailnet</b>:</small>
+            </div>
+        } else {
+            <div style="text-align: left; padding-bottom: 10px;">
+                <p><b>Tailnets</b></p>
+                <small>Select your tailnet:</small>
+            </div>
+        }
+
+        <form method="post">
+            <input type="hidden" name="aid" value={ strconv.FormatUint(accountID, 10) }/>
+            <input type="hidden" name="_csrf" value={ csrf }/>
+            <ul class="selectionList">
+            for _, t := range tailnets {
+                <li><button type="submit" name="tid" value={ strconv.FormatUint(t.ID, 10) }>{ t.Name }</button></li>
+            }
+            </ul>
+        </form>
+    }
+}

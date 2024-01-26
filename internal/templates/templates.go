@@ -1,23 +1,19 @@
 package templates
 
 import (
-	"embed"
+	"fmt"
+	"github.com/a-h/templ"
 	"github.com/labstack/echo/v4"
-	"html/template"
 	"io"
 )
 
-//go:embed *.html
-var fs embed.FS
-
-func NewTemplates() *Template {
-	return &Template{templates: template.Must(template.ParseFS(fs, "*.html"))}
+type Renderer struct {
 }
 
-type Template struct {
-	templates *template.Template
-}
+func (t *Renderer) Render(w io.Writer, name string, data interface{}, c echo.Context) error {
+	if x, ok := data.(templ.Component); ok {
+		return layout(x).Render(c.Request().Context(), w)
+	}
 
-func (t *Template) Render(w io.Writer, name string, data interface{}, c echo.Context) error {
-	return t.templates.ExecuteTemplate(w, name, data)
+	return fmt.Errorf("invalid data")
 }

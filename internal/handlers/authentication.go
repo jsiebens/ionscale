@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/jsiebens/ionscale/internal/addr"
 	"github.com/jsiebens/ionscale/internal/auth"
+	tpl "github.com/jsiebens/ionscale/internal/templates"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/mr-tron/base58"
 	"net/http"
@@ -40,11 +41,6 @@ type AuthenticationHandlers struct {
 	systemIAMPolicy *domain.IAMPolicy
 }
 
-type AuthFormData struct {
-	ProviderAvailable bool
-	Csrf              string
-}
-
 type AuthInput struct {
 	Key     string   `param:"key"`
 	Flow    AuthFlow `param:"flow"`
@@ -58,13 +54,6 @@ type EndAuthForm struct {
 	AsSystemAdmin bool   `form:"sad"`
 	AuthKey       string `form:"ak"`
 	State         string `form:"state"`
-}
-
-type TailnetSelectionData struct {
-	AccountID   uint64
-	Tailnets    []domain.Tailnet
-	SystemAdmin bool
-	Csrf        string
 }
 
 type oauthState struct {
@@ -104,7 +93,7 @@ func (h *AuthenticationHandlers) StartAuth(c echo.Context) error {
 		}
 
 		csrf := c.Get(middleware.DefaultCSRFConfig.ContextKey).(string)
-		return c.Render(http.StatusOK, "auth.html", &AuthFormData{ProviderAvailable: h.authProvider != nil, Csrf: csrf})
+		return c.Render(http.StatusOK, "", tpl.Auth(h.authProvider != nil, csrf))
 	}
 
 	// cli auth flow
@@ -245,12 +234,7 @@ func (h *AuthenticationHandlers) Callback(c echo.Context) error {
 			return h.endMachineRegistrationFlow(c, EndAuthForm{AccountID: account.ID, TailnetID: tailnets[0].ID}, req)
 		}
 
-		return c.Render(http.StatusOK, "tailnets.html", &TailnetSelectionData{
-			Csrf:        csrf,
-			Tailnets:    tailnets,
-			SystemAdmin: false,
-			AccountID:   account.ID,
-		})
+		return c.Render(http.StatusOK, "", tpl.Tailnets(account.ID, false, tailnets, csrf))
 	}
 
 	if state.Flow == AuthFlowClient {
@@ -267,12 +251,8 @@ func (h *AuthenticationHandlers) Callback(c echo.Context) error {
 			}
 			return c.Redirect(http.StatusFound, "/a/error?e=ua")
 		}
-		return c.Render(http.StatusOK, "tailnets.html", &TailnetSelectionData{
-			Csrf:        csrf,
-			Tailnets:    tailnets,
-			SystemAdmin: isSystemAdmin,
-			AccountID:   account.ID,
-		})
+
+		return c.Render(http.StatusOK, "", tpl.Tailnets(account.ID, isSystemAdmin, tailnets, csrf))
 	}
 
 	return echo.NewHTTPError(http.StatusNotFound)
@@ -316,24 +296,24 @@ func (h *AuthenticationHandlers) Success(c echo.Context) error {
 	s := c.QueryParam("s")
 	switch s {
 	case "nma":
-		return c.Render(http.StatusOK, "newmachine.html", nil)
+		return c.Render(http.StatusOK, "", tpl.NewMachine())
 	}
-	return c.Render(http.StatusOK, "success.html", nil)
+	return c.Render(http.StatusOK, "", tpl.Success())
 }
 
 func (h *AuthenticationHandlers) Error(c echo.Context) error {
 	e := c.QueryParam("e")
 	switch e {
 	case "iak":
-		return c.Render(http.StatusForbidden, "invalidauthkey.html", nil)
+		return c.Render(http.StatusForbidden, "", tpl.InvalidAuthKey())
 	case "ua":
-		return c.Render(http.StatusForbidden, "unauthorized.html", nil)
+		return c.Render(http.StatusForbidden, "", tpl.Unauthorized())
 	case "nto":
-		return c.Render(http.StatusForbidden, "notagowner.html", nil)
+		return c.Render(http.StatusForbidden, "", tpl.NotTagOwner())
 	case "nmo":
-		return c.Render(http.StatusForbidden, "notmachineowner.html", nil)
+		return c.Render(http.StatusForbidden, "", tpl.NotMachineOwner())
 	}
-	return c.Render(http.StatusOK, "error.html", nil)
+	return c.Render(http.StatusOK, "", tpl.Error())
 }
 
 func (h *AuthenticationHandlers) endCliAuthenticationFlow(c echo.Context, form EndAuthForm, req *domain.AuthenticationRequest) error {

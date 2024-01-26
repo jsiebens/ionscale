@@ -3,6 +3,7 @@ module github.com/jsiebens/ionscale
 go 1.21
 
 require (
+	github.com/a-h/templ v0.2.543
 	github.com/apparentlymart/go-cidr v1.1.0
 	github.com/bufbuild/connect-go v1.10.0
 	github.com/caarlos0/env/v6 v6.10.1
