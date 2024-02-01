@@ -17,6 +17,7 @@ import (
 	echo_prometheus "github.com/labstack/echo-contrib/prometheus"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
+	certmagicsql "github.com/travisjeffery/certmagic-sqlstorage"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"golang.org/x/net/http2"
@@ -29,7 +30,7 @@ import (
 	"tailscale.com/types/key"
 )
 
-func Start(c *config.Config) error {
+func Start(ctx context.Context, c *config.Config) error {
 	logger, err := setupLogging(c.Logging)
 	if err != nil {
 		return err
@@ -47,14 +48,14 @@ func Start(c *config.Config) error {
 	httpLogger := logger.Named("http")
 	dbLogger := logger.Named("db")
 
-	repository, err := database.OpenDB(&c.Database, dbLogger)
+	db, repository, err := database.OpenDB(&c.Database, dbLogger)
 	if err != nil {
 		return logError(err)
 	}
 
 	sessionManager := core.NewPollMapSessionManager()
 
-	defaultControlKeys, err := repository.GetControlKeys(context.Background())
+	defaultControlKeys, err := repository.GetControlKeys(ctx)
 	if err != nil {
 		return logError(err)
 	}
@@ -73,16 +74,19 @@ func Start(c *config.Config) error {
 
 	// prepare CertMagic
 	if c.Tls.AcmeEnabled {
+		storage, err := certmagicsql.NewStorage(ctx, db, certmagicsql.Options{})
+		if err != nil {
+			return err
+		}
+
 		certmagic.DefaultACME.Agreed = true
 		certmagic.DefaultACME.Email = c.Tls.AcmeEmail
 		certmagic.DefaultACME.CA = c.Tls.AcmeCA
 		certmagic.Default.Logger = logger.Named("certmagic")
-		if c.Tls.AcmePath != "" {
-			certmagic.Default.Storage = &certmagic.FileStorage{Path: c.Tls.AcmePath}
-		}
+		certmagic.Default.Storage = storage
 
 		cfg := certmagic.NewDefault()
-		if err := cfg.ManageAsync(context.Background(), []string{serverUrl.Host}); err != nil {
+		if err := cfg.ManageAsync(ctx, []string{serverUrl.Host}); err != nil {
 			return logError(err)
 		}
 

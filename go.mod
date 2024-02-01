@@ -151,6 +151,7 @@ require (
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/tailscale/netlink v1.1.1-0.20211101221916-cabfb018fe85 // indirect
 	github.com/tkuchiki/go-timezone v0.2.2 // indirect
+	github.com/travisjeffery/certmagic-sqlstorage v1.1.1 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/fasttemplate v1.2.2 // indirect
 	github.com/vishvananda/netlink v1.2.1-beta.2 // indirect

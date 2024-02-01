@@ -2,6 +2,7 @@ package database
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"fmt"
 	"github.com/go-gormigrate/gormigrate/v2"
@@ -23,17 +24,17 @@ type dbLock interface {
 	UnlockErr(error) error
 }
 
-func OpenDB(config *config.Database, logger *zap.Logger) (domain.Repository, error) {
+func OpenDB(config *config.Database, logger *zap.Logger) (*sql.DB, domain.Repository, error) {
 	db, lock, err := createDB(config, logger)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	_ = db.Use(prometheus.New(prometheus.Config{StartServer: false}))
 
 	sqlDB, err := db.DB()
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	sqlDB.SetMaxOpenConns(config.MaxOpenConns)
@@ -44,14 +45,14 @@ func OpenDB(config *config.Database, logger *zap.Logger) (domain.Repository, err
 	repository := domain.NewRepository(db)
 
 	if err := lock.Lock(); err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	if err := lock.UnlockErr(migrate(db)); err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
-	return repository, nil
+	return sqlDB, repository, nil
 }
 
 func createDB(config *config.Database, logger *zap.Logger) (*gorm.DB, dbLock, error) {

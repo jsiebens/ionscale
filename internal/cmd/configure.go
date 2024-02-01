@@ -67,7 +67,6 @@ func configureCommand() *cobra.Command {
 		if acme {
 			c.Tls.AcmeEnabled = true
 			c.Tls.AcmeEmail = email
-			c.Tls.AcmePath = filepath.Join(dataDir, "acme")
 		} else {
 			c.Tls.CertFile = certFile
 			c.Tls.KeyFile = keyFile

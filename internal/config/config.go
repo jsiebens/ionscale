@@ -115,7 +115,6 @@ func defaultConfig() *Config {
 			ForceHttps:  true,
 			AcmeEnabled: false,
 			AcmeCA:      certmagic.LetsEncryptProductionCA,
-			AcmePath:    "./acme",
 		},
 		PollNet: PollNet{
 			KeepAliveInterval: defaultKeepAliveInterval,
@@ -157,7 +156,6 @@ type Tls struct {
 	AcmeEnabled bool   `yaml:"acme,omitempty" env:"ACME_ENABLED"`
 	AcmeEmail   string `yaml:"acme_email,omitempty" env:"ACME_EMAIL"`
 	AcmeCA      string `yaml:"acme_ca,omitempty" env:"ACME_CA"`
-	AcmePath    string `yaml:"acme_path,omitempty" env:"ACME_PATH"`
 }
 
 type PollNet struct {
