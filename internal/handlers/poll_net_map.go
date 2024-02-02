@@ -46,6 +46,10 @@ func (h *PollNetMapHandler) PollNetMap(c echo.Context) error {
 		return logError(err)
 	}
 
+	if req.Version < SupportedCapabilityVersion {
+		return UnsupportedClientVersionError
+	}
+
 	machineKey := h.machineKey.String()
 	nodeKey := req.NodeKey.String()
 
@@ -59,35 +63,15 @@ func (h *PollNetMapHandler) PollNetMap(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusNotFound)
 	}
 
-	if req.ReadOnly {
-		return h.handleReadOnly(c, m, req)
-	} else {
-		return h.handleUpdate(c, m, req)
-	}
+	return h.handlePollNetMap(c, m, req)
 }
 
-func (h *PollNetMapHandler) handleUpdate(c echo.Context, m *domain.Machine, mapRequest *tailcfg.MapRequest) error {
+func (h *PollNetMapHandler) handlePollNetMap(c echo.Context, m *domain.Machine, mapRequest *tailcfg.MapRequest) error {
 	ctx := c.Request().Context()
 
 	now := time.Now().UTC()
-
-	m.HostInfo = domain.HostInfo(*mapRequest.Hostinfo)
-	m.DiscoKey = mapRequest.DiscoKey.String()
-	m.Endpoints = mapRequest.Endpoints
-	m.LastSeen = &now
-
-	if err := h.repository.SaveMachine(ctx, m); err != nil {
-		return logError(err)
-	}
-
 	tailnetID := m.TailnetID
 	machineID := m.ID
-
-	h.sessionManager.NotifyAll(tailnetID, m.ID)
-
-	if !mapRequest.Stream {
-		return c.String(http.StatusOK, "")
-	}
 
 	mapper := mapping.NewPollNetMapper(mapRequest, m.ID, h.repository, h.sessionManager)
 
@@ -96,11 +80,26 @@ func (h *PollNetMapHandler) handleUpdate(c echo.Context, m *domain.Machine, mapR
 		return logError(err)
 	}
 
+	if !mapRequest.Stream {
+		m.HostInfo = domain.HostInfo(*mapRequest.Hostinfo)
+		m.DiscoKey = mapRequest.DiscoKey.String()
+		m.Endpoints = mapRequest.Endpoints
+		m.LastSeen = &now
+
+		if err := h.repository.SaveMachine(ctx, m); err != nil {
+			return logError(err)
+		}
+
+		h.sessionManager.NotifyAll(tailnetID)
+
+		return c.JSONBlob(http.StatusOK, response)
+	}
+
 	updateChan := make(chan *core.Ping, 20)
 	h.sessionManager.Register(m.TailnetID, m.ID, updateChan)
 
 	// Listen to connection close
-	notify := c.Request().Context().Done()
+	notify := ctx.Done()
 
 	keepAliveResponse, err := h.createKeepAliveResponse(mapRequest)
 	if err != nil {
@@ -172,26 +171,6 @@ func (h *PollNetMapHandler) handleUpdate(c echo.Context, m *domain.Machine, mapR
 			return nil
 		}
 	}
-}
-
-func (h *PollNetMapHandler) handleReadOnly(c echo.Context, m *domain.Machine, request *tailcfg.MapRequest) error {
-	ctx := c.Request().Context()
-
-	m.HostInfo = domain.HostInfo(*request.Hostinfo)
-	m.DiscoKey = request.DiscoKey.String()
-
-	if err := h.repository.SaveMachine(ctx, m); err != nil {
-		return logError(err)
-	}
-
-	mapper := mapping.NewPollNetMapper(request, m.ID, h.repository, h.sessionManager)
-	payload, err := h.createMapResponse(mapper, false, request.Compress)
-	if err != nil {
-		return logError(err)
-	}
-
-	_, err = c.Response().Write(payload)
-	return logError(err)
 }
 
 func (h *PollNetMapHandler) createKeepAliveResponse(request *tailcfg.MapRequest) ([]byte, error) {
