@@ -45,6 +45,11 @@ func (h *RegistrationHandlers) Register(c echo.Context) error {
 		return logError(err)
 	}
 
+	if req.Version < SupportedCapabilityVersion {
+		response := tailcfg.RegisterResponse{MachineAuthorized: false, Error: UnsupportedClientVersionMessage}
+		return c.JSON(http.StatusOK, response)
+	}
+
 	machineKey := h.machineKey.String()
 	nodeKey := req.NodeKey.String()
 

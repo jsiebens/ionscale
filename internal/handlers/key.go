@@ -9,8 +9,12 @@ import (
 )
 
 const (
-	NoiseCapabilityVersion = 28
+	SupportedCapabilityVersion      = 68
+	NoiseCapabilityVersion          = 28
+	UnsupportedClientVersionMessage = "ionscale only support client version >= 1.48.0, please upgrade your client"
 )
+
+var UnsupportedClientVersionError = echo.NewHTTPError(http.StatusBadRequest, UnsupportedClientVersionMessage)
 
 func KeyHandler(keys *config.ServerKeys) echo.HandlerFunc {
 	legacyPublicKey := keys.LegacyControlKey.Public()
