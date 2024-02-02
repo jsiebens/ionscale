@@ -39,13 +39,17 @@ type IDTokenHandlers struct {
 func (h *IDTokenHandlers) FetchToken(c echo.Context) error {
 	ctx := c.Request().Context()
 
-	keySet, err := h.repository.GetJSONWebKeySet(c.Request().Context())
-	if err != nil {
+	req := &tailcfg.TokenRequest{}
+	if err := c.Bind(req); err != nil {
 		return logError(err)
 	}
 
-	req := &tailcfg.TokenRequest{}
-	if err := c.Bind(req); err != nil {
+	if req.CapVersion < SupportedCapabilityVersion {
+		return UnsupportedClientVersionError
+	}
+
+	keySet, err := h.repository.GetJSONWebKeySet(c.Request().Context())
+	if err != nil {
 		return logError(err)
 	}
 
