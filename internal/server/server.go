@@ -153,7 +153,7 @@ func Start(ctx context.Context, c *config.Config) error {
 	tlsAppHandler := echo.New()
 	tlsAppHandler.Renderer = &templates.Renderer{}
 	tlsAppHandler.Pre(handlers.HttpsRedirect(c.Tls))
-	tlsAppHandler.Use(EchoMetrics(p), EchoLogger(logger), EchoErrorHandler(), EchoRecover())
+	tlsAppHandler.Use(EchoMetrics(p), EchoLogger(httpLogger), EchoErrorHandler(), EchoRecover())
 
 	tlsAppHandler.Any("/*", handlers.IndexHandler(http.StatusNotFound))
 	tlsAppHandler.Any("/", handlers.IndexHandler(http.StatusOK))
@@ -302,7 +302,8 @@ func setupLogging(config config.Logging) (*zap.Logger, error) {
 		return nil, err
 	}
 
-	zap.ReplaceGlobals(logger)
+	globalLogger := logger.Named("ionscale")
+	zap.ReplaceGlobals(globalLogger)
 
-	return logger, nil
+	return globalLogger, nil
 }
