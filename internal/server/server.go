@@ -65,7 +65,7 @@ func Start(ctx context.Context, c *config.Config) error {
 		return logError(err)
 	}
 
-	core.StartReaper(repository, sessionManager)
+	core.StartWorker(repository, sessionManager)
 
 	serverUrl, err := url.Parse(c.ServerUrl)
 	if err != nil {

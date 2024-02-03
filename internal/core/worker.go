@@ -11,8 +11,8 @@ const (
 	inactivityTimeout = 30 * time.Minute
 )
 
-func StartReaper(repository domain.Repository, sessionManager PollMapSessionManager) {
-	r := &reaper{
+func StartWorker(repository domain.Repository, sessionManager PollMapSessionManager) {
+	r := &worker{
 		sessionManager: sessionManager,
 		repository:     repository,
 	}
@@ -20,19 +20,20 @@ func StartReaper(repository domain.Repository, sessionManager PollMapSessionMana
 	go r.start()
 }
 
-type reaper struct {
+type worker struct {
 	sessionManager PollMapSessionManager
 	repository     domain.Repository
 }
 
-func (r *reaper) start() {
+func (r *worker) start() {
+	r.deleteInactiveEphemeralNodes()
 	t := time.NewTicker(ticker)
 	for range t.C {
-		r.reapInactiveEphemeralNodes()
+		r.deleteInactiveEphemeralNodes()
 	}
 }
 
-func (r *reaper) reapInactiveEphemeralNodes() {
+func (r *worker) deleteInactiveEphemeralNodes() {
 	ctx := context.Background()
 
 	now := time.Now().UTC()
@@ -41,6 +42,7 @@ func (r *reaper) reapInactiveEphemeralNodes() {
 	if err != nil {
 		return
 	}
+
 	var removedNodes = make(map[uint64][]uint64)
 	for _, m := range machines {
 		if now.After(m.LastSeen.Add(inactivityTimeout)) {
