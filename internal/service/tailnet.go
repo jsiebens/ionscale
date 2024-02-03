@@ -55,6 +55,10 @@ func (s *Service) CreateTailnet(ctx context.Context, req *connect.Request[api.Cr
 	}
 
 	if req.Msg.IamPolicy != nil {
+		if err := validateIamPolicy(req.Msg.IamPolicy); err != nil {
+			return nil, connect.NewError(connect.CodeInvalidArgument, fmt.Errorf("invalid iam policy: %w", err))
+		}
+
 		if err := mapping.CopyViaJson(req.Msg.IamPolicy, &tailnet.IAMPolicy); err != nil {
 			return nil, logError(err)
 		}
@@ -100,6 +104,10 @@ func (s *Service) UpdateTailnet(ctx context.Context, req *connect.Request[api.Up
 	}
 
 	if req.Msg.IamPolicy != nil {
+		if err := validateIamPolicy(req.Msg.IamPolicy); err != nil {
+			return nil, connect.NewError(connect.CodeInvalidArgument, fmt.Errorf("invalid iam policy: %w", err))
+		}
+
 		tailnet.IAMPolicy = domain.IAMPolicy{}
 		if err := mapping.CopyViaJson(req.Msg.IamPolicy, &tailnet.IAMPolicy); err != nil {
 			return nil, logError(err)

@@ -46,6 +46,10 @@ func (s *Service) SetIAMPolicy(ctx context.Context, req *connect.Request[api.Set
 		return nil, connect.NewError(connect.CodeNotFound, fmt.Errorf("tailnet does not exist"))
 	}
 
+	if err := validateIamPolicy(req.Msg.Policy); err != nil {
+		return nil, connect.NewError(connect.CodeInvalidArgument, fmt.Errorf("invalid iam policy: %w", err))
+	}
+
 	tailnet.IAMPolicy = domain.IAMPolicy{
 		Subs:    req.Msg.Policy.Subs,
 		Emails:  req.Msg.Policy.Emails,

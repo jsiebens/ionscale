@@ -2,7 +2,10 @@ package service
 
 import (
 	"context"
+	"fmt"
 	"github.com/bufbuild/connect-go"
+	"github.com/hashicorp/go-bexpr/grammar"
+	"github.com/hashicorp/go-multierror"
 	"github.com/jsiebens/ionscale/internal/auth"
 	"github.com/jsiebens/ionscale/internal/config"
 	"github.com/jsiebens/ionscale/internal/core"
@@ -36,4 +39,14 @@ func (s *Service) GetVersion(_ context.Context, _ *connect.Request[api.GetVersio
 		Version:  v,
 		Revision: revision,
 	}), nil
+}
+
+func validateIamPolicy(p *api.IAMPolicy) error {
+	var mErr *multierror.Error
+	for i, exp := range p.Filters {
+		if _, err := grammar.Parse(fmt.Sprintf("filter %d", i), []byte(exp)); err != nil {
+			mErr = multierror.Append(mErr, err)
+		}
+	}
+	return mErr.ErrorOrNil()
 }
