@@ -30,7 +30,7 @@ setup_env() {
     fatal "env variable IONSCALE_ACME_EMAIL is undefined"
   fi
 
-  IONSCALE_VERSION=v0.9.1
+  IONSCALE_VERSION=v0.12.0
   IONSCALE_DATA_DIR=/var/lib/ionscale
   IONSCALE_CONFIG_DIR=/etc/ionscale
   IONSCALE_SERVICE_FILE=/etc/systemd/system/ionscale.service
