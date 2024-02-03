@@ -42,7 +42,7 @@ func (p *OIDCProvider) GetLoginURL(redirectURI, state string) string {
 		ClientSecret: p.clientSecret,
 		RedirectURL:  redirectURI,
 		Endpoint:     p.provider.Endpoint(),
-		Scopes:       []string{oidc.ScopeOpenID, "profile", "email"},
+		Scopes:       p.scopes,
 	}
 
 	return oauth2Config.AuthCodeURL(state, oauth2.ApprovalForce)
@@ -54,7 +54,7 @@ func (p *OIDCProvider) Exchange(redirectURI, code string) (*User, error) {
 		ClientSecret: p.clientSecret,
 		RedirectURL:  redirectURI,
 		Endpoint:     p.provider.Endpoint(),
-		Scopes:       []string{oidc.ScopeOpenID, "profile", "email"},
+		Scopes:       p.scopes,
 	}
 
 	oauth2Token, err := oauth2Config.Exchange(context.Background(), code)
