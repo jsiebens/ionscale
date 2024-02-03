@@ -9,6 +9,7 @@ import (
 
 const (
 	ionscaleSystemAdminKey     = "IONSCALE_SYSTEM_ADMIN_KEY"
+	ionscaleKeysSystemAdminKey = "IONSCALE_KEYS_SYSTEM_ADMIN_KEY"
 	ionscaleAddr               = "IONSCALE_ADDR"
 	ionscaleInsecureSkipVerify = "IONSCALE_SKIP_VERIFY"
 )
@@ -56,5 +57,5 @@ func (t *Target) getSystemAdminKey() string {
 	if len(t.systemAdminKey) != 0 {
 		return t.systemAdminKey
 	}
-	return config.GetString(ionscaleSystemAdminKey, "")
+	return config.GetString(ionscaleSystemAdminKey, config.GetString(ionscaleKeysSystemAdminKey, ""))
 }
