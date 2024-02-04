@@ -39,6 +39,7 @@ require (
 	github.com/spf13/cobra v1.8.0
 	github.com/stretchr/testify v1.8.4
 	github.com/tailscale/hujson v0.0.0-20221223112325-20486734a56a
+	github.com/travisjeffery/certmagic-sqlstorage v1.1.1
 	github.com/xhit/go-str2duration/v2 v2.1.0
 	go.uber.org/zap v1.26.0
 	golang.org/x/crypto v0.18.0
@@ -151,7 +152,6 @@ require (
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/tailscale/netlink v1.1.1-0.20211101221916-cabfb018fe85 // indirect
 	github.com/tkuchiki/go-timezone v0.2.2 // indirect
-	github.com/travisjeffery/certmagic-sqlstorage v1.1.1 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/fasttemplate v1.2.2 // indirect
 	github.com/vishvananda/netlink v1.2.1-beta.2 // indirect
