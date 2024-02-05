@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"context"
 	"fmt"
 	"github.com/bufbuild/connect-go"
 	"github.com/jsiebens/ionscale/internal/version"
@@ -10,14 +9,11 @@ import (
 )
 
 func versionCommand() *cobra.Command {
-	var command = &cobra.Command{
+	command, tc := prepareCommand(false, &cobra.Command{
 		Use:          "version",
 		Short:        "Display version information",
 		SilenceUsage: true,
-	}
-
-	var target = Target{}
-	target.prepareCommand(command)
+	})
 
 	command.Run = func(cmd *cobra.Command, args []string) {
 		clientVersion, clientRevision := version.GetReleaseInfo()
@@ -27,16 +23,7 @@ Client:
  Git Revision:  %s
 `, clientVersion, clientRevision)
 
-		client, err := target.createGRPCClient()
-		if err != nil {
-			fmt.Printf(`
-Server:
- Error:         %s
-`, err)
-			return
-		}
-
-		resp, err := client.GetVersion(context.Background(), connect.NewRequest(&api.GetVersionRequest{}))
+		resp, err := tc.Client().GetVersion(cmd.Context(), connect.NewRequest(&api.GetVersionRequest{}))
 		if err != nil {
 			fmt.Printf(`
 Server:
@@ -50,7 +37,7 @@ Server:
  Addr:          %s
  Version:       %s 
  Git Revision:  %s
-`, target.getAddr(), resp.Msg.Version, resp.Msg.Revision)
+`, tc.Addr(), resp.Msg.Version, resp.Msg.Revision)
 
 	}
 

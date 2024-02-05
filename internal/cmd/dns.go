@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"context"
 	"fmt"
 	"github.com/bufbuild/connect-go"
 	api "github.com/jsiebens/ionscale/pkg/gen/ionscale/v1"
@@ -12,34 +11,15 @@ import (
 )
 
 func getDNSConfigCommand() *cobra.Command {
-	command := &cobra.Command{
+	command, tc := prepareCommand(true, &cobra.Command{
 		Use:          "get-dns",
 		Short:        "Get DNS configuration",
 		SilenceUsage: true,
-	}
+	})
 
-	var tailnetID uint64
-	var tailnetName string
-	var target = Target{}
-
-	target.prepareCommand(command)
-	command.Flags().StringVar(&tailnetName, "tailnet", "", "Tailnet name. Mutually exclusive with --tailnet-id.")
-	command.Flags().Uint64Var(&tailnetID, "tailnet-id", 0, "Tailnet ID. Mutually exclusive with --tailnet.")
-
-	command.PreRunE = checkRequiredTailnetAndTailnetIdFlags
-	command.RunE = func(command *cobra.Command, args []string) error {
-		client, err := target.createGRPCClient()
-		if err != nil {
-			return err
-		}
-
-		tailnet, err := findTailnet(client, tailnetName, tailnetID)
-		if err != nil {
-			return err
-		}
-
-		req := api.GetDNSConfigRequest{TailnetId: tailnet.Id}
-		resp, err := client.GetDNSConfig(context.Background(), connect.NewRequest(&req))
+	command.RunE = func(cmd *cobra.Command, args []string) error {
+		req := api.GetDNSConfigRequest{TailnetId: tc.TailnetID()}
+		resp, err := tc.Client().GetDNSConfig(cmd.Context(), connect.NewRequest(&req))
 
 		if err != nil {
 			return err
@@ -83,40 +63,23 @@ func getDNSConfigCommand() *cobra.Command {
 }
 
 func setDNSConfigCommand() *cobra.Command {
-	command := &cobra.Command{
+	command, tc := prepareCommand(true, &cobra.Command{
 		Use:          "set-dns",
 		Short:        "Set DNS config",
 		SilenceUsage: true,
-	}
+	})
 
 	var nameservers []string
 	var magicDNS bool
 	var httpsCerts bool
 	var overrideLocalDNS bool
-	var tailnetID uint64
-	var tailnetName string
-	var target = Target{}
 
-	target.prepareCommand(command)
-	command.Flags().StringVar(&tailnetName, "tailnet", "", "Tailnet name. Mutually exclusive with --tailnet-id.")
-	command.Flags().Uint64Var(&tailnetID, "tailnet-id", 0, "Tailnet ID. Mutually exclusive with --tailnet.")
 	command.Flags().StringSliceVarP(&nameservers, "nameserver", "", []string{}, "Machines on your network will use these nameservers to resolve DNS queries.")
 	command.Flags().BoolVarP(&magicDNS, "magic-dns", "", false, "Enable MagicDNS for the specified Tailnet")
 	command.Flags().BoolVarP(&httpsCerts, "https-certs", "", false, "Enable HTTPS Certificates for the specified Tailnet")
 	command.Flags().BoolVarP(&overrideLocalDNS, "override-local-dns", "", false, "When enabled, connected clients ignore local DNS settings and always use the nameservers specified for this Tailnet")
 
-	command.PreRunE = checkRequiredTailnetAndTailnetIdFlags
-	command.RunE = func(command *cobra.Command, args []string) error {
-		client, err := target.createGRPCClient()
-		if err != nil {
-			return err
-		}
-
-		tailnet, err := findTailnet(client, tailnetName, tailnetID)
-		if err != nil {
-			return err
-		}
-
+	command.RunE = func(cmd *cobra.Command, args []string) error {
 		var globalNameservers []string
 		var routes = make(map[string]*api.Routes)
 
@@ -135,7 +98,7 @@ func setDNSConfigCommand() *cobra.Command {
 		}
 
 		req := api.SetDNSConfigRequest{
-			TailnetId: tailnet.Id,
+			TailnetId: tc.TailnetID(),
 			Config: &api.DNSConfig{
 				MagicDns:         magicDNS,
 				OverrideLocalDns: overrideLocalDNS,
@@ -144,7 +107,7 @@ func setDNSConfigCommand() *cobra.Command {
 				HttpsCerts:       httpsCerts,
 			},
 		}
-		resp, err := client.SetDNSConfig(context.Background(), connect.NewRequest(&req))
+		resp, err := tc.Client().SetDNSConfig(cmd.Context(), connect.NewRequest(&req))
 
 		if err != nil {
 			return err

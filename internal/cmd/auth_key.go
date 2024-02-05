@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"context"
 	"fmt"
 	"github.com/bufbuild/connect-go"
 	api "github.com/jsiebens/ionscale/pkg/gen/ionscale/v1"
@@ -28,40 +27,23 @@ func authkeysCommand() *cobra.Command {
 }
 
 func createAuthkeysCommand() *cobra.Command {
-	command := &cobra.Command{
+	command, tc := prepareCommand(true, &cobra.Command{
 		Use:          "create",
 		Short:        "Creates a new auth key in the specified tailnet",
 		SilenceUsage: true,
-	}
+	})
 
-	var tailnetID uint64
-	var tailnetName string
 	var ephemeral bool
 	var preAuthorized bool
 	var tags []string
 	var expiry string
-	var target = Target{}
 
-	target.prepareCommand(command)
-	command.Flags().StringVar(&tailnetName, "tailnet", "", "Tailnet name. Mutually exclusive with --tailnet-id.")
-	command.Flags().Uint64Var(&tailnetID, "tailnet-id", 0, "Tailnet ID. Mutually exclusive with --tailnet.")
 	command.Flags().BoolVar(&ephemeral, "ephemeral", false, "When enabled, machines authenticated by this key will be automatically removed after going offline.")
 	command.Flags().StringSliceVar(&tags, "tag", []string{}, "Machines authenticated by this key will be automatically tagged with these tags")
 	command.Flags().StringVar(&expiry, "expiry", "180d", "Human-readable expiration of the key")
 	command.Flags().BoolVar(&preAuthorized, "pre-authorized", false, "Generate an auth key which is pre-authorized.")
 
-	command.PreRunE = checkRequiredTailnetAndTailnetIdFlags
-	command.RunE = func(command *cobra.Command, args []string) error {
-		client, err := target.createGRPCClient()
-		if err != nil {
-			return err
-		}
-
-		tailnet, err := findTailnet(client, tailnetName, tailnetID)
-		if err != nil {
-			return err
-		}
-
+	command.RunE = func(cmd *cobra.Command, args []string) error {
 		var expiryDur *durationpb.Duration
 
 		if expiry != "" && expiry != "none" {
@@ -73,13 +55,13 @@ func createAuthkeysCommand() *cobra.Command {
 		}
 
 		req := &api.CreateAuthKeyRequest{
-			TailnetId:     tailnet.Id,
+			TailnetId:     tc.TailnetID(),
 			Ephemeral:     ephemeral,
 			PreAuthorized: preAuthorized,
 			Tags:          tags,
 			Expiry:        expiryDur,
 		}
-		resp, err := client.CreateAuthKey(context.Background(), connect.NewRequest(req))
+		resp, err := tc.Client().CreateAuthKey(cmd.Context(), connect.NewRequest(req))
 
 		if err != nil {
 			return err
@@ -99,25 +81,19 @@ func createAuthkeysCommand() *cobra.Command {
 }
 
 func deleteAuthKeyCommand() *cobra.Command {
-	command := &cobra.Command{
+	command, tc := prepareCommand(false, &cobra.Command{
 		Use:          "delete",
 		Short:        "Delete a specified auth key",
 		SilenceUsage: true,
-	}
+	})
 
 	var authKeyId uint64
-	var target = Target{}
-	target.prepareCommand(command)
+
 	command.Flags().Uint64Var(&authKeyId, "id", 0, "Auth Key ID")
 
-	command.RunE = func(command *cobra.Command, args []string) error {
-		grpcClient, err := target.createGRPCClient()
-		if err != nil {
-			return err
-		}
-
+	command.RunE = func(cmd *cobra.Command, args []string) error {
 		req := api.DeleteAuthKeyRequest{AuthKeyId: authKeyId}
-		if _, err := grpcClient.DeleteAuthKey(context.Background(), connect.NewRequest(&req)); err != nil {
+		if _, err := tc.Client().DeleteAuthKey(cmd.Context(), connect.NewRequest(&req)); err != nil {
 			return err
 		}
 
@@ -130,34 +106,15 @@ func deleteAuthKeyCommand() *cobra.Command {
 }
 
 func listAuthkeysCommand() *cobra.Command {
-	command := &cobra.Command{
+	command, tc := prepareCommand(true, &cobra.Command{
 		Use:          "list",
 		Short:        "List all auth keys for a given tailnet",
 		SilenceUsage: true,
-	}
+	})
 
-	var tailnetID uint64
-	var tailnetName string
-	var target = Target{}
-
-	target.prepareCommand(command)
-	command.Flags().StringVar(&tailnetName, "tailnet", "", "Tailnet name. Mutually exclusive with --tailnet-id.")
-	command.Flags().Uint64Var(&tailnetID, "tailnet-id", 0, "Tailnet ID. Mutually exclusive with --tailnet.")
-
-	command.PreRunE = checkRequiredTailnetAndTailnetIdFlags
-	command.RunE = func(command *cobra.Command, args []string) error {
-		client, err := target.createGRPCClient()
-		if err != nil {
-			return err
-		}
-
-		tailnet, err := findTailnet(client, tailnetName, tailnetID)
-		if err != nil {
-			return err
-		}
-
-		req := &api.ListAuthKeysRequest{TailnetId: tailnet.Id}
-		resp, err := client.ListAuthKeys(context.Background(), connect.NewRequest(req))
+	command.RunE = func(cmd *cobra.Command, args []string) error {
+		req := &api.ListAuthKeysRequest{TailnetId: tc.TailnetID()}
+		resp, err := tc.Client().ListAuthKeys(cmd.Context(), connect.NewRequest(req))
 
 		if err != nil {
 			return err

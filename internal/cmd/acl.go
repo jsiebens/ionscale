@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"bytes"
-	"context"
 	"encoding/json"
 	"fmt"
 	"github.com/bufbuild/connect-go"
@@ -14,33 +13,14 @@ import (
 )
 
 func getACLConfigCommand() *cobra.Command {
-	command := &cobra.Command{
+	command, tc := prepareCommand(true, &cobra.Command{
 		Use:          "get-acl-policy",
 		Short:        "Get the ACL policy",
 		SilenceUsage: true,
-	}
+	})
 
-	var tailnetID uint64
-	var tailnetName string
-	var target = Target{}
-
-	target.prepareCommand(command)
-	command.Flags().StringVar(&tailnetName, "tailnet", "", "Tailnet name. Mutually exclusive with --tailnet-id.")
-	command.Flags().Uint64Var(&tailnetID, "tailnet-id", 0, "Tailnet ID. Mutually exclusive with --tailnet.")
-
-	command.PreRunE = checkRequiredTailnetAndTailnetIdFlags
 	command.RunE = func(cmd *cobra.Command, args []string) error {
-		client, err := target.createGRPCClient()
-		if err != nil {
-			return err
-		}
-
-		tailnet, err := findTailnet(client, tailnetName, tailnetID)
-		if err != nil {
-			return err
-		}
-
-		resp, err := client.GetACLPolicy(context.Background(), connect.NewRequest(&api.GetACLPolicyRequest{TailnetId: tailnet.Id}))
+		resp, err := tc.Client().GetACLPolicy(cmd.Context(), connect.NewRequest(&api.GetACLPolicyRequest{TailnetId: tc.TailnetID()}))
 		if err != nil {
 			return err
 		}
@@ -59,35 +39,16 @@ func getACLConfigCommand() *cobra.Command {
 }
 
 func editACLConfigCommand() *cobra.Command {
-	command := &cobra.Command{
+	command, tc := prepareCommand(true, &cobra.Command{
 		Use:          "edit-acl-policy",
 		Short:        "Edit the ACL policy",
 		SilenceUsage: true,
-	}
+	})
 
-	var tailnetID uint64
-	var tailnetName string
-	var target = Target{}
-
-	target.prepareCommand(command)
-	command.Flags().StringVar(&tailnetName, "tailnet", "", "Tailnet name. Mutually exclusive with --tailnet-id.")
-	command.Flags().Uint64Var(&tailnetID, "tailnet-id", 0, "Tailnet ID. Mutually exclusive with --tailnet.")
-
-	command.PreRunE = checkRequiredTailnetAndTailnetIdFlags
 	command.RunE = func(cmd *cobra.Command, args []string) error {
 		edit := editor.NewDefaultEditor([]string{"IONSCALE_EDITOR", "EDITOR"})
 
-		client, err := target.createGRPCClient()
-		if err != nil {
-			return err
-		}
-
-		tailnet, err := findTailnet(client, tailnetName, tailnetID)
-		if err != nil {
-			return err
-		}
-
-		resp, err := client.GetACLPolicy(context.Background(), connect.NewRequest(&api.GetACLPolicyRequest{TailnetId: tailnet.Id}))
+		resp, err := tc.Client().GetACLPolicy(cmd.Context(), connect.NewRequest(&api.GetACLPolicyRequest{TailnetId: tc.TailnetID()}))
 		if err != nil {
 			return err
 		}
@@ -114,7 +75,7 @@ func editACLConfigCommand() *cobra.Command {
 			return err
 		}
 
-		_, err = client.SetACLPolicy(context.Background(), connect.NewRequest(&api.SetACLPolicyRequest{TailnetId: tailnet.Id, Policy: policy}))
+		_, err = tc.Client().SetACLPolicy(cmd.Context(), connect.NewRequest(&api.SetACLPolicyRequest{TailnetId: tc.TailnetID(), Policy: policy}))
 		if err != nil {
 			return err
 		}
@@ -128,23 +89,16 @@ func editACLConfigCommand() *cobra.Command {
 }
 
 func setACLConfigCommand() *cobra.Command {
-	command := &cobra.Command{
+	command, tc := prepareCommand(true, &cobra.Command{
 		Use:          "set-acl-policy",
 		Short:        "Set ACL policy",
 		SilenceUsage: true,
-	}
+	})
 
-	var tailnetID uint64
-	var tailnetName string
 	var file string
-	var target = Target{}
 
-	target.prepareCommand(command)
-	command.Flags().StringVar(&tailnetName, "tailnet", "", "Tailnet name. Mutually exclusive with --tailnet-id.")
-	command.Flags().Uint64Var(&tailnetID, "tailnet-id", 0, "Tailnet ID. Mutually exclusive with --tailnet.")
 	command.Flags().StringVar(&file, "file", "", "Path to json file with the acl configuration")
 
-	command.PreRunE = checkRequiredTailnetAndTailnetIdFlags
 	command.RunE = func(cmd *cobra.Command, args []string) error {
 		content, err := os.ReadFile(file)
 		if err != nil {
@@ -161,17 +115,7 @@ func setACLConfigCommand() *cobra.Command {
 			return err
 		}
 
-		client, err := target.createGRPCClient()
-		if err != nil {
-			return err
-		}
-
-		tailnet, err := findTailnet(client, tailnetName, tailnetID)
-		if err != nil {
-			return err
-		}
-
-		_, err = client.SetACLPolicy(context.Background(), connect.NewRequest(&api.SetACLPolicyRequest{TailnetId: tailnet.Id, Policy: policy}))
+		_, err = tc.Client().SetACLPolicy(cmd.Context(), connect.NewRequest(&api.SetACLPolicyRequest{TailnetId: tc.TailnetID(), Policy: policy}))
 		if err != nil {
 			return err
 		}

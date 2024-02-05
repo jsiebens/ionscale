@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"context"
 	"fmt"
 	"github.com/bufbuild/connect-go"
 	api "github.com/jsiebens/ionscale/pkg/gen/ionscale/v1"
@@ -24,34 +23,15 @@ func userCommands() *cobra.Command {
 }
 
 func listUsersCommand() *cobra.Command {
-	command := &cobra.Command{
+	command, tc := prepareCommand(true, &cobra.Command{
 		Use:          "list",
 		Short:        "List users",
 		SilenceUsage: true,
-	}
+	})
 
-	var tailnetID uint64
-	var tailnetName string
-
-	var target = Target{}
-	target.prepareCommand(command)
-	command.Flags().StringVar(&tailnetName, "tailnet", "", "Tailnet name. Mutually exclusive with --tailnet-id.")
-	command.Flags().Uint64Var(&tailnetID, "tailnet-id", 0, "Tailnet ID. Mutually exclusive with --tailnet.")
-
-	command.PreRunE = checkRequiredTailnetAndTailnetIdFlags
-	command.RunE = func(command *cobra.Command, args []string) error {
-		client, err := target.createGRPCClient()
-		if err != nil {
-			return err
-		}
-
-		tailnet, err := findTailnet(client, tailnetName, tailnetID)
-		if err != nil {
-			return err
-		}
-
-		req := api.ListUsersRequest{TailnetId: tailnet.Id}
-		resp, err := client.ListUsers(context.Background(), connect.NewRequest(&req))
+	command.RunE = func(cmd *cobra.Command, args []string) error {
+		req := api.ListUsersRequest{TailnetId: tc.TailnetID()}
+		resp, err := tc.Client().ListUsers(cmd.Context(), connect.NewRequest(&req))
 
 		if err != nil {
 			return err
@@ -70,27 +50,21 @@ func listUsersCommand() *cobra.Command {
 }
 
 func deleteUserCommand() *cobra.Command {
-	command := &cobra.Command{
+	command, tc := prepareCommand(false, &cobra.Command{
 		Use:          "delete",
 		Short:        "Deletes a user",
 		SilenceUsage: true,
-	}
+	})
 
 	var userID uint64
-	var target = Target{}
-	target.prepareCommand(command)
+
 	command.Flags().Uint64Var(&userID, "user-id", 0, "User ID.")
 
 	_ = command.MarkFlagRequired("user-id")
 
-	command.RunE = func(command *cobra.Command, args []string) error {
-		client, err := target.createGRPCClient()
-		if err != nil {
-			return err
-		}
-
+	command.RunE = func(cmd *cobra.Command, args []string) error {
 		req := api.DeleteUserRequest{UserId: userID}
-		if _, err := client.DeleteUser(context.Background(), connect.NewRequest(&req)); err != nil {
+		if _, err := tc.Client().DeleteUser(cmd.Context(), connect.NewRequest(&req)); err != nil {
 			return err
 		}
 
