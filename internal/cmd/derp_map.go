@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"github.com/bufbuild/connect-go"
@@ -27,25 +26,18 @@ func systemCommand() *cobra.Command {
 }
 
 func getDefaultDERPMap() *cobra.Command {
-	command := &cobra.Command{
+	command, tc := prepareCommand(false, &cobra.Command{
 		Use:          "get-derp-map",
 		Short:        "Get the DERP Map configuration",
 		SilenceUsage: true,
-	}
+	})
 
 	var asJson bool
 
-	var target = Target{}
-	target.prepareCommand(command)
 	command.Flags().BoolVar(&asJson, "json", false, "When enabled, render output as json otherwise yaml")
 
-	command.RunE = func(command *cobra.Command, args []string) error {
-		client, err := target.createGRPCClient()
-		if err != nil {
-			return err
-		}
-
-		resp, err := client.GetDefaultDERPMap(context.Background(), connect.NewRequest(&api.GetDefaultDERPMapRequest{}))
+	command.RunE = func(cmd *cobra.Command, args []string) error {
+		resp, err := tc.Client().GetDefaultDERPMap(cmd.Context(), connect.NewRequest(&api.GetDefaultDERPMapRequest{}))
 
 		if err != nil {
 			return err
@@ -82,23 +74,17 @@ func getDefaultDERPMap() *cobra.Command {
 }
 
 func setDefaultDERPMap() *cobra.Command {
-	command := &cobra.Command{
+	command, tc := prepareCommand(false, &cobra.Command{
 		Use:          "set-derp-map",
 		Short:        "Set the DERP Map configuration",
 		SilenceUsage: true,
-	}
+	})
 
 	var file string
-	var target = Target{}
-	target.prepareCommand(command)
+
 	command.Flags().StringVar(&file, "file", "", "Path to json file with the DERP Map configuration")
 
-	command.RunE = func(command *cobra.Command, args []string) error {
-		grpcClient, err := target.createGRPCClient()
-		if err != nil {
-			return err
-		}
-
+	command.RunE = func(cmd *cobra.Command, args []string) error {
 		content, err := os.ReadFile(file)
 		if err != nil {
 			return err
@@ -109,7 +95,7 @@ func setDefaultDERPMap() *cobra.Command {
 			return err
 		}
 
-		resp, err := grpcClient.SetDefaultDERPMap(context.Background(), connect.NewRequest(&api.SetDefaultDERPMapRequest{Value: rawJson}))
+		resp, err := tc.Client().SetDefaultDERPMap(cmd.Context(), connect.NewRequest(&api.SetDefaultDERPMapRequest{Value: rawJson}))
 		if err != nil {
 			return err
 		}
@@ -128,22 +114,14 @@ func setDefaultDERPMap() *cobra.Command {
 }
 
 func resetDefaultDERPMap() *cobra.Command {
-	command := &cobra.Command{
+	command, tc := prepareCommand(false, &cobra.Command{
 		Use:          "reset-derp-map",
 		Short:        "Reset the DERP Map to the default configuration",
 		SilenceUsage: true,
-	}
+	})
 
-	var target = Target{}
-	target.prepareCommand(command)
-
-	command.RunE = func(command *cobra.Command, args []string) error {
-		grpcClient, err := target.createGRPCClient()
-		if err != nil {
-			return err
-		}
-
-		if _, err := grpcClient.ResetDefaultDERPMap(context.Background(), connect.NewRequest(&api.ResetDefaultDERPMapRequest{})); err != nil {
+	command.RunE = func(cmd *cobra.Command, args []string) error {
+		if _, err := tc.Client().ResetDefaultDERPMap(cmd.Context(), connect.NewRequest(&api.ResetDefaultDERPMapRequest{})); err != nil {
 			return err
 		}
 

@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"bytes"
-	"context"
 	"encoding/json"
 	"fmt"
 	"github.com/bufbuild/connect-go"
@@ -14,33 +13,14 @@ import (
 )
 
 func getIAMPolicyCommand() *cobra.Command {
-	command := &cobra.Command{
+	command, tc := prepareCommand(true, &cobra.Command{
 		Use:          "get-iam-policy",
 		Short:        "Get the IAM policy",
 		SilenceUsage: true,
-	}
+	})
 
-	var tailnetID uint64
-	var tailnetName string
-	var target = Target{}
-
-	target.prepareCommand(command)
-	command.Flags().StringVar(&tailnetName, "tailnet", "", "Tailnet name. Mutually exclusive with --tailnet-id.")
-	command.Flags().Uint64Var(&tailnetID, "tailnet-id", 0, "Tailnet ID. Mutually exclusive with --tailnet.")
-
-	command.PreRunE = checkRequiredTailnetAndTailnetIdFlags
 	command.RunE = func(cmd *cobra.Command, args []string) error {
-		client, err := target.createGRPCClient()
-		if err != nil {
-			return err
-		}
-
-		tailnet, err := findTailnet(client, tailnetName, tailnetID)
-		if err != nil {
-			return err
-		}
-
-		resp, err := client.GetIAMPolicy(context.Background(), connect.NewRequest(&api.GetIAMPolicyRequest{TailnetId: tailnet.Id}))
+		resp, err := tc.Client().GetIAMPolicy(cmd.Context(), connect.NewRequest(&api.GetIAMPolicyRequest{TailnetId: tc.TailnetID()}))
 		if err != nil {
 			return err
 		}
@@ -59,35 +39,16 @@ func getIAMPolicyCommand() *cobra.Command {
 }
 
 func editIAMPolicyCommand() *cobra.Command {
-	command := &cobra.Command{
+	command, tc := prepareCommand(true, &cobra.Command{
 		Use:          "edit-iam-policy",
 		Short:        "Edit the IAM policy",
 		SilenceUsage: true,
-	}
+	})
 
-	var tailnetID uint64
-	var tailnetName string
-	var target = Target{}
-
-	target.prepareCommand(command)
-	command.Flags().StringVar(&tailnetName, "tailnet", "", "Tailnet name. Mutually exclusive with --tailnet-id.")
-	command.Flags().Uint64Var(&tailnetID, "tailnet-id", 0, "Tailnet ID. Mutually exclusive with --tailnet.")
-
-	command.PreRunE = checkRequiredTailnetAndTailnetIdFlags
 	command.RunE = func(cmd *cobra.Command, args []string) error {
 		edit := editor.NewDefaultEditor([]string{"IONSCALE_EDITOR", "EDITOR"})
 
-		client, err := target.createGRPCClient()
-		if err != nil {
-			return err
-		}
-
-		tailnet, err := findTailnet(client, tailnetName, tailnetID)
-		if err != nil {
-			return err
-		}
-
-		resp, err := client.GetIAMPolicy(context.Background(), connect.NewRequest(&api.GetIAMPolicyRequest{TailnetId: tailnet.Id}))
+		resp, err := tc.Client().GetIAMPolicy(cmd.Context(), connect.NewRequest(&api.GetIAMPolicyRequest{TailnetId: tc.TailnetID()}))
 		if err != nil {
 			return err
 		}
@@ -114,7 +75,7 @@ func editIAMPolicyCommand() *cobra.Command {
 			return err
 		}
 
-		_, err = client.SetIAMPolicy(context.Background(), connect.NewRequest(&api.SetIAMPolicyRequest{TailnetId: tailnet.Id, Policy: policy}))
+		_, err = tc.Client().SetIAMPolicy(cmd.Context(), connect.NewRequest(&api.SetIAMPolicyRequest{TailnetId: tc.TailnetID(), Policy: policy}))
 		if err != nil {
 			return err
 		}
@@ -128,23 +89,16 @@ func editIAMPolicyCommand() *cobra.Command {
 }
 
 func setIAMPolicyCommand() *cobra.Command {
-	command := &cobra.Command{
+	command, tc := prepareCommand(true, &cobra.Command{
 		Use:          "set-iam-policy",
 		Short:        "Set IAM policy",
 		SilenceUsage: true,
-	}
+	})
 
-	var tailnetID uint64
-	var tailnetName string
 	var file string
-	var target = Target{}
 
-	target.prepareCommand(command)
-	command.Flags().StringVar(&tailnetName, "tailnet", "", "Tailnet name. Mutually exclusive with --tailnet-id.")
-	command.Flags().Uint64Var(&tailnetID, "tailnet-id", 0, "Tailnet ID. Mutually exclusive with --tailnet.")
 	command.Flags().StringVar(&file, "file", "", "Path to json file with the acl configuration")
 
-	command.PreRunE = checkRequiredTailnetAndTailnetIdFlags
 	command.RunE = func(cmd *cobra.Command, args []string) error {
 		content, err := os.ReadFile(file)
 		if err != nil {
@@ -161,17 +115,7 @@ func setIAMPolicyCommand() *cobra.Command {
 			return err
 		}
 
-		client, err := target.createGRPCClient()
-		if err != nil {
-			return err
-		}
-
-		tailnet, err := findTailnet(client, tailnetName, tailnetID)
-		if err != nil {
-			return err
-		}
-
-		_, err = client.SetIAMPolicy(context.Background(), connect.NewRequest(&api.SetIAMPolicyRequest{TailnetId: tailnet.Id, Policy: policy}))
+		_, err = tc.Client().SetIAMPolicy(cmd.Context(), connect.NewRequest(&api.SetIAMPolicyRequest{TailnetId: tc.TailnetID(), Policy: policy}))
 		if err != nil {
 			return err
 		}

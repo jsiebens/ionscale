@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"context"
 	"fmt"
 	"github.com/bufbuild/connect-go"
 	"github.com/jsiebens/ionscale/pkg/client/ionscale"
@@ -20,24 +19,14 @@ func authCommand() *cobra.Command {
 }
 
 func authLoginCommand() *cobra.Command {
-	command := &cobra.Command{
+	command, tc := prepareCommand(false, &cobra.Command{
 		Use:          "login",
 		SilenceUsage: true,
-	}
+	})
 
-	var target = Target{}
-
-	target.prepareCommand(command)
-
-	command.RunE = func(command *cobra.Command, args []string) error {
-
-		client, err := target.createGRPCClient()
-		if err != nil {
-			return err
-		}
-
+	command.RunE = func(cmd *cobra.Command, args []string) error {
 		req := &api.AuthenticateRequest{}
-		stream, err := client.Authenticate(context.Background(), connect.NewRequest(req))
+		stream, err := tc.Client().Authenticate(cmd.Context(), connect.NewRequest(req))
 		if err != nil {
 			return err
 		}

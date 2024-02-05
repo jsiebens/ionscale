@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"github.com/bufbuild/connect-go"
@@ -50,23 +49,14 @@ func tailnetCommand() *cobra.Command {
 }
 
 func listTailnetsCommand() *cobra.Command {
-	command := &cobra.Command{
+	command, tc := prepareCommand(false, &cobra.Command{
 		Use:          "list",
 		Short:        "List available Tailnets",
 		SilenceUsage: true,
-	}
+	})
 
-	var target = Target{}
-	target.prepareCommand(command)
-
-	command.RunE = func(command *cobra.Command, args []string) error {
-
-		client, err := target.createGRPCClient()
-		if err != nil {
-			return err
-		}
-
-		resp, err := client.ListTailnets(context.Background(), connect.NewRequest(&api.ListTailnetsRequest{}))
+	command.RunE = func(cmd *cobra.Command, args []string) error {
+		resp, err := tc.Client().ListTailnets(cmd.Context(), connect.NewRequest(&api.ListTailnetsRequest{}))
 
 		if err != nil {
 			return err
@@ -85,17 +75,15 @@ func listTailnetsCommand() *cobra.Command {
 }
 
 func createTailnetsCommand() *cobra.Command {
-	command := &cobra.Command{
+	command, tc := prepareCommand(false, &cobra.Command{
 		Use:          "create",
 		Short:        "Create a new Tailnet",
 		SilenceUsage: true,
-	}
+	})
 
 	var name string
 	var domain string
 	var email string
-	var target = Target{}
-	target.prepareCommand(command)
 
 	command.Flags().StringVarP(&name, "name", "n", "", "")
 	command.Flags().StringVar(&domain, "domain", "", "")
@@ -111,7 +99,7 @@ func createTailnetsCommand() *cobra.Command {
 		return nil
 	}
 
-	command.RunE = func(command *cobra.Command, args []string) error {
+	command.RunE = func(cmd *cobra.Command, args []string) error {
 
 		dnsConfig := defaults.DefaultDNSConfig()
 		aclPolicy := defaults.DefaultACLPolicy()
@@ -134,12 +122,7 @@ func createTailnetsCommand() *cobra.Command {
 			}
 		}
 
-		client, err := target.createGRPCClient()
-		if err != nil {
-			return err
-		}
-
-		resp, err := client.CreateTailnet(context.Background(), connect.NewRequest(&api.CreateTailnetRequest{
+		resp, err := tc.Client().CreateTailnet(cmd.Context(), connect.NewRequest(&api.CreateTailnetRequest{
 			Name:      name,
 			IamPolicy: iamPolicy,
 			AclPolicy: aclPolicy,
@@ -161,37 +144,18 @@ func createTailnetsCommand() *cobra.Command {
 }
 
 func deleteTailnetCommand() *cobra.Command {
-	command := &cobra.Command{
+	command, tc := prepareCommand(true, &cobra.Command{
 		Use:          "delete",
 		Short:        "Delete a tailnet",
 		SilenceUsage: true,
-	}
+	})
 
-	var tailnetID uint64
-	var tailnetName string
 	var force bool
-	var target = Target{}
-	target.prepareCommand(command)
 
-	command.Flags().StringVar(&tailnetName, "tailnet", "", "Tailnet name. Mutually exclusive with --tailnet-id.")
-	command.Flags().Uint64Var(&tailnetID, "tailnet-id", 0, "Tailnet ID. Mutually exclusive with --tailnet.")
 	command.Flags().BoolVar(&force, "force", false, "When enabled, force delete the specified Tailnet even when machines are still available.")
 
-	command.PreRunE = checkRequiredTailnetAndTailnetIdFlags
-	command.RunE = func(command *cobra.Command, args []string) error {
-
-		client, err := target.createGRPCClient()
-		if err != nil {
-			return err
-		}
-
-		tailnet, err := findTailnet(client, tailnetName, tailnetID)
-		if err != nil {
-			return err
-		}
-
-		_, err = client.DeleteTailnet(context.Background(), connect.NewRequest(&api.DeleteTailnetRequest{TailnetId: tailnet.Id, Force: force}))
-
+	command.RunE = func(cmd *cobra.Command, args []string) error {
+		_, err := tc.Client().DeleteTailnet(cmd.Context(), connect.NewRequest(&api.DeleteTailnetRequest{TailnetId: tc.TailnetID(), Force: force}))
 		if err != nil {
 			return err
 		}
@@ -205,36 +169,18 @@ func deleteTailnetCommand() *cobra.Command {
 }
 
 func getDERPMap() *cobra.Command {
-	command := &cobra.Command{
+	command, tc := prepareCommand(true, &cobra.Command{
 		Use:          "get-derp-map",
 		Short:        "Get the DERP Map configuration",
 		SilenceUsage: true,
-	}
+	})
 
-	var tailnetID uint64
-	var tailnetName string
 	var asJson bool
 
-	var target = Target{}
-	target.prepareCommand(command)
-
-	command.Flags().StringVar(&tailnetName, "tailnet", "", "Tailnet name. Mutually exclusive with --tailnet-id.")
-	command.Flags().Uint64Var(&tailnetID, "tailnet-id", 0, "Tailnet ID. Mutually exclusive with --tailnet.")
 	command.Flags().BoolVar(&asJson, "json", false, "When enabled, render output as json otherwise yaml")
 
-	command.PreRunE = checkRequiredTailnetAndTailnetIdFlags
-	command.RunE = func(command *cobra.Command, args []string) error {
-		client, err := target.createGRPCClient()
-		if err != nil {
-			return err
-		}
-
-		tailnet, err := findTailnet(client, tailnetName, tailnetID)
-		if err != nil {
-			return err
-		}
-
-		resp, err := client.GetDERPMap(context.Background(), connect.NewRequest(&api.GetDERPMapRequest{TailnetId: tailnet.Id}))
+	command.RunE = func(cmd *cobra.Command, args []string) error {
+		resp, err := tc.Client().GetDERPMap(cmd.Context(), connect.NewRequest(&api.GetDERPMapRequest{TailnetId: tc.TailnetID()}))
 
 		if err != nil {
 			return err
@@ -271,40 +217,23 @@ func getDERPMap() *cobra.Command {
 }
 
 func setDERPMap() *cobra.Command {
-	command := &cobra.Command{
+	command, tc := prepareCommand(true, &cobra.Command{
 		Use:          "set-derp-map",
 		Short:        "Set the DERP Map configuration",
 		SilenceUsage: true,
-	}
+	})
 
-	var tailnetID uint64
-	var tailnetName string
 	var file string
-	var target = Target{}
-	target.prepareCommand(command)
 
-	command.Flags().StringVar(&tailnetName, "tailnet", "", "Tailnet name. Mutually exclusive with --tailnet-id.")
-	command.Flags().Uint64Var(&tailnetID, "tailnet-id", 0, "Tailnet ID. Mutually exclusive with --tailnet.")
 	command.Flags().StringVar(&file, "file", "", "Path to json file with the DERP Map configuration")
 
-	command.PreRunE = checkRequiredTailnetAndTailnetIdFlags
-	command.RunE = func(command *cobra.Command, args []string) error {
-		client, err := target.createGRPCClient()
-		if err != nil {
-			return err
-		}
-
-		tailnet, err := findTailnet(client, tailnetName, tailnetID)
-		if err != nil {
-			return err
-		}
-
+	command.RunE = func(cmd *cobra.Command, args []string) error {
 		rawJson, err := os.ReadFile(file)
 		if err != nil {
 			return err
 		}
 
-		resp, err := client.SetDERPMap(context.Background(), connect.NewRequest(&api.SetDERPMapRequest{TailnetId: tailnet.Id, Value: rawJson}))
+		resp, err := tc.Client().SetDERPMap(cmd.Context(), connect.NewRequest(&api.SetDERPMapRequest{TailnetId: tc.TailnetID(), Value: rawJson}))
 		if err != nil {
 			return err
 		}
@@ -323,33 +252,14 @@ func setDERPMap() *cobra.Command {
 }
 
 func resetDERPMap() *cobra.Command {
-	command := &cobra.Command{
+	command, tc := prepareCommand(true, &cobra.Command{
 		Use:          "reset-derp-map",
 		Short:        "Reset the DERP Map to the default configuration",
 		SilenceUsage: true,
-	}
+	})
 
-	var tailnetID uint64
-	var tailnetName string
-	var target = Target{}
-	target.prepareCommand(command)
-
-	command.Flags().StringVar(&tailnetName, "tailnet", "", "Tailnet name. Mutually exclusive with --tailnet-id.")
-	command.Flags().Uint64Var(&tailnetID, "tailnet-id", 0, "Tailnet ID. Mutually exclusive with --tailnet.")
-
-	command.PreRunE = checkRequiredTailnetAndTailnetIdFlags
-	command.RunE = func(command *cobra.Command, args []string) error {
-		client, err := target.createGRPCClient()
-		if err != nil {
-			return err
-		}
-
-		tailnet, err := findTailnet(client, tailnetName, tailnetID)
-		if err != nil {
-			return err
-		}
-
-		if _, err := client.ResetDERPMap(context.Background(), connect.NewRequest(&api.ResetDERPMapRequest{TailnetId: tailnet.Id})); err != nil {
+	command.RunE = func(cmd *cobra.Command, args []string) error {
+		if _, err := tc.Client().ResetDERPMap(cmd.Context(), connect.NewRequest(&api.ResetDERPMapRequest{TailnetId: tc.TailnetID()})); err != nil {
 			return err
 		}
 
@@ -362,38 +272,19 @@ func resetDERPMap() *cobra.Command {
 }
 
 func enableFileSharingCommand() *cobra.Command {
-	command := &cobra.Command{
+	command, tc := prepareCommand(true, &cobra.Command{
 		Use:          "enable-file-sharing",
 		Aliases:      []string{"enable-taildrop"},
 		Short:        "Enable Taildrop, the file sharing feature",
 		SilenceUsage: true,
-	}
+	})
 
-	var tailnetID uint64
-	var tailnetName string
-	var target = Target{}
-
-	target.prepareCommand(command)
-	command.Flags().StringVar(&tailnetName, "tailnet", "", "Tailnet name. Mutually exclusive with --tailnet-id.")
-	command.Flags().Uint64Var(&tailnetID, "tailnet-id", 0, "Tailnet ID. Mutually exclusive with --tailnet.")
-
-	command.PreRunE = checkRequiredTailnetAndTailnetIdFlags
-	command.RunE = func(command *cobra.Command, args []string) error {
-		client, err := target.createGRPCClient()
-		if err != nil {
-			return err
-		}
-
-		tailnet, err := findTailnet(client, tailnetName, tailnetID)
-		if err != nil {
-			return err
-		}
-
+	command.RunE = func(cmd *cobra.Command, args []string) error {
 		req := api.EnableFileSharingRequest{
-			TailnetId: tailnet.Id,
+			TailnetId: tc.TailnetID(),
 		}
 
-		if _, err := client.EnableFileSharing(context.Background(), connect.NewRequest(&req)); err != nil {
+		if _, err := tc.Client().EnableFileSharing(cmd.Context(), connect.NewRequest(&req)); err != nil {
 			return err
 		}
 
@@ -404,38 +295,19 @@ func enableFileSharingCommand() *cobra.Command {
 }
 
 func disableFileSharingCommand() *cobra.Command {
-	command := &cobra.Command{
+	command, tc := prepareCommand(true, &cobra.Command{
 		Use:          "disable-file-sharing",
 		Aliases:      []string{"disable-taildrop"},
 		Short:        "Disable Taildrop, the file sharing feature",
 		SilenceUsage: true,
-	}
+	})
 
-	var tailnetID uint64
-	var tailnetName string
-	var target = Target{}
-
-	target.prepareCommand(command)
-	command.Flags().StringVar(&tailnetName, "tailnet", "", "Tailnet name. Mutually exclusive with --tailnet-id.")
-	command.Flags().Uint64Var(&tailnetID, "tailnet-id", 0, "Tailnet ID. Mutually exclusive with --tailnet.")
-
-	command.PreRunE = checkRequiredTailnetAndTailnetIdFlags
-	command.RunE = func(command *cobra.Command, args []string) error {
-		client, err := target.createGRPCClient()
-		if err != nil {
-			return err
-		}
-
-		tailnet, err := findTailnet(client, tailnetName, tailnetID)
-		if err != nil {
-			return err
-		}
-
+	command.RunE = func(cmd *cobra.Command, args []string) error {
 		req := api.DisableFileSharingRequest{
-			TailnetId: tailnet.Id,
+			TailnetId: tc.TailnetID(),
 		}
 
-		if _, err := client.DisableFileSharing(context.Background(), connect.NewRequest(&req)); err != nil {
+		if _, err := tc.Client().DisableFileSharing(cmd.Context(), connect.NewRequest(&req)); err != nil {
 			return err
 		}
 
@@ -446,37 +318,18 @@ func disableFileSharingCommand() *cobra.Command {
 }
 
 func enableServiceCollectionCommand() *cobra.Command {
-	command := &cobra.Command{
+	command, tc := prepareCommand(true, &cobra.Command{
 		Use:          "enable-service-collection",
 		Short:        "Enable monitoring live services running on your network’s machines.",
 		SilenceUsage: true,
-	}
+	})
 
-	var tailnetID uint64
-	var tailnetName string
-	var target = Target{}
-
-	target.prepareCommand(command)
-	command.Flags().StringVar(&tailnetName, "tailnet", "", "Tailnet name. Mutually exclusive with --tailnet-id.")
-	command.Flags().Uint64Var(&tailnetID, "tailnet-id", 0, "Tailnet ID. Mutually exclusive with --tailnet.")
-
-	command.PreRunE = checkRequiredTailnetAndTailnetIdFlags
-	command.RunE = func(command *cobra.Command, args []string) error {
-		client, err := target.createGRPCClient()
-		if err != nil {
-			return err
-		}
-
-		tailnet, err := findTailnet(client, tailnetName, tailnetID)
-		if err != nil {
-			return err
-		}
-
+	command.RunE = func(cmd *cobra.Command, args []string) error {
 		req := api.EnableServiceCollectionRequest{
-			TailnetId: tailnet.Id,
+			TailnetId: tc.TailnetID(),
 		}
 
-		if _, err := client.EnableServiceCollection(context.Background(), connect.NewRequest(&req)); err != nil {
+		if _, err := tc.Client().EnableServiceCollection(cmd.Context(), connect.NewRequest(&req)); err != nil {
 			return err
 		}
 
@@ -487,37 +340,18 @@ func enableServiceCollectionCommand() *cobra.Command {
 }
 
 func disableServiceCollectionCommand() *cobra.Command {
-	command := &cobra.Command{
+	command, tc := prepareCommand(true, &cobra.Command{
 		Use:          "disable-service-collection",
 		Short:        "Disable monitoring live services running on your network’s machines.",
 		SilenceUsage: true,
-	}
+	})
 
-	var tailnetID uint64
-	var tailnetName string
-	var target = Target{}
-
-	target.prepareCommand(command)
-	command.Flags().StringVar(&tailnetName, "tailnet", "", "Tailnet name. Mutually exclusive with --tailnet-id.")
-	command.Flags().Uint64Var(&tailnetID, "tailnet-id", 0, "Tailnet ID. Mutually exclusive with --tailnet.")
-
-	command.PreRunE = checkRequiredTailnetAndTailnetIdFlags
-	command.RunE = func(command *cobra.Command, args []string) error {
-		client, err := target.createGRPCClient()
-		if err != nil {
-			return err
-		}
-
-		tailnet, err := findTailnet(client, tailnetName, tailnetID)
-		if err != nil {
-			return err
-		}
-
+	command.RunE = func(cmd *cobra.Command, args []string) error {
 		req := api.DisableServiceCollectionRequest{
-			TailnetId: tailnet.Id,
+			TailnetId: tc.TailnetID(),
 		}
 
-		if _, err := client.DisableServiceCollection(context.Background(), connect.NewRequest(&req)); err != nil {
+		if _, err := tc.Client().DisableServiceCollection(cmd.Context(), connect.NewRequest(&req)); err != nil {
 			return err
 		}
 
@@ -528,37 +362,18 @@ func disableServiceCollectionCommand() *cobra.Command {
 }
 
 func enableSSHCommand() *cobra.Command {
-	command := &cobra.Command{
+	command, tc := prepareCommand(true, &cobra.Command{
 		Use:          "enable-ssh",
 		Short:        "Enable ssh access using tailnet and ACLs.",
 		SilenceUsage: true,
-	}
+	})
 
-	var tailnetID uint64
-	var tailnetName string
-	var target = Target{}
-
-	target.prepareCommand(command)
-	command.Flags().StringVar(&tailnetName, "tailnet", "", "Tailnet name. Mutually exclusive with --tailnet-id.")
-	command.Flags().Uint64Var(&tailnetID, "tailnet-id", 0, "Tailnet ID. Mutually exclusive with --tailnet.")
-
-	command.PreRunE = checkRequiredTailnetAndTailnetIdFlags
-	command.RunE = func(command *cobra.Command, args []string) error {
-		client, err := target.createGRPCClient()
-		if err != nil {
-			return err
-		}
-
-		tailnet, err := findTailnet(client, tailnetName, tailnetID)
-		if err != nil {
-			return err
-		}
-
+	command.RunE = func(cmd *cobra.Command, args []string) error {
 		req := api.EnableSSHRequest{
-			TailnetId: tailnet.Id,
+			TailnetId: tc.TailnetID(),
 		}
 
-		if _, err := client.EnableSSH(context.Background(), connect.NewRequest(&req)); err != nil {
+		if _, err := tc.Client().EnableSSH(cmd.Context(), connect.NewRequest(&req)); err != nil {
 			return err
 		}
 
@@ -569,37 +384,18 @@ func enableSSHCommand() *cobra.Command {
 }
 
 func disableSSHCommand() *cobra.Command {
-	command := &cobra.Command{
+	command, tc := prepareCommand(true, &cobra.Command{
 		Use:          "disable-ssh",
 		Short:        "Disable ssh access using tailnet and ACLs.",
 		SilenceUsage: true,
-	}
+	})
 
-	var tailnetID uint64
-	var tailnetName string
-	var target = Target{}
-
-	target.prepareCommand(command)
-	command.Flags().StringVar(&tailnetName, "tailnet", "", "Tailnet name. Mutually exclusive with --tailnet-id.")
-	command.Flags().Uint64Var(&tailnetID, "tailnet-id", 0, "Tailnet ID. Mutually exclusive with --tailnet.")
-
-	command.PreRunE = checkRequiredTailnetAndTailnetIdFlags
-	command.RunE = func(command *cobra.Command, args []string) error {
-		client, err := target.createGRPCClient()
-		if err != nil {
-			return err
-		}
-
-		tailnet, err := findTailnet(client, tailnetName, tailnetID)
-		if err != nil {
-			return err
-		}
-
+	command.RunE = func(cmd *cobra.Command, args []string) error {
 		req := api.DisableSSHRequest{
-			TailnetId: tailnet.Id,
+			TailnetId: tc.TailnetID(),
 		}
 
-		if _, err := client.DisableSSH(context.Background(), connect.NewRequest(&req)); err != nil {
+		if _, err := tc.Client().DisableSSH(cmd.Context(), connect.NewRequest(&req)); err != nil {
 			return err
 		}
 
@@ -610,37 +406,18 @@ func disableSSHCommand() *cobra.Command {
 }
 
 func enableMachineAuthorizationCommand() *cobra.Command {
-	command := &cobra.Command{
+	command, tc := prepareCommand(true, &cobra.Command{
 		Use:          "enable-machine-authorization",
 		Short:        "Enable machine authorization.",
 		SilenceUsage: true,
-	}
+	})
 
-	var tailnetID uint64
-	var tailnetName string
-	var target = Target{}
-
-	target.prepareCommand(command)
-	command.Flags().StringVar(&tailnetName, "tailnet", "", "Tailnet name. Mutually exclusive with --tailnet-id.")
-	command.Flags().Uint64Var(&tailnetID, "tailnet-id", 0, "Tailnet ID. Mutually exclusive with --tailnet.")
-
-	command.PreRunE = checkRequiredTailnetAndTailnetIdFlags
-	command.RunE = func(command *cobra.Command, args []string) error {
-		client, err := target.createGRPCClient()
-		if err != nil {
-			return err
-		}
-
-		tailnet, err := findTailnet(client, tailnetName, tailnetID)
-		if err != nil {
-			return err
-		}
-
+	command.RunE = func(cmd *cobra.Command, args []string) error {
 		req := api.EnableMachineAuthorizationRequest{
-			TailnetId: tailnet.Id,
+			TailnetId: tc.TailnetID(),
 		}
 
-		if _, err := client.EnableMachineAuthorization(context.Background(), connect.NewRequest(&req)); err != nil {
+		if _, err := tc.Client().EnableMachineAuthorization(cmd.Context(), connect.NewRequest(&req)); err != nil {
 			return err
 		}
 
@@ -651,37 +428,18 @@ func enableMachineAuthorizationCommand() *cobra.Command {
 }
 
 func disableMachineAuthorizationCommand() *cobra.Command {
-	command := &cobra.Command{
+	command, tc := prepareCommand(true, &cobra.Command{
 		Use:          "disable-machine-authorization",
 		Short:        "Disable machine authorization.",
 		SilenceUsage: true,
-	}
+	})
 
-	var tailnetID uint64
-	var tailnetName string
-	var target = Target{}
-
-	target.prepareCommand(command)
-	command.Flags().StringVar(&tailnetName, "tailnet", "", "Tailnet name. Mutually exclusive with --tailnet-id.")
-	command.Flags().Uint64Var(&tailnetID, "tailnet-id", 0, "Tailnet ID. Mutually exclusive with --tailnet.")
-
-	command.PreRunE = checkRequiredTailnetAndTailnetIdFlags
-	command.RunE = func(command *cobra.Command, args []string) error {
-		client, err := target.createGRPCClient()
-		if err != nil {
-			return err
-		}
-
-		tailnet, err := findTailnet(client, tailnetName, tailnetID)
-		if err != nil {
-			return err
-		}
-
+	command.RunE = func(cmd *cobra.Command, args []string) error {
 		req := api.DisableMachineAuthorizationRequest{
-			TailnetId: tailnet.Id,
+			TailnetId: tc.TailnetID(),
 		}
 
-		if _, err := client.DisableMachineAuthorization(context.Background(), connect.NewRequest(&req)); err != nil {
+		if _, err := tc.Client().DisableMachineAuthorization(cmd.Context(), connect.NewRequest(&req)); err != nil {
 			return err
 		}
 
