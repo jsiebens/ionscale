@@ -52,7 +52,7 @@ func prepareCommand(enableTailnetSelector bool, cmd *cobra.Command) (*cobra.Comm
 		skipVerify := t.getInsecureSkipVerify()
 		systemAdminKey := t.getSystemAdminKey()
 
-		auth, err := ionscale.LoadClientAuth(systemAdminKey)
+		auth, err := ionscale.LoadClientAuth(addr, systemAdminKey)
 		if err != nil {
 			return err
 		}
@@ -65,10 +65,7 @@ func prepareCommand(enableTailnetSelector bool, cmd *cobra.Command) (*cobra.Comm
 		t.client = client
 
 		if enableTailnetSelector {
-			savedTailnetID, err := ionscale.TailnetFromFile()
-			if err != nil {
-				return err
-			}
+			savedTailnetID := auth.TailnetID()
 
 			if savedTailnetID == 0 && !cmd.Flags().Changed("tailnet") && !cmd.Flags().Changed("tailnet-id") {
 				return fmt.Errorf("flag --tailnet or --tailnet-id is required")
