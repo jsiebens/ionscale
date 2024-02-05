@@ -221,10 +221,11 @@ func Run(t *testing.T, f func(s *Scenario)) {
 	err = pool.Retry(httpCheck(port, "/key"))
 	require.NoError(s.t, err)
 
-	auth, err := ionscaleclt.LoadClientAuth("804ecd57365342254ce6647da5c249e85c10a0e51e74856bfdf292a2136b4249")
+	addr := fmt.Sprintf("http://localhost:%s", port)
+	auth, err := ionscaleclt.LoadClientAuth(addr, "804ecd57365342254ce6647da5c249e85c10a0e51e74856bfdf292a2136b4249")
 	require.NoError(s.t, err)
 
-	s.ionscaleClient, err = ionscaleclt.NewClient(auth, fmt.Sprintf("http://localhost:%s", port), true)
+	s.ionscaleClient, err = ionscaleclt.NewClient(auth, addr, true)
 	require.NoError(s.t, err)
 
 	f(s)

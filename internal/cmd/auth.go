@@ -37,7 +37,13 @@ func authLoginCommand() *cobra.Command {
 			if len(resp.Token) != 0 {
 				fmt.Println()
 				fmt.Println("Success.")
-				if err := ionscale.SessionToFile(resp.Token, resp.TailnetId); err != nil {
+
+				tailnetId := uint64(0)
+				if resp.TailnetId != nil {
+					tailnetId = *resp.TailnetId
+				}
+
+				if err := ionscale.StoreAuthToken(tc.Addr(), resp.Token, tailnetId); err != nil {
 					fmt.Println()
 					fmt.Println("Your api token:")
 					fmt.Println()
