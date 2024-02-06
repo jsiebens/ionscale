@@ -11,7 +11,19 @@ func DefaultACLPolicy() *ionscalev1.ACLPolicy {
 				Dst:    []string{"*:*"},
 			},
 		},
+		Ssh: []*ionscalev1.SSHRule{
+			{
+				Action: "check",
+				Src:    []string{"autogroup:member"},
+				Dst:    []string{"autogroup:self"},
+				Users:  []string{"autogroup:nonroot", "root"},
+			},
+		},
 	}
+}
+
+func DefaultIAMPolicy() *ionscalev1.IAMPolicy {
+	return &ionscalev1.IAMPolicy{}
 }
 
 func DefaultDNSConfig() *ionscalev1.DNSConfig {

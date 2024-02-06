@@ -8,6 +8,7 @@ import (
 	"github.com/jsiebens/ionscale/internal/domain"
 	"github.com/jsiebens/ionscale/internal/mapping"
 	"github.com/jsiebens/ionscale/internal/util"
+	"github.com/jsiebens/ionscale/pkg/defaults"
 	api "github.com/jsiebens/ionscale/pkg/gen/ionscale/v1"
 	"tailscale.com/tailcfg"
 )
@@ -42,6 +43,18 @@ func (s *Service) CreateTailnet(ctx context.Context, req *connect.Request[api.Cr
 		return nil, connect.NewError(connect.CodePermissionDenied, fmt.Errorf("permission denied"))
 	}
 
+	if req.Msg.IamPolicy == nil {
+		req.Msg.IamPolicy = defaults.DefaultIAMPolicy()
+	}
+
+	if req.Msg.AclPolicy == nil {
+		req.Msg.AclPolicy = defaults.DefaultACLPolicy()
+	}
+
+	if req.Msg.DnsConfig == nil {
+		req.Msg.DnsConfig = defaults.DefaultDNSConfig()
+	}
+
 	tailnet := &domain.Tailnet{
 		ID:                          util.NextID(),
 		Name:                        req.Msg.Name,
@@ -54,24 +67,16 @@ func (s *Service) CreateTailnet(ctx context.Context, req *connect.Request[api.Cr
 		MachineAuthorizationEnabled: req.Msg.MachineAuthorizationEnabled,
 	}
 
-	if req.Msg.IamPolicy != nil {
-		if err := validateIamPolicy(req.Msg.IamPolicy); err != nil {
-			return nil, connect.NewError(connect.CodeInvalidArgument, fmt.Errorf("invalid iam policy: %w", err))
-		}
-
-		if err := mapping.CopyViaJson(req.Msg.IamPolicy, &tailnet.IAMPolicy); err != nil {
-			return nil, logError(err)
-		}
-	} else {
-		tailnet.IAMPolicy = domain.DefaultIAMPolicy()
+	if err := validateIamPolicy(req.Msg.IamPolicy); err != nil {
+		return nil, connect.NewError(connect.CodeInvalidArgument, fmt.Errorf("invalid iam policy: %w", err))
 	}
 
-	if req.Msg.AclPolicy != nil {
-		if err := mapping.CopyViaJson(req.Msg.AclPolicy, &tailnet.ACLPolicy); err != nil {
-			return nil, logError(err)
-		}
-	} else {
-		tailnet.ACLPolicy = domain.DefaultACLPolicy()
+	if err := mapping.CopyViaJson(req.Msg.IamPolicy, &tailnet.IAMPolicy); err != nil {
+		return nil, logError(err)
+	}
+
+	if err := mapping.CopyViaJson(req.Msg.AclPolicy, &tailnet.ACLPolicy); err != nil {
+		return nil, logError(err)
 	}
 
 	if err := s.repository.SaveTailnet(ctx, tailnet); err != nil {

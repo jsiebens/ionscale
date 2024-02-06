@@ -66,18 +66,6 @@ type Grant struct {
 	App tailcfg.PeerCapMap       `json:"app"`
 }
 
-func DefaultACLPolicy() ACLPolicy {
-	return ACLPolicy{
-		ACLs: []ACL{
-			{
-				Action: "accept",
-				Src:    []string{"*"},
-				Dst:    []string{"*:*"},
-			},
-		},
-	}
-}
-
 func (a ACLPolicy) FindAutoApprovedIPs(routableIPs []netip.Prefix, tags []string, u *User) []netip.Prefix {
 	if a.AutoApprovers == nil || len(routableIPs) == 0 {
 		return nil
