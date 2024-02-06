@@ -16,7 +16,7 @@ import (
 func machineCommands() *cobra.Command {
 	command := &cobra.Command{
 		Use:          "machines",
-		Aliases:      []string{"machine"},
+		Aliases:      []string{"machine", "devices", "device"},
 		Short:        "Manage ionscale machines",
 		SilenceUsage: true,
 	}
