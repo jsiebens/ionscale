@@ -27,6 +27,7 @@ type Repository interface {
 
 	SaveTailnet(ctx context.Context, tailnet *Tailnet) error
 	GetTailnet(ctx context.Context, id uint64) (*Tailnet, error)
+	GetTailnetByName(ctx context.Context, name string) (*Tailnet, error)
 	ListTailnets(ctx context.Context) ([]Tailnet, error)
 	DeleteTailnet(ctx context.Context, id uint64) error
 

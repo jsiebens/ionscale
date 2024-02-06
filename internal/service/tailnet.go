@@ -43,6 +43,14 @@ func (s *Service) CreateTailnet(ctx context.Context, req *connect.Request[api.Cr
 		return nil, connect.NewError(connect.CodePermissionDenied, fmt.Errorf("permission denied"))
 	}
 
+	check, err := s.repository.GetTailnetByName(ctx, req.Msg.Name)
+	if err != nil {
+		return nil, logError(err)
+	}
+	if check != nil {
+		return nil, connect.NewError(connect.CodeInvalidArgument, fmt.Errorf("tailnet with name '%s' already exists", req.Msg.Name))
+	}
+
 	if req.Msg.IamPolicy == nil {
 		req.Msg.IamPolicy = defaults.DefaultIAMPolicy()
 	}
