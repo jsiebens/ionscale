@@ -29,6 +29,7 @@ message DNSConfig {
   map<string, Routes> routes = 4;
   string magic_dns_suffix = 5;
   bool https_certs = 6;
+  repeated string search_domains = 7;
 }
 
 message Routes {

@@ -14,6 +14,7 @@ type DNSConfig struct {
 	OverrideLocalDNS  bool                `json:"override_local_dns"`
 	Nameservers       []string            `json:"nameservers"`
 	Routes            map[string][]string `json:"routes"`
+	SearchDomains     []string            `json:"search_domains"`
 }
 
 func (i *DNSConfig) Scan(destination interface{}) error {

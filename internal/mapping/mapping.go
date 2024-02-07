@@ -34,20 +34,20 @@ func ToDNSConfig(m *domain.Machine, tailnet *domain.Tailnet, c *domain.DNSConfig
 	sanitizeTailnetName := domain.SanitizeTailnetName(tailnet.Name)
 	tailnetDomain := fmt.Sprintf("%s.%s", sanitizeTailnetName, config.MagicDNSSuffix())
 
-	resolvers := []*dnstype.Resolver{}
+	resolvers := make([]*dnstype.Resolver, 0)
+
 	for _, r := range c.Nameservers {
-		resolver := &dnstype.Resolver{
-			Addr: r,
-		}
-		resolvers = append(resolvers, resolver)
+		resolvers = append(resolvers, &dnstype.Resolver{Addr: r})
 	}
 
 	dnsConfig := &tailcfg.DNSConfig{}
 
+	var routes = make(map[string][]*dnstype.Resolver)
 	var domains []string
 	var certDomains []string
 
 	if c.MagicDNS {
+		routes[tailnetDomain] = nil
 		domains = append(domains, tailnetDomain)
 		dnsConfig.Proxied = true
 
@@ -63,22 +63,23 @@ func ToDNSConfig(m *domain.Machine, tailnet *domain.Tailnet, c *domain.DNSConfig
 	}
 
 	if len(c.Routes) != 0 || certsEnabled {
-		routes := make(map[string][]*dnstype.Resolver)
-
 		for r, s := range c.Routes {
-			routeResolver := []*dnstype.Resolver{}
+			routeResolver := make([]*dnstype.Resolver, 0)
 			for _, addr := range s {
-				resolver := &dnstype.Resolver{Addr: addr}
-				routeResolver = append(routeResolver, resolver)
+				routeResolver = append(routeResolver, &dnstype.Resolver{Addr: addr})
 			}
 			routes[r] = routeResolver
-			domains = append(domains, r)
 		}
+
 		dnsConfig.Routes = routes
 	}
 
-	dnsConfig.Domains = domains
+	dnsConfig.Domains = append(domains, c.SearchDomains...)
 	dnsConfig.CertDomains = certDomains
+
+	dnsConfig.ExitNodeFilteredSet = []string{
+		fmt.Sprintf(".%s", config.MagicDNSSuffix()),
+	}
 
 	return dnsConfig
 }
