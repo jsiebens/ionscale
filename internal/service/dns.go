@@ -42,6 +42,10 @@ func (s *Service) SetDNSConfig(ctx context.Context, req *connect.Request[api.Set
 		return nil, connect.NewError(connect.CodeFailedPrecondition, fmt.Errorf("MagicDNS must be enabled when enabling HTTPS Certs"))
 	}
 
+	if dnsConfig.HttpsCerts && s.dnsProvider != nil {
+		return nil, connect.NewError(connect.CodeFailedPrecondition, fmt.Errorf("A DNS provider must be configured when enabling HTTPS Certs"))
+	}
+
 	tailnet, err := s.repository.GetTailnet(ctx, req.Msg.TailnetId)
 	if err != nil {
 		return nil, logError(err)
@@ -50,13 +54,7 @@ func (s *Service) SetDNSConfig(ctx context.Context, req *connect.Request[api.Set
 		return nil, connect.NewError(connect.CodeNotFound, fmt.Errorf("tailnet not found"))
 	}
 
-	tailnet.DNSConfig = domain.DNSConfig{
-		MagicDNS:          dnsConfig.MagicDns,
-		HttpsCertsEnabled: s.dnsProvider != nil && dnsConfig.HttpsCerts,
-		OverrideLocalDNS:  dnsConfig.OverrideLocalDns,
-		Nameservers:       dnsConfig.Nameservers,
-		Routes:            apiRoutesToDomainRoutes(dnsConfig.Routes),
-	}
+	tailnet.DNSConfig = apiDNSConfigToDomainDNSConfig(req.Msg.Config)
 
 	if err := s.repository.SaveTailnet(ctx, tailnet); err != nil {
 		return nil, logError(err)
@@ -102,6 +100,7 @@ func apiDNSConfigToDomainDNSConfig(dnsConfig *api.DNSConfig) domain.DNSConfig {
 		OverrideLocalDNS:  dnsConfig.OverrideLocalDns,
 		Nameservers:       dnsConfig.Nameservers,
 		Routes:            apiRoutesToDomainRoutes(dnsConfig.Routes),
+		SearchDomains:     dnsConfig.SearchDomains,
 	}
 }
 
@@ -115,5 +114,6 @@ func domainDNSConfigToApiDNSConfig(tailnet *domain.Tailnet) *api.DNSConfig {
 		OverrideLocalDns: dnsConfig.OverrideLocalDNS,
 		Nameservers:      dnsConfig.Nameservers,
 		Routes:           domainRoutesToApiRoutes(dnsConfig.Routes),
+		SearchDomains:    dnsConfig.SearchDomains,
 	}
 }
