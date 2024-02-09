@@ -6,6 +6,7 @@ import (
 	"github.com/jsiebens/ionscale/internal/config"
 	"github.com/jsiebens/ionscale/internal/core"
 	"github.com/jsiebens/ionscale/internal/domain"
+	"github.com/jsiebens/ionscale/internal/eventlog"
 	"github.com/jsiebens/ionscale/internal/mapping"
 	"github.com/jsiebens/ionscale/internal/util"
 	"github.com/labstack/echo/v4"
@@ -178,9 +179,11 @@ func (h *RegistrationHandlers) authenticateMachineWithAuthKey(c echo.Context, ma
 		return logError(err)
 	}
 
+	var events eventlog.Events
 	now := time.Now().UTC()
+	createNewMachine := m == nil
 
-	if m == nil {
+	if createNewMachine {
 		sanitizeHostname := dnsname.SanitizeHostname(req.Hostinfo.Hostname)
 		nameIdx, err := h.repository.GetNextMachineNameIndex(ctx, tailnet.ID, sanitizeHostname)
 		if err != nil {
@@ -218,6 +221,8 @@ func (h *RegistrationHandlers) authenticateMachineWithAuthKey(c echo.Context, ma
 		}
 		m.IPv4 = domain.IP{Addr: ipv4}
 		m.IPv6 = domain.IP{Addr: ipv6}
+
+		events = append(events, eventlog.MachineCreated(m, &user))
 	} else {
 		sanitizeHostname := dnsname.SanitizeHostname(req.Hostinfo.Hostname)
 		if m.Name != sanitizeHostname {
@@ -243,6 +248,8 @@ func (h *RegistrationHandlers) authenticateMachineWithAuthKey(c echo.Context, ma
 	if err := h.repository.SaveMachine(ctx, m); err != nil {
 		return logError(err)
 	}
+
+	eventlog.Send(ctx, events...)
 
 	tUser, tLogin := mapping.ToUser(m.User)
 	response := tailcfg.RegisterResponse{

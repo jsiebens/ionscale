@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/jsiebens/ionscale/internal/addr"
 	"github.com/jsiebens/ionscale/internal/auth"
+	"github.com/jsiebens/ionscale/internal/eventlog"
 	tpl "github.com/jsiebens/ionscale/internal/templates"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/mr-tron/base58"
@@ -465,9 +466,11 @@ func (h *AuthenticationHandlers) endMachineRegistrationFlow(c echo.Context, form
 		return logError(err)
 	}
 
+	var events eventlog.Events
 	now := time.Now().UTC()
+	createNewMachine := m == nil
 
-	if m == nil {
+	if createNewMachine {
 		registeredTags := tags
 		advertisedTags := domain.SanitizeTags(req.Hostinfo.RequestTags)
 		tags := append(registeredTags, advertisedTags...)
@@ -505,6 +508,8 @@ func (h *AuthenticationHandlers) endMachineRegistrationFlow(c echo.Context, form
 		}
 		m.IPv4 = domain.IP{Addr: ipv4}
 		m.IPv6 = domain.IP{Addr: ipv6}
+
+		events = append(events, eventlog.MachineCreated(m, user))
 	} else {
 		registeredTags := tags
 		advertisedTags := domain.SanitizeTags(req.Hostinfo.RequestTags)
@@ -554,6 +559,8 @@ func (h *AuthenticationHandlers) endMachineRegistrationFlow(c echo.Context, form
 	if err != nil {
 		return logError(err)
 	}
+
+	eventlog.Send(ctx, events...)
 
 	if m.Authorized {
 		return c.Redirect(http.StatusFound, "/a/success")

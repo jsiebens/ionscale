@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/bufbuild/connect-go"
 	"github.com/jsiebens/ionscale/internal/domain"
+	"github.com/jsiebens/ionscale/internal/eventlog"
 	"github.com/jsiebens/ionscale/internal/mapping"
 	"github.com/jsiebens/ionscale/internal/util"
 	"github.com/jsiebens/ionscale/pkg/defaults"
@@ -95,6 +96,8 @@ func (s *Service) CreateTailnet(ctx context.Context, req *connect.Request[api.Cr
 	if err != nil {
 		return nil, logError(err)
 	}
+
+	eventlog.Send(ctx, eventlog.TailnetCreated(tailnet, principal.User))
 
 	resp := &api.CreateTailnetResponse{Tailnet: t}
 
@@ -214,6 +217,15 @@ func (s *Service) DeleteTailnet(ctx context.Context, req *connect.Request[api.De
 	principal := CurrentPrincipal(ctx)
 	if !principal.IsSystemAdmin() {
 		return nil, connect.NewError(connect.CodePermissionDenied, fmt.Errorf("permission denied"))
+	}
+
+	tailnet, err := s.repository.GetTailnet(ctx, req.Msg.TailnetId)
+	if err != nil {
+		return nil, logError(err)
+	}
+
+	if tailnet == nil {
+		return nil, connect.NewError(connect.CodeNotFound, fmt.Errorf("tailnet not found"))
 	}
 
 	count, err := s.repository.CountMachineByTailnet(ctx, req.Msg.TailnetId)

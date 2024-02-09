@@ -62,7 +62,7 @@ func EchoRecover() echo.MiddlewareFunc {
 						if !ok {
 							err = fmt.Errorf("%v", r)
 						}
-						zap.L().Error("panic when processing request", zap.Error(err))
+						zap.L().WithOptions(zap.AddCallerSkip(1)).Error("panic when processing request", zap.Error(err))
 						topErr = err
 					}
 				}()

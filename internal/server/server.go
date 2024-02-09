@@ -12,6 +12,7 @@ import (
 	"github.com/jsiebens/ionscale/internal/database"
 	"github.com/jsiebens/ionscale/internal/dns"
 	"github.com/jsiebens/ionscale/internal/domain"
+	"github.com/jsiebens/ionscale/internal/eventlog"
 	"github.com/jsiebens/ionscale/internal/handlers"
 	"github.com/jsiebens/ionscale/internal/service"
 	"github.com/jsiebens/ionscale/internal/templates"
@@ -49,6 +50,10 @@ func Start(ctx context.Context, c *config.Config) error {
 			zap.L().WithOptions(zap.AddCallerSkip(1)).Error("Unable to start server", zap.Error(err))
 		}
 		return err
+	}
+
+	if err := eventlog.Configure(c); err != nil {
+		return logError(err)
 	}
 
 	httpLogger := logger.Named("http")
