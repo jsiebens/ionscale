@@ -77,6 +77,14 @@ func (s *Scenario) AuthorizeMachines(tailnetID uint64) {
 	}
 }
 
+func (s *Scenario) ExpireMachines(tailnetID uint64) {
+	machines := s.ListMachines(tailnetID)
+	for _, m := range machines {
+		_, err := s.ionscaleClient.ExpireMachine(context.Background(), connect.NewRequest(&api.ExpireMachineRequest{MachineId: m.Id}))
+		require.NoError(s.t, err)
+	}
+}
+
 func (s *Scenario) SetACLPolicy(tailnetID uint64, policy *api.ACLPolicy) {
 	_, err := s.ionscaleClient.SetACLPolicy(context.Background(), connect.NewRequest(&api.SetACLPolicyRequest{TailnetId: tailnetID, Policy: policy}))
 	require.NoError(s.t, err)

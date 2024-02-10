@@ -89,9 +89,6 @@ func (h *PollNetMapper) CreateMapResponse(ctx context.Context, delta bool) (*Map
 		syncedUserIDs := map[tailcfg.UserID]bool{user.ID: true}
 
 		for _, peer := range candidatePeers {
-			if peer.IsExpired() {
-				continue
-			}
 			if policies.IsValidPeer(m, &peer) || policies.IsValidPeer(&peer, m) {
 				isConnected := h.sessionManager.HasSession(peer.TailnetID, peer.ID)
 
