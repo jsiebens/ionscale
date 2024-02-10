@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"github.com/jsiebens/ionscale/internal/util"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 	"net/http"
 	"sync"
 	"tailscale.com/tailcfg"
@@ -98,7 +99,7 @@ type repository struct {
 }
 
 func (r *repository) withContext(ctx context.Context) *gorm.DB {
-	return r.db.WithContext(ctx)
+	return r.db.WithContext(ctx).Omit(clause.Associations)
 }
 
 func (r *repository) Transaction(action func(Repository) error) error {

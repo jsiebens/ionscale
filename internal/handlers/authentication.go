@@ -479,8 +479,10 @@ func (h *AuthenticationHandlers) endMachineRegistrationFlow(c echo.Context, form
 			KeyExpiryDisabled: len(tags) != 0,
 			Authorized:        !tailnet.MachineAuthorizationEnabled || authorized,
 
-			User:    *user,
-			Tailnet: *tailnet,
+			User:      *user,
+			UserID:    user.ID,
+			Tailnet:   *tailnet,
+			TailnetID: tailnet.ID,
 		}
 
 		ipv4, ipv6, err := addr.SelectIP(checkIP(ctx, h.repository.CountMachinesWithIPv4))

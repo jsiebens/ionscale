@@ -202,8 +202,10 @@ func (h *RegistrationHandlers) authenticateMachineWithAuthKey(c echo.Context, ma
 			KeyExpiryDisabled: len(tags) != 0,
 			Authorized:        !tailnet.MachineAuthorizationEnabled || authKey.PreAuthorized,
 
-			User:    user,
-			Tailnet: tailnet,
+			User:      user,
+			UserID:    user.ID,
+			Tailnet:   tailnet,
+			TailnetID: tailnet.ID,
 		}
 
 		if !req.Expiry.IsZero() {
