@@ -1,6 +1,7 @@
 package sc
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"github.com/bufbuild/connect-go"
@@ -96,6 +97,31 @@ func (s *Scenario) PushOIDCUser(sub, email, preferredUsername string) {
 	require.NoError(s.t, err)
 }
 
+func (s *Scenario) printIonscaleLogs() error {
+	var stdout bytes.Buffer
+
+	err := s.pool.Client.Logs(docker.LogsOptions{
+		Context:      context.TODO(),
+		Container:    s.ionscale.Container.ID,
+		OutputStream: &stdout,
+		ErrorStream:  io.Discard,
+		Tail:         "all",
+		RawTerminal:  false,
+		Stdout:       true,
+		Stderr:       true,
+		Follow:       false,
+		Timestamps:   false,
+	})
+
+	if err != nil {
+		return err
+	}
+
+	_, err = os.Stdout.Write(stdout.Bytes())
+
+	return err
+}
+
 type TailscaleNodeConfig struct {
 	Hostname string
 }
@@ -155,6 +181,10 @@ func Run(t *testing.T, f func(s *Scenario)) {
 	defer func() {
 		for _, r := range s.resources {
 			_ = pool.Purge(r)
+		}
+
+		if verbose() {
+			_ = s.printIonscaleLogs()
 		}
 
 		if s.ionscale != nil {
@@ -312,4 +342,8 @@ func prepareDockerPoolAndImages() {
 	if err != nil {
 		log.Fatal(err)
 	}
+}
+
+func verbose() bool {
+	return os.Getenv("IONSCALE_TESTS_VERBOSE") == "true"
 }
