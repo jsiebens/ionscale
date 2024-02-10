@@ -34,6 +34,7 @@ func TestSwitchAccounts(t *testing.T) {
 		require.NoError(t, node.WaitFor(tsn.Connected()))
 		require.NoError(t, node.Check(tsn.HasUser("jane@localtest.me")))
 		require.NoError(t, node.Check(tsn.HasName("switch-1")))
+		require.NoError(t, node.Check(tsn.PeerCount(1)))
 
 		machines := s.ListMachines(tailnet.Id)
 		require.Equal(t, 2, len(machines))

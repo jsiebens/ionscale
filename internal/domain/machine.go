@@ -471,14 +471,14 @@ func (r *repository) ListMachineByTailnet(ctx context.Context, tailnetID uint64)
 	return machines, nil
 }
 
-func (r *repository) ListMachinePeers(ctx context.Context, tailnetID uint64, key string) (Machines, error) {
-	var machines = []Machine{}
+func (r *repository) ListMachinePeers(ctx context.Context, tailnetID uint64, machineID uint64) (Machines, error) {
+	var machines []Machine
 
 	tx := r.withContext(ctx).
 		Preload("Tailnet").
 		Joins("User").
 		Joins("User.Account").
-		Where("machines.tailnet_id = ? AND machines.machine_key <> ?", tailnetID, key).
+		Where("machines.tailnet_id = ? AND machines.id <> ?", tailnetID, machineID).
 		Order("machines.id asc").
 		Find(&machines)
 

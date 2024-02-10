@@ -67,7 +67,7 @@ type Repository interface {
 	CountMachineByTailnet(ctx context.Context, tailnetID uint64) (int64, error)
 	DeleteMachineByTailnet(ctx context.Context, tailnetID uint64) error
 	DeleteMachineByUser(ctx context.Context, userID uint64) error
-	ListMachinePeers(ctx context.Context, tailnetID uint64, key string) (Machines, error)
+	ListMachinePeers(ctx context.Context, tailnetID uint64, machineID uint64) (Machines, error)
 	ListInactiveEphemeralMachines(ctx context.Context, checkpoint time.Time) (Machines, error)
 	SetMachineLastSeen(ctx context.Context, machineID uint64) error
 

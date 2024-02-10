@@ -81,7 +81,7 @@ func (h *PollNetMapper) CreateMapResponse(ctx context.Context, delta bool) (*Map
 	syncedPeerIDs := map[uint64]bool{}
 
 	if !h.req.OmitPeers {
-		candidatePeers, err := h.repository.ListMachinePeers(ctx, m.TailnetID, m.MachineKey)
+		candidatePeers, err := h.repository.ListMachinePeers(ctx, m.TailnetID, m.ID)
 		if err != nil {
 			return nil, err
 		}
