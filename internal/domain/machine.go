@@ -389,9 +389,9 @@ func (r *repository) GetNextMachineNameIndex(ctx context.Context, tailnetID uint
 	return m.NameIdx + 1, nil
 }
 
-func (r *repository) GetMachineByKey(ctx context.Context, tailnetID uint64, machineKey string) (*Machine, error) {
+func (r *repository) GetMachineByKeyAndUser(ctx context.Context, machineKey string, userID uint64) (*Machine, error) {
 	var m Machine
-	tx := r.withContext(ctx).Preload("Tailnet").Preload("User").Take(&m, "tailnet_id = ? AND machine_key = ?", tailnetID, machineKey)
+	tx := r.withContext(ctx).Preload("Tailnet").Preload("User").Take(&m, "machine_key = ? AND user_id = ?", machineKey, userID)
 
 	if errors.Is(tx.Error, gorm.ErrRecordNotFound) {
 		return nil, nil

@@ -47,7 +47,7 @@ func (t *TailscaleNode) LoginWithOidc(flags ...UpFlag) (int, error) {
 		return strings.Contains(stderr, "To authenticate, visit:")
 	}
 
-	cmd := []string{"up", "--login-server", t.loginServer}
+	cmd := []string{"login", "--login-server", t.loginServer}
 	for _, f := range flags {
 		cmd = append(cmd, f...)
 	}

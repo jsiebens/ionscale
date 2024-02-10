@@ -2,6 +2,7 @@ package tsn
 
 import (
 	"slices"
+	"strings"
 	"tailscale.com/ipn/ipnstate"
 	"tailscale.com/tailcfg"
 	"tailscale.com/types/views"
@@ -24,6 +25,12 @@ func HasTailnet(tailnet string) Condition {
 func HasTag(tag string) Condition {
 	return func(status *ipnstate.Status) bool {
 		return status.Self != nil && status.Self.Tags != nil && views.SliceContains[string](*status.Self.Tags, tag)
+	}
+}
+
+func HasName(name string) Condition {
+	return func(status *ipnstate.Status) bool {
+		return status.Self != nil && strings.HasPrefix(status.Self.DNSName, name)
 	}
 }
 

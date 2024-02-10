@@ -58,7 +58,7 @@ type Repository interface {
 	SaveMachine(ctx context.Context, m *Machine) error
 	DeleteMachine(ctx context.Context, id uint64) (bool, error)
 	GetMachine(ctx context.Context, id uint64) (*Machine, error)
-	GetMachineByKey(ctx context.Context, tailnetID uint64, key string) (*Machine, error)
+	GetMachineByKeyAndUser(ctx context.Context, key string, userID uint64) (*Machine, error)
 	GetMachineByKeys(ctx context.Context, machineKey string, nodeKey string) (*Machine, error)
 	CountMachinesWithIPv4(ctx context.Context, ip string) (int64, error)
 	GetNextMachineNameIndex(ctx context.Context, tailnetID uint64, name string) (uint64, error)

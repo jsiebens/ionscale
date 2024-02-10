@@ -446,7 +446,7 @@ func (h *AuthenticationHandlers) endMachineRegistrationFlow(c echo.Context, form
 
 	var m *domain.Machine
 
-	m, err := h.repository.GetMachineByKey(ctx, tailnet.ID, machineKey)
+	m, err := h.repository.GetMachineByKeyAndUser(ctx, machineKey, user.ID)
 	if err != nil {
 		return logError(err)
 	}
