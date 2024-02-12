@@ -15,6 +15,7 @@ import (
 	"github.com/jsiebens/ionscale/internal/service"
 	"github.com/jsiebens/ionscale/internal/templates"
 	"github.com/labstack/echo-contrib/echoprometheus"
+	"github.com/labstack/echo-contrib/pprof"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	certmagicsql "github.com/travisjeffery/certmagic-sqlstorage"
@@ -108,6 +109,7 @@ func Start(ctx context.Context, c *config.Config) error {
 
 	metricsHandler := echo.New()
 	metricsHandler.GET("/metrics", echoprometheus.NewHandler())
+	pprof.Register(metricsHandler)
 
 	createPeerHandler := func(machinePublicKey key.MachinePublic) http.Handler {
 		registrationHandlers := handlers.NewRegistrationHandlers(machinePublicKey, c, sessionManager, repository)
