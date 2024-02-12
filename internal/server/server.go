@@ -14,7 +14,7 @@ import (
 	"github.com/jsiebens/ionscale/internal/handlers"
 	"github.com/jsiebens/ionscale/internal/service"
 	"github.com/jsiebens/ionscale/internal/templates"
-	echo_prometheus "github.com/labstack/echo-contrib/prometheus"
+	"github.com/labstack/echo-contrib/echoprometheus"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	certmagicsql "github.com/travisjeffery/certmagic-sqlstorage"
@@ -104,10 +104,10 @@ func Start(ctx context.Context, c *config.Config) error {
 		return logError(err)
 	}
 
-	p := echo_prometheus.NewPrometheus("http", nil)
+	promMiddleware := echoprometheus.NewMiddleware("http")
 
 	metricsHandler := echo.New()
-	p.SetMetricsPath(metricsHandler)
+	metricsHandler.GET("/metrics", echoprometheus.NewHandler())
 
 	createPeerHandler := func(machinePublicKey key.MachinePublic) http.Handler {
 		registrationHandlers := handlers.NewRegistrationHandlers(machinePublicKey, c, sessionManager, repository)
@@ -119,7 +119,7 @@ func Start(ctx context.Context, c *config.Config) error {
 
 		e := echo.New()
 		e.Binder = handlers.JsonBinder{}
-		e.Use(EchoMetrics(p), EchoLogger(httpLogger), EchoErrorHandler(), EchoRecover())
+		e.Use(promMiddleware, EchoLogger(httpLogger), EchoErrorHandler(), EchoRecover())
 		e.POST("/machine/register", registrationHandlers.Register)
 		e.POST("/machine/map", pollNetMapHandler.PollNetMap)
 		e.POST("/machine/set-dns", dnsHandlers.SetDNS)
@@ -146,14 +146,14 @@ func Start(ctx context.Context, c *config.Config) error {
 	rpcPath, rpcHandler := NewRpcHandler(serverKey.SystemAdminKey, repository, rpcService)
 
 	nonTlsAppHandler := echo.New()
-	nonTlsAppHandler.Use(EchoMetrics(p), EchoLogger(httpLogger), EchoErrorHandler(), EchoRecover())
+	nonTlsAppHandler.Use(promMiddleware, EchoLogger(httpLogger), EchoErrorHandler(), EchoRecover())
 	nonTlsAppHandler.POST("/ts2021", noiseHandlers.Upgrade)
 	nonTlsAppHandler.Any("/*", handlers.HttpRedirectHandler(c.Tls))
 
 	tlsAppHandler := echo.New()
 	tlsAppHandler.Renderer = &templates.Renderer{}
 	tlsAppHandler.Pre(handlers.HttpsRedirect(c.Tls))
-	tlsAppHandler.Use(EchoMetrics(p), EchoLogger(httpLogger), EchoErrorHandler(), EchoRecover())
+	tlsAppHandler.Use(promMiddleware, EchoLogger(httpLogger), EchoErrorHandler(), EchoRecover())
 
 	tlsAppHandler.Any("/*", handlers.IndexHandler(http.StatusNotFound))
 	tlsAppHandler.Any("/", handlers.IndexHandler(http.StatusOK))

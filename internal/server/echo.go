@@ -2,7 +2,6 @@ package server
 
 import (
 	"fmt"
-	"github.com/labstack/echo-contrib/prometheus"
 	"github.com/labstack/echo/v4"
 	"go.uber.org/zap"
 	"net/http"
@@ -72,8 +71,4 @@ func EchoRecover() echo.MiddlewareFunc {
 			return apply()
 		}
 	}
-}
-
-func EchoMetrics(p *prometheus.Prometheus) echo.MiddlewareFunc {
-	return p.HandlerFunc
 }
