@@ -55,6 +55,7 @@ type Repository interface {
 	DeleteUser(ctx context.Context, userID uint64) error
 	ListUsers(ctx context.Context, tailnetID uint64) (Users, error)
 	DeleteUsersByTailnet(ctx context.Context, tailnetID uint64) error
+	SetUserLastAuthenticated(ctx context.Context, userID uint64, timestamp time.Time) error
 
 	SaveMachine(ctx context.Context, m *Machine) error
 	DeleteMachine(ctx context.Context, id uint64) (bool, error)

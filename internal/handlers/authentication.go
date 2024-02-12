@@ -193,9 +193,20 @@ func (h *AuthenticationHandlers) Callback(c echo.Context) error {
 
 		if !machine.HasTags() && machine.User.AccountID != nil && *machine.User.AccountID == account.ID {
 			sshActionReq.Action = "accept"
-			if err := h.repository.SaveSSHActionRequest(ctx, sshActionReq); err != nil {
+
+			err := h.repository.Transaction(func(rp domain.Repository) error {
+				if err := rp.SetUserLastAuthenticated(ctx, machine.UserID, time.Now().UTC()); err != nil {
+					return err
+				}
+				if err := rp.SaveSSHActionRequest(ctx, sshActionReq); err != nil {
+					return err
+				}
+				return nil
+			})
+			if err != nil {
 				return logError(err)
 			}
+
 			return c.Redirect(http.StatusFound, "/a/success")
 		}
 
@@ -361,6 +372,9 @@ func (h *AuthenticationHandlers) endCliAuthenticationFlow(c echo.Context, form E
 	req.TailnetID = &tailnet.ID
 
 	err = h.repository.Transaction(func(rp domain.Repository) error {
+		if err := rp.SetUserLastAuthenticated(ctx, user.ID, time.Now().UTC()); err != nil {
+			return err
+		}
 		if err := rp.SaveApiKey(ctx, apiKey); err != nil {
 			return err
 		}
@@ -521,6 +535,10 @@ func (h *AuthenticationHandlers) endMachineRegistrationFlow(c echo.Context, form
 		registrationRequest.Authenticated = true
 		registrationRequest.Error = ""
 		registrationRequest.UserID = user.ID
+
+		if err := rp.SetUserLastAuthenticated(ctx, m.UserID, time.Now().UTC()); err != nil {
+			return err
+		}
 
 		if err := rp.SaveMachine(ctx, m); err != nil {
 			return err

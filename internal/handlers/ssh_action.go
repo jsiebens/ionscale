@@ -52,8 +52,8 @@ func (h *SSHActionHandlers) StartAuth(c echo.Context) error {
 			return logError(err)
 		}
 
-		if machine.User.Account != nil && machine.User.Account.LastAuthenticated != nil {
-			sinceLastAuthentication := time.Since(*machine.User.Account.LastAuthenticated)
+		if machine.User.Account != nil && machine.User.LastAuthenticated != nil {
+			sinceLastAuthentication := time.Since(*machine.User.LastAuthenticated)
 
 			if sinceLastAuthentication < checkPeriod {
 				resp := &tailcfg.SSHAction{
