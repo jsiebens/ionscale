@@ -5,6 +5,7 @@ import (
 	"errors"
 	"github.com/jsiebens/ionscale/internal/util"
 	"gorm.io/gorm"
+	"time"
 )
 
 type SystemRole string
@@ -38,13 +39,14 @@ func (s UserRole) IsAdmin() bool {
 }
 
 type User struct {
-	ID        uint64 `gorm:"primary_key"`
-	Name      string
-	UserType  UserType
-	TailnetID uint64
-	Tailnet   Tailnet
-	AccountID *uint64
-	Account   *Account
+	ID                uint64 `gorm:"primary_key"`
+	Name              string
+	UserType          UserType
+	LastAuthenticated *time.Time
+	TailnetID         uint64
+	Tailnet           Tailnet
+	AccountID         *uint64
+	Account           *Account
 }
 
 type Users []User
@@ -116,4 +118,17 @@ func (r *repository) GetUser(ctx context.Context, userID uint64) (*User, error) 
 func (r *repository) DeleteUser(ctx context.Context, userID uint64) error {
 	tx := r.withContext(ctx).Delete(&User{ID: userID})
 	return tx.Error
+}
+
+func (r *repository) SetUserLastAuthenticated(ctx context.Context, userID uint64, timestamp time.Time) error {
+	tx := r.withContext(ctx).
+		Model(User{}).
+		Where("id = ?", userID).
+		Updates(map[string]interface{}{"last_authenticated": &timestamp})
+
+	if tx.Error != nil {
+		return tx.Error
+	}
+
+	return nil
 }

@@ -9,10 +9,9 @@ import (
 )
 
 type Account struct {
-	ID                uint64 `gorm:"primary_key"`
-	ExternalID        string
-	LoginName         string
-	LastAuthenticated *time.Time
+	ID         uint64 `gorm:"primary_key"`
+	ExternalID string
+	LoginName  string
 }
 
 func (r *repository) GetOrCreateAccount(ctx context.Context, externalID, loginName string) (*Account, bool, error) {
