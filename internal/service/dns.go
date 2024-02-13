@@ -42,7 +42,7 @@ func (s *Service) SetDNSConfig(ctx context.Context, req *connect.Request[api.Set
 		return nil, connect.NewError(connect.CodeFailedPrecondition, fmt.Errorf("MagicDNS must be enabled when enabling HTTPS Certs"))
 	}
 
-	if dnsConfig.HttpsCerts && s.dnsProvider != nil {
+	if dnsConfig.HttpsCerts && s.dnsProvider == nil {
 		return nil, connect.NewError(connect.CodeFailedPrecondition, fmt.Errorf("A DNS provider must be configured when enabling HTTPS Certs"))
 	}
 
