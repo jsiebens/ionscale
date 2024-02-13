@@ -32,6 +32,11 @@ func CreateSystemApiKey(account *Account, expiresAt *time.Time) (string, *System
 	}
 }
 
+type SystemApiKeyRepository interface {
+	SaveSystemApiKey(ctx context.Context, key *SystemApiKey) error
+	LoadSystemApiKey(ctx context.Context, key string) (*SystemApiKey, error)
+}
+
 type SystemApiKey struct {
 	ID   uint64 `gorm:"primary_key"`
 	Key  string

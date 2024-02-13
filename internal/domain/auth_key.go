@@ -36,6 +36,17 @@ func CreateAuthKey(tailnet *Tailnet, user *User, ephemeral bool, preAuthorized b
 	}
 }
 
+type AuthKeyRepository interface {
+	GetAuthKey(ctx context.Context, id uint64) (*AuthKey, error)
+	SaveAuthKey(ctx context.Context, key *AuthKey) error
+	DeleteAuthKey(ctx context.Context, id uint64) (bool, error)
+	DeleteAuthKeysByTailnet(ctx context.Context, tailnetID uint64) error
+	DeleteAuthKeysByUser(ctx context.Context, userID uint64) error
+	ListAuthKeys(ctx context.Context, tailnetID uint64) ([]AuthKey, error)
+	ListAuthKeysByTailnetAndUser(ctx context.Context, tailnetID, userID uint64) ([]AuthKey, error)
+	LoadAuthKey(ctx context.Context, key string) (*AuthKey, error)
+}
+
 type AuthKey struct {
 	ID            uint64 `gorm:"primary_key"`
 	Key           string

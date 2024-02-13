@@ -13,6 +13,23 @@ import (
 	"time"
 )
 
+type MachineRepository interface {
+	SaveMachine(ctx context.Context, m *Machine) error
+	DeleteMachine(ctx context.Context, id uint64) (bool, error)
+	GetMachine(ctx context.Context, id uint64) (*Machine, error)
+	GetMachineByKeyAndUser(ctx context.Context, key string, userID uint64) (*Machine, error)
+	GetMachineByKeys(ctx context.Context, machineKey string, nodeKey string) (*Machine, error)
+	CountMachinesWithIPv4(ctx context.Context, ip string) (int64, error)
+	GetNextMachineNameIndex(ctx context.Context, tailnetID uint64, name string) (uint64, error)
+	ListMachineByTailnet(ctx context.Context, tailnetID uint64) (Machines, error)
+	CountMachineByTailnet(ctx context.Context, tailnetID uint64) (int64, error)
+	DeleteMachineByTailnet(ctx context.Context, tailnetID uint64) error
+	DeleteMachineByUser(ctx context.Context, userID uint64) error
+	ListMachinePeers(ctx context.Context, tailnetID uint64, machineID uint64) (Machines, error)
+	ListInactiveEphemeralMachines(ctx context.Context, checkpoint time.Time) (Machines, error)
+	SetMachineLastSeen(ctx context.Context, machineID uint64) error
+}
+
 type Machine struct {
 	ID                uint64 `gorm:"primary_key"`
 	Name              string

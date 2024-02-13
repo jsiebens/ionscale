@@ -38,6 +38,16 @@ func (s UserRole) IsAdmin() bool {
 	return s == UserRoleAdmin
 }
 
+type UserRepository interface {
+	GetOrCreateServiceUser(ctx context.Context, tailnet *Tailnet) (*User, bool, error)
+	GetOrCreateUserWithAccount(ctx context.Context, tailnet *Tailnet, account *Account) (*User, bool, error)
+	GetUser(ctx context.Context, userID uint64) (*User, error)
+	DeleteUser(ctx context.Context, userID uint64) error
+	ListUsers(ctx context.Context, tailnetID uint64) (Users, error)
+	DeleteUsersByTailnet(ctx context.Context, tailnetID uint64) error
+	SetUserLastAuthenticated(ctx context.Context, userID uint64, timestamp time.Time) error
+}
+
 type User struct {
 	ID                uint64 `gorm:"primary_key"`
 	Name              string

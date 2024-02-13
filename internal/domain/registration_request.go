@@ -12,6 +12,12 @@ import (
 	"time"
 )
 
+type RegistrationRequestRepository interface {
+	SaveRegistrationRequest(ctx context.Context, request *RegistrationRequest) error
+	GetRegistrationRequestByKey(ctx context.Context, key string) (*RegistrationRequest, error)
+	GetRegistrationRequestByMachineKey(ctx context.Context, key string) (*RegistrationRequest, error)
+}
+
 type RegistrationRequest struct {
 	MachineKey    string `gorm:"primary_key"`
 	Key           string

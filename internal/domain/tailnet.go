@@ -22,6 +22,14 @@ type Tailnet struct {
 	MachineAuthorizationEnabled bool
 }
 
+type TailnetRepository interface {
+	SaveTailnet(ctx context.Context, tailnet *Tailnet) error
+	GetTailnet(ctx context.Context, id uint64) (*Tailnet, error)
+	GetTailnetByName(ctx context.Context, name string) (*Tailnet, error)
+	ListTailnets(ctx context.Context) ([]Tailnet, error)
+	DeleteTailnet(ctx context.Context, id uint64) error
+}
+
 func (t Tailnet) GetDERPMap(ctx context.Context, fallack DefaultDERPMap) (*DERPMap, error) {
 	if t.DERPMap.Checksum == "" {
 		return fallack.GetDERPMap(ctx)

@@ -7,6 +7,12 @@ import (
 	"time"
 )
 
+type AuthenticationRequestRepository interface {
+	SaveAuthenticationRequest(ctx context.Context, session *AuthenticationRequest) error
+	GetAuthenticationRequest(ctx context.Context, key string) (*AuthenticationRequest, error)
+	DeleteAuthenticationRequest(ctx context.Context, key string) error
+}
+
 type AuthenticationRequest struct {
 	Key       string `gorm:"primary_key"`
 	Token     string

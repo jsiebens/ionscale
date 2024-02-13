@@ -7,6 +7,12 @@ import (
 	"time"
 )
 
+type SSHActionRequestRepository interface {
+	SaveSSHActionRequest(ctx context.Context, session *SSHActionRequest) error
+	GetSSHActionRequest(ctx context.Context, key string) (*SSHActionRequest, error)
+	DeleteSSHActionRequest(ctx context.Context, key string) error
+}
+
 type SSHActionRequest struct {
 	Key          string `gorm:"primary_key"`
 	Action       string

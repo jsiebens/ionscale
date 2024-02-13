@@ -8,6 +8,12 @@ import (
 	"time"
 )
 
+type AccountRepository interface {
+	GetAccount(ctx context.Context, accountID uint64) (*Account, error)
+	GetOrCreateAccount(ctx context.Context, externalID, loginName string) (*Account, bool, error)
+	SetAccountLastAuthenticated(ctx context.Context, accountID uint64) error
+}
+
 type Account struct {
 	ID         uint64 `gorm:"primary_key"`
 	ExternalID string

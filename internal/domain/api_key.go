@@ -33,6 +33,13 @@ func CreateApiKey(tailnet *Tailnet, user *User, expiresAt *time.Time) (string, *
 	}
 }
 
+type ApiKeyRepository interface {
+	SaveApiKey(ctx context.Context, key *ApiKey) error
+	LoadApiKey(ctx context.Context, key string) (*ApiKey, error)
+	DeleteApiKeysByTailnet(ctx context.Context, tailnetID uint64) error
+	DeleteApiKeysByUser(ctx context.Context, userID uint64) error
+}
+
 type ApiKey struct {
 	ID   uint64 `gorm:"primary_key"`
 	Key  string
