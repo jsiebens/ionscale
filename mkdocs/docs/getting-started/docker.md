@@ -32,23 +32,23 @@ cd ./ionscale
 Generate a configuration file for __ionscale__ with the following commands:
 
 ``` bash
-export IONSCALE_DOMAIN=example.com
 export IONSCALE_ACME_EMAIL=<your email>
+export IONSCALE_ADDR=https://ionscale.example.com
+export IONSCALE_SYSTEM_ADMIN_KEY=$(docker run ghcr.io/jsiebens/ionscale:0.13.0 genkey -n)
 ```
 
 ``` bash
 tee ./config.yaml >/dev/null <<EOF
 http_listen_addr: ":80"
 https_listen_addr: ":443"
-server_url: "https://${IONSCALE_DOMAIN}"
+server_url: "${IONSCALE_ADDR}"
 
 tls:
   acme: true
   acme_email: "${IONSCALE_ACME_EMAIL}"
-  acme_path: "/data/acme"
 
 keys:
-  system_admin_key: "$(ionscale genkey -n)"
+  system_admin_key: "${IONSCALE_SYSTEM_ADMIN_KEY}"
   
 database:
   url: "/data/ionscale.db?_pragma=busy_timeout(5000)&_pragma=journal_mode(WAL)"
@@ -68,5 +68,5 @@ docker run \
   -v $(pwd)/data:/data \
   -p 80:80 \
   -p 443:443 \
-  ghcr.io/jsiebens/ionscale:0.8.2 server --config /etc/ionscale/config.yaml
+  ghcr.io/jsiebens/ionscale:0.13.0 server --config /etc/ionscale/config.yaml
 ```

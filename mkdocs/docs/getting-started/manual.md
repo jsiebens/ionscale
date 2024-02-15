@@ -41,7 +41,7 @@ Run the following commands to install the __ionscale__ binary on your Linux host
 ``` bash
 sudo curl \
     -o "/usr/local/bin/ionscale" \
-    -sfL "https://github.com/jsiebens/ionscale/releases/download/v0.8.2/ionscale_linux_amd64"
+    -sfL "https://github.com/jsiebens/ionscale/releases/download/v0.13.0/ionscale_linux_amd64"
 
 sudo chmod +x "/usr/local/bin/ionscale"
 ```
@@ -59,8 +59,8 @@ EOF
 Generate a configuration file for __ionscale__ with the following commands:
 
 ``` bash
-export IONSCALE_DOMAIN=example.com
 export IONSCALE_ACME_EMAIL=<your email>
+export IONSCALE_ADDR=https://ionscale.example.com
 ```
 
 ``` bash
