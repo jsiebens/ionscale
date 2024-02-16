@@ -193,11 +193,11 @@ func Start(ctx context.Context, c *config.Config) error {
 	http2Server := &http2.Server{}
 	g := new(errgroup.Group)
 
-	g.Go(func() error { return http.Serve(httpL, h2c.NewHandler(tlsAppHandler, http2Server)) })
-	g.Go(func() error { return http.Serve(metricsL, metricsHandler) })
+	g.Go(func() error { return httpServe(httpLogger, httpL, h2c.NewHandler(tlsAppHandler, http2Server)) })
+	g.Go(func() error { return httpServe(httpLogger, metricsL, metricsHandler) })
 
 	if tlsL != nil {
-		g.Go(func() error { return http.Serve(nonTlsL, nonTlsAppHandler) })
+		g.Go(func() error { return httpServe(httpLogger, nonTlsL, nonTlsAppHandler) })
 	}
 
 	if c.Tls.AcmeEnabled {
@@ -275,6 +275,20 @@ func selectListener(a net.Listener, b net.Listener) net.Listener {
 		return a
 	}
 	return b
+}
+
+func httpServe(logger *zap.Logger, l net.Listener, handler http.Handler) error {
+	errorLog, err := zap.NewStdLogAt(logger, zap.DebugLevel)
+	if err != nil {
+		return err
+	}
+
+	s := &http.Server{
+		Handler:  handler,
+		ErrorLog: errorLog,
+	}
+
+	return s.Serve(l)
 }
 
 func setupLogging(config config.Logging) (*zap.Logger, error) {

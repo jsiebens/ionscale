@@ -9,10 +9,6 @@ import (
 	"time"
 )
 
-func handler(h http.Handler) echo.HandlerFunc {
-	return echo.WrapHandler(h)
-}
-
 func EchoErrorHandler() echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
