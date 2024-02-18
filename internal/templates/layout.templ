@@ -74,29 +74,38 @@ templ heading() {
     <meta charset="UTF-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@200;300;400;500;600;700&display=swap');
-
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: 'Poppins', sans-serif;
+            font-family: system-ui,
+            -apple-system,
+            BlinkMacSystemFont,
+            "Segoe UI",
+            "Roboto",
+            "Oxygen",
+            "Ubuntu",
+            "Cantarell",
+            "Fira Sans",
+            "Droid Sans",
+            "Helvetica Neue",
+            sans-serif;
         }
 
         body {
             width: 100%;
             height: 100vh;
             padding: 10px;
-            background: #379683;
         }
 
         .wrapper {
-            background: #fff;
+            background: #eef5ff;
+            color: #12304b;
             max-width: 400px;
             width: 100%;
             margin: 120px auto;
             padding: 25px;
-            border-radius: 5px;
+            border: 1px solid #1f5c99;
             box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
         }
 
@@ -106,9 +115,10 @@ templ heading() {
             height: 45px;
             line-height: 45px;
             margin-bottom: 8px;
-            background: #f2f2f2;
-            border-radius: 3px;
             overflow: hidden;
+            background: #fff;
+            border: 1px solid #c0c0c0;
+            border-radius: 4px;
             box-shadow: 0 2px 2px rgba(0, 0, 0, 0.1);
         }
 
@@ -125,15 +135,17 @@ templ heading() {
             width: 100%;
             height: 100%;
             padding: 10px;
+            border: 1px solid #c0c0c0;
+            border-radius: 4px;
         }
 
         button {
-            padding-top: 10px;
-            padding-bottom: 10px;
-            padding-left: 20px;
-            padding-right: 20px;
+            padding: 10px 20px;
             height: 45px;
-            border: none;
+            background: #fff;
+            border: 1px solid #c0c0c0;
+            border-radius: 4px;
+            box-shadow: 0 2px 2px rgba(0, 0, 0, 0.1);
         }
     </style>
     <title>ionscale</title>
