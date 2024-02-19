@@ -9,6 +9,7 @@ import (
 	"github.com/mitchellh/pointerstructure"
 	"gorm.io/gorm"
 	"gorm.io/gorm/schema"
+	"reflect"
 )
 
 type Identity struct {
@@ -66,6 +67,16 @@ func (i *IAMPolicy) EvaluatePolicy(identity *Identity) (bool, error) {
 	}
 
 	return false, nil
+}
+
+func (i *IAMPolicy) Equal(x *IAMPolicy) bool {
+	if i == nil && x == nil {
+		return true
+	}
+	if (i == nil) != (x == nil) {
+		return false
+	}
+	return reflect.DeepEqual(i, x)
 }
 
 func (i *IAMPolicy) Scan(destination interface{}) error {

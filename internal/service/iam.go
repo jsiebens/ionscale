@@ -50,12 +50,19 @@ func (s *Service) SetIAMPolicy(ctx context.Context, req *connect.Request[api.Set
 		return nil, connect.NewError(connect.CodeInvalidArgument, fmt.Errorf("invalid iam policy: %w", err))
 	}
 
-	tailnet.IAMPolicy = domain.IAMPolicy{
+	oldPolicy := tailnet.IAMPolicy
+	newPolicy := domain.IAMPolicy{
 		Subs:    req.Msg.Policy.Subs,
 		Emails:  req.Msg.Policy.Emails,
 		Filters: req.Msg.Policy.Filters,
 		Roles:   apiRolesMapToDomainRolesMap(req.Msg.Policy.Roles),
 	}
+
+	if oldPolicy.Equal(&newPolicy) {
+		return connect.NewResponse(&api.SetIAMPolicyResponse{}), nil
+	}
+
+	tailnet.IAMPolicy = newPolicy
 
 	if err := s.repository.SaveTailnet(ctx, tailnet); err != nil {
 		return nil, logError(err)

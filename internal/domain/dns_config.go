@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"gorm.io/gorm"
 	"gorm.io/gorm/schema"
+	"reflect"
 )
 
 type DNSConfig struct {
@@ -15,6 +16,22 @@ type DNSConfig struct {
 	Nameservers       []string            `json:"nameservers"`
 	Routes            map[string][]string `json:"routes"`
 	SearchDomains     []string            `json:"search_domains"`
+}
+
+func (i *DNSConfig) Equal(x *DNSConfig) bool {
+	if i == nil && x == nil {
+		return true
+	}
+	if (i == nil) != (x == nil) {
+		return false
+	}
+
+	return i.MagicDNS == x.MagicDNS &&
+		i.HttpsCertsEnabled == x.HttpsCertsEnabled &&
+		i.OverrideLocalDNS == x.OverrideLocalDNS &&
+		reflect.DeepEqual(i.Nameservers, x.Nameservers) &&
+		reflect.DeepEqual(i.Routes, x.Routes) &&
+		reflect.DeepEqual(i.SearchDomains, x.SearchDomains)
 }
 
 func (i *DNSConfig) Scan(destination interface{}) error {

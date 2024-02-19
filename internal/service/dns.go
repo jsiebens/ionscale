@@ -54,23 +54,21 @@ func (s *Service) SetDNSConfig(ctx context.Context, req *connect.Request[api.Set
 		return nil, connect.NewError(connect.CodeNotFound, fmt.Errorf("tailnet not found"))
 	}
 
-	tailnet.DNSConfig = apiDNSConfigToDomainDNSConfig(req.Msg.Config)
+	oldConfig := tailnet.DNSConfig
+	newConfig := apiDNSConfigToDomainDNSConfig(req.Msg.Config)
 
+	if oldConfig.Equal(&newConfig) {
+		return connect.NewResponse(&api.SetDNSConfigResponse{Config: domainDNSConfigToApiDNSConfig(tailnet)}), nil
+	}
+
+	tailnet.DNSConfig = newConfig
 	if err := s.repository.SaveTailnet(ctx, tailnet); err != nil {
 		return nil, logError(err)
 	}
 
 	s.sessionManager.NotifyAll(tailnet.ID)
 
-	resp := &api.SetDNSConfigResponse{
-		Config: domainDNSConfigToApiDNSConfig(tailnet),
-	}
-
-	if dnsConfig.HttpsCerts && s.dnsProvider == nil {
-		resp.Message = "# HTTPS Certs cannot be enabled because a DNS provider is not properly configured"
-	}
-
-	return connect.NewResponse(resp), nil
+	return connect.NewResponse(&api.SetDNSConfigResponse{Config: domainDNSConfigToApiDNSConfig(tailnet)}), nil
 }
 
 func domainRoutesToApiRoutes(routes map[string][]string) map[string]*api.Routes {

@@ -8,6 +8,7 @@ import (
 	"gorm.io/gorm"
 	"gorm.io/gorm/schema"
 	"net/netip"
+	"reflect"
 	"slices"
 	"sort"
 	"strconv"
@@ -64,6 +65,16 @@ type Grant struct {
 	Dst []string                 `json:"dst"`
 	IP  []tailcfg.ProtoPortRange `json:"ip"`
 	App tailcfg.PeerCapMap       `json:"app"`
+}
+
+func (a *ACLPolicy) Equal(x *ACLPolicy) bool {
+	if a == nil && x == nil {
+		return true
+	}
+	if (a == nil) != (x == nil) {
+		return false
+	}
+	return reflect.DeepEqual(a, x)
 }
 
 func (a ACLPolicy) FindAutoApprovedIPs(routableIPs []netip.Prefix, tags []string, u *User) []netip.Prefix {

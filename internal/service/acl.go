@@ -45,12 +45,17 @@ func (s *Service) SetACLPolicy(ctx context.Context, req *connect.Request[api.Set
 		return nil, connect.NewError(connect.CodeNotFound, fmt.Errorf("tailnet does not exist"))
 	}
 
-	var policy domain.ACLPolicy
-	if err := mapping.CopyViaJson(req.Msg.Policy, &policy); err != nil {
+	oldPolicy := tailnet.ACLPolicy
+	var newPolicy domain.ACLPolicy
+	if err := mapping.CopyViaJson(req.Msg.Policy, &newPolicy); err != nil {
 		return nil, logError(err)
 	}
 
-	tailnet.ACLPolicy = policy
+	if oldPolicy.Equal(&newPolicy) {
+		return connect.NewResponse(&api.SetACLPolicyResponse{}), nil
+	}
+
+	tailnet.ACLPolicy = newPolicy
 	if err := s.repository.SaveTailnet(ctx, tailnet); err != nil {
 		return nil, logError(err)
 	}
