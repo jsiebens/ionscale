@@ -99,7 +99,7 @@ func Configure(c *config.Config) error {
 	_globalMu.Lock()
 	defer _globalMu.Unlock()
 	_globalE = &eventer{
-		source: c.ServerUrl,
+		source: c.WebPublicUrl.String(),
 		sinks:  sinks,
 	}
 

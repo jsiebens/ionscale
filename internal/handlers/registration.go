@@ -222,7 +222,7 @@ func (h *RegistrationHandlers) authenticateMachineWithAuthKey(c echo.Context, ma
 		m.IPv4 = domain.IP{Addr: ipv4}
 		m.IPv6 = domain.IP{Addr: ipv6}
 
-		events = append(events, eventlog.MachineCreated(m, &user))
+		events = append(events, eventlog.MachineCreated(m, eventlog.User(&user)))
 	} else {
 		sanitizeHostname := dnsname.SanitizeHostname(req.Hostinfo.Hostname)
 		if m.Name != sanitizeHostname {

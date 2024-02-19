@@ -7,20 +7,18 @@ import (
 )
 
 const (
-	tailnetCreated = "ionscale.tailnet.created"
-	tailnetDeleted = "ionscale.tailnet.deleted"
-	nodeCreated    = "ionscale.node.created"
+	tailnetCreated          = "ionscale.tailnet.create"
+	tailnetIamUpdated       = "ionscale.tailnet.iam.update"
+	tailnetAclUpdated       = "ionscale.tailnet.acl.update"
+	tailnetDNSConfigUpdated = "ionscale.tailnet.dns_config.update"
+	nodeCreated             = "ionscale.node.create"
 )
 
-func TailnetCreated(tailnet *domain.Tailnet, actor *domain.User) cloudevents.Event {
-	data := &EventData{
+func TailnetCreated(tailnet *domain.Tailnet, actor ActorOpts) cloudevents.Event {
+	data := &EventData[any]{
 		Tailnet: &Target{ID: idToStr(tailnet.ID), Name: tailnet.Name},
 		Target:  &Target{ID: idToStr(tailnet.ID), Name: tailnet.Name},
-		Actor:   system,
-	}
-
-	if actor != nil {
-		data.Actor = Actor{ID: idToStr(actor.ID), Name: actor.Name}
+		Actor:   actor(),
 	}
 
 	event := cloudevents.NewEvent()
@@ -30,11 +28,65 @@ func TailnetCreated(tailnet *domain.Tailnet, actor *domain.User) cloudevents.Eve
 	return event
 }
 
-func MachineCreated(machine *domain.Machine, actor *domain.User) cloudevents.Event {
-	data := &EventData{
+func TailnetIAMUpdated(tailnet *domain.Tailnet, old *domain.IAMPolicy, actor ActorOpts) cloudevents.Event {
+	data := &EventData[*domain.IAMPolicy]{
+		Tailnet: &Target{ID: idToStr(tailnet.ID), Name: tailnet.Name},
+		Target:  &Target{ID: idToStr(tailnet.ID), Name: tailnet.Name},
+		Actor:   actor(),
+		Attr: &Attr[*domain.IAMPolicy]{
+			New: &tailnet.IAMPolicy,
+			Old: old,
+		},
+	}
+
+	event := cloudevents.NewEvent()
+	event.SetType(tailnetIamUpdated)
+	_ = event.SetData(cloudevents.ApplicationJSON, data)
+
+	return event
+}
+
+func TailnetACLUpdated(tailnet *domain.Tailnet, old *domain.ACLPolicy, actor ActorOpts) cloudevents.Event {
+	data := &EventData[*domain.ACLPolicy]{
+		Tailnet: &Target{ID: idToStr(tailnet.ID), Name: tailnet.Name},
+		Target:  &Target{ID: idToStr(tailnet.ID), Name: tailnet.Name},
+		Actor:   actor(),
+		Attr: &Attr[*domain.ACLPolicy]{
+			New: &tailnet.ACLPolicy,
+			Old: old,
+		},
+	}
+
+	event := cloudevents.NewEvent()
+	event.SetType(tailnetAclUpdated)
+	_ = event.SetData(cloudevents.ApplicationJSON, data)
+
+	return event
+}
+
+func TailnetDNSConfigUpdated(tailnet *domain.Tailnet, old *domain.DNSConfig, actor ActorOpts) cloudevents.Event {
+	data := &EventData[*domain.DNSConfig]{
+		Tailnet: &Target{ID: idToStr(tailnet.ID), Name: tailnet.Name},
+		Target:  &Target{ID: idToStr(tailnet.ID), Name: tailnet.Name},
+		Actor:   actor(),
+		Attr: &Attr[*domain.DNSConfig]{
+			New: &tailnet.DNSConfig,
+			Old: old,
+		},
+	}
+
+	event := cloudevents.NewEvent()
+	event.SetType(tailnetDNSConfigUpdated)
+	_ = event.SetData(cloudevents.ApplicationJSON, data)
+
+	return event
+}
+
+func MachineCreated(machine *domain.Machine, actor ActorOpts) cloudevents.Event {
+	data := &EventData[any]{
 		Tailnet: &Target{ID: idToStr(machine.Tailnet.ID), Name: machine.Tailnet.Name},
-		Target:  &Target{ID: idToStr(machine.ID), Name: machine.CompleteName(), Addresses: machine.IPs()},
-		Actor:   UserToActor(actor),
+		Target:  &Target{ID: idToStr(machine.ID), Name: machine.CompleteName()},
+		Actor:   actor(),
 	}
 
 	event := cloudevents.NewEvent()
@@ -44,29 +96,39 @@ func MachineCreated(machine *domain.Machine, actor *domain.User) cloudevents.Eve
 	return event
 }
 
-func UserToActor(actor *domain.User) Actor {
-	if actor == nil {
-		return system
+type ActorOpts func() Actor
+
+func User(u *domain.User) ActorOpts {
+	if u == nil {
+		return SystemAdmin()
 	}
 
-	switch actor.UserType {
+	switch u.UserType {
 	case domain.UserTypePerson:
-		return Actor{ID: idToStr(actor.ID), Name: actor.Name}
+		return func() Actor {
+			return Actor{ID: idToStr(u.ID), Name: u.Name}
+		}
 	default:
-		return system
+		return SystemAdmin()
 	}
 }
 
-type EventData struct {
-	Tailnet *Target `json:"tailnet,omitempty"`
-	Target  *Target `json:"target,omitempty"`
-	Actor   Actor   `json:"actor"`
+func SystemAdmin() ActorOpts {
+	return func() Actor {
+		return Actor{ID: "", Name: "system admin"}
+	}
+}
+
+type EventData[T any] struct {
+	Tailnet *Target  `json:"tailnet,omitempty"`
+	Target  *Target  `json:"target,omitempty"`
+	Attr    *Attr[T] `json:"attr,omitempty"`
+	Actor   Actor    `json:"actor"`
 }
 
 type Target struct {
-	ID        string   `json:"id"`
-	Name      string   `json:"name"`
-	Addresses []string `json:"addresses,omitempty"`
+	ID   string `json:"id"`
+	Name string `json:"name"`
 }
 
 type Actor struct {
@@ -74,8 +136,11 @@ type Actor struct {
 	Name string `json:"name"`
 }
 
+type Attr[T any] struct {
+	New T `json:"new"`
+	Old T `json:"old,omitempty"`
+}
+
 func idToStr(id uint64) string {
 	return big.NewInt(int64(id)).Text(10)
 }
-
-var system = Actor{ID: "", Name: "ionscale system"}

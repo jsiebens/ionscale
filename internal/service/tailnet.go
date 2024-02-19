@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/bufbuild/connect-go"
+	cloudevents "github.com/cloudevents/sdk-go/v2"
 	"github.com/jsiebens/ionscale/internal/domain"
 	"github.com/jsiebens/ionscale/internal/eventlog"
 	"github.com/jsiebens/ionscale/internal/mapping"
@@ -97,7 +98,12 @@ func (s *Service) CreateTailnet(ctx context.Context, req *connect.Request[api.Cr
 		return nil, logError(err)
 	}
 
-	eventlog.Send(ctx, eventlog.TailnetCreated(tailnet, principal.User))
+	eventlog.Send(ctx,
+		eventlog.TailnetCreated(tailnet, eventlog.User(principal.User)),
+		eventlog.TailnetIAMUpdated(tailnet, nil, eventlog.User(principal.User)),
+		eventlog.TailnetACLUpdated(tailnet, nil, eventlog.User(principal.User)),
+		eventlog.TailnetDNSConfigUpdated(tailnet, nil, eventlog.User(principal.User)),
+	)
 
 	resp := &api.CreateTailnetResponse{Tailnet: t}
 
@@ -119,26 +125,48 @@ func (s *Service) UpdateTailnet(ctx context.Context, req *connect.Request[api.Up
 		return nil, connect.NewError(connect.CodeNotFound, fmt.Errorf("tailnet not found"))
 	}
 
+	events := make([]cloudevents.Event, 0)
+
 	if req.Msg.IamPolicy != nil {
 		if err := validateIamPolicy(req.Msg.IamPolicy); err != nil {
 			return nil, connect.NewError(connect.CodeInvalidArgument, fmt.Errorf("invalid iam policy: %w", err))
 		}
 
-		tailnet.IAMPolicy = domain.IAMPolicy{}
-		if err := mapping.CopyViaJson(req.Msg.IamPolicy, &tailnet.IAMPolicy); err != nil {
+		oldPolicy := tailnet.IAMPolicy
+		var newPolicy domain.IAMPolicy
+
+		if err := mapping.CopyViaJson(req.Msg.IamPolicy, &newPolicy); err != nil {
 			return nil, logError(err)
+		}
+
+		if !oldPolicy.Equal(&newPolicy) {
+			tailnet.IAMPolicy = newPolicy
+			events = append(events, eventlog.TailnetIAMUpdated(tailnet, &oldPolicy, eventlog.User(principal.User)))
 		}
 	}
 
 	if req.Msg.AclPolicy != nil {
-		tailnet.ACLPolicy = domain.ACLPolicy{}
-		if err := mapping.CopyViaJson(req.Msg.AclPolicy, &tailnet.ACLPolicy); err != nil {
+		oldPolicy := tailnet.ACLPolicy
+		var newPolicy domain.ACLPolicy
+
+		if err := mapping.CopyViaJson(req.Msg.AclPolicy, &newPolicy); err != nil {
 			return nil, logError(err)
+		}
+
+		if !oldPolicy.Equal(&newPolicy) {
+			tailnet.ACLPolicy = newPolicy
+			events = append(events, eventlog.TailnetACLUpdated(tailnet, &oldPolicy, eventlog.User(principal.User)))
 		}
 	}
 
 	if req.Msg.DnsConfig != nil {
-		tailnet.DNSConfig = apiDNSConfigToDomainDNSConfig(req.Msg.DnsConfig)
+		oldConfig := tailnet.DNSConfig
+		newConfig := apiDNSConfigToDomainDNSConfig(req.Msg.DnsConfig)
+
+		if !oldConfig.Equal(&newConfig) {
+			tailnet.DNSConfig = newConfig
+			events = append(events, eventlog.TailnetDNSConfigUpdated(tailnet, &oldConfig, eventlog.User(principal.User)))
+		}
 	}
 
 	tailnet.ServiceCollectionEnabled = req.Msg.ServiceCollectionEnabled
@@ -150,6 +178,7 @@ func (s *Service) UpdateTailnet(ctx context.Context, req *connect.Request[api.Up
 		return nil, logError(err)
 	}
 
+	eventlog.Send(ctx, events...)
 	s.sessionManager.NotifyAll(tailnet.ID)
 
 	t, err := domainTailnetToApiTailnet(tailnet)

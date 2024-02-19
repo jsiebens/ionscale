@@ -509,7 +509,7 @@ func (h *AuthenticationHandlers) endMachineRegistrationFlow(c echo.Context, form
 		m.IPv4 = domain.IP{Addr: ipv4}
 		m.IPv6 = domain.IP{Addr: ipv6}
 
-		events = append(events, eventlog.MachineCreated(m, user))
+		events = append(events, eventlog.MachineCreated(m, eventlog.User(user)))
 	} else {
 		registeredTags := tags
 		advertisedTags := domain.SanitizeTags(req.Hostinfo.RequestTags)

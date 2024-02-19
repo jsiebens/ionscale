@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/bufbuild/connect-go"
 	"github.com/jsiebens/ionscale/internal/domain"
+	"github.com/jsiebens/ionscale/internal/eventlog"
 	"github.com/jsiebens/ionscale/internal/mapping"
 	api "github.com/jsiebens/ionscale/pkg/gen/ionscale/v1"
 )
@@ -60,6 +61,7 @@ func (s *Service) SetACLPolicy(ctx context.Context, req *connect.Request[api.Set
 		return nil, logError(err)
 	}
 
+	eventlog.Send(ctx, eventlog.TailnetACLUpdated(tailnet, &oldPolicy, eventlog.User(principal.User)))
 	s.sessionManager.NotifyAll(tailnet.ID)
 
 	return connect.NewResponse(&api.SetACLPolicyResponse{}), nil

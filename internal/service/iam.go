@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/bufbuild/connect-go"
 	"github.com/jsiebens/ionscale/internal/domain"
+	"github.com/jsiebens/ionscale/internal/eventlog"
 	api "github.com/jsiebens/ionscale/pkg/gen/ionscale/v1"
 )
 
@@ -67,6 +68,8 @@ func (s *Service) SetIAMPolicy(ctx context.Context, req *connect.Request[api.Set
 	if err := s.repository.SaveTailnet(ctx, tailnet); err != nil {
 		return nil, logError(err)
 	}
+
+	eventlog.Send(ctx, eventlog.TailnetIAMUpdated(tailnet, &oldPolicy, eventlog.User(principal.User)))
 
 	return connect.NewResponse(&api.SetIAMPolicyResponse{}), nil
 }
