@@ -3,6 +3,7 @@ package server
 import (
 	"context"
 	"crypto/tls"
+	"errors"
 	"fmt"
 	"github.com/caddyserver/certmagic"
 	"github.com/jsiebens/ionscale/internal/auth"
@@ -28,10 +29,15 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"os/signal"
+	"syscall"
 	"tailscale.com/types/key"
+	"time"
 )
 
 func Start(ctx context.Context, c *config.Config) error {
+	ctx = contextWithSigterm(ctx)
+
 	logger, err := setupLogging(c.Logging)
 	if err != nil {
 		return err
@@ -189,16 +195,28 @@ func Start(ctx context.Context, c *config.Config) error {
 		return logError(err)
 	}
 
-	httpL := selectListener(tlsL, nonTlsL)
-	http2Server := &http2.Server{}
-	g := new(errgroup.Group)
-
-	g.Go(func() error { return httpServe(httpLogger, httpL, h2c.NewHandler(tlsAppHandler, http2Server)) })
-	g.Go(func() error { return httpServe(httpLogger, metricsL, metricsHandler) })
-
-	if tlsL != nil {
-		g.Go(func() error { return httpServe(httpLogger, nonTlsL, nonTlsAppHandler) })
+	errorLog, err := zap.NewStdLogAt(logger, zap.DebugLevel)
+	if err != nil {
+		return logError(err)
 	}
+
+	httpAppServer := &http.Server{ErrorLog: errorLog, Handler: nonTlsAppHandler}
+	httpsAppServer := &http.Server{ErrorLog: errorLog, Handler: h2c.NewHandler(tlsAppHandler, &http2.Server{})}
+	metricsServer := &http.Server{ErrorLog: errorLog, Handler: metricsHandler}
+
+	g, gCtx := errgroup.WithContext(ctx)
+
+	go func() {
+		<-gCtx.Done()
+		logger.Sugar().Infow("Shutting down ionscale server")
+		shutdownHttpServer(metricsServer)
+		shutdownHttpServer(httpAppServer)
+		shutdownHttpServer(httpsAppServer)
+	}()
+
+	g.Go(func() error { return serveHttp(metricsServer, metricsL) })
+	g.Go(func() error { return serveHttp(httpAppServer, nonTlsOrNoListener(tlsL, nonTlsL)) })
+	g.Go(func() error { return serveHttp(httpsAppServer, tlsOrNonTlsListener(tlsL, nonTlsL)) })
 
 	if c.Tls.AcmeEnabled {
 		logger.Sugar().Infow("TLS is enabled with ACME", "domain", serverUrl.Host)
@@ -212,6 +230,22 @@ func Start(ctx context.Context, c *config.Config) error {
 	}
 
 	return g.Wait()
+}
+
+func serveHttp(s *http.Server, l net.Listener) error {
+	if l == nil || s == nil {
+		return nil
+	}
+	if err := s.Serve(l); err != nil && !errors.Is(err, http.ErrServerClosed) {
+		return err
+	}
+	return nil
+}
+
+func shutdownHttpServer(s *http.Server) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	_ = s.Shutdown(ctx)
 }
 
 func setupAuthProvider(config config.Auth) (auth.Provider, *domain.IAMPolicy, error) {
@@ -270,25 +304,18 @@ func nonTlsListener(config *config.Config) (net.Listener, error) {
 	return net.Listen("tcp", config.HttpListenAddr)
 }
 
-func selectListener(a net.Listener, b net.Listener) net.Listener {
-	if a != nil {
-		return a
+func tlsOrNonTlsListener(tlsL net.Listener, nonTlsL net.Listener) net.Listener {
+	if tlsL != nil {
+		return tlsL
 	}
-	return b
+	return nonTlsL
 }
 
-func httpServe(logger *zap.Logger, l net.Listener, handler http.Handler) error {
-	errorLog, err := zap.NewStdLogAt(logger, zap.DebugLevel)
-	if err != nil {
-		return err
+func nonTlsOrNoListener(tlsL net.Listener, nonTlsL net.Listener) net.Listener {
+	if tlsL != nil {
+		return nonTlsL
 	}
-
-	s := &http.Server{
-		Handler:  handler,
-		ErrorLog: errorLog,
-	}
-
-	return s.Serve(l)
+	return nil
 }
 
 func setupLogging(config config.Logging) (*zap.Logger, error) {
@@ -322,4 +349,21 @@ func setupLogging(config config.Logging) (*zap.Logger, error) {
 	zap.ReplaceGlobals(globalLogger)
 
 	return globalLogger, nil
+}
+
+func contextWithSigterm(ctx context.Context) context.Context {
+	ctxWithCancel, cancel := context.WithCancel(ctx)
+	go func() {
+		defer cancel()
+
+		signalCh := make(chan os.Signal, 1)
+		signal.Notify(signalCh, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
+
+		select {
+		case <-signalCh:
+		case <-ctx.Done():
+		}
+	}()
+
+	return ctxWithCancel
 }
