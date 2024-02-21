@@ -14,19 +14,23 @@ While the Tailscale software running on each node is open source, their centrali
 
 _ionscale_ aims to implement such lightweight, open source alternative Tailscale control server.
 
+⭐ If you find _ionscale_ useful, please consider giving it a star on GitHub, or [drop a note](https://github.com/jsiebens/ionscale/discussions/new?category=show-and-tell) on how you are using _ionscale_.
+
 ## Features
 
 - multi [tailnet](https://tailscale.com/kb/1136/tailnet/) support
 - multi user support
 - OIDC integration (not required, although recommended)
 - [Auth keys](https://tailscale.com/kb/1085/auth-keys/)
-- [Access control list](https://tailscale.com/kb/1018/acls/)
+- [Access control list](https://tailscale.com/kb/1018/acls/) (with support for `autogroups`, `tagOwners`, `autoApprovers`, `nodeAttrs`, `grants` ...)  
 - [DNS](https://tailscale.com/kb/1054/dns/)
   - nameservers
   - Split DNS
-  - MagicDNS 
+  - MagicDNS
+- [Subnet routers](https://tailscale.com/kb/1019/subnets) and [Exit Nodes](https://tailscale.com/kb/1103/exit-nodes)
 - [HTTPS Certs](https://tailscale.com/kb/1153/enabling-https/)
 - [Tailscale SSH](https://tailscale.com/kb/1193/tailscale-ssh/) 
+- [Tailscale Serve](https://tailscale.com/kb/1312/serve)
 - [Service collection](https://tailscale.com/kb/1100/services/)
 - [Taildrop](https://tailscale.com/kb/1106/taildrop/)
 
