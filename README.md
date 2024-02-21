@@ -14,6 +14,12 @@ While the Tailscale software running on each node is open source, their centrali
 
 _ionscale_ aims to implement such lightweight, open source alternative Tailscale control server.
 
+![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/jsiebens/ionscale/build.yaml)
+![GitHub go.mod Go version](https://img.shields.io/github/go-mod/go-version/jsiebens/ionscale?label=go)
+![Go Report Card](https://goreportcard.com/badge/github.com/jsiebens/ionscale)
+![GitHub All Releases](https://img.shields.io/github/downloads/jsiebens/ionscale/total)
+![GitHub Release](https://img.shields.io/github/v/release/jsiebens/ionscale)
+
 ⭐ If you find _ionscale_ useful, please consider giving it a star on GitHub, or [drop a note](https://github.com/jsiebens/ionscale/discussions/new?category=show-and-tell) on how you are using _ionscale_.
 
 ## Features
