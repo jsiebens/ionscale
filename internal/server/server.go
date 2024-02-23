@@ -27,7 +27,6 @@ import (
 	"golang.org/x/sync/errgroup"
 	"net"
 	"net/http"
-	"net/url"
 	"os"
 	"os/signal"
 	"syscall"
@@ -74,11 +73,6 @@ func Start(ctx context.Context, c *config.Config) error {
 
 	core.StartWorker(repository, sessionManager)
 
-	serverUrl, err := url.Parse(c.ServerUrl)
-	if err != nil {
-		return logError(err)
-	}
-
 	// prepare CertMagic
 	if c.Tls.AcmeEnabled {
 		storage, err := certmagicsql.NewStorage(ctx, db, certmagicsql.Options{})
@@ -95,12 +89,9 @@ func Start(ctx context.Context, c *config.Config) error {
 		certmagic.Default.Storage = storage
 
 		cfg := certmagic.NewDefault()
-		if err := cfg.ManageAsync(ctx, []string{serverUrl.Host}); err != nil {
+		if err := cfg.ManageAsync(ctx, []string{c.WebPublicUrl.Hostname()}); err != nil {
 			return logError(err)
 		}
-
-		c.HttpListenAddr = fmt.Sprintf(":%d", certmagic.HTTPPort)
-		c.HttpsListenAddr = fmt.Sprintf(":%d", certmagic.HTTPSPort)
 	}
 
 	authProvider, systemIAMPolicy, err := setupAuthProvider(c.Auth)
@@ -114,10 +105,6 @@ func Start(ctx context.Context, c *config.Config) error {
 	}
 
 	promMiddleware := echoprometheus.NewMiddleware("http")
-
-	metricsHandler := echo.New()
-	metricsHandler.GET("/metrics", echoprometheus.NewHandler())
-	pprof.Register(metricsHandler)
 
 	createPeerHandler := func(machinePublicKey key.MachinePublic) http.Handler {
 		registrationHandlers := handlers.NewRegistrationHandlers(machinePublicKey, c, sessionManager, repository)
@@ -155,39 +142,33 @@ func Start(ctx context.Context, c *config.Config) error {
 	rpcService := service.NewService(c, authProvider, dnsProvider, repository, sessionManager)
 	rpcPath, rpcHandler := NewRpcHandler(serverKey.SystemAdminKey, repository, rpcService)
 
-	nonTlsAppHandler := echo.New()
-	nonTlsAppHandler.Use(promMiddleware, EchoLogger(httpLogger), EchoErrorHandler(), EchoRecover())
-	nonTlsAppHandler.POST("/ts2021", noiseHandlers.Upgrade)
-	nonTlsAppHandler.Any("/*", handlers.HttpRedirectHandler(c.Tls))
+	metricsMux := echo.New()
+	metricsMux.GET("/metrics", echoprometheus.NewHandler())
+	pprof.Register(metricsMux)
 
-	tlsAppHandler := echo.New()
-	tlsAppHandler.Renderer = &templates.Renderer{}
-	tlsAppHandler.Pre(handlers.HttpsRedirect(c.Tls))
-	tlsAppHandler.Use(promMiddleware, EchoLogger(httpLogger), EchoErrorHandler(), EchoRecover())
+	webMux := echo.New()
+	webMux.Renderer = &templates.Renderer{}
+	webMux.Pre(handlers.HttpsRedirect(c.Tls))
+	webMux.Use(promMiddleware, EchoLogger(httpLogger), EchoErrorHandler(), EchoRecover())
 
-	tlsAppHandler.Any("/*", handlers.IndexHandler(http.StatusNotFound))
-	tlsAppHandler.Any("/", handlers.IndexHandler(http.StatusOK))
-	tlsAppHandler.POST(rpcPath+"*", echo.WrapHandler(rpcHandler))
-	tlsAppHandler.GET("/version", handlers.Version)
-	tlsAppHandler.GET("/key", handlers.KeyHandler(serverKey))
-	tlsAppHandler.POST("/ts2021", noiseHandlers.Upgrade)
-	tlsAppHandler.GET("/.well-known/jwks", oidcConfigHandlers.Jwks)
-	tlsAppHandler.GET("/.well-known/openid-configuration", oidcConfigHandlers.OpenIDConfig)
+	webMux.Any("/*", handlers.IndexHandler(http.StatusNotFound))
+	webMux.Any("/", handlers.IndexHandler(http.StatusOK))
+	webMux.POST(rpcPath+"*", echo.WrapHandler(rpcHandler))
+	webMux.GET("/version", handlers.Version)
+	webMux.GET("/key", handlers.KeyHandler(serverKey))
+	webMux.POST("/ts2021", noiseHandlers.Upgrade)
+	webMux.GET("/.well-known/jwks", oidcConfigHandlers.Jwks)
+	webMux.GET("/.well-known/openid-configuration", oidcConfigHandlers.OpenIDConfig)
 
 	csrf := middleware.CSRFWithConfig(middleware.CSRFConfig{TokenLookup: "form:_csrf"})
-	tlsAppHandler.GET("/a/:flow/:key", authenticationHandlers.StartAuth, csrf)
-	tlsAppHandler.POST("/a/:flow/:key", authenticationHandlers.ProcessAuth, csrf)
-	tlsAppHandler.GET("/a/callback", authenticationHandlers.Callback, csrf)
-	tlsAppHandler.POST("/a/callback", authenticationHandlers.EndAuth, csrf)
-	tlsAppHandler.GET("/a/success", authenticationHandlers.Success, csrf)
-	tlsAppHandler.GET("/a/error", authenticationHandlers.Error, csrf)
+	webMux.GET("/a/:flow/:key", authenticationHandlers.StartAuth, csrf)
+	webMux.POST("/a/:flow/:key", authenticationHandlers.ProcessAuth, csrf)
+	webMux.GET("/a/callback", authenticationHandlers.Callback, csrf)
+	webMux.POST("/a/callback", authenticationHandlers.EndAuth, csrf)
+	webMux.GET("/a/success", authenticationHandlers.Success, csrf)
+	webMux.GET("/a/error", authenticationHandlers.Error, csrf)
 
-	tlsL, err := tlsListener(c)
-	if err != nil {
-		return logError(err)
-	}
-
-	nonTlsL, err := nonTlsListener(c)
+	webL, err := webListener(c)
 	if err != nil {
 		return logError(err)
 	}
@@ -202,9 +183,8 @@ func Start(ctx context.Context, c *config.Config) error {
 		return logError(err)
 	}
 
-	httpAppServer := &http.Server{ErrorLog: errorLog, Handler: nonTlsAppHandler}
-	httpsAppServer := &http.Server{ErrorLog: errorLog, Handler: h2c.NewHandler(tlsAppHandler, &http2.Server{})}
-	metricsServer := &http.Server{ErrorLog: errorLog, Handler: metricsHandler}
+	webServer := &http.Server{ErrorLog: errorLog, Handler: h2c.NewHandler(webMux, &http2.Server{})}
+	metricsServer := &http.Server{ErrorLog: errorLog, Handler: metricsMux}
 
 	g, gCtx := errgroup.WithContext(ctx)
 
@@ -212,23 +192,21 @@ func Start(ctx context.Context, c *config.Config) error {
 		<-gCtx.Done()
 		logger.Sugar().Infow("Shutting down ionscale server")
 		shutdownHttpServer(metricsServer)
-		shutdownHttpServer(httpAppServer)
-		shutdownHttpServer(httpsAppServer)
+		shutdownHttpServer(webServer)
 	}()
 
+	g.Go(func() error { return serveHttp(webServer, webL) })
 	g.Go(func() error { return serveHttp(metricsServer, metricsL) })
-	g.Go(func() error { return serveHttp(httpAppServer, nonTlsOrNoListener(tlsL, nonTlsL)) })
-	g.Go(func() error { return serveHttp(httpsAppServer, tlsOrNonTlsListener(tlsL, nonTlsL)) })
 
 	if c.Tls.AcmeEnabled {
-		logger.Sugar().Infow("TLS is enabled with ACME", "domain", serverUrl.Host)
-		logger.Sugar().Infow("Server is running", "http_addr", c.HttpListenAddr, "https_addr", c.HttpsListenAddr, "metrics_addr", c.MetricsListenAddr)
+		logger.Sugar().Infow("TLS is enabled with ACME", "domain", c.WebPublicUrl.Hostname())
+		logger.Sugar().Infow("Server is running", "addr", c.WebListenAddr, "metrics_addr", c.MetricsListenAddr, "url", c.WebPublicUrl)
 	} else if !c.Tls.Disable {
 		logger.Sugar().Infow("TLS is enabled", "cert", c.Tls.CertFile)
-		logger.Sugar().Infow("Server is running", "http_addr", c.HttpListenAddr, "https_addr", c.HttpsListenAddr, "metrics_addr", c.MetricsListenAddr)
+		logger.Sugar().Infow("Server is running", "addr", c.WebListenAddr, "metrics_addr", c.MetricsListenAddr, "url", c.WebPublicUrl)
 	} else {
 		logger.Sugar().Warnw("TLS is disabled")
-		logger.Sugar().Infow("Server is running", "http_addr", c.HttpListenAddr, "metrics_addr", c.MetricsListenAddr)
+		logger.Sugar().Infow("Server is running", "addr", c.WebListenAddr, "metrics_addr", c.MetricsListenAddr, "url", c.WebPublicUrl)
 	}
 
 	return g.Wait()
@@ -267,20 +245,16 @@ func setupAuthProvider(config config.Auth) (auth.Provider, *domain.IAMPolicy, er
 	}, nil
 }
 
-func metricsListener(config *config.Config) (net.Listener, error) {
-	return net.Listen("tcp", config.MetricsListenAddr)
-}
-
-func tlsListener(config *config.Config) (net.Listener, error) {
+func webListener(config *config.Config) (net.Listener, error) {
 	if config.Tls.Disable {
-		return nil, nil
+		return net.Listen("tcp", config.WebListenAddr)
 	}
 
 	if config.Tls.AcmeEnabled {
 		cfg := certmagic.NewDefault()
 		tlsConfig := cfg.TLSConfig()
 		tlsConfig.NextProtos = append([]string{"h2", "http/1.1"}, tlsConfig.NextProtos...)
-		return tls.Listen("tcp", config.HttpsListenAddr, tlsConfig)
+		return tls.Listen("tcp", config.WebListenAddr, tlsConfig)
 	}
 
 	certPEMBlock, err := os.ReadFile(config.Tls.CertFile)
@@ -299,25 +273,11 @@ func tlsListener(config *config.Config) (net.Listener, error) {
 
 	tlsConfig := &tls.Config{Certificates: []tls.Certificate{cer}}
 
-	return tls.Listen("tcp", config.HttpsListenAddr, tlsConfig)
+	return tls.Listen("tcp", config.WebListenAddr, tlsConfig)
 }
 
-func nonTlsListener(config *config.Config) (net.Listener, error) {
-	return net.Listen("tcp", config.HttpListenAddr)
-}
-
-func tlsOrNonTlsListener(tlsL net.Listener, nonTlsL net.Listener) net.Listener {
-	if tlsL != nil {
-		return tlsL
-	}
-	return nonTlsL
-}
-
-func nonTlsOrNoListener(tlsL net.Listener, nonTlsL net.Listener) net.Listener {
-	if tlsL != nil {
-		return nonTlsL
-	}
-	return nil
+func metricsListener(config *config.Config) (net.Listener, error) {
+	return net.Listen("tcp", config.MetricsListenAddr)
 }
 
 func setupLogging(config config.Logging) (*zap.Logger, error) {

@@ -11,9 +11,9 @@ import (
 	"github.com/jsiebens/ionscale/internal/util"
 	"github.com/mitchellh/go-homedir"
 	"gopkg.in/yaml.v3"
+	"net/url"
 	"os"
 	"path/filepath"
-	"strings"
 	tkey "tailscale.com/types/key"
 	"time"
 )
@@ -95,15 +95,13 @@ func LoadConfig(path string) (*Config, error) {
 		dnsProviderConfigured = true
 	}
 
-	return cfg, nil
+	return cfg.Validate()
 }
 
 func defaultConfig() *Config {
 	return &Config{
-		HttpListenAddr:    ":8080",
-		HttpsListenAddr:   ":8443",
+		WebListenAddr:     ":8080",
 		MetricsListenAddr: ":9091",
-		ServerUrl:         "https://localhost:8843",
 		Database: Database{
 			Type:         "sqlite",
 			Url:          "./ionscale.db?_pragma=busy_timeout(5000)&_pragma=journal_mode(WAL)&_pragma=foreign_keys(ON)",
@@ -135,10 +133,9 @@ type ServerKeys struct {
 }
 
 type Config struct {
-	HttpListenAddr    string   `yaml:"http_listen_addr,omitempty" env:"HTTP_LISTEN_ADDR"`
-	HttpsListenAddr   string   `yaml:"https_listen_addr,omitempty" env:"HTTPS_LISTEN_ADDR"`
+	WebListenAddr     string   `yaml:"web_listen_addr,omitempty" env:"WEB_LISTEN_ADDR"`
 	MetricsListenAddr string   `yaml:"metrics_listen_addr,omitempty" env:"METRICS_LISTEN_ADDR"`
-	ServerUrl         string   `yaml:"server_url,omitempty" env:"SERVER_URL"`
+	WebPublicAddr     string   `yaml:"web_public_addr,omitempty" env:"WEB_PUBLIC_ADDR"`
 	Tls               Tls      `yaml:"tls,omitempty" envPrefix:"TLS_"`
 	PollNet           PollNet  `yaml:"poll_net,omitempty" envPrefix:"POLL_NET_"`
 	Keys              Keys     `yaml:"keys,omitempty" envPrefix:"KEYS_"`
@@ -146,6 +143,8 @@ type Config struct {
 	Auth              Auth     `yaml:"auth,omitempty" envPrefix:"AUTH_"`
 	DNS               DNS      `yaml:"dns,omitempty"`
 	Logging           Logging  `yaml:"logging,omitempty" envPrefix:"LOGGING_"`
+
+	WebPublicUrl *url.URL `yaml:"-"`
 }
 
 type Tls struct {
@@ -212,9 +211,24 @@ type SystemAdminPolicy struct {
 	Filters []string `yaml:"filters,omitempty"`
 }
 
+func (c *Config) Validate() (*Config, error) {
+	publicWebUrl, err := publicAddrToUrl(c.WebPublicAddr)
+	if err != nil {
+		return nil, err
+	}
+
+	c.WebPublicUrl = publicWebUrl
+	return c, nil
+}
+
 func (c *Config) CreateUrl(format string, a ...interface{}) string {
 	path := fmt.Sprintf(format, a...)
-	return strings.TrimSuffix(c.ServerUrl, "/") + "/" + strings.TrimPrefix(path, "/")
+	u := url.URL{
+		Scheme: c.WebPublicUrl.Scheme,
+		Host:   c.WebPublicUrl.Host,
+		Path:   path,
+	}
+	return u.String()
 }
 
 func (c *Config) ReadServerKeys(defaultKeys *domain.ControlKeys) (*ServerKeys, error) {

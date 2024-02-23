@@ -1,6 +1,9 @@
 package config
 
 import (
+	"fmt"
+	"net"
+	"net/url"
 	"os"
 	"strings"
 )
@@ -19,4 +22,29 @@ func GetString(key, defaultValue string) string {
 		return v
 	}
 	return defaultValue
+}
+
+func publicAddrToUrl(addr string) (*url.URL, error) {
+	scheme := "https"
+
+	if strings.HasPrefix(addr, "http://") {
+		scheme = "http"
+		addr = strings.TrimPrefix(addr, "http://")
+	}
+
+	if strings.HasPrefix(addr, "https://") {
+		scheme = "https"
+		addr = strings.TrimPrefix(addr, "https://")
+	}
+
+	host, port, err := net.SplitHostPort(addr)
+	if err != nil {
+		return nil, fmt.Errorf("invalid public addr")
+	}
+
+	if (port == "443" && scheme == "https") || (port == "80" && scheme == "http") || port == "" {
+		return &url.URL{Scheme: scheme, Host: host}, nil
+	}
+
+	return &url.URL{Scheme: scheme, Host: fmt.Sprintf("%s:%s", host, port)}, nil
 }
