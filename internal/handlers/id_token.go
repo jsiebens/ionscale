@@ -17,14 +17,14 @@ import (
 func NewIDTokenHandlers(machineKey key.MachinePublic, config *config.Config, repository domain.Repository) *IDTokenHandlers {
 	return &IDTokenHandlers{
 		machineKey: machineKey,
-		issuer:     config.ServerUrl,
+		issuer:     config.WebPublicUrl.String(),
 		repository: repository,
 	}
 }
 
 func NewOIDCConfigHandlers(config *config.Config, repository domain.Repository) *OIDCConfigHandlers {
 	return &OIDCConfigHandlers{
-		issuer:     config.ServerUrl,
+		issuer:     config.WebPublicUrl.String(),
 		jwksUri:    config.CreateUrl("/.well-known/jwks"),
 		repository: repository,
 	}

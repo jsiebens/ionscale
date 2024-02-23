@@ -1,5 +1,5 @@
-http_listen_addr: ":80"
-server_url: "http://ionscale"
+web_listen_addr: ":80"
+web_public_addr: "http://ionscale:80"
 
 tls:
   disable: true
