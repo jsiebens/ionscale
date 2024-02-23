@@ -86,10 +86,12 @@ func Start(ctx context.Context, c *config.Config) error {
 			return err
 		}
 
+		certmagicLogger := logger.Named("certmagic")
 		certmagic.DefaultACME.Agreed = true
 		certmagic.DefaultACME.Email = c.Tls.AcmeEmail
 		certmagic.DefaultACME.CA = c.Tls.AcmeCA
-		certmagic.Default.Logger = logger.Named("certmagic")
+		certmagic.DefaultACME.Logger = certmagicLogger
+		certmagic.Default.Logger = certmagicLogger
 		certmagic.Default.Storage = storage
 
 		cfg := certmagic.NewDefault()
