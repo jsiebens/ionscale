@@ -29,6 +29,10 @@ func (h *DNSHandlers) SetDNS(c echo.Context) error {
 		return logError(err)
 	}
 
+	if req.Version < SupportedCapabilityVersion {
+		return UnsupportedClientVersionError
+	}
+
 	if h.provider == nil {
 		return echo.NewHTTPError(http.StatusNotFound)
 	}
