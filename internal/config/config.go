@@ -123,6 +123,15 @@ func defaultConfig() *Config {
 		Logging: Logging{
 			Level: "info",
 		},
+		Events: Events{
+			Log: EventsLogSink{
+				Enabled: false,
+			},
+			File: EventsFileSink{
+				Enabled:  false,
+				FileName: "events.log",
+			},
+		},
 	}
 }
 
@@ -143,6 +152,7 @@ type Config struct {
 	Auth              Auth     `yaml:"auth,omitempty" envPrefix:"AUTH_"`
 	DNS               DNS      `yaml:"dns,omitempty"`
 	Logging           Logging  `yaml:"logging,omitempty" envPrefix:"LOGGING_"`
+	Events            Events   `yaml:"events,omitempty" envPrefix:"EVENTS_"`
 
 	WebPublicUrl *url.URL `yaml:"-"`
 }
@@ -165,6 +175,30 @@ type Logging struct {
 	Level  string `yaml:"level,omitempty" env:"LEVEL"`
 	Format string `yaml:"format,omitempty" env:"FORMAT"`
 	File   string `yaml:"file,omitempty" env:"FILE"`
+}
+
+type Events struct {
+	Log  EventsLogSink  `yaml:"log,omitempty" envPrefix:"LOG_"`
+	File EventsFileSink `yaml:"file,omitempty" envPrefix:"FILE_"`
+	Tcp  EventsTcpSink  `yaml:"tcp,omitempty" envPrefix:"TCP_"`
+}
+
+type EventsLogSink struct {
+	Enabled bool `yaml:"enabled,omitempty" env:"ENABLED"`
+}
+
+type EventsFileSink struct {
+	Enabled     bool          `yaml:"enabled,omitempty" env:"ENABLED"`
+	Path        string        `yaml:"path,omitempty" env:"PATH"`
+	FileName    string        `yaml:"name,omitempty" env:"NAME"`
+	MaxBytes    int           `yaml:"max_bytes,omitempty" env:"MAX_BYTES"`
+	MaxDuration time.Duration `yaml:"max_duration,omitempty" env:"MAX_DURATION"`
+	MaxFiles    int           `yaml:"max_files,omitempty" env:"MAX_FILES"`
+}
+
+type EventsTcpSink struct {
+	Enabled bool   `yaml:"enabled,omitempty" env:"ENABLED"`
+	Addr    string `yaml:"addr,omitempty" env:"ADDR"`
 }
 
 type Database struct {

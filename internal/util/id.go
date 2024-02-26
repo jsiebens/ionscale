@@ -3,6 +3,7 @@ package util
 import (
 	"fmt"
 	"github.com/sony/sonyflake"
+	"math/big"
 	"net"
 	"os"
 	"strconv"
@@ -19,6 +20,10 @@ func NextID() uint64 {
 	ensureProvider()
 	id, _ := sf.NextID()
 	return id
+}
+
+func NextIDString() string {
+	return big.NewInt(int64(NextID())).Text(62)
 }
 
 func ensureProvider() {

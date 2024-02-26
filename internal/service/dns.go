@@ -6,6 +6,7 @@ import (
 	"github.com/bufbuild/connect-go"
 	"github.com/jsiebens/ionscale/internal/config"
 	"github.com/jsiebens/ionscale/internal/domain"
+	"github.com/jsiebens/ionscale/internal/eventlog"
 	api "github.com/jsiebens/ionscale/pkg/gen/ionscale/v1"
 )
 
@@ -66,6 +67,7 @@ func (s *Service) SetDNSConfig(ctx context.Context, req *connect.Request[api.Set
 		return nil, logError(err)
 	}
 
+	eventlog.Send(ctx, eventlog.TailnetDNSConfigUpdated(tailnet, &oldConfig, eventlog.User(principal.User)))
 	s.sessionManager.NotifyAll(tailnet.ID)
 
 	return connect.NewResponse(&api.SetDNSConfigResponse{Config: domainDNSConfigToApiDNSConfig(tailnet)}), nil
