@@ -10,10 +10,12 @@ import (
 	"github.com/jsiebens/ionscale/internal/config"
 	"github.com/jsiebens/ionscale/internal/core"
 	"github.com/jsiebens/ionscale/internal/database"
+	"github.com/jsiebens/ionscale/internal/derp"
 	"github.com/jsiebens/ionscale/internal/dns"
 	"github.com/jsiebens/ionscale/internal/domain"
 	"github.com/jsiebens/ionscale/internal/handlers"
 	"github.com/jsiebens/ionscale/internal/service"
+	"github.com/jsiebens/ionscale/internal/stunserver"
 	"github.com/jsiebens/ionscale/internal/templates"
 	"github.com/labstack/echo-contrib/echoprometheus"
 	"github.com/labstack/echo-contrib/pprof"
@@ -50,6 +52,13 @@ func Start(ctx context.Context, c *config.Config) error {
 		}
 		return err
 	}
+
+	derpMap, err := derp.LoadDERPSources(c)
+	if err != nil {
+		logger.Warn("not all derp sources are read successfully", zap.Error(err))
+	}
+
+	domain.SetDefaultDERPMap(derpMap)
 
 	httpLogger := logger.Named("http")
 	dbLogger := logger.Named("db")
@@ -168,12 +177,27 @@ func Start(ctx context.Context, c *config.Config) error {
 	webMux.GET("/a/success", authenticationHandlers.Success, csrf)
 	webMux.GET("/a/error", authenticationHandlers.Error, csrf)
 
+	if !c.DERP.Server.Disabled {
+		derpHandlers := handlers.NewDERPHandler()
+
+		metricsMux.GET("/debug/derp/traffic", derpHandlers.DebugTraffic)
+		metricsMux.GET("/debug/derp/check", derpHandlers.DebugCheck)
+
+		webMux.GET("/derp", derpHandlers.Handler)
+		webMux.GET("/derp/latency-check", derpHandlers.LatencyCheck)
+	}
+
 	webL, err := webListener(c)
 	if err != nil {
 		return logError(err)
 	}
 
 	metricsL, err := metricsListener(c)
+	if err != nil {
+		return logError(err)
+	}
+
+	stunL, err := stunListener(c)
 	if err != nil {
 		return logError(err)
 	}
@@ -185,6 +209,7 @@ func Start(ctx context.Context, c *config.Config) error {
 
 	webServer := &http.Server{ErrorLog: errorLog, Handler: h2c.NewHandler(webMux, &http2.Server{})}
 	metricsServer := &http.Server{ErrorLog: errorLog, Handler: metricsMux}
+	stunServer := stunserver.New(stunL)
 
 	g, gCtx := errgroup.WithContext(ctx)
 
@@ -193,20 +218,34 @@ func Start(ctx context.Context, c *config.Config) error {
 		logger.Sugar().Infow("Shutting down ionscale server")
 		shutdownHttpServer(metricsServer)
 		shutdownHttpServer(webServer)
+		_ = stunServer.Shutdown()
 	}()
 
 	g.Go(func() error { return serveHttp(webServer, webL) })
 	g.Go(func() error { return serveHttp(metricsServer, metricsL) })
+	g.Go(func() error { return stunServer.Serve() })
+
+	fields := []zap.Field{
+		zap.String("url", c.WebPublicUrl.String()),
+		zap.String("addr", c.WebListenAddr),
+		zap.String("metrics_addr", c.MetricsListenAddr),
+	}
+
+	if !c.DERP.Server.Disabled {
+		fields = append(fields, zap.String("stun_addr", c.StunListenAddr))
+	} else {
+		logger.Warn("Embedded DERP is disabled")
+	}
 
 	if c.Tls.AcmeEnabled {
-		logger.Sugar().Infow("TLS is enabled with ACME", "domain", c.WebPublicUrl.Hostname())
-		logger.Sugar().Infow("Server is running", "addr", c.WebListenAddr, "metrics_addr", c.MetricsListenAddr, "url", c.WebPublicUrl)
+		logger.Info("TLS is enabled with ACME", zap.String("domain", c.WebPublicUrl.Hostname()))
+		logger.Info("Server is running", fields...)
 	} else if !c.Tls.Disable {
-		logger.Sugar().Infow("TLS is enabled", "cert", c.Tls.CertFile)
-		logger.Sugar().Infow("Server is running", "addr", c.WebListenAddr, "metrics_addr", c.MetricsListenAddr, "url", c.WebPublicUrl)
+		logger.Info("TLS is enabled", zap.String("cert", c.Tls.CertFile))
+		logger.Info("Server is running", fields...)
 	} else {
-		logger.Sugar().Warnw("TLS is disabled")
-		logger.Sugar().Infow("Server is running", "addr", c.WebListenAddr, "metrics_addr", c.MetricsListenAddr, "url", c.WebPublicUrl)
+		logger.Warn("TLS is disabled")
+		logger.Info("Server is running", fields...)
 	}
 
 	return g.Wait()
@@ -278,6 +317,19 @@ func webListener(config *config.Config) (net.Listener, error) {
 
 func metricsListener(config *config.Config) (net.Listener, error) {
 	return net.Listen("tcp", config.MetricsListenAddr)
+}
+
+func stunListener(config *config.Config) (*net.UDPConn, error) {
+	if config.DERP.Server.Disabled {
+		return nil, nil
+	}
+
+	addr, err := net.ResolveUDPAddr("udp", config.StunListenAddr)
+	if err != nil {
+		return nil, err
+	}
+
+	return net.ListenUDP("udp", addr)
 }
 
 func setupLogging(config config.Logging) (*zap.Logger, error) {

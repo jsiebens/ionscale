@@ -5,6 +5,7 @@ import (
 	"net"
 	"net/url"
 	"os"
+	"strconv"
 	"strings"
 )
 
@@ -24,7 +25,7 @@ func GetString(key, defaultValue string) string {
 	return defaultValue
 }
 
-func publicAddrToUrl(addr string) (*url.URL, error) {
+func validatePublicAddr(addr string) (*url.URL, string, int, error) {
 	scheme := "https"
 
 	if strings.HasPrefix(addr, "http://") {
@@ -37,14 +38,19 @@ func publicAddrToUrl(addr string) (*url.URL, error) {
 		addr = strings.TrimPrefix(addr, "https://")
 	}
 
-	host, port, err := net.SplitHostPort(addr)
+	host, portS, err := net.SplitHostPort(addr)
 	if err != nil {
-		return nil, fmt.Errorf("invalid public addr")
+		return nil, "", -1, fmt.Errorf("invalid")
 	}
 
-	if (port == "443" && scheme == "https") || (port == "80" && scheme == "http") || port == "" {
-		return &url.URL{Scheme: scheme, Host: host}, nil
+	port, err := strconv.Atoi(portS)
+	if err != nil {
+		return nil, "", 0, fmt.Errorf("invalid")
 	}
 
-	return &url.URL{Scheme: scheme, Host: fmt.Sprintf("%s:%s", host, port)}, nil
+	if (port == 443 && scheme == "https") || (port == 80 && scheme == "http") {
+		return &url.URL{Scheme: scheme, Host: host}, host, port, nil
+	}
+
+	return &url.URL{Scheme: scheme, Host: fmt.Sprintf("%s:%s", host, port)}, host, port, nil
 }

@@ -42,12 +42,6 @@ const (
 	// IonscaleServiceGetDefaultDERPMapProcedure is the fully-qualified name of the IonscaleService's
 	// GetDefaultDERPMap RPC.
 	IonscaleServiceGetDefaultDERPMapProcedure = "/ionscale.v1.IonscaleService/GetDefaultDERPMap"
-	// IonscaleServiceSetDefaultDERPMapProcedure is the fully-qualified name of the IonscaleService's
-	// SetDefaultDERPMap RPC.
-	IonscaleServiceSetDefaultDERPMapProcedure = "/ionscale.v1.IonscaleService/SetDefaultDERPMap"
-	// IonscaleServiceResetDefaultDERPMapProcedure is the fully-qualified name of the IonscaleService's
-	// ResetDefaultDERPMap RPC.
-	IonscaleServiceResetDefaultDERPMapProcedure = "/ionscale.v1.IonscaleService/ResetDefaultDERPMap"
 	// IonscaleServiceCreateTailnetProcedure is the fully-qualified name of the IonscaleService's
 	// CreateTailnet RPC.
 	IonscaleServiceCreateTailnetProcedure = "/ionscale.v1.IonscaleService/CreateTailnet"
@@ -172,8 +166,6 @@ type IonscaleServiceClient interface {
 	GetVersion(context.Context, *connect_go.Request[v1.GetVersionRequest]) (*connect_go.Response[v1.GetVersionResponse], error)
 	Authenticate(context.Context, *connect_go.Request[v1.AuthenticateRequest]) (*connect_go.ServerStreamForClient[v1.AuthenticateResponse], error)
 	GetDefaultDERPMap(context.Context, *connect_go.Request[v1.GetDefaultDERPMapRequest]) (*connect_go.Response[v1.GetDefaultDERPMapResponse], error)
-	SetDefaultDERPMap(context.Context, *connect_go.Request[v1.SetDefaultDERPMapRequest]) (*connect_go.Response[v1.SetDefaultDERPMapResponse], error)
-	ResetDefaultDERPMap(context.Context, *connect_go.Request[v1.ResetDefaultDERPMapRequest]) (*connect_go.Response[v1.ResetDefaultDERPMapResponse], error)
 	CreateTailnet(context.Context, *connect_go.Request[v1.CreateTailnetRequest]) (*connect_go.Response[v1.CreateTailnetResponse], error)
 	UpdateTailnet(context.Context, *connect_go.Request[v1.UpdateTailnetRequest]) (*connect_go.Response[v1.UpdateTailnetResponse], error)
 	GetTailnet(context.Context, *connect_go.Request[v1.GetTailnetRequest]) (*connect_go.Response[v1.GetTailnetResponse], error)
@@ -238,16 +230,6 @@ func NewIonscaleServiceClient(httpClient connect_go.HTTPClient, baseURL string, 
 		getDefaultDERPMap: connect_go.NewClient[v1.GetDefaultDERPMapRequest, v1.GetDefaultDERPMapResponse](
 			httpClient,
 			baseURL+IonscaleServiceGetDefaultDERPMapProcedure,
-			opts...,
-		),
-		setDefaultDERPMap: connect_go.NewClient[v1.SetDefaultDERPMapRequest, v1.SetDefaultDERPMapResponse](
-			httpClient,
-			baseURL+IonscaleServiceSetDefaultDERPMapProcedure,
-			opts...,
-		),
-		resetDefaultDERPMap: connect_go.NewClient[v1.ResetDefaultDERPMapRequest, v1.ResetDefaultDERPMapResponse](
-			httpClient,
-			baseURL+IonscaleServiceResetDefaultDERPMapProcedure,
 			opts...,
 		),
 		createTailnet: connect_go.NewClient[v1.CreateTailnetRequest, v1.CreateTailnetResponse](
@@ -453,8 +435,6 @@ type ionscaleServiceClient struct {
 	getVersion                  *connect_go.Client[v1.GetVersionRequest, v1.GetVersionResponse]
 	authenticate                *connect_go.Client[v1.AuthenticateRequest, v1.AuthenticateResponse]
 	getDefaultDERPMap           *connect_go.Client[v1.GetDefaultDERPMapRequest, v1.GetDefaultDERPMapResponse]
-	setDefaultDERPMap           *connect_go.Client[v1.SetDefaultDERPMapRequest, v1.SetDefaultDERPMapResponse]
-	resetDefaultDERPMap         *connect_go.Client[v1.ResetDefaultDERPMapRequest, v1.ResetDefaultDERPMapResponse]
 	createTailnet               *connect_go.Client[v1.CreateTailnetRequest, v1.CreateTailnetResponse]
 	updateTailnet               *connect_go.Client[v1.UpdateTailnetRequest, v1.UpdateTailnetResponse]
 	getTailnet                  *connect_go.Client[v1.GetTailnetRequest, v1.GetTailnetResponse]
@@ -509,16 +489,6 @@ func (c *ionscaleServiceClient) Authenticate(ctx context.Context, req *connect_g
 // GetDefaultDERPMap calls ionscale.v1.IonscaleService.GetDefaultDERPMap.
 func (c *ionscaleServiceClient) GetDefaultDERPMap(ctx context.Context, req *connect_go.Request[v1.GetDefaultDERPMapRequest]) (*connect_go.Response[v1.GetDefaultDERPMapResponse], error) {
 	return c.getDefaultDERPMap.CallUnary(ctx, req)
-}
-
-// SetDefaultDERPMap calls ionscale.v1.IonscaleService.SetDefaultDERPMap.
-func (c *ionscaleServiceClient) SetDefaultDERPMap(ctx context.Context, req *connect_go.Request[v1.SetDefaultDERPMapRequest]) (*connect_go.Response[v1.SetDefaultDERPMapResponse], error) {
-	return c.setDefaultDERPMap.CallUnary(ctx, req)
-}
-
-// ResetDefaultDERPMap calls ionscale.v1.IonscaleService.ResetDefaultDERPMap.
-func (c *ionscaleServiceClient) ResetDefaultDERPMap(ctx context.Context, req *connect_go.Request[v1.ResetDefaultDERPMapRequest]) (*connect_go.Response[v1.ResetDefaultDERPMapResponse], error) {
-	return c.resetDefaultDERPMap.CallUnary(ctx, req)
 }
 
 // CreateTailnet calls ionscale.v1.IonscaleService.CreateTailnet.
@@ -721,8 +691,6 @@ type IonscaleServiceHandler interface {
 	GetVersion(context.Context, *connect_go.Request[v1.GetVersionRequest]) (*connect_go.Response[v1.GetVersionResponse], error)
 	Authenticate(context.Context, *connect_go.Request[v1.AuthenticateRequest], *connect_go.ServerStream[v1.AuthenticateResponse]) error
 	GetDefaultDERPMap(context.Context, *connect_go.Request[v1.GetDefaultDERPMapRequest]) (*connect_go.Response[v1.GetDefaultDERPMapResponse], error)
-	SetDefaultDERPMap(context.Context, *connect_go.Request[v1.SetDefaultDERPMapRequest]) (*connect_go.Response[v1.SetDefaultDERPMapResponse], error)
-	ResetDefaultDERPMap(context.Context, *connect_go.Request[v1.ResetDefaultDERPMapRequest]) (*connect_go.Response[v1.ResetDefaultDERPMapResponse], error)
 	CreateTailnet(context.Context, *connect_go.Request[v1.CreateTailnetRequest]) (*connect_go.Response[v1.CreateTailnetResponse], error)
 	UpdateTailnet(context.Context, *connect_go.Request[v1.UpdateTailnetRequest]) (*connect_go.Response[v1.UpdateTailnetResponse], error)
 	GetTailnet(context.Context, *connect_go.Request[v1.GetTailnetRequest]) (*connect_go.Response[v1.GetTailnetResponse], error)
@@ -783,16 +751,6 @@ func NewIonscaleServiceHandler(svc IonscaleServiceHandler, opts ...connect_go.Ha
 	ionscaleServiceGetDefaultDERPMapHandler := connect_go.NewUnaryHandler(
 		IonscaleServiceGetDefaultDERPMapProcedure,
 		svc.GetDefaultDERPMap,
-		opts...,
-	)
-	ionscaleServiceSetDefaultDERPMapHandler := connect_go.NewUnaryHandler(
-		IonscaleServiceSetDefaultDERPMapProcedure,
-		svc.SetDefaultDERPMap,
-		opts...,
-	)
-	ionscaleServiceResetDefaultDERPMapHandler := connect_go.NewUnaryHandler(
-		IonscaleServiceResetDefaultDERPMapProcedure,
-		svc.ResetDefaultDERPMap,
 		opts...,
 	)
 	ionscaleServiceCreateTailnetHandler := connect_go.NewUnaryHandler(
@@ -998,10 +956,6 @@ func NewIonscaleServiceHandler(svc IonscaleServiceHandler, opts ...connect_go.Ha
 			ionscaleServiceAuthenticateHandler.ServeHTTP(w, r)
 		case IonscaleServiceGetDefaultDERPMapProcedure:
 			ionscaleServiceGetDefaultDERPMapHandler.ServeHTTP(w, r)
-		case IonscaleServiceSetDefaultDERPMapProcedure:
-			ionscaleServiceSetDefaultDERPMapHandler.ServeHTTP(w, r)
-		case IonscaleServiceResetDefaultDERPMapProcedure:
-			ionscaleServiceResetDefaultDERPMapHandler.ServeHTTP(w, r)
 		case IonscaleServiceCreateTailnetProcedure:
 			ionscaleServiceCreateTailnetHandler.ServeHTTP(w, r)
 		case IonscaleServiceUpdateTailnetProcedure:
@@ -1099,14 +1053,6 @@ func (UnimplementedIonscaleServiceHandler) Authenticate(context.Context, *connec
 
 func (UnimplementedIonscaleServiceHandler) GetDefaultDERPMap(context.Context, *connect_go.Request[v1.GetDefaultDERPMapRequest]) (*connect_go.Response[v1.GetDefaultDERPMapResponse], error) {
 	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("ionscale.v1.IonscaleService.GetDefaultDERPMap is not implemented"))
-}
-
-func (UnimplementedIonscaleServiceHandler) SetDefaultDERPMap(context.Context, *connect_go.Request[v1.SetDefaultDERPMapRequest]) (*connect_go.Response[v1.SetDefaultDERPMapResponse], error) {
-	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("ionscale.v1.IonscaleService.SetDefaultDERPMap is not implemented"))
-}
-
-func (UnimplementedIonscaleServiceHandler) ResetDefaultDERPMap(context.Context, *connect_go.Request[v1.ResetDefaultDERPMapRequest]) (*connect_go.Response[v1.ResetDefaultDERPMapResponse], error) {
-	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("ionscale.v1.IonscaleService.ResetDefaultDERPMap is not implemented"))
 }
 
 func (UnimplementedIonscaleServiceHandler) CreateTailnet(context.Context, *connect_go.Request[v1.CreateTailnetRequest]) (*connect_go.Response[v1.CreateTailnetResponse], error) {

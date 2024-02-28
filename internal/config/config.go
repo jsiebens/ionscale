@@ -14,6 +14,7 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"tailscale.com/tailcfg"
 	tkey "tailscale.com/types/key"
 	"time"
 )
@@ -102,6 +103,7 @@ func defaultConfig() *Config {
 	return &Config{
 		WebListenAddr:     ":8080",
 		MetricsListenAddr: ":9091",
+		StunListenAddr:    ":3478",
 		Database: Database{
 			Type:         "sqlite",
 			Url:          "./ionscale.db?_pragma=busy_timeout(5000)&_pragma=journal_mode(WAL)&_pragma=foreign_keys(ON)",
@@ -120,6 +122,14 @@ func defaultConfig() *Config {
 		DNS: DNS{
 			MagicDNSSuffix: defaultMagicDNSSuffix,
 		},
+		DERP: DERP{
+			Server: DERPServer{
+				Disabled:   false,
+				RegionID:   1000,
+				RegionCode: "ionscale",
+				RegionName: "ionscale Embedded DERP",
+			},
+		},
 		Logging: Logging{
 			Level: "info",
 		},
@@ -134,17 +144,25 @@ type ServerKeys struct {
 
 type Config struct {
 	WebListenAddr     string   `yaml:"web_listen_addr,omitempty" env:"WEB_LISTEN_ADDR"`
+	StunListenAddr    string   `yaml:"stun_listen_addr,omitempty" env:"STUN_LISTEN_ADDR"`
 	MetricsListenAddr string   `yaml:"metrics_listen_addr,omitempty" env:"METRICS_LISTEN_ADDR"`
 	WebPublicAddr     string   `yaml:"web_public_addr,omitempty" env:"WEB_PUBLIC_ADDR"`
+	StunPublicAddr    string   `yaml:"stun_public_addr,omitempty" env:"STUN_PUBLIC_ADDR"`
 	Tls               Tls      `yaml:"tls,omitempty" envPrefix:"TLS_"`
 	PollNet           PollNet  `yaml:"poll_net,omitempty" envPrefix:"POLL_NET_"`
 	Keys              Keys     `yaml:"keys,omitempty" envPrefix:"KEYS_"`
 	Database          Database `yaml:"database,omitempty" envPrefix:"DB_"`
 	Auth              Auth     `yaml:"auth,omitempty" envPrefix:"AUTH_"`
 	DNS               DNS      `yaml:"dns,omitempty"`
+	DERP              DERP     `yaml:"derp,omitempty" envPrefix:"DERP_"`
 	Logging           Logging  `yaml:"logging,omitempty" envPrefix:"LOGGING_"`
 
 	WebPublicUrl *url.URL `yaml:"-"`
+
+	stunHost string
+	stunPort int
+	derpHost string
+	derpPort int
 }
 
 type Tls struct {
@@ -211,13 +229,38 @@ type SystemAdminPolicy struct {
 	Filters []string `yaml:"filters,omitempty"`
 }
 
+type DERP struct {
+	Server  DERPServer `yaml:"server,omitempty"`
+	Sources []string   `yaml:"sources,omitempty"`
+}
+
+type DERPServer struct {
+	Disabled   bool   `yaml:"disabled,omitempty"`
+	RegionID   int    `yaml:"region_id,omitempty"`
+	RegionCode string `yaml:"region_code,omitempty"`
+	RegionName string `yaml:"region_name,omitempty"`
+}
+
 func (c *Config) Validate() (*Config, error) {
-	publicWebUrl, err := publicAddrToUrl(c.WebPublicAddr)
+	publicWebUrl, webHost, webPort, err := validatePublicAddr(c.WebPublicAddr)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("web public addr: %w", err)
 	}
 
 	c.WebPublicUrl = publicWebUrl
+	c.derpHost = webHost
+	c.derpPort = webPort
+
+	if !c.DERP.Server.Disabled {
+		_, stunHost, stunPort, err := validatePublicAddr(c.StunPublicAddr)
+		if err != nil {
+			return nil, fmt.Errorf("stun public addr: %w", err)
+		}
+
+		c.stunHost = stunHost
+		c.stunPort = stunPort
+	}
+
 	return c, nil
 }
 
@@ -263,4 +306,53 @@ func (c *Config) ReadServerKeys(defaultKeys *domain.ControlKeys) (*ServerKeys, e
 	}
 
 	return keys, nil
+}
+
+func (c *Config) DefaultDERPMap() *tailcfg.DERPMap {
+	if c.derpHost == c.stunHost {
+		return &tailcfg.DERPMap{
+			Regions: map[int]*tailcfg.DERPRegion{
+				c.DERP.Server.RegionID: {
+					RegionID:   c.DERP.Server.RegionID,
+					RegionCode: c.DERP.Server.RegionCode,
+					RegionName: c.DERP.Server.RegionName,
+					Nodes: []*tailcfg.DERPNode{
+						{
+							RegionID: c.DERP.Server.RegionID,
+							Name:     "ionscale",
+							HostName: c.derpHost,
+							DERPPort: c.derpPort,
+							STUNPort: c.stunPort,
+						},
+					},
+				},
+			},
+		}
+	}
+
+	return &tailcfg.DERPMap{
+		Regions: map[int]*tailcfg.DERPRegion{
+			c.DERP.Server.RegionID: {
+				RegionID:   c.DERP.Server.RegionID,
+				RegionCode: c.DERP.Server.RegionCode,
+				RegionName: c.DERP.Server.RegionName,
+				Nodes: []*tailcfg.DERPNode{
+					{
+						RegionID: c.DERP.Server.RegionID,
+						Name:     "stun",
+						HostName: c.stunHost,
+						STUNOnly: true,
+						STUNPort: c.stunPort,
+					},
+					{
+						RegionID: c.DERP.Server.RegionID,
+						Name:     "derp",
+						HostName: c.derpHost,
+						DERPPort: c.derpPort,
+						STUNPort: -1,
+					},
+				},
+			},
+		},
+	}
 }

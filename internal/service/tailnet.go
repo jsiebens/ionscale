@@ -335,7 +335,7 @@ func (s *Service) GetDERPMap(ctx context.Context, req *connect.Request[api.GetDE
 		return nil, connect.NewError(connect.CodeNotFound, fmt.Errorf("tailnet not found"))
 	}
 
-	derpMap, err := tailnet.GetDERPMap(ctx, s.repository)
+	derpMap, err := tailnet.GetDERPMap(ctx, domain.GetDefaultDERPMap())
 	if err != nil {
 		return nil, logError(err)
 	}

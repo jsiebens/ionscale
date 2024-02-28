@@ -11,6 +11,7 @@ import (
 	"strconv"
 	"strings"
 	"tailscale.com/ipn/ipnstate"
+	"tailscale.com/net/netcheck"
 	"testing"
 	"time"
 )
@@ -145,6 +146,21 @@ func (t *TailscaleNode) Ping(target string) error {
 	}
 
 	return nil
+}
+
+func (t *TailscaleNode) NetCheck() (*netcheck.Report, error) {
+	result, _, err := t.execTailscaleCmd("netcheck", "--format=json")
+	if err != nil {
+		return nil, err
+	}
+
+	var nm netcheck.Report
+	err = json.Unmarshal([]byte(result), &nm)
+	if err != nil {
+		return nil, err
+	}
+
+	return &nm, err
 }
 
 func (t *TailscaleNode) curl(url *url.URL) (int, error) {

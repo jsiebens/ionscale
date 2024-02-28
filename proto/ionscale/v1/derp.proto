@@ -9,15 +9,3 @@ message GetDefaultDERPMapRequest {}
 message GetDefaultDERPMapResponse {
   bytes value = 1;
 }
-
-message SetDefaultDERPMapRequest {
-  bytes value = 1;
-}
-
-message SetDefaultDERPMapResponse {
-  bytes value = 1;
-}
-
-message ResetDefaultDERPMapRequest {}
-
-message ResetDefaultDERPMapResponse {}
