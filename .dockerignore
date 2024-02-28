@@ -1,3 +1,4 @@
 .git
 .idea
 tests
+!tests/config/ca.pem
