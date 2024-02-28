@@ -28,7 +28,7 @@ func TestPublicAddrToUrl(t *testing.T) {
 
 	for _, p := range parameters {
 		t.Run(fmt.Sprintf("Testing [%v]", p.input), func(t *testing.T) {
-			url, err := publicAddrToUrl(p.input)
+			url, err := validatePublicAddr(p.input)
 			require.Equal(t, p.expected, url)
 			require.Equal(t, p.err, err)
 		})

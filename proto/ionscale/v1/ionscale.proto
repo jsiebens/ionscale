@@ -22,8 +22,6 @@ service IonscaleService {
   rpc Authenticate(AuthenticateRequest) returns (stream AuthenticateResponse) {}
 
   rpc GetDefaultDERPMap(GetDefaultDERPMapRequest) returns (GetDefaultDERPMapResponse) {}
-  rpc SetDefaultDERPMap(SetDefaultDERPMapRequest) returns (SetDefaultDERPMapResponse) {}
-  rpc ResetDefaultDERPMap(ResetDefaultDERPMapRequest) returns (ResetDefaultDERPMapResponse) {}
 
   rpc CreateTailnet(CreateTailnetRequest) returns (CreateTailnetResponse) {}
   rpc UpdateTailnet(UpdateTailnetRequest) returns (UpdateTailnetResponse) {}

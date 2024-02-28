@@ -105,176 +105,6 @@ func (x *GetDefaultDERPMapResponse) GetValue() []byte {
 	return nil
 }
 
-type SetDefaultDERPMapRequest struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-
-	Value []byte `protobuf:"bytes,1,opt,name=value,proto3" json:"value,omitempty"`
-}
-
-func (x *SetDefaultDERPMapRequest) Reset() {
-	*x = SetDefaultDERPMapRequest{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_ionscale_v1_derp_proto_msgTypes[2]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
-}
-
-func (x *SetDefaultDERPMapRequest) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*SetDefaultDERPMapRequest) ProtoMessage() {}
-
-func (x *SetDefaultDERPMapRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_ionscale_v1_derp_proto_msgTypes[2]
-	if protoimpl.UnsafeEnabled && x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use SetDefaultDERPMapRequest.ProtoReflect.Descriptor instead.
-func (*SetDefaultDERPMapRequest) Descriptor() ([]byte, []int) {
-	return file_ionscale_v1_derp_proto_rawDescGZIP(), []int{2}
-}
-
-func (x *SetDefaultDERPMapRequest) GetValue() []byte {
-	if x != nil {
-		return x.Value
-	}
-	return nil
-}
-
-type SetDefaultDERPMapResponse struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-
-	Value []byte `protobuf:"bytes,1,opt,name=value,proto3" json:"value,omitempty"`
-}
-
-func (x *SetDefaultDERPMapResponse) Reset() {
-	*x = SetDefaultDERPMapResponse{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_ionscale_v1_derp_proto_msgTypes[3]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
-}
-
-func (x *SetDefaultDERPMapResponse) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*SetDefaultDERPMapResponse) ProtoMessage() {}
-
-func (x *SetDefaultDERPMapResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_ionscale_v1_derp_proto_msgTypes[3]
-	if protoimpl.UnsafeEnabled && x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use SetDefaultDERPMapResponse.ProtoReflect.Descriptor instead.
-func (*SetDefaultDERPMapResponse) Descriptor() ([]byte, []int) {
-	return file_ionscale_v1_derp_proto_rawDescGZIP(), []int{3}
-}
-
-func (x *SetDefaultDERPMapResponse) GetValue() []byte {
-	if x != nil {
-		return x.Value
-	}
-	return nil
-}
-
-type ResetDefaultDERPMapRequest struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-}
-
-func (x *ResetDefaultDERPMapRequest) Reset() {
-	*x = ResetDefaultDERPMapRequest{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_ionscale_v1_derp_proto_msgTypes[4]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
-}
-
-func (x *ResetDefaultDERPMapRequest) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*ResetDefaultDERPMapRequest) ProtoMessage() {}
-
-func (x *ResetDefaultDERPMapRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_ionscale_v1_derp_proto_msgTypes[4]
-	if protoimpl.UnsafeEnabled && x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use ResetDefaultDERPMapRequest.ProtoReflect.Descriptor instead.
-func (*ResetDefaultDERPMapRequest) Descriptor() ([]byte, []int) {
-	return file_ionscale_v1_derp_proto_rawDescGZIP(), []int{4}
-}
-
-type ResetDefaultDERPMapResponse struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-}
-
-func (x *ResetDefaultDERPMapResponse) Reset() {
-	*x = ResetDefaultDERPMapResponse{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_ionscale_v1_derp_proto_msgTypes[5]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
-}
-
-func (x *ResetDefaultDERPMapResponse) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*ResetDefaultDERPMapResponse) ProtoMessage() {}
-
-func (x *ResetDefaultDERPMapResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_ionscale_v1_derp_proto_msgTypes[5]
-	if protoimpl.UnsafeEnabled && x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use ResetDefaultDERPMapResponse.ProtoReflect.Descriptor instead.
-func (*ResetDefaultDERPMapResponse) Descriptor() ([]byte, []int) {
-	return file_ionscale_v1_derp_proto_rawDescGZIP(), []int{5}
-}
-
 var File_ionscale_v1_derp_proto protoreflect.FileDescriptor
 
 var file_ionscale_v1_derp_proto_rawDesc = []byte{
@@ -285,21 +115,11 @@ var file_ionscale_v1_derp_proto_rawDesc = []byte{
 	0x74, 0x22, 0x31, 0x0a, 0x19, 0x47, 0x65, 0x74, 0x44, 0x65, 0x66, 0x61, 0x75, 0x6c, 0x74, 0x44,
 	0x45, 0x52, 0x50, 0x4d, 0x61, 0x70, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x14,
 	0x0a, 0x05, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x05, 0x76,
-	0x61, 0x6c, 0x75, 0x65, 0x22, 0x30, 0x0a, 0x18, 0x53, 0x65, 0x74, 0x44, 0x65, 0x66, 0x61, 0x75,
-	0x6c, 0x74, 0x44, 0x45, 0x52, 0x50, 0x4d, 0x61, 0x70, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74,
-	0x12, 0x14, 0x0a, 0x05, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0c, 0x52,
-	0x05, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x22, 0x31, 0x0a, 0x19, 0x53, 0x65, 0x74, 0x44, 0x65, 0x66,
-	0x61, 0x75, 0x6c, 0x74, 0x44, 0x45, 0x52, 0x50, 0x4d, 0x61, 0x70, 0x52, 0x65, 0x73, 0x70, 0x6f,
-	0x6e, 0x73, 0x65, 0x12, 0x14, 0x0a, 0x05, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x18, 0x01, 0x20, 0x01,
-	0x28, 0x0c, 0x52, 0x05, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x22, 0x1c, 0x0a, 0x1a, 0x52, 0x65, 0x73,
-	0x65, 0x74, 0x44, 0x65, 0x66, 0x61, 0x75, 0x6c, 0x74, 0x44, 0x45, 0x52, 0x50, 0x4d, 0x61, 0x70,
-	0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x22, 0x1d, 0x0a, 0x1b, 0x52, 0x65, 0x73, 0x65, 0x74,
-	0x44, 0x65, 0x66, 0x61, 0x75, 0x6c, 0x74, 0x44, 0x45, 0x52, 0x50, 0x4d, 0x61, 0x70, 0x52, 0x65,
-	0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x42, 0x3d, 0x5a, 0x3b, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62,
-	0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x6a, 0x73, 0x69, 0x65, 0x62, 0x65, 0x6e, 0x73, 0x2f, 0x69, 0x6f,
-	0x6e, 0x73, 0x63, 0x61, 0x6c, 0x65, 0x2f, 0x70, 0x6b, 0x67, 0x2f, 0x67, 0x65, 0x6e, 0x2f, 0x69,
-	0x6f, 0x6e, 0x73, 0x63, 0x61, 0x6c, 0x65, 0x2f, 0x76, 0x31, 0x3b, 0x69, 0x6f, 0x6e, 0x73, 0x63,
-	0x61, 0x6c, 0x65, 0x76, 0x31, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x61, 0x6c, 0x75, 0x65, 0x42, 0x3d, 0x5a, 0x3b, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63,
+	0x6f, 0x6d, 0x2f, 0x6a, 0x73, 0x69, 0x65, 0x62, 0x65, 0x6e, 0x73, 0x2f, 0x69, 0x6f, 0x6e, 0x73,
+	0x63, 0x61, 0x6c, 0x65, 0x2f, 0x70, 0x6b, 0x67, 0x2f, 0x67, 0x65, 0x6e, 0x2f, 0x69, 0x6f, 0x6e,
+	0x73, 0x63, 0x61, 0x6c, 0x65, 0x2f, 0x76, 0x31, 0x3b, 0x69, 0x6f, 0x6e, 0x73, 0x63, 0x61, 0x6c,
+	0x65, 0x76, 0x31, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -314,14 +134,10 @@ func file_ionscale_v1_derp_proto_rawDescGZIP() []byte {
 	return file_ionscale_v1_derp_proto_rawDescData
 }
 
-var file_ionscale_v1_derp_proto_msgTypes = make([]protoimpl.MessageInfo, 6)
+var file_ionscale_v1_derp_proto_msgTypes = make([]protoimpl.MessageInfo, 2)
 var file_ionscale_v1_derp_proto_goTypes = []interface{}{
-	(*GetDefaultDERPMapRequest)(nil),    // 0: ionscale.v1.GetDefaultDERPMapRequest
-	(*GetDefaultDERPMapResponse)(nil),   // 1: ionscale.v1.GetDefaultDERPMapResponse
-	(*SetDefaultDERPMapRequest)(nil),    // 2: ionscale.v1.SetDefaultDERPMapRequest
-	(*SetDefaultDERPMapResponse)(nil),   // 3: ionscale.v1.SetDefaultDERPMapResponse
-	(*ResetDefaultDERPMapRequest)(nil),  // 4: ionscale.v1.ResetDefaultDERPMapRequest
-	(*ResetDefaultDERPMapResponse)(nil), // 5: ionscale.v1.ResetDefaultDERPMapResponse
+	(*GetDefaultDERPMapRequest)(nil),  // 0: ionscale.v1.GetDefaultDERPMapRequest
+	(*GetDefaultDERPMapResponse)(nil), // 1: ionscale.v1.GetDefaultDERPMapResponse
 }
 var file_ionscale_v1_derp_proto_depIdxs = []int32{
 	0, // [0:0] is the sub-list for method output_type
@@ -361,54 +177,6 @@ func file_ionscale_v1_derp_proto_init() {
 				return nil
 			}
 		}
-		file_ionscale_v1_derp_proto_msgTypes[2].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*SetDefaultDERPMapRequest); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_ionscale_v1_derp_proto_msgTypes[3].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*SetDefaultDERPMapResponse); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_ionscale_v1_derp_proto_msgTypes[4].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*ResetDefaultDERPMapRequest); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_ionscale_v1_derp_proto_msgTypes[5].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*ResetDefaultDERPMapResponse); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
@@ -416,7 +184,7 @@ func file_ionscale_v1_derp_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_ionscale_v1_derp_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   6,
+			NumMessages:   2,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

@@ -81,30 +81,6 @@ func (r *repository) SetJSONWebKeySet(ctx context.Context, v *JSONWebKeys) error
 	return r.setServerConfig(ctx, jwksConfigKey, v)
 }
 
-func (r *repository) GetDERPMap(ctx context.Context) (*DERPMap, error) {
-	var m DERPMap
-
-	err := r.getServerConfig(ctx, derpMapConfigKey, &m)
-
-	if errors.Is(err, gorm.ErrRecordNotFound) {
-		return r.defaultDERPMap.Get()
-	}
-
-	if m.Checksum == "" {
-		return r.defaultDERPMap.Get()
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	return &m, nil
-}
-
-func (r *repository) SetDERPMap(ctx context.Context, v *DERPMap) error {
-	return r.setServerConfig(ctx, "derp_map", v)
-}
-
 func (r *repository) getServerConfig(ctx context.Context, s configKey, v interface{}) error {
 	var m ServerConfig
 	tx := r.withContext(ctx).Take(&m, "key = ?", s)

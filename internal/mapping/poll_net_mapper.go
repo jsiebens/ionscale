@@ -61,7 +61,7 @@ func (h *PollNetMapper) CreateMapResponse(ctx context.Context, delta bool) (*Map
 		return nil, err
 	}
 
-	derpMap, err := m.Tailnet.GetDERPMap(ctx, h.repository)
+	derpMap, err := m.Tailnet.GetDERPMap(ctx, domain.GetDefaultDERPMap())
 	if err != nil {
 		return nil, err
 	}
