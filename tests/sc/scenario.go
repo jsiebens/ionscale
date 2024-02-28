@@ -169,7 +169,7 @@ func (s *Scenario) NewTailscaleNode(opts ...TailscaleNodeOpt) *tsn.TailscaleNode
 
 	s.resources = append(s.resources, resource)
 
-	return tsn.New(s.t, config.Hostname, "http://ionscale", resource, s.pool.Retry)
+	return tsn.New(s.t, config.Hostname, "https://ionscale", resource, s.pool.Retry)
 }
 
 func Run(t *testing.T, f func(s *Scenario)) {
@@ -247,23 +247,26 @@ func Run(t *testing.T, f func(s *Scenario)) {
 			fmt.Sprintf("%s/config:/etc/ionscale", currentPath),
 		},
 		Networks:     []*dockertest.Network{s.network},
-		ExposedPorts: []string{"80"},
+		ExposedPorts: []string{"443"},
 		Cmd:          []string{"server", "--config", "/etc/ionscale/config.yaml"},
 	}
 
 	s.ionscale, err = pool.RunWithOptions(ionscale, restartPolicy)
 	require.NoError(s.t, err)
 
-	port := s.ionscale.GetPort("80/tcp")
+	port := s.ionscale.GetPort("443/tcp")
 
-	err = pool.Retry(httpCheck(port, "/key"))
-	require.NoError(s.t, err)
-
-	addr := fmt.Sprintf("http://localhost:%s", port)
+	addr := fmt.Sprintf("https://localhost:%s", port)
 	auth, err := ionscaleclt.LoadClientAuth(addr, "804ecd57365342254ce6647da5c249e85c10a0e51e74856bfdf292a2136b4249")
 	require.NoError(s.t, err)
 
 	s.ionscaleClient, err = ionscaleclt.NewClient(auth, addr, true)
+	require.NoError(s.t, err)
+
+	err = pool.Retry(func() error {
+		_, err := s.ionscaleClient.GetVersion(context.Background(), connect.NewRequest(&api.GetVersionRequest{}))
+		return err
+	})
 	require.NoError(s.t, err)
 
 	f(s)
@@ -313,7 +316,8 @@ func prepareDockerPoolAndImages() {
 	pool, _ = dockertest.NewPool("")
 
 	buildOpts := &dockertest.BuildOptions{
-		ContextDir: "./docker/tailscale",
+		ContextDir: "../",
+		Dockerfile: "tests/docker/tailscale/Dockerfile",
 		BuildArgs: []docker.BuildArg{
 			{
 				Name:  "TAILSCALE_VERSION",

@@ -1,9 +1,11 @@
-web_listen_addr: ":80"
-web_public_addr: "http://ionscale:80"
+web_listen_addr: ":443"
+web_public_addr: "ionscale:443"
 
 tls:
-  disable: true
+  disable: false
   force_https: false
+  key_file: /etc/ionscale/ionscale.key
+  cert_file: /etc/ionscale/ionscale.pem
 
 keys:
   system_admin_key: "804ecd57365342254ce6647da5c249e85c10a0e51e74856bfdf292a2136b4249"

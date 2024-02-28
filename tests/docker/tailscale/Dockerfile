@@ -4,6 +4,8 @@ FROM tailscale/tailscale:${TAILSCALE_VERSION} as src
 FROM alpine:latest
 
 RUN apk update && apk add ca-certificates openssh curl && rm -rf /var/cache/apk/*
+COPY ./tests/config/ca.pem /usr/local/share/ca-certificates/
+RUN update-ca-certificates
 
 WORKDIR /app
 COPY --from=src /usr/local/bin/tailscale .
