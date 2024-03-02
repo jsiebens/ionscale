@@ -52,5 +52,5 @@ func validatePublicAddr(addr string) (*url.URL, string, int, error) {
 		return &url.URL{Scheme: scheme, Host: host}, host, port, nil
 	}
 
-	return &url.URL{Scheme: scheme, Host: fmt.Sprintf("%s:%s", host, port)}, host, port, nil
+	return &url.URL{Scheme: scheme, Host: fmt.Sprintf("%s:%d", host, port)}, host, port, nil
 }

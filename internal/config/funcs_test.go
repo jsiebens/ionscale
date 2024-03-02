@@ -19,7 +19,7 @@ func TestPublicAddrToUrl(t *testing.T) {
 		expected *url.URL
 		err      error
 	}{
-		{"localtest.me", nil, fmt.Errorf("invalid public addr")},
+		{"localtest.me", nil, fmt.Errorf("invalid")},
 		{"localtest.me:443", mustParseUrl("https://localtest.me"), nil},
 		{"localtest.me:80", mustParseUrl("https://localtest.me:80"), nil},
 		{"localtest.me:8080", mustParseUrl("https://localtest.me:8080"), nil},
@@ -28,7 +28,7 @@ func TestPublicAddrToUrl(t *testing.T) {
 
 	for _, p := range parameters {
 		t.Run(fmt.Sprintf("Testing [%v]", p.input), func(t *testing.T) {
-			url, err := validatePublicAddr(p.input)
+			url, _, _, err := validatePublicAddr(p.input)
 			require.Equal(t, p.expected, url)
 			require.Equal(t, p.err, err)
 		})
