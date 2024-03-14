@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/99designs/keyring"
+	"github.com/jsiebens/ionscale/internal/config"
 	"github.com/jsiebens/ionscale/internal/key"
 	"github.com/jsiebens/ionscale/internal/token"
 )
@@ -21,7 +22,8 @@ func LoadClientAuth(addr string, systemAdminKey string) (ClientAuth, error) {
 		if err != nil {
 			return nil, fmt.Errorf("invalid system admin key")
 		}
-		return systemAdminTokenSession{key: *k}, nil
+		tid := config.GetUint64("IONSCALE_SYSTEM_ADMIN_DEFAULT_TAILNET_ID", 0)
+		return systemAdminTokenSession{key: *k, tid: tid}, nil
 	}
 
 	ring, err := openKeyring()
@@ -88,6 +90,7 @@ func (m defaultSession) TailnetID() uint64 {
 
 type systemAdminTokenSession struct {
 	key key.ServerPrivate
+	tid uint64
 }
 
 func (m systemAdminTokenSession) GetToken() (string, error) {
@@ -95,7 +98,7 @@ func (m systemAdminTokenSession) GetToken() (string, error) {
 }
 
 func (m systemAdminTokenSession) TailnetID() uint64 {
-	return 0
+	return m.tid
 }
 
 type Anonymous struct {
