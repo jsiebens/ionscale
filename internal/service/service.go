@@ -41,7 +41,7 @@ func (s *Service) GetVersion(_ context.Context, _ *connect.Request[api.GetVersio
 	}), nil
 }
 
-func validateIamPolicy(p *api.IAMPolicy) error {
+func validateIamPolicy(p *domain.IAMPolicy) error {
 	var mErr *multierror.Error
 	for i, exp := range p.Filters {
 		if _, err := grammar.Parse(fmt.Sprintf("filter %d", i), []byte(exp)); err != nil {

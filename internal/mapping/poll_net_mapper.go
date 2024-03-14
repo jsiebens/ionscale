@@ -53,7 +53,7 @@ func (h *PollNetMapper) CreateMapResponse(ctx context.Context, delta bool) (*Map
 
 	hostinfo := tailcfg.Hostinfo(m.HostInfo)
 	tailnet := m.Tailnet
-	policies := tailnet.ACLPolicy
+	policies := tailnet.ACLPolicy.Get()
 	dnsConfig := tailnet.DNSConfig
 
 	serviceUser, _, err := h.repository.GetOrCreateServiceUser(ctx, &tailnet)

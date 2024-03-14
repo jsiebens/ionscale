@@ -160,7 +160,7 @@ func (h *RegistrationHandlers) authenticateMachineWithAuthKey(c echo.Context, ma
 	tailnet := authKey.Tailnet
 	user := authKey.User
 
-	if err := tailnet.ACLPolicy.CheckTagOwners(req.Hostinfo.RequestTags, &user); err != nil {
+	if err := tailnet.ACLPolicy.Get().CheckTagOwners(req.Hostinfo.RequestTags, &user); err != nil {
 		response := tailcfg.RegisterResponse{MachineAuthorized: false, Error: err.Error()}
 		return c.JSON(http.StatusOK, response)
 	}
@@ -169,7 +169,7 @@ func (h *RegistrationHandlers) authenticateMachineWithAuthKey(c echo.Context, ma
 	advertisedTags := domain.SanitizeTags(req.Hostinfo.RequestTags)
 	tags := append(registeredTags, advertisedTags...)
 
-	autoAllowIPs := tailnet.ACLPolicy.FindAutoApprovedIPs(req.Hostinfo.RoutableIPs, tags, &user)
+	autoAllowIPs := tailnet.ACLPolicy.Get().FindAutoApprovedIPs(req.Hostinfo.RoutableIPs, tags, &user)
 
 	var m *domain.Machine
 

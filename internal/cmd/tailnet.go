@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/bufbuild/connect-go"
 	idomain "github.com/jsiebens/ionscale/internal/domain"
+	"github.com/jsiebens/ionscale/pkg/client/ionscale"
 	"github.com/jsiebens/ionscale/pkg/defaults"
 	api "github.com/jsiebens/ionscale/pkg/gen/ionscale/v1"
 	"github.com/rodaine/table"
@@ -102,24 +103,32 @@ func createTailnetsCommand() *cobra.Command {
 	command.RunE = func(cmd *cobra.Command, args []string) error {
 
 		dnsConfig := defaults.DefaultDNSConfig()
-		aclPolicy := defaults.DefaultACLPolicy()
-		iamPolicy := &api.IAMPolicy{}
+		aclPolicy := defaults.DefaultACLPolicy().Marshal()
+		iamPolicy := "{}"
 
 		if len(domain) != 0 {
 			domainToLower := strings.ToLower(domain)
-			iamPolicy = &api.IAMPolicy{
+			m, err := json.MarshalIndent(&ionscale.IAMPolicy{
 				Filters: []string{fmt.Sprintf("domain == %s", domainToLower)},
+			}, "", "  ")
+			if err != nil {
+				return err
 			}
+			iamPolicy = string(m)
 		}
 
 		if len(email) != 0 {
 			emailToLower := strings.ToLower(email)
-			iamPolicy = &api.IAMPolicy{
+			m, err := json.MarshalIndent(&ionscale.IAMPolicy{
 				Emails: []string{emailToLower},
 				Roles: map[string]string{
 					emailToLower: string(idomain.UserRoleAdmin),
 				},
+			}, "", "  ")
+			if err != nil {
+				return err
 			}
+			iamPolicy = string(m)
 		}
 
 		resp, err := tc.Client().CreateTailnet(cmd.Context(), connect.NewRequest(&api.CreateTailnetRequest{

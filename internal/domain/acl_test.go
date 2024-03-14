@@ -3,6 +3,7 @@ package domain
 import (
 	"encoding/json"
 	"github.com/jsiebens/ionscale/internal/addr"
+	"github.com/jsiebens/ionscale/pkg/client/ionscale"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"net/netip"
@@ -15,18 +16,20 @@ func TestACLPolicy_NodeAttributesWithWildcards(t *testing.T) {
 	p1 := createMachine("john@example.com")
 
 	policy := ACLPolicy{
-		NodeAttrs: []NodeAttr{
-			{
-				Target: []string{"*"},
-				Attr: []string{
-					"attr1",
-					"attr2",
+		ionscale.ACLPolicy{
+			NodeAttrs: []ionscale.ACLNodeAttrGrant{
+				{
+					Target: []string{"*"},
+					Attr: []string{
+						"attr1",
+						"attr2",
+					},
 				},
-			},
-			{
-				Target: []string{"*"},
-				Attr: []string{
-					"attr3",
+				{
+					Target: []string{"*"},
+					Attr: []string{
+						"attr3",
+					},
 				},
 			},
 		},
@@ -46,21 +49,23 @@ func TestACLPolicy_NodeAttributesWithUserAndGroups(t *testing.T) {
 	p1 := createMachine("john@example.com")
 
 	policy := ACLPolicy{
-		Groups: map[string][]string{
-			"group:admins": []string{"john@example.com"},
-		},
-		NodeAttrs: []NodeAttr{
-			{
-				Target: []string{"john@example.com"},
-				Attr: []string{
-					"attr1",
-					"attr2",
-				},
+		ionscale.ACLPolicy{
+			Groups: map[string][]string{
+				"group:admins": []string{"john@example.com"},
 			},
-			{
-				Target: []string{"jane@example.com", "group:analytics", "group:admins"},
-				Attr: []string{
-					"attr3",
+			NodeAttrs: []ionscale.ACLNodeAttrGrant{
+				{
+					Target: []string{"john@example.com"},
+					Attr: []string{
+						"attr1",
+						"attr2",
+					},
+				},
+				{
+					Target: []string{"jane@example.com", "group:analytics", "group:admins"},
+					Attr: []string{
+						"attr3",
+					},
 				},
 			},
 		},
@@ -80,21 +85,23 @@ func TestACLPolicy_NodeAttributesWithUserAndTags(t *testing.T) {
 	p1 := createMachine("john@example.com", "tag:web")
 
 	policy := ACLPolicy{
-		Groups: map[string][]string{
-			"group:admins": []string{"john@example.com"},
-		},
-		NodeAttrs: []NodeAttr{
-			{
-				Target: []string{"john@example.com"},
-				Attr: []string{
-					"attr1",
-					"attr2",
-				},
+		ionscale.ACLPolicy{
+			Groups: map[string][]string{
+				"group:admins": []string{"john@example.com"},
 			},
-			{
-				Target: []string{"jane@example.com", "tag:web"},
-				Attr: []string{
-					"attr3",
+			NodeAttrs: []ionscale.ACLNodeAttrGrant{
+				{
+					Target: []string{"john@example.com"},
+					Attr: []string{
+						"attr1",
+						"attr2",
+					},
+				},
+				{
+					Target: []string{"jane@example.com", "tag:web"},
+					Attr: []string{
+						"attr3",
+					},
 				},
 			},
 		},
@@ -111,7 +118,9 @@ func TestACLPolicy_BuildFilterRulesEmptyACL(t *testing.T) {
 	p2 := createMachine("jane@example.com")
 
 	policy := ACLPolicy{
-		ACLs: []ACL{},
+		ionscale.ACLPolicy{
+			ACLs: []ionscale.ACLEntry{},
+		},
 	}
 
 	dst := createMachine("john@example.com")
@@ -127,11 +136,13 @@ func TestACLPolicy_BuildFilterRulesWildcards(t *testing.T) {
 	p2 := createMachine("jane@example.com")
 
 	policy := ACLPolicy{
-		ACLs: []ACL{
-			{
-				Action: "accept",
-				Src:    []string{"*"},
-				Dst:    []string{"*:*"},
+		ionscale.ACLPolicy{
+			ACLs: []ionscale.ACLEntry{
+				{
+					Action:      "accept",
+					Source:      []string{"*"},
+					Destination: []string{"*:*"},
+				},
 			},
 		},
 	}
@@ -162,17 +173,19 @@ func TestACLPolicy_BuildFilterRulesProto(t *testing.T) {
 	p2 := createMachine("jane@example.com")
 
 	policy := ACLPolicy{
-		ACLs: []ACL{
-			{
-				Action: "accept",
-				Src:    []string{"*"},
-				Dst:    []string{"*:22"},
-			},
-			{
-				Action: "accept",
-				Src:    []string{"*"},
-				Dst:    []string{"*:*"},
-				Proto:  "igmp",
+		ionscale.ACLPolicy{
+			ACLs: []ionscale.ACLEntry{
+				{
+					Action:      "accept",
+					Source:      []string{"*"},
+					Destination: []string{"*:22"},
+				},
+				{
+					Action:      "accept",
+					Source:      []string{"*"},
+					Destination: []string{"*:*"},
+					Protocol:    "igmp",
+				},
 			},
 		},
 	}
@@ -217,20 +230,22 @@ func TestACLPolicy_BuildFilterRulesWithGroups(t *testing.T) {
 	p3 := createMachine("joe@example.com")
 
 	policy := ACLPolicy{
-		Groups: map[string][]string{
-			"group:admin": []string{"jane@example.com"},
-			"group:audit": []string{"nick@example.com"},
-		},
-		ACLs: []ACL{
-			{
-				Action: "accept",
-				Src:    []string{"group:admin"},
-				Dst:    []string{"*:22"},
+		ionscale.ACLPolicy{
+			Groups: map[string][]string{
+				"group:admin": []string{"jane@example.com"},
+				"group:audit": []string{"nick@example.com"},
 			},
-			{
-				Action: "accept",
-				Src:    []string{"group:audit"},
-				Dst:    []string{"*:8000-8080"},
+			ACLs: []ionscale.ACLEntry{
+				{
+					Action:      "accept",
+					Source:      []string{"group:admin"},
+					Destination: []string{"*:22"},
+				},
+				{
+					Action:      "accept",
+					Source:      []string{"group:audit"},
+					Destination: []string{"*:8000-8080"},
+				},
 			},
 		},
 	}
@@ -280,11 +295,13 @@ func TestACLPolicy_BuildFilterRulesWithAutoGroupMembers(t *testing.T) {
 	p3 := createMachine("joe@example.com", "tag:web")
 
 	policy := ACLPolicy{
-		ACLs: []ACL{
-			{
-				Action: "accept",
-				Src:    []string{"autogroup:members"},
-				Dst:    []string{"*:22"},
+		ionscale.ACLPolicy{
+			ACLs: []ionscale.ACLEntry{
+				{
+					Action:      "accept",
+					Source:      []string{"autogroup:members"},
+					Destination: []string{"*:22"},
+				},
 			},
 		},
 	}
@@ -323,11 +340,13 @@ func TestACLPolicy_BuildFilterRulesWithAutoGroupMember(t *testing.T) {
 	p3 := createMachine("joe@example.com", "tag:web")
 
 	policy := ACLPolicy{
-		ACLs: []ACL{
-			{
-				Action: "accept",
-				Src:    []string{"autogroup:member"},
-				Dst:    []string{"*:22"},
+		ionscale.ACLPolicy{
+			ACLs: []ionscale.ACLEntry{
+				{
+					Action:      "accept",
+					Source:      []string{"autogroup:member"},
+					Destination: []string{"*:22"},
+				},
 			},
 		},
 	}
@@ -367,11 +386,13 @@ func TestACLPolicy_BuildFilterRulesWithAutoGroupTagged(t *testing.T) {
 	p3 := createMachine("joe@example.com", "tag:web")
 
 	policy := ACLPolicy{
-		ACLs: []ACL{
-			{
-				Action: "accept",
-				Src:    []string{"autogroup:tagged"},
-				Dst:    []string{"*:22"},
+		ionscale.ACLPolicy{
+			ACLs: []ionscale.ACLEntry{
+				{
+					Action:      "accept",
+					Source:      []string{"autogroup:tagged"},
+					Destination: []string{"*:22"},
+				},
 			},
 		},
 	}
@@ -408,11 +429,13 @@ func TestACLPolicy_BuildFilterRulesAutogroupSelf(t *testing.T) {
 	p2 := createMachine("jane@example.com")
 
 	policy := ACLPolicy{
-		ACLs: []ACL{
-			{
-				Action: "accept",
-				Src:    []string{"*"},
-				Dst:    []string{"autogroup:self:*"},
+		ionscale.ACLPolicy{
+			ACLs: []ionscale.ACLEntry{
+				{
+					Action:      "accept",
+					Source:      []string{"*"},
+					Destination: []string{"autogroup:self:*"},
+				},
 			},
 		},
 	}
@@ -453,11 +476,13 @@ func TestACLPolicy_BuildFilterRulesAutogroupSelfAndTags(t *testing.T) {
 	p2 := createMachine("john@example.com", "tag:web")
 
 	policy := ACLPolicy{
-		ACLs: []ACL{
-			{
-				Action: "accept",
-				Src:    []string{"*"},
-				Dst:    []string{"autogroup:self:*"},
+		ionscale.ACLPolicy{
+			ACLs: []ionscale.ACLEntry{
+				{
+					Action:      "accept",
+					Source:      []string{"*"},
+					Destination: []string{"autogroup:self:*"},
+				},
 			},
 		},
 	}
@@ -499,11 +524,13 @@ func TestACLPolicy_BuildFilterRulesAutogroupSelfAndOtherDestinations(t *testing.
 	p3 := createMachine("jane@example.com")
 
 	policy := ACLPolicy{
-		ACLs: []ACL{
-			{
-				Action: "accept",
-				Src:    []string{"*"},
-				Dst:    []string{"autogroup:self:22", "john@example.com:80"},
+		ionscale.ACLPolicy{
+			ACLs: []ionscale.ACLEntry{
+				{
+					Action:      "accept",
+					Source:      []string{"*"},
+					Destination: []string{"autogroup:self:22", "john@example.com:80"},
+				},
 			},
 		},
 	}
@@ -560,11 +587,13 @@ func TestACLPolicy_BuildFilterRulesAutogroupInternet(t *testing.T) {
 	p2 := createMachine("jane@example.com")
 
 	policy := ACLPolicy{
-		ACLs: []ACL{
-			{
-				Action: "accept",
-				Src:    []string{"nick@example.com"},
-				Dst:    []string{"autogroup:internet:*"},
+		ionscale.ACLPolicy{
+			ACLs: []ionscale.ACLEntry{
+				{
+					Action:      "accept",
+					Source:      []string{"nick@example.com"},
+					Destination: []string{"autogroup:internet:*"},
+				},
 			},
 		},
 	}
@@ -601,11 +630,13 @@ func TestACLPolicy_BuildFilterRulesAutogroupInternet(t *testing.T) {
 
 func TestWithUser(t *testing.T) {
 	policy := ACLPolicy{
-		ACLs: []ACL{
-			{
-				Action: "accept",
-				Src:    []string{"*"},
-				Dst:    []string{"john@example.com:*"},
+		ionscale.ACLPolicy{
+			ACLs: []ionscale.ACLEntry{
+				{
+					Action:      "accept",
+					Source:      []string{"*"},
+					Destination: []string{"john@example.com:*"},
+				},
 			},
 		},
 	}
@@ -618,14 +649,16 @@ func TestWithUser(t *testing.T) {
 
 func TestWithGroup(t *testing.T) {
 	policy := ACLPolicy{
-		Groups: map[string][]string{
-			"group:admin": {"john@example.com"},
-		},
-		ACLs: []ACL{
-			{
-				Action: "accept",
-				Src:    []string{"*"},
-				Dst:    []string{"group:admin:*"},
+		ionscale.ACLPolicy{
+			Groups: map[string][]string{
+				"group:admin": {"john@example.com"},
+			},
+			ACLs: []ionscale.ACLEntry{
+				{
+					Action:      "accept",
+					Source:      []string{"*"},
+					Destination: []string{"group:admin:*"},
+				},
 			},
 		},
 	}
@@ -637,11 +670,13 @@ func TestWithGroup(t *testing.T) {
 
 func TestWithTags(t *testing.T) {
 	policy := ACLPolicy{
-		ACLs: []ACL{
-			{
-				Action: "accept",
-				Src:    []string{"*"},
-				Dst:    []string{"tag:web:*"},
+		ionscale.ACLPolicy{
+			ACLs: []ionscale.ACLEntry{
+				{
+					Action:      "accept",
+					Source:      []string{"*"},
+					Destination: []string{"tag:web:*"},
+				},
 			},
 		},
 	}
@@ -657,15 +692,17 @@ func TestWithHosts(t *testing.T) {
 	dst2 := createMachine("john@example.com")
 
 	policy := ACLPolicy{
-		Hosts: map[string]string{
-			"dst1": dst1.IPv4.String(),
-		},
-		ACLs: []ACL{
+		ionscale.ACLPolicy{
+			Hosts: map[string]string{
+				"dst1": dst1.IPv4.String(),
+			},
+			ACLs: []ionscale.ACLEntry{
 
-			{
-				Action: "accept",
-				Src:    []string{"*"},
-				Dst:    []string{"dst1:*"},
+				{
+					Action:      "accept",
+					Source:      []string{"*"},
+					Destination: []string{"dst1:*"},
+				},
 			},
 		},
 	}
@@ -695,12 +732,13 @@ func createMachine(user string, tags ...string) *Machine {
 
 func TestACLPolicy_IsTagOwner(t *testing.T) {
 	policy := ACLPolicy{
-		Groups: map[string][]string{
-			"group:engineers": {"jane@example.com"},
-		},
-		TagOwners: map[string][]string{
-			"tag:web": {"john@example.com", "group:engineers"},
-		}}
+		ionscale.ACLPolicy{
+			Groups: map[string][]string{
+				"group:engineers": {"jane@example.com"},
+			},
+			TagOwners: map[string][]string{
+				"tag:web": {"john@example.com", "group:engineers"},
+			}}}
 
 	testCases := []struct {
 		name      string
@@ -780,15 +818,17 @@ func TestACLPolicy_FindAutoApprovedIPs(t *testing.T) {
 	route3 := netip.MustParsePrefix("10.162.0.0/20")
 
 	policy := ACLPolicy{
-		Groups: map[string][]string{
-			"group:admins": {"jane@example.com"},
-		},
-		AutoApprovers: &AutoApprovers{
-			Routes: map[string][]string{
-				route1.String(): {"group:admins"},
-				route2.String(): {"john@example.com", "tag:router"},
+		ionscale.ACLPolicy{
+			Groups: map[string][]string{
+				"group:admins": {"jane@example.com"},
 			},
-			ExitNode: []string{"nick@example.com"},
+			AutoApprovers: &ionscale.ACLAutoApprovers{
+				Routes: map[string][]string{
+					route1.String(): {"group:admins"},
+					route2.String(): {"john@example.com", "tag:router"},
+				},
+				ExitNode: []string{"nick@example.com"},
+			},
 		},
 	}
 
@@ -872,11 +912,13 @@ func TestACLPolicy_BuildFilterRulesWithAdvertisedRoutes(t *testing.T) {
 	p1 := createMachine("john@example.com", "tag:trusted")
 
 	policy := ACLPolicy{
-		ACLs: []ACL{
-			{
-				Action: "accept",
-				Src:    []string{"tag:trusted"},
-				Dst:    []string{"fd7a:115c:a1e0:b1a:0:1:a3c:0/120:*"},
+		ionscale.ACLPolicy{
+			ACLs: []ionscale.ACLEntry{
+				{
+					Action:      "accept",
+					Source:      []string{"tag:trusted"},
+					Destination: []string{"fd7a:115c:a1e0:b1a:0:1:a3c:0/120:*"},
+				},
 			},
 		},
 	}
@@ -911,11 +953,13 @@ func TestACLPolicy_BuildFilterRulesWildcardGrants(t *testing.T) {
 	p2 := createMachine("jane@example.com")
 
 	policy := ACLPolicy{
-		Grants: []Grant{
-			{
-				Src: []string{"*"},
-				Dst: []string{"*"},
-				IP:  ranges,
+		ionscale.ACLPolicy{
+			Grants: []ionscale.ACLGrant{
+				{
+					Source:      []string{"*"},
+					Destination: []string{"*"},
+					IP:          ranges,
+				},
 			},
 		},
 	}
@@ -955,12 +999,14 @@ func TestACLPolicy_BuildFilterRulesWithAppGrants(t *testing.T) {
 	marshal, _ := json.Marshal(mycap)
 
 	policy := ACLPolicy{
-		Grants: []Grant{
-			{
-				Src: []string{"*"},
-				Dst: []string{"*"},
-				App: map[tailcfg.PeerCapability][]tailcfg.RawMessage{
-					tailcfg.PeerCapability("localtest.me/cap/test"): {tailcfg.RawMessage(marshal)},
+		ionscale.ACLPolicy{
+			Grants: []ionscale.ACLGrant{
+				{
+					Source:      []string{"*"},
+					Destination: []string{"*"},
+					App: map[tailcfg.PeerCapability][]tailcfg.RawMessage{
+						tailcfg.PeerCapability("localtest.me/cap/test"): {tailcfg.RawMessage(marshal)},
+					},
 				},
 			},
 		},

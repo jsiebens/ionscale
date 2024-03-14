@@ -2,13 +2,11 @@ package cmd
 
 import (
 	"bytes"
-	"encoding/json"
 	"fmt"
 	"github.com/bufbuild/connect-go"
 	"github.com/jsiebens/go-edit/editor"
 	api "github.com/jsiebens/ionscale/pkg/gen/ionscale/v1"
 	"github.com/spf13/cobra"
-	"github.com/tailscale/hujson"
 	"os"
 )
 
@@ -25,12 +23,7 @@ func getIAMPolicyCommand() *cobra.Command {
 			return err
 		}
 
-		marshal, err := json.MarshalIndent(resp.Msg.Policy, "", "  ")
-		if err != nil {
-			return err
-		}
-
-		fmt.Println(string(marshal))
+		fmt.Println(resp.Msg.Policy)
 
 		return nil
 	}
@@ -53,29 +46,14 @@ func editIAMPolicyCommand() *cobra.Command {
 			return err
 		}
 
-		previous, err := json.MarshalIndent(resp.Msg.Policy, "", "  ")
-		if err != nil {
-			return err
-		}
-
-		next, s, err := edit.LaunchTempFile("ionscale", ".json", bytes.NewReader(previous))
-		if err != nil {
-			return err
-		}
-
-		next, err = hujson.Standardize(next)
+		next, s, err := edit.LaunchTempFile("ionscale", ".json", bytes.NewReader([]byte(resp.Msg.Policy)))
 		if err != nil {
 			return err
 		}
 
 		defer os.Remove(s)
 
-		var policy = &api.IAMPolicy{}
-		if err := json.Unmarshal(next, policy); err != nil {
-			return err
-		}
-
-		_, err = tc.Client().SetIAMPolicy(cmd.Context(), connect.NewRequest(&api.SetIAMPolicyRequest{TailnetId: tc.TailnetID(), Policy: policy}))
+		_, err = tc.Client().SetIAMPolicy(cmd.Context(), connect.NewRequest(&api.SetIAMPolicyRequest{TailnetId: tc.TailnetID(), Policy: string(next)}))
 		if err != nil {
 			return err
 		}
@@ -105,17 +83,7 @@ func setIAMPolicyCommand() *cobra.Command {
 			return err
 		}
 
-		rawJson, err := hujson.Standardize(content)
-		if err != nil {
-			return err
-		}
-
-		var policy = &api.IAMPolicy{}
-		if err := json.Unmarshal(rawJson, policy); err != nil {
-			return err
-		}
-
-		_, err = tc.Client().SetIAMPolicy(cmd.Context(), connect.NewRequest(&api.SetIAMPolicyRequest{TailnetId: tc.TailnetID(), Policy: policy}))
+		_, err = tc.Client().SetIAMPolicy(cmd.Context(), connect.NewRequest(&api.SetIAMPolicyRequest{TailnetId: tc.TailnetID(), Policy: string(content)}))
 		if err != nil {
 			return err
 		}

@@ -1,8 +1,8 @@
 package tests
 
 import (
+	"github.com/jsiebens/ionscale/pkg/client/ionscale"
 	"github.com/jsiebens/ionscale/pkg/defaults"
-	ionscalev1 "github.com/jsiebens/ionscale/pkg/gen/ionscale/v1"
 	"github.com/jsiebens/ionscale/tests/sc"
 	"github.com/jsiebens/ionscale/tests/tsn"
 	"github.com/stretchr/testify/require"
@@ -19,7 +19,7 @@ func TestNodeAttrs(t *testing.T) {
 		require.NoError(t, nodeA.Up(key))
 
 		policy := defaults.DefaultACLPolicy()
-		policy.Nodeattrs = []*ionscalev1.NodeAttr{
+		policy.NodeAttrs = []ionscale.ACLNodeAttrGrant{
 			{
 				Target: []string{"tag:test"},
 				Attr:   []string{"ionscale:test"},
@@ -41,10 +41,10 @@ func TestNodeAttrs_IgnoreFunnelAttr(t *testing.T) {
 		require.NoError(t, nodeA.Up(key))
 
 		policy := defaults.DefaultACLPolicy()
-		policy.Nodeattrs = []*ionscalev1.NodeAttr{
+		policy.NodeAttrs = []ionscale.ACLNodeAttrGrant{
 			{
 				Target: []string{"tag:test"},
-				Attr:   []string{"ionscale:test", string(tailcfg.NodeAttrFunnel)},
+				Attr:   []string{"ionscale:test"},
 			},
 		}
 

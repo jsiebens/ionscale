@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"github.com/bufbuild/connect-go"
 	"github.com/jsiebens/ionscale/internal/domain"
-	"github.com/jsiebens/ionscale/internal/mapping"
 	"github.com/jsiebens/ionscale/internal/util"
 	"github.com/jsiebens/ionscale/pkg/defaults"
 	api "github.com/jsiebens/ionscale/pkg/gen/ionscale/v1"
@@ -17,21 +16,13 @@ func domainTailnetToApiTailnet(tailnet *domain.Tailnet) (*api.Tailnet, error) {
 	t := &api.Tailnet{
 		Id:                          tailnet.ID,
 		Name:                        tailnet.Name,
-		IamPolicy:                   new(api.IAMPolicy),
-		AclPolicy:                   new(api.ACLPolicy),
+		IamPolicy:                   tailnet.IAMPolicy.String(),
+		AclPolicy:                   tailnet.ACLPolicy.String(),
 		DnsConfig:                   domainDNSConfigToApiDNSConfig(tailnet),
 		ServiceCollectionEnabled:    tailnet.ServiceCollectionEnabled,
 		FileSharingEnabled:          tailnet.FileSharingEnabled,
 		SshEnabled:                  tailnet.SSHEnabled,
 		MachineAuthorizationEnabled: tailnet.MachineAuthorizationEnabled,
-	}
-
-	if err := mapping.CopyViaJson(tailnet.IAMPolicy, t.IamPolicy); err != nil {
-		return nil, err
-	}
-
-	if err := mapping.CopyViaJson(tailnet.ACLPolicy, t.AclPolicy); err != nil {
-		return nil, err
 	}
 
 	return t, nil
@@ -51,12 +42,26 @@ func (s *Service) CreateTailnet(ctx context.Context, req *connect.Request[api.Cr
 		return nil, connect.NewError(connect.CodeInvalidArgument, fmt.Errorf("tailnet with name '%s' already exists", req.Msg.Name))
 	}
 
-	if req.Msg.IamPolicy == nil {
-		req.Msg.IamPolicy = defaults.DefaultIAMPolicy()
+	iamPolicy := domain.NewHuJSON(&domain.IAMPolicy{})
+	aclPolicy := domain.NewHuJSON(&domain.ACLPolicy{ACLPolicy: *defaults.DefaultACLPolicy()})
+
+	if req.Msg.IamPolicy != "" {
+		newPolicy, err := domain.ParseHuJson[domain.IAMPolicy](req.Msg.IamPolicy)
+		if err != nil {
+			return nil, connect.NewError(connect.CodeInvalidArgument, fmt.Errorf("invalid iam policy: %w", err))
+		}
+		if err := validateIamPolicy(newPolicy.Get()); err != nil {
+			return nil, connect.NewError(connect.CodeInvalidArgument, fmt.Errorf("invalid iam policy: %w", err))
+		}
+		iamPolicy = *newPolicy
 	}
 
-	if req.Msg.AclPolicy == nil {
-		req.Msg.AclPolicy = defaults.DefaultACLPolicy()
+	if req.Msg.AclPolicy != "" {
+		newPolicy, err := domain.ParseHuJson[domain.ACLPolicy](req.Msg.AclPolicy)
+		if err != nil {
+			return nil, connect.NewError(connect.CodeInvalidArgument, fmt.Errorf("invalid acl policy: %w", err))
+		}
+		aclPolicy = *newPolicy
 	}
 
 	if req.Msg.DnsConfig == nil {
@@ -66,25 +71,13 @@ func (s *Service) CreateTailnet(ctx context.Context, req *connect.Request[api.Cr
 	tailnet := &domain.Tailnet{
 		ID:                          util.NextID(),
 		Name:                        req.Msg.Name,
-		IAMPolicy:                   domain.IAMPolicy{},
-		ACLPolicy:                   domain.ACLPolicy{},
+		IAMPolicy:                   iamPolicy,
+		ACLPolicy:                   aclPolicy,
 		DNSConfig:                   apiDNSConfigToDomainDNSConfig(req.Msg.DnsConfig),
 		ServiceCollectionEnabled:    req.Msg.ServiceCollectionEnabled,
 		FileSharingEnabled:          req.Msg.FileSharingEnabled,
 		SSHEnabled:                  req.Msg.SshEnabled,
 		MachineAuthorizationEnabled: req.Msg.MachineAuthorizationEnabled,
-	}
-
-	if err := validateIamPolicy(req.Msg.IamPolicy); err != nil {
-		return nil, connect.NewError(connect.CodeInvalidArgument, fmt.Errorf("invalid iam policy: %w", err))
-	}
-
-	if err := mapping.CopyViaJson(req.Msg.IamPolicy, &tailnet.IAMPolicy); err != nil {
-		return nil, logError(err)
-	}
-
-	if err := mapping.CopyViaJson(req.Msg.AclPolicy, &tailnet.ACLPolicy); err != nil {
-		return nil, logError(err)
 	}
 
 	if err := s.repository.SaveTailnet(ctx, tailnet); err != nil {
@@ -116,22 +109,23 @@ func (s *Service) UpdateTailnet(ctx context.Context, req *connect.Request[api.Up
 		return nil, connect.NewError(connect.CodeNotFound, fmt.Errorf("tailnet not found"))
 	}
 
-	if req.Msg.IamPolicy != nil {
-		if err := validateIamPolicy(req.Msg.IamPolicy); err != nil {
+	if req.Msg.IamPolicy != "" {
+		newPolicy, err := domain.ParseHuJson[domain.IAMPolicy](req.Msg.IamPolicy)
+		if err != nil {
 			return nil, connect.NewError(connect.CodeInvalidArgument, fmt.Errorf("invalid iam policy: %w", err))
 		}
-
-		tailnet.IAMPolicy = domain.IAMPolicy{}
-		if err := mapping.CopyViaJson(req.Msg.IamPolicy, &tailnet.IAMPolicy); err != nil {
-			return nil, logError(err)
+		if err := validateIamPolicy(newPolicy.Get()); err != nil {
+			return nil, connect.NewError(connect.CodeInvalidArgument, fmt.Errorf("invalid iam policy: %w", err))
 		}
+		tailnet.IAMPolicy = *newPolicy
 	}
 
-	if req.Msg.AclPolicy != nil {
-		tailnet.ACLPolicy = domain.ACLPolicy{}
-		if err := mapping.CopyViaJson(req.Msg.AclPolicy, &tailnet.ACLPolicy); err != nil {
-			return nil, logError(err)
+	if req.Msg.AclPolicy != "" {
+		newPolicy, err := domain.ParseHuJson[domain.ACLPolicy](req.Msg.AclPolicy)
+		if err != nil {
+			return nil, connect.NewError(connect.CodeInvalidArgument, fmt.Errorf("invalid acl policy: %w", err))
 		}
+		tailnet.ACLPolicy = *newPolicy
 	}
 
 	if req.Msg.DnsConfig != nil {

@@ -9,19 +9,12 @@ message GetIAMPolicyRequest {
 }
 
 message GetIAMPolicyResponse {
-  IAMPolicy policy = 1;
+  string policy = 1;
 }
 
 message SetIAMPolicyRequest {
   uint64 tailnet_id = 1;
-  IAMPolicy policy = 2;
+  string policy = 2;
 }
 
 message SetIAMPolicyResponse {}
-
-message IAMPolicy {
-  repeated string subs = 1;
-  repeated string emails = 2;
-  repeated string filters = 3;
-  map<string, string> roles = 4;
-}

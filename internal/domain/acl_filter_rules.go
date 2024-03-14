@@ -1,6 +1,7 @@
 package domain
 
 import (
+	"github.com/jsiebens/ionscale/pkg/client/ionscale"
 	"net/netip"
 	"strings"
 	"tailscale.com/tailcfg"
@@ -12,16 +13,16 @@ func (a ACLPolicy) IsValidPeer(src *Machine, dest *Machine) bool {
 	}
 
 	for _, acl := range a.ACLs {
-		selfDestPorts, allDestPorts := a.translateDestinationAliasesToMachineNetPortRanges(acl.Dst, dest)
+		selfDestPorts, allDestPorts := a.translateDestinationAliasesToMachineNetPortRanges(acl.Destination, dest)
 		if len(selfDestPorts) != 0 {
-			for _, alias := range acl.Src {
+			for _, alias := range acl.Source {
 				if len(a.translateSourceAliasToMachineIPs(alias, src, &dest.User)) != 0 {
 					return true
 				}
 			}
 		}
 		if len(allDestPorts) != 0 {
-			for _, alias := range acl.Src {
+			for _, alias := range acl.Source {
 				if len(a.translateSourceAliasToMachineIPs(alias, src, nil)) != 0 {
 					return true
 				}
@@ -30,16 +31,16 @@ func (a ACLPolicy) IsValidPeer(src *Machine, dest *Machine) bool {
 	}
 
 	for _, grant := range a.Grants {
-		selfIps, otherIps := a.translateDestinationAliasesToMachineIPs(grant.Dst, dest)
+		selfIps, otherIps := a.translateDestinationAliasesToMachineIPs(grant.Destination, dest)
 		if len(selfIps) != 0 {
-			for _, alias := range grant.Src {
+			for _, alias := range grant.Source {
 				if len(a.translateSourceAliasToMachineIPs(alias, src, &dest.User)) != 0 {
 					return true
 				}
 			}
 		}
 		if len(otherIps) != 0 {
-			for _, alias := range grant.Src {
+			for _, alias := range grant.Source {
 				if len(a.translateSourceAliasToMachineIPs(alias, src, nil)) != 0 {
 					return true
 				}
@@ -89,23 +90,23 @@ func (a ACLPolicy) BuildFilterRules(peers []Machine, dst *Machine) []tailcfg.Fil
 
 	for _, acl := range a.ACLs {
 		self, other := a.prepareFilterRulesFromACL(dst, acl)
-		rules = matchSourceAndAppendRule(rules, acl.Src, self, &dst.User)
-		rules = matchSourceAndAppendRule(rules, acl.Src, other, nil)
+		rules = matchSourceAndAppendRule(rules, acl.Source, self, &dst.User)
+		rules = matchSourceAndAppendRule(rules, acl.Source, other, nil)
 	}
 
 	for _, acl := range a.Grants {
 		self, other := a.prepareFilterRulesFromGrant(dst, acl)
-		rules = matchSourceAndAppendRule(rules, acl.Src, self, &dst.User)
-		rules = matchSourceAndAppendRule(rules, acl.Src, other, nil)
+		rules = matchSourceAndAppendRule(rules, acl.Source, self, &dst.User)
+		rules = matchSourceAndAppendRule(rules, acl.Source, other, nil)
 	}
 
 	return rules
 }
 
-func (a ACLPolicy) prepareFilterRulesFromACL(candidate *Machine, acl ACL) ([]tailcfg.FilterRule, []tailcfg.FilterRule) {
-	proto := parseProtocol(acl.Proto)
+func (a ACLPolicy) prepareFilterRulesFromACL(candidate *Machine, acl ionscale.ACLEntry) ([]tailcfg.FilterRule, []tailcfg.FilterRule) {
+	proto := parseProtocol(acl.Protocol)
 
-	selfDstPorts, otherDstPorts := a.translateDestinationAliasesToMachineNetPortRanges(acl.Dst, candidate)
+	selfDstPorts, otherDstPorts := a.translateDestinationAliasesToMachineNetPortRanges(acl.Destination, candidate)
 
 	var selfFilterRules []tailcfg.FilterRule
 	var otherFilterRules []tailcfg.FilterRule
@@ -121,8 +122,8 @@ func (a ACLPolicy) prepareFilterRulesFromACL(candidate *Machine, acl ACL) ([]tai
 	return selfFilterRules, otherFilterRules
 }
 
-func (a ACLPolicy) prepareFilterRulesFromGrant(candidate *Machine, grant Grant) ([]tailcfg.FilterRule, []tailcfg.FilterRule) {
-	selfIPs, otherIPs := a.translateDestinationAliasesToMachineIPs(grant.Dst, candidate)
+func (a ACLPolicy) prepareFilterRulesFromGrant(candidate *Machine, grant ionscale.ACLGrant) ([]tailcfg.FilterRule, []tailcfg.FilterRule) {
+	selfIPs, otherIPs := a.translateDestinationAliasesToMachineIPs(grant.Destination, candidate)
 
 	var selfFilterRules []tailcfg.FilterRule
 	var otherFilterRules []tailcfg.FilterRule

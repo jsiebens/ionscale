@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"bytes"
-	"encoding/json"
 	"fmt"
 	"github.com/bufbuild/connect-go"
 	"github.com/jsiebens/go-edit/editor"
@@ -25,12 +24,7 @@ func getACLConfigCommand() *cobra.Command {
 			return err
 		}
 
-		marshal, err := json.MarshalIndent(resp.Msg.Policy, "", "  ")
-		if err != nil {
-			return err
-		}
-
-		fmt.Println(string(marshal))
+		fmt.Println(resp.Msg.Policy)
 
 		return nil
 	}
@@ -53,12 +47,7 @@ func editACLConfigCommand() *cobra.Command {
 			return err
 		}
 
-		previous, err := json.MarshalIndent(resp.Msg.Policy, "", "  ")
-		if err != nil {
-			return err
-		}
-
-		next, s, err := edit.LaunchTempFile("ionscale", ".json", bytes.NewReader(previous))
+		next, s, err := edit.LaunchTempFile("ionscale", ".json", bytes.NewReader([]byte(resp.Msg.Policy)))
 		if err != nil {
 			return err
 		}
@@ -70,12 +59,7 @@ func editACLConfigCommand() *cobra.Command {
 			return err
 		}
 
-		var policy = &api.ACLPolicy{}
-		if err := json.Unmarshal(next, policy); err != nil {
-			return err
-		}
-
-		_, err = tc.Client().SetACLPolicy(cmd.Context(), connect.NewRequest(&api.SetACLPolicyRequest{TailnetId: tc.TailnetID(), Policy: policy}))
+		_, err = tc.Client().SetACLPolicy(cmd.Context(), connect.NewRequest(&api.SetACLPolicyRequest{TailnetId: tc.TailnetID(), Policy: string(next)}))
 		if err != nil {
 			return err
 		}
@@ -105,17 +89,7 @@ func setACLConfigCommand() *cobra.Command {
 			return err
 		}
 
-		rawJson, err := hujson.Standardize(content)
-		if err != nil {
-			return err
-		}
-
-		var policy = &api.ACLPolicy{}
-		if err := json.Unmarshal(rawJson, policy); err != nil {
-			return err
-		}
-
-		_, err = tc.Client().SetACLPolicy(cmd.Context(), connect.NewRequest(&api.SetACLPolicyRequest{TailnetId: tc.TailnetID(), Policy: policy}))
+		_, err = tc.Client().SetACLPolicy(cmd.Context(), connect.NewRequest(&api.SetACLPolicyRequest{TailnetId: tc.TailnetID(), Policy: string(content)}))
 		if err != nil {
 			return err
 		}

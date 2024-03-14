@@ -64,7 +64,7 @@ func exchangeToken(ctx context.Context, systemAdminKey *key.ServerPrivate, repos
 	if err == nil && apiKey != nil {
 		user := apiKey.User
 		tailnet := apiKey.Tailnet
-		role := tailnet.IAMPolicy.GetRole(user)
+		role := tailnet.IAMPolicy.Get().GetRole(user)
 
 		return &domain.Principal{User: &apiKey.User, SystemRole: domain.SystemRoleNone, UserRole: role}
 	}

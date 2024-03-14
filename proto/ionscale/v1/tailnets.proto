@@ -11,8 +11,8 @@ option go_package = "github.com/jsiebens/ionscale/pkg/gen/ionscale/v1;ionscalev1
 message Tailnet {
   uint64 id = 1;
   string name = 2;
-  IAMPolicy iam_policy = 3;
-  ACLPolicy acl_policy = 4;
+  string iam_policy = 3;
+  string acl_policy = 4;
   DNSConfig dns_config = 5;
 
   bool service_collection_enabled = 6;
@@ -23,8 +23,8 @@ message Tailnet {
 
 message CreateTailnetRequest {
   string name = 1;
-  IAMPolicy iam_policy = 2;
-  ACLPolicy acl_policy = 3;
+  string iam_policy = 2;
+  string acl_policy = 3;
   DNSConfig dns_config = 4;
 
   bool service_collection_enabled = 5;
@@ -39,8 +39,8 @@ message CreateTailnetResponse {
 
 message UpdateTailnetRequest {
   uint64 tailnet_id = 1;
-  IAMPolicy iam_policy = 2;
-  ACLPolicy acl_policy = 3;
+  string iam_policy = 2;
+  string acl_policy = 3;
   DNSConfig dns_config = 4;
 
   bool service_collection_enabled = 5;
