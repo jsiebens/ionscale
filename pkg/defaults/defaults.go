@@ -1,29 +1,32 @@
 package defaults
 
-import ionscalev1 "github.com/jsiebens/ionscale/pkg/gen/ionscale/v1"
+import (
+	"github.com/jsiebens/ionscale/pkg/client/ionscale"
+	ionscalev1 "github.com/jsiebens/ionscale/pkg/gen/ionscale/v1"
+)
 
-func DefaultACLPolicy() *ionscalev1.ACLPolicy {
-	return &ionscalev1.ACLPolicy{
-		Acls: []*ionscalev1.ACL{
+func DefaultIAMPolicy() *ionscale.IAMPolicy {
+	return &ionscale.IAMPolicy{}
+}
+
+func DefaultACLPolicy() *ionscale.ACLPolicy {
+	return &ionscale.ACLPolicy{
+		ACLs: []ionscale.ACLEntry{
 			{
-				Action: "accept",
-				Src:    []string{"*"},
-				Dst:    []string{"*:*"},
+				Action:      "accept",
+				Source:      []string{"*"},
+				Destination: []string{"*:*"},
 			},
 		},
-		Ssh: []*ionscalev1.SSHRule{
+		SSH: []ionscale.ACLSSH{
 			{
-				Action: "check",
-				Src:    []string{"autogroup:member"},
-				Dst:    []string{"autogroup:self"},
-				Users:  []string{"autogroup:nonroot", "root"},
+				Action:      "check",
+				Source:      []string{"autogroup:member"},
+				Destination: []string{"autogroup:self"},
+				Users:       []string{"autogroup:nonroot", "root"},
 			},
 		},
 	}
-}
-
-func DefaultIAMPolicy() *ionscalev1.IAMPolicy {
-	return &ionscalev1.IAMPolicy{}
 }
 
 func DefaultDNSConfig() *ionscalev1.DNSConfig {

@@ -447,7 +447,7 @@ func (h *AuthenticationHandlers) endMachineRegistrationFlow(c echo.Context, form
 		ephemeral = false
 	}
 
-	if err := tailnet.ACLPolicy.CheckTagOwners(registrationRequest.Data.Hostinfo.RequestTags, user); err != nil {
+	if err := tailnet.ACLPolicy.Get().CheckTagOwners(registrationRequest.Data.Hostinfo.RequestTags, user); err != nil {
 		registrationRequest.Authenticated = false
 		registrationRequest.Error = err.Error()
 		if err := h.repository.SaveRegistrationRequest(ctx, registrationRequest); err != nil {
@@ -456,7 +456,7 @@ func (h *AuthenticationHandlers) endMachineRegistrationFlow(c echo.Context, form
 		return c.Redirect(http.StatusFound, "/a/error?e=nto")
 	}
 
-	autoAllowIPs := tailnet.ACLPolicy.FindAutoApprovedIPs(req.Hostinfo.RoutableIPs, tags, user)
+	autoAllowIPs := tailnet.ACLPolicy.Get().FindAutoApprovedIPs(req.Hostinfo.RoutableIPs, tags, user)
 
 	var m *domain.Machine
 
@@ -573,7 +573,7 @@ func (h *AuthenticationHandlers) listAvailableTailnets(ctx context.Context, u *a
 		return nil, err
 	}
 	for _, t := range tailnets {
-		approved, err := t.IAMPolicy.EvaluatePolicy(&domain.Identity{UserID: u.ID, Email: u.Name, Attr: u.Attr})
+		approved, err := t.IAMPolicy.Get().EvaluatePolicy(&domain.Identity{UserID: u.ID, Email: u.Name, Attr: u.Attr})
 		if err != nil {
 			return nil, err
 		}

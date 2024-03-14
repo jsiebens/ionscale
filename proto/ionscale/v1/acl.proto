@@ -2,8 +2,6 @@ syntax = "proto3";
 
 package ionscale.v1;
 
-import "google/protobuf/struct.proto";
-
 option go_package = "github.com/jsiebens/ionscale/pkg/gen/ionscale/v1;ionscalev1";
 
 message GetACLPolicyRequest {
@@ -11,55 +9,12 @@ message GetACLPolicyRequest {
 }
 
 message GetACLPolicyResponse {
-  ACLPolicy policy = 1;
+  string policy = 1;
 }
 
 message SetACLPolicyRequest {
   uint64 tailnet_id = 1;
-  ACLPolicy policy = 2;
+  string policy = 2;
 }
 
 message SetACLPolicyResponse {}
-
-message ACLPolicy {
-  map<string, string> hosts = 1;
-  map<string, google.protobuf.ListValue> groups = 2;
-  repeated ACL acls = 3;
-  map<string, google.protobuf.ListValue> tagowners = 4;
-  optional AutoApprovers autoapprovers = 5;
-  repeated SSHRule ssh = 6;
-  repeated NodeAttr nodeattrs = 7;
-  repeated ACLGrant grants = 8;
-}
-
-message ACL {
-  string action = 1;
-  repeated string src = 2;
-  repeated string dst = 3;
-  string proto = 4;
-}
-
-message AutoApprovers {
-  map<string, google.protobuf.ListValue> routes = 1;
-  repeated string exitnode = 2;
-}
-
-message SSHRule {
-  string action = 1;
-  repeated string src = 2;
-  repeated string dst = 3;
-  repeated string users = 4;
-  string checkperiod = 5;
-}
-
-message NodeAttr {
-  repeated string target = 1;
-  repeated string attr = 2;
-}
-
-message ACLGrant {
-  repeated string src = 1;
-  repeated string dst = 2;
-  repeated string ip = 3;
-  map<string, google.protobuf.ListValue> app = 4;
-}

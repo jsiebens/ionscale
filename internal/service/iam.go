@@ -22,14 +22,7 @@ func (s *Service) GetIAMPolicy(ctx context.Context, req *connect.Request[api.Get
 		return nil, connect.NewError(connect.CodeNotFound, fmt.Errorf("tailnet does not exist"))
 	}
 
-	policy := &api.IAMPolicy{
-		Subs:    tailnet.IAMPolicy.Subs,
-		Emails:  tailnet.IAMPolicy.Emails,
-		Filters: tailnet.IAMPolicy.Filters,
-		Roles:   domainRolesMapToApiRolesMap(tailnet.IAMPolicy.Roles),
-	}
-
-	return connect.NewResponse(&api.GetIAMPolicyResponse{Policy: policy}), nil
+	return connect.NewResponse(&api.GetIAMPolicyResponse{Policy: tailnet.IAMPolicy.String()}), nil
 }
 
 func (s *Service) SetIAMPolicy(ctx context.Context, req *connect.Request[api.SetIAMPolicyRequest]) (*connect.Response[api.SetIAMPolicyResponse], error) {
@@ -46,43 +39,25 @@ func (s *Service) SetIAMPolicy(ctx context.Context, req *connect.Request[api.Set
 		return nil, connect.NewError(connect.CodeNotFound, fmt.Errorf("tailnet does not exist"))
 	}
 
-	if err := validateIamPolicy(req.Msg.Policy); err != nil {
+	newPolicy, err := domain.ParseHuJson[domain.IAMPolicy](req.Msg.Policy)
+	if err != nil {
+		return nil, connect.NewError(connect.CodeInvalidArgument, fmt.Errorf("invalid iam policy: %w", err))
+	}
+
+	if err := validateIamPolicy(newPolicy.Get()); err != nil {
 		return nil, connect.NewError(connect.CodeInvalidArgument, fmt.Errorf("invalid iam policy: %w", err))
 	}
 
 	oldPolicy := tailnet.IAMPolicy
-	newPolicy := domain.IAMPolicy{
-		Subs:    req.Msg.Policy.Subs,
-		Emails:  req.Msg.Policy.Emails,
-		Filters: req.Msg.Policy.Filters,
-		Roles:   apiRolesMapToDomainRolesMap(req.Msg.Policy.Roles),
-	}
-
-	if oldPolicy.Equal(&newPolicy) {
+	if oldPolicy.Equal(newPolicy) {
 		return connect.NewResponse(&api.SetIAMPolicyResponse{}), nil
 	}
 
-	tailnet.IAMPolicy = newPolicy
+	tailnet.IAMPolicy = *newPolicy
 
 	if err := s.repository.SaveTailnet(ctx, tailnet); err != nil {
 		return nil, logError(err)
 	}
 
 	return connect.NewResponse(&api.SetIAMPolicyResponse{}), nil
-}
-
-func apiRolesMapToDomainRolesMap(values map[string]string) map[string]domain.UserRole {
-	var result = map[string]domain.UserRole{}
-	for k, v := range values {
-		result[k] = domain.UserRole(v)
-	}
-	return result
-}
-
-func domainRolesMapToApiRolesMap(values map[string]domain.UserRole) map[string]string {
-	var result = map[string]string{}
-	for k, v := range values {
-		result[k] = string(v)
-	}
-	return result
 }

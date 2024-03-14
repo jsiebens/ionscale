@@ -85,7 +85,7 @@ func ToDNSConfig(m *domain.Machine, tailnet *domain.Tailnet, c *domain.DNSConfig
 }
 
 func ToNode(capVer tailcfg.CapabilityVersion, m *domain.Machine, tailnet *domain.Tailnet, taggedDevicesUser *domain.User, peer bool, connected bool, routeFilter func(m *domain.Machine) []netip.Prefix) (*tailcfg.Node, *tailcfg.UserProfile, error) {
-	role := tailnet.IAMPolicy.GetRole(m.User)
+	role := tailnet.IAMPolicy.Get().GetRole(m.User)
 
 	nKey, err := util.ParseNodePublicKey(m.NodeKey)
 	if err != nil {
@@ -179,7 +179,7 @@ func ToNode(capVer tailcfg.CapabilityVersion, m *domain.Machine, tailnet *domain
 		var capabilities []tailcfg.NodeCapability
 		capMap := make(tailcfg.NodeCapMap)
 
-		for _, c := range tailnet.ACLPolicy.NodeCapabilities(m) {
+		for _, c := range tailnet.ACLPolicy.Get().NodeCapabilities(m) {
 			capabilities = append(capabilities, c)
 			capMap[c] = []tailcfg.RawMessage{}
 		}

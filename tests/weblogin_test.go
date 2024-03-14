@@ -1,12 +1,11 @@
 package tests
 
 import (
+	"github.com/jsiebens/ionscale/pkg/client/ionscale"
 	"github.com/jsiebens/ionscale/pkg/defaults"
-	api "github.com/jsiebens/ionscale/pkg/gen/ionscale/v1"
 	"github.com/jsiebens/ionscale/tests/sc"
 	"github.com/jsiebens/ionscale/tests/tsn"
 	"github.com/stretchr/testify/require"
-	"google.golang.org/protobuf/types/known/structpb"
 	"net/http"
 	"tailscale.com/tailcfg"
 	"testing"
@@ -30,7 +29,7 @@ func TestWebLoginWithDomainFilterInIAMPolicy(t *testing.T) {
 		s.PushOIDCUser("124", "jane@localtest.me", "jane")
 
 		tailnet := s.CreateTailnet()
-		s.SetIAMPolicy(tailnet.Id, &api.IAMPolicy{Filters: []string{"domain == localtest.me"}})
+		s.SetIAMPolicy(tailnet.Id, &ionscale.IAMPolicy{Filters: []string{"domain == localtest.me"}})
 
 		john := newTailscaleNodeAndLoginWithOIDC(t, s, "john@localtest.me")
 		jane := newTailscaleNodeAndLoginWithOIDC(t, s, "jane@localtest.me")
@@ -49,7 +48,7 @@ func TestWebLoginWithSubsAndEmailsInIAMPolicy(t *testing.T) {
 		s.PushOIDCUser("124", "jane@localtest.me", "jane")
 
 		tailnet := s.CreateTailnet()
-		s.SetIAMPolicy(tailnet.Id, &api.IAMPolicy{Subs: []string{"123"}, Emails: []string{"jane@localtest.me"}})
+		s.SetIAMPolicy(tailnet.Id, &ionscale.IAMPolicy{Subs: []string{"123"}, Emails: []string{"jane@localtest.me"}})
 
 		john := newTailscaleNodeAndLoginWithOIDC(t, s, "john@localtest.me")
 		jane := newTailscaleNodeAndLoginWithOIDC(t, s, "jane@localtest.me")
@@ -65,7 +64,7 @@ func TestWebLoginWithUserAsTailnetAdmin(t *testing.T) {
 		s.PushOIDCUser("124", "jane@localtest.me", "jane")
 
 		tailnet := s.CreateTailnet()
-		s.SetIAMPolicy(tailnet.Id, &api.IAMPolicy{
+		s.SetIAMPolicy(tailnet.Id, &ionscale.IAMPolicy{
 			Filters: []string{"domain == localtest.me"},
 			Roles:   map[string]string{"john@localtest.me": "admin"},
 		})
@@ -83,7 +82,7 @@ func TestWebLoginWhenNotAuthorizedForAnyTailnet(t *testing.T) {
 		s.PushOIDCUser("124", "jane@localtest.me", "jane")
 
 		tailnet := s.CreateTailnet()
-		s.SetIAMPolicy(tailnet.Id, &api.IAMPolicy{
+		s.SetIAMPolicy(tailnet.Id, &ionscale.IAMPolicy{
 			Subs: []string{"123"},
 		})
 
@@ -99,7 +98,7 @@ func TestWebLoginWhenInvalidTagOwner(t *testing.T) {
 		s.PushOIDCUser("124", "jane@localtest.me", "jane")
 
 		tailnet := s.CreateTailnet()
-		s.SetIAMPolicy(tailnet.Id, &api.IAMPolicy{
+		s.SetIAMPolicy(tailnet.Id, &ionscale.IAMPolicy{
 			Subs: []string{"124"},
 		})
 
@@ -114,17 +113,14 @@ func TestWebLoginAsTagOwner(t *testing.T) {
 	sc.Run(t, func(s *sc.Scenario) {
 		s.PushOIDCUser("124", "jane@localtest.me", "jane")
 
-		owners, err := structpb.NewList([]interface{}{"jane@localtest.me"})
-		require.NoError(t, err)
-
 		aclPolicy := defaults.DefaultACLPolicy()
-		aclPolicy.Tagowners = map[string]*structpb.ListValue{
-			"tag:localtest": owners,
+		aclPolicy.TagOwners = map[string][]string{
+			"tag:localtest": {"jane@localtest.me"},
 		}
 
 		tailnet := s.CreateTailnet()
 		s.SetACLPolicy(tailnet.Id, aclPolicy)
-		s.SetIAMPolicy(tailnet.Id, &api.IAMPolicy{
+		s.SetIAMPolicy(tailnet.Id, &ionscale.IAMPolicy{
 			Subs: []string{"124"},
 		})
 
@@ -137,7 +133,7 @@ func TestWebLoginWithMachineAuthorizationRequired(t *testing.T) {
 		s.PushOIDCUser("123", "john@localtest.me", "john")
 
 		tailnet := s.CreateTailnet()
-		s.SetIAMPolicy(tailnet.Id, &api.IAMPolicy{Filters: []string{"domain == localtest.me"}})
+		s.SetIAMPolicy(tailnet.Id, &ionscale.IAMPolicy{Filters: []string{"domain == localtest.me"}})
 		s.EnableMachineAutorization(tailnet.Id)
 
 		node := newTailscaleNodeAndLoginWithOIDC(t, s, "john@localtest.me")

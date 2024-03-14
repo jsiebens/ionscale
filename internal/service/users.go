@@ -34,7 +34,7 @@ func (s *Service) ListUsers(ctx context.Context, req *connect.Request[api.ListUs
 		resp.Users = append(resp.Users, &api.User{
 			Id:   u.ID,
 			Name: u.Name,
-			Role: string(tailnet.IAMPolicy.GetRole(u)),
+			Role: string(tailnet.IAMPolicy.Get().GetRole(u)),
 		})
 	}
 

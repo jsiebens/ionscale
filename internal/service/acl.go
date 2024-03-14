@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/bufbuild/connect-go"
 	"github.com/jsiebens/ionscale/internal/domain"
-	"github.com/jsiebens/ionscale/internal/mapping"
 	api "github.com/jsiebens/ionscale/pkg/gen/ionscale/v1"
 )
 
@@ -23,12 +22,7 @@ func (s *Service) GetACLPolicy(ctx context.Context, req *connect.Request[api.Get
 		return nil, connect.NewError(connect.CodeNotFound, fmt.Errorf("tailnet does not exist"))
 	}
 
-	var policy api.ACLPolicy
-	if err := mapping.CopyViaJson(&tailnet.ACLPolicy, &policy); err != nil {
-		return nil, logError(err)
-	}
-
-	return connect.NewResponse(&api.GetACLPolicyResponse{Policy: &policy}), nil
+	return connect.NewResponse(&api.GetACLPolicyResponse{Policy: tailnet.ACLPolicy.String()}), nil
 }
 
 func (s *Service) SetACLPolicy(ctx context.Context, req *connect.Request[api.SetACLPolicyRequest]) (*connect.Response[api.SetACLPolicyResponse], error) {
@@ -45,17 +39,18 @@ func (s *Service) SetACLPolicy(ctx context.Context, req *connect.Request[api.Set
 		return nil, connect.NewError(connect.CodeNotFound, fmt.Errorf("tailnet does not exist"))
 	}
 
-	oldPolicy := tailnet.ACLPolicy
-	var newPolicy domain.ACLPolicy
-	if err := mapping.CopyViaJson(req.Msg.Policy, &newPolicy); err != nil {
-		return nil, logError(err)
+	newPolicy, err := domain.ParseHuJson[domain.ACLPolicy](req.Msg.Policy)
+	if err != nil {
+		return nil, connect.NewError(connect.CodeInvalidArgument, fmt.Errorf("invalid acl policy: %w", err))
 	}
 
-	if oldPolicy.Equal(&newPolicy) {
+	oldPolicy := tailnet.ACLPolicy
+	if oldPolicy.Equal(newPolicy) {
 		return connect.NewResponse(&api.SetACLPolicyResponse{}), nil
 	}
 
-	tailnet.ACLPolicy = newPolicy
+	tailnet.ACLPolicy = *newPolicy
+
 	if err := s.repository.SaveTailnet(ctx, tailnet); err != nil {
 		return nil, logError(err)
 	}

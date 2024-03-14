@@ -1,6 +1,7 @@
 package domain
 
 import (
+	"github.com/jsiebens/ionscale/pkg/client/ionscale"
 	"strings"
 	"tailscale.com/tailcfg"
 )
@@ -28,7 +29,7 @@ func (a ACLPolicy) BuildSSHPolicy(srcs []Machine, dst *Machine) *tailcfg.SSHPoli
 		return result
 	}
 
-	for _, rule := range a.SSHRules {
+	for _, rule := range a.SSH {
 		if rule.Action != "accept" && rule.Action != "check" {
 			continue
 		}
@@ -48,7 +49,7 @@ func (a ACLPolicy) BuildSSHPolicy(srcs []Machine, dst *Machine) *tailcfg.SSHPoli
 		selfUsers, otherUsers := a.expandSSHDstToSSHUsers(dst, rule)
 
 		if len(selfUsers) != 0 {
-			principals := expandSrcAliases(rule.Src, rule.Action, &dst.User)
+			principals := expandSrcAliases(rule.Source, rule.Action, &dst.User)
 			if len(principals) != 0 {
 				rules = append(rules, &tailcfg.SSHRule{
 					Principals: principals,
@@ -59,7 +60,7 @@ func (a ACLPolicy) BuildSSHPolicy(srcs []Machine, dst *Machine) *tailcfg.SSHPoli
 		}
 
 		if len(otherUsers) != 0 {
-			principals := expandSrcAliases(rule.Src, rule.Action, nil)
+			principals := expandSrcAliases(rule.Source, rule.Action, nil)
 			if len(principals) != 0 {
 				rules = append(rules, &tailcfg.SSHRule{
 					Principals: principals,
@@ -113,13 +114,13 @@ func (a ACLPolicy) expandSSHSrcAlias(m *Machine, alias string, dstUser *User) []
 	return []string{}
 }
 
-func (a ACLPolicy) expandSSHDstToSSHUsers(m *Machine, rule SSHRule) (map[string]string, map[string]string) {
+func (a ACLPolicy) expandSSHDstToSSHUsers(m *Machine, rule ionscale.ACLSSH) (map[string]string, map[string]string) {
 	users := buildSSHUsers(rule.Users)
 
 	var selfUsers map[string]string
 	var otherUsers map[string]string
 
-	for _, d := range rule.Dst {
+	for _, d := range rule.Destination {
 		if strings.HasPrefix(d, "tag:") && m.HasTag(d) {
 			otherUsers = users
 		}

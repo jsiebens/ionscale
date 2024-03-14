@@ -1,7 +1,7 @@
 package tests
 
 import (
-	api "github.com/jsiebens/ionscale/pkg/gen/ionscale/v1"
+	"github.com/jsiebens/ionscale/pkg/client/ionscale"
 	"github.com/jsiebens/ionscale/tests/sc"
 	"github.com/jsiebens/ionscale/tests/tsn"
 	"github.com/stretchr/testify/require"
@@ -15,7 +15,7 @@ func TestSwitchAccounts(t *testing.T) {
 		s.PushOIDCUser("124", "jane@localtest.me", "jane")
 
 		tailnet := s.CreateTailnet()
-		s.SetIAMPolicy(tailnet.Id, &api.IAMPolicy{Filters: []string{"domain == localtest.me"}})
+		s.SetIAMPolicy(tailnet.Id, &ionscale.IAMPolicy{Filters: []string{"domain == localtest.me"}})
 
 		node := s.NewTailscaleNode(sc.WithName("switch"))
 

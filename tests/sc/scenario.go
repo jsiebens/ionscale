@@ -85,13 +85,13 @@ func (s *Scenario) ExpireMachines(tailnetID uint64) {
 	}
 }
 
-func (s *Scenario) SetACLPolicy(tailnetID uint64, policy *api.ACLPolicy) {
-	_, err := s.ionscaleClient.SetACLPolicy(context.Background(), connect.NewRequest(&api.SetACLPolicyRequest{TailnetId: tailnetID, Policy: policy}))
+func (s *Scenario) SetACLPolicy(tailnetID uint64, policy *ionscaleclt.ACLPolicy) {
+	_, err := s.ionscaleClient.SetACLPolicy(context.Background(), connect.NewRequest(&api.SetACLPolicyRequest{TailnetId: tailnetID, Policy: policy.Marshal()}))
 	require.NoError(s.t, err)
 }
 
-func (s *Scenario) SetIAMPolicy(tailnetID uint64, policy *api.IAMPolicy) {
-	_, err := s.ionscaleClient.SetIAMPolicy(context.Background(), connect.NewRequest(&api.SetIAMPolicyRequest{TailnetId: tailnetID, Policy: policy}))
+func (s *Scenario) SetIAMPolicy(tailnetID uint64, policy *ionscaleclt.IAMPolicy) {
+	_, err := s.ionscaleClient.SetIAMPolicy(context.Background(), connect.NewRequest(&api.SetIAMPolicyRequest{TailnetId: tailnetID, Policy: policy.Marshal()}))
 	require.NoError(s.t, err)
 }
 

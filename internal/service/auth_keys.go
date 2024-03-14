@@ -135,7 +135,7 @@ func (s *Service) CreateAuthKey(ctx context.Context, req *connect.Request[api.Cr
 	}
 
 	if !principal.IsSystemAdmin() {
-		if err := tailnet.ACLPolicy.CheckTagOwners(req.Msg.Tags, principal.User); err != nil {
+		if err := tailnet.ACLPolicy.Get().CheckTagOwners(req.Msg.Tags, principal.User); err != nil {
 			return nil, connect.NewError(connect.CodeInvalidArgument, err)
 		}
 	}

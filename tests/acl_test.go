@@ -1,8 +1,8 @@
 package tests
 
 import (
+	"github.com/jsiebens/ionscale/pkg/client/ionscale"
 	"github.com/jsiebens/ionscale/pkg/defaults"
-	ionscalev1 "github.com/jsiebens/ionscale/pkg/gen/ionscale/v1"
 	"github.com/jsiebens/ionscale/tests/sc"
 	"github.com/jsiebens/ionscale/tests/tsn"
 	"github.com/stretchr/testify/require"
@@ -25,11 +25,11 @@ func TestACL_PeersShouldBeRemovedWhenNoMatchingACLRuleIsAvailable(t *testing.T) 
 		require.NoError(t, server.WaitFor(tsn.PeerCount(2)))
 
 		policy := defaults.DefaultACLPolicy()
-		policy.Acls = []*ionscalev1.ACL{
+		policy.ACLs = []ionscale.ACLEntry{
 			{
-				Action: "accept",
-				Src:    []string{"tag:server"},
-				Dst:    []string{"tag:server:*"},
+				Action:      "accept",
+				Source:      []string{"tag:server"},
+				Destination: []string{"tag:server:*"},
 			},
 		}
 

@@ -3,6 +3,7 @@ package domain
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/jsiebens/ionscale/pkg/client/ionscale"
 	"github.com/stretchr/testify/assert"
 	"tailscale.com/tailcfg"
 	"testing"
@@ -13,12 +14,14 @@ func TestACLPolicy_BuildSSHPolicy_(t *testing.T) {
 	p2 := createMachine("jane@example.com")
 
 	policy := ACLPolicy{
-		SSHRules: []SSHRule{
-			{
-				Action: "accept",
-				Src:    []string{"autogroup:members"},
-				Dst:    []string{"autogroup:self"},
-				Users:  []string{"autogroup:nonroot"},
+		ionscale.ACLPolicy{
+			SSH: []ionscale.ACLSSH{
+				{
+					Action:      "accept",
+					Source:      []string{"autogroup:members"},
+					Destination: []string{"autogroup:self"},
+					Users:       []string{"autogroup:nonroot"},
+				},
 			},
 		},
 	}
@@ -52,17 +55,19 @@ func TestACLPolicy_BuildSSHPolicy_WithGroup(t *testing.T) {
 	p2 := createMachine("jane@example.com")
 
 	policy := ACLPolicy{
-		Groups: map[string][]string{
-			"group:sre": {
-				"john@example.com",
+		ionscale.ACLPolicy{
+			Groups: map[string][]string{
+				"group:sre": {
+					"john@example.com",
+				},
 			},
-		},
-		SSHRules: []SSHRule{
-			{
-				Action: "accept",
-				Src:    []string{"group:sre"},
-				Dst:    []string{"tag:web"},
-				Users:  []string{"autogroup:nonroot", "root"},
+			SSH: []ionscale.ACLSSH{
+				{
+					Action:      "accept",
+					Source:      []string{"group:sre"},
+					Destination: []string{"tag:web"},
+					Users:       []string{"autogroup:nonroot", "root"},
+				},
 			},
 		},
 	}
@@ -96,12 +101,14 @@ func TestACLPolicy_BuildSSHPolicy_WithMatchingUsers(t *testing.T) {
 	p2 := createMachine("jane@example.com")
 
 	policy := ACLPolicy{
-		SSHRules: []SSHRule{
-			{
-				Action: "accept",
-				Src:    []string{"john@example.com"},
-				Dst:    []string{"john@example.com"},
-				Users:  []string{"autogroup:nonroot", "root"},
+		ionscale.ACLPolicy{
+			SSH: []ionscale.ACLSSH{
+				{
+					Action:      "accept",
+					Source:      []string{"john@example.com"},
+					Destination: []string{"john@example.com"},
+					Users:       []string{"autogroup:nonroot", "root"},
+				},
 			},
 		},
 	}
@@ -132,15 +139,17 @@ func TestACLPolicy_BuildSSHPolicy_WithMatchingUsersInGroup(t *testing.T) {
 	p2 := createMachine("jane@example.com")
 
 	policy := ACLPolicy{
-		Groups: map[string][]string{
-			"group:sre": {"jane@example.com", "john@example.com"},
-		},
-		SSHRules: []SSHRule{
-			{
-				Action: "accept",
-				Src:    []string{"group:sre"},
-				Dst:    []string{"john@example.com"},
-				Users:  []string{"autogroup:nonroot", "root"},
+		ionscale.ACLPolicy{
+			Groups: map[string][]string{
+				"group:sre": {"jane@example.com", "john@example.com"},
+			},
+			SSH: []ionscale.ACLSSH{
+				{
+					Action:      "accept",
+					Source:      []string{"group:sre"},
+					Destination: []string{"john@example.com"},
+					Users:       []string{"autogroup:nonroot", "root"},
+				},
 			},
 		},
 	}
@@ -171,12 +180,14 @@ func TestACLPolicy_BuildSSHPolicy_WithNoMatchingUsers(t *testing.T) {
 	p2 := createMachine("jane@example.com")
 
 	policy := ACLPolicy{
-		SSHRules: []SSHRule{
-			{
-				Action: "accept",
-				Src:    []string{"jane@example.com"},
-				Dst:    []string{"john@example.com"},
-				Users:  []string{"autogroup:nonroot", "root"},
+		ionscale.ACLPolicy{
+			SSH: []ionscale.ACLSSH{
+				{
+					Action:      "accept",
+					Source:      []string{"jane@example.com"},
+					Destination: []string{"john@example.com"},
+					Users:       []string{"autogroup:nonroot", "root"},
+				},
 			},
 		},
 	}
@@ -194,12 +205,14 @@ func TestACLPolicy_BuildSSHPolicy_WithTags(t *testing.T) {
 	p3 := createMachine("nick@example.com", "tag:web")
 
 	policy := ACLPolicy{
-		SSHRules: []SSHRule{
-			{
-				Action: "accept",
-				Src:    []string{"john@example.com", "tag:web"},
-				Dst:    []string{"tag:web"},
-				Users:  []string{"ubuntu"},
+		ionscale.ACLPolicy{
+			SSH: []ionscale.ACLSSH{
+				{
+					Action:      "accept",
+					Source:      []string{"john@example.com", "tag:web"},
+					Destination: []string{"tag:web"},
+					Users:       []string{"ubuntu"},
+				},
 			},
 		},
 	}
@@ -230,12 +243,14 @@ func TestACLPolicy_BuildSSHPolicy_WithTagsInDstAndAutogroupMemberInSrc(t *testin
 	p3 := createMachine("nick@example.com", "tag:web")
 
 	policy := ACLPolicy{
-		SSHRules: []SSHRule{
-			{
-				Action: "accept",
-				Src:    []string{"autogroup:members"},
-				Dst:    []string{"tag:web"},
-				Users:  []string{"ubuntu"},
+		ionscale.ACLPolicy{
+			SSH: []ionscale.ACLSSH{
+				{
+					Action:      "accept",
+					Source:      []string{"autogroup:members"},
+					Destination: []string{"tag:web"},
+					Users:       []string{"ubuntu"},
+				},
 			},
 		},
 	}
@@ -265,12 +280,14 @@ func TestACLPolicy_BuildSSHPolicy_WithUserInDstAndNonMatchingSrc(t *testing.T) {
 	p2 := createMachine("jane@example.com")
 
 	policy := ACLPolicy{
-		SSHRules: []SSHRule{
-			{
-				Action: "accept",
-				Src:    []string{"jane@example.com"},
-				Dst:    []string{"john@example.com"},
-				Users:  []string{"autogroup:nonroot"},
+		ionscale.ACLPolicy{
+			SSH: []ionscale.ACLSSH{
+				{
+					Action:      "accept",
+					Source:      []string{"jane@example.com"},
+					Destination: []string{"john@example.com"},
+					Users:       []string{"autogroup:nonroot"},
+				},
 			},
 		},
 	}
@@ -287,12 +304,14 @@ func TestACLPolicy_BuildSSHPolicy_WithUserInDstAndAutogroupMembersSrc(t *testing
 	p2 := createMachine("jane@example.com")
 
 	policy := ACLPolicy{
-		SSHRules: []SSHRule{
-			{
-				Action: "accept",
-				Src:    []string{"autogroup:members"},
-				Dst:    []string{"john@example.com"},
-				Users:  []string{"autogroup:nonroot"},
+		ionscale.ACLPolicy{
+			SSH: []ionscale.ACLSSH{
+				{
+					Action:      "accept",
+					Source:      []string{"autogroup:members"},
+					Destination: []string{"john@example.com"},
+					Users:       []string{"autogroup:nonroot"},
+				},
 			},
 		},
 	}
@@ -323,12 +342,14 @@ func TestACLPolicy_BuildSSHPolicy_WithAutogroupSelfAndTagSrc(t *testing.T) {
 	p2 := createMachine("jane@example.com", "tag:web")
 
 	policy := ACLPolicy{
-		SSHRules: []SSHRule{
-			{
-				Action: "accept",
-				Src:    []string{"tag:web"},
-				Dst:    []string{"autogroup:self"},
-				Users:  []string{"autogroup:nonroot"},
+		ionscale.ACLPolicy{
+			SSH: []ionscale.ACLSSH{
+				{
+					Action:      "accept",
+					Source:      []string{"tag:web"},
+					Destination: []string{"autogroup:self"},
+					Users:       []string{"autogroup:nonroot"},
+				},
 			},
 		},
 	}
@@ -345,12 +366,14 @@ func TestACLPolicy_BuildSSHPolicy_WithTagsAndActionCheck(t *testing.T) {
 	p2 := createMachine("jane@example.com", "tag:web")
 
 	policy := ACLPolicy{
-		SSHRules: []SSHRule{
-			{
-				Action: "check",
-				Src:    []string{"tag:web"},
-				Dst:    []string{"tag:web"},
-				Users:  []string{"autogroup:nonroot"},
+		ionscale.ACLPolicy{
+			SSH: []ionscale.ACLSSH{
+				{
+					Action:      "check",
+					Source:      []string{"tag:web"},
+					Destination: []string{"tag:web"},
+					Users:       []string{"autogroup:nonroot"},
+				},
 			},
 		},
 	}

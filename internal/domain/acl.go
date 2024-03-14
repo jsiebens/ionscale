@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/hashicorp/go-multierror"
+	"github.com/jsiebens/ionscale/pkg/client/ionscale"
 	"gorm.io/gorm"
 	"gorm.io/gorm/schema"
 	"net/netip"
@@ -30,41 +31,7 @@ type AutoApprovers struct {
 }
 
 type ACLPolicy struct {
-	Groups        map[string][]string `json:"groups,omitempty"`
-	Hosts         map[string]string   `json:"hosts,omitempty"`
-	ACLs          []ACL               `json:"acls,omitempty"`
-	TagOwners     map[string][]string `json:"tagowners,omitempty"`
-	AutoApprovers *AutoApprovers      `json:"autoApprovers,omitempty"`
-	SSHRules      []SSHRule           `json:"ssh,omitempty"`
-	NodeAttrs     []NodeAttr          `json:"nodeAttrs,omitempty"`
-	Grants        []Grant             `json:"grants,omitempty"`
-}
-
-type ACL struct {
-	Action string   `json:"action"`
-	Proto  string   `json:"proto"`
-	Src    []string `json:"src"`
-	Dst    []string `json:"dst"`
-}
-
-type SSHRule struct {
-	Action      string   `json:"action"`
-	Src         []string `json:"src"`
-	Dst         []string `json:"dst"`
-	Users       []string `json:"users"`
-	CheckPeriod string   `json:"checkPeriod,omitempty"`
-}
-
-type NodeAttr struct {
-	Target []string `json:"target"`
-	Attr   []string `json:"attr"`
-}
-
-type Grant struct {
-	Src []string                 `json:"src"`
-	Dst []string                 `json:"dst"`
-	IP  []tailcfg.ProtoPortRange `json:"ip"`
-	App tailcfg.PeerCapMap       `json:"app"`
+	ionscale.ACLPolicy
 }
 
 func (a *ACLPolicy) Equal(x *ACLPolicy) bool {
