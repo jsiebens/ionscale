@@ -98,7 +98,7 @@ func Start(ctx context.Context, c *config.Config) error {
 		certmagic.Default.Storage = storage
 
 		cfg := certmagic.NewDefault()
-		if err := cfg.ManageAsync(ctx, []string{c.WebPublicUrl.Hostname()}); err != nil {
+		if err := cfg.ManageAsync(ctx, []string{c.PublicUrl.Hostname()}); err != nil {
 			return logError(err)
 		}
 	}
@@ -226,8 +226,8 @@ func Start(ctx context.Context, c *config.Config) error {
 	g.Go(func() error { return stunServer.Serve() })
 
 	fields := []zap.Field{
-		zap.String("url", c.WebPublicUrl.String()),
-		zap.String("addr", c.WebListenAddr),
+		zap.String("url", c.PublicUrl.String()),
+		zap.String("addr", c.ListenAddr),
 		zap.String("metrics_addr", c.MetricsListenAddr),
 	}
 
@@ -238,7 +238,7 @@ func Start(ctx context.Context, c *config.Config) error {
 	}
 
 	if c.Tls.AcmeEnabled {
-		logger.Info("TLS is enabled with ACME", zap.String("domain", c.WebPublicUrl.Hostname()))
+		logger.Info("TLS is enabled with ACME", zap.String("domain", c.PublicUrl.Hostname()))
 		logger.Info("Server is running", fields...)
 	} else if !c.Tls.Disable {
 		logger.Info("TLS is enabled", zap.String("cert", c.Tls.CertFile))
@@ -286,14 +286,14 @@ func setupAuthProvider(config config.Auth) (auth.Provider, *domain.IAMPolicy, er
 
 func webListener(config *config.Config) (net.Listener, error) {
 	if config.Tls.Disable {
-		return net.Listen("tcp", config.WebListenAddr)
+		return net.Listen("tcp", config.ListenAddr)
 	}
 
 	if config.Tls.AcmeEnabled {
 		cfg := certmagic.NewDefault()
 		tlsConfig := cfg.TLSConfig()
 		tlsConfig.NextProtos = append([]string{"h2", "http/1.1"}, tlsConfig.NextProtos...)
-		return tls.Listen("tcp", config.WebListenAddr, tlsConfig)
+		return tls.Listen("tcp", config.ListenAddr, tlsConfig)
 	}
 
 	certPEMBlock, err := os.ReadFile(config.Tls.CertFile)
@@ -312,7 +312,7 @@ func webListener(config *config.Config) (net.Listener, error) {
 
 	tlsConfig := &tls.Config{Certificates: []tls.Certificate{cer}}
 
-	return tls.Listen("tcp", config.WebListenAddr, tlsConfig)
+	return tls.Listen("tcp", config.ListenAddr, tlsConfig)
 }
 
 func metricsListener(config *config.Config) (net.Listener, error) {

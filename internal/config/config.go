@@ -101,7 +101,7 @@ func LoadConfig(path string) (*Config, error) {
 
 func defaultConfig() *Config {
 	return &Config{
-		WebListenAddr:     ":8080",
+		ListenAddr:        ":8080",
 		MetricsListenAddr: ":9091",
 		StunListenAddr:    ":3478",
 		Database: Database{
@@ -143,10 +143,10 @@ type ServerKeys struct {
 }
 
 type Config struct {
-	WebListenAddr     string   `yaml:"web_listen_addr,omitempty" env:"WEB_LISTEN_ADDR"`
+	ListenAddr        string   `yaml:"listen_addr,omitempty" env:"LISTEN_ADDR"`
 	StunListenAddr    string   `yaml:"stun_listen_addr,omitempty" env:"STUN_LISTEN_ADDR"`
 	MetricsListenAddr string   `yaml:"metrics_listen_addr,omitempty" env:"METRICS_LISTEN_ADDR"`
-	WebPublicAddr     string   `yaml:"web_public_addr,omitempty" env:"WEB_PUBLIC_ADDR"`
+	PublicAddr        string   `yaml:"public_addr,omitempty" env:"PUBLIC_ADDR"`
 	StunPublicAddr    string   `yaml:"stun_public_addr,omitempty" env:"STUN_PUBLIC_ADDR"`
 	Tls               Tls      `yaml:"tls,omitempty" envPrefix:"TLS_"`
 	PollNet           PollNet  `yaml:"poll_net,omitempty" envPrefix:"POLL_NET_"`
@@ -157,7 +157,7 @@ type Config struct {
 	DERP              DERP     `yaml:"derp,omitempty" envPrefix:"DERP_"`
 	Logging           Logging  `yaml:"logging,omitempty" envPrefix:"LOGGING_"`
 
-	WebPublicUrl *url.URL `yaml:"-"`
+	PublicUrl *url.URL `yaml:"-"`
 
 	stunHost string
 	stunPort int
@@ -242,12 +242,12 @@ type DERPServer struct {
 }
 
 func (c *Config) Validate() (*Config, error) {
-	publicWebUrl, webHost, webPort, err := validatePublicAddr(c.WebPublicAddr)
+	publicWebUrl, webHost, webPort, err := validatePublicAddr(c.PublicAddr)
 	if err != nil {
 		return nil, fmt.Errorf("web public addr: %w", err)
 	}
 
-	c.WebPublicUrl = publicWebUrl
+	c.PublicUrl = publicWebUrl
 	c.derpHost = webHost
 	c.derpPort = webPort
 
@@ -267,8 +267,8 @@ func (c *Config) Validate() (*Config, error) {
 func (c *Config) CreateUrl(format string, a ...interface{}) string {
 	path := fmt.Sprintf(format, a...)
 	u := url.URL{
-		Scheme: c.WebPublicUrl.Scheme,
-		Host:   c.WebPublicUrl.Host,
+		Scheme: c.PublicUrl.Scheme,
+		Host:   c.PublicUrl.Host,
 		Path:   path,
 	}
 	return u.String()

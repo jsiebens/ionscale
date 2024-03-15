@@ -52,9 +52,9 @@ func configureCommand() *cobra.Command {
 	command.RunE = func(command *cobra.Command, args []string) error {
 		c := &config.Config{}
 
-		c.WebListenAddr = "0.0.0.0:443"
+		c.ListenAddr = "0.0.0.0:443"
 		c.MetricsListenAddr = "127.0.0.1:9090"
-		c.WebPublicAddr = fmt.Sprintf("%s:443", domain)
+		c.PublicAddr = fmt.Sprintf("%s:443", domain)
 
 		c.Keys = config.Keys{
 			ControlKey:       key.NewServerKey().String(),
