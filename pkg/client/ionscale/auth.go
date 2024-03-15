@@ -7,9 +7,10 @@ import (
 	"errors"
 	"fmt"
 	"github.com/99designs/keyring"
-	"github.com/jsiebens/ionscale/internal/config"
 	"github.com/jsiebens/ionscale/internal/key"
 	"github.com/jsiebens/ionscale/internal/token"
+	"os"
+	"strconv"
 )
 
 const (
@@ -22,7 +23,7 @@ func LoadClientAuth(addr string, systemAdminKey string) (ClientAuth, error) {
 		if err != nil {
 			return nil, fmt.Errorf("invalid system admin key")
 		}
-		tid := config.GetUint64("IONSCALE_SYSTEM_ADMIN_DEFAULT_TAILNET_ID", 0)
+		tid := getEnvUint64("IONSCALE_SYSTEM_ADMIN_DEFAULT_TAILNET_ID", 0)
 		return systemAdminTokenSession{key: *k, tid: tid}, nil
 	}
 
@@ -128,4 +129,16 @@ func createKeyName(addr string) string {
 	sum := md5.Sum([]byte(addr))
 	x := hex.EncodeToString(sum[:])
 	return fmt.Sprintf("ionscale:%s", x)
+}
+
+func getEnvUint64(key string, defaultValue uint64) uint64 {
+	v := os.Getenv(key)
+	if v != "" {
+		vi, err := strconv.ParseUint(v, 10, 64)
+		if err != nil {
+			return defaultValue
+		}
+		return vi
+	}
+	return defaultValue
 }
