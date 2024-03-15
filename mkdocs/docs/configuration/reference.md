@@ -4,17 +4,20 @@ __ionscale__ uses the YAML file format for configuration.
 A full configuration reference file is shown below, this provides comments and all available options.
 
 ```yaml
-# The address to bind to for HTTP.
-http_listen_addr: ":8080"
+# The HTTP(S) listen address to serve the control plane.
+listen_addr: ":8080"
 
-# The address to bind to for HTTPS.
-https_listen_addr: "8443"
+# The STUN listen address when using the embedded DERP.
+stun_listen_addr: ":3478"
 
 # The address to bind to for the metrics.
 metrics_listen_addr: ":9091"
 
-# The public URL at which the ionscale server can be reached by clients and the CLI.
-server_url: "https://ionscale.example.com"
+# The DNS name of the server HTTP(S) endpoint as accessible by clients and the CLI.
+public_addr: "ionscale.example.com:443"
+
+# The DNS name of the STUN endpoint as accessible by clients.
+stun_public_addr: "ionscale.example.com:3478"
 
 tls:
   # Disable TLS (not recommended)
@@ -45,6 +48,15 @@ database:
   # url: "/data/ionscale.db?_pragma=busy_timeout(5000)&_pragma=journal_mode(WAL)"
   # url: "postgres://ionscale:ionscale@localhost/ionscale?sslmode=disable"
   url: "./ionscale.db"
+
+derp:
+  server:
+    disabled:     false
+    region_id:    1000
+    region_code:  "ionscale"
+    region_name:  "ionscale Embedded DERP"
+  sources:
+    - https://controlplane.tailscale.com/derpmap/default
 
 keys:
   # A private, 32 bytes in hex, system admin key
