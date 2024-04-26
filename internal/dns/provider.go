@@ -65,7 +65,7 @@ func configureAzureProvider(zone string, values map[string]string) (Provider, er
 		return nil, err
 	}
 
-	return &externalProvider{zone: zone, setter: p}, nil
+	return &externalProvider{zone: fqdn(zone), setter: p}, nil
 }
 
 func configureCloudflareProvider(zone string, values map[string]string) (Provider, error) {
@@ -83,7 +83,7 @@ func configureCloudflareProvider(zone string, values map[string]string) (Provide
 		return nil, err
 	}
 
-	return &externalProvider{zone: zone, setter: p}, nil
+	return &externalProvider{zone: fqdn(zone), setter: p}, nil
 }
 
 func configureDigitalOceanProvider(zone string, values map[string]string) (Provider, error) {
@@ -101,7 +101,7 @@ func configureDigitalOceanProvider(zone string, values map[string]string) (Provi
 		return nil, err
 	}
 
-	return &externalProvider{zone: zone, setter: p}, nil
+	return &externalProvider{zone: fqdn(zone), setter: p}, nil
 }
 
 func configureGoogleCloudDNSProvider(zone string, values map[string]string) (Provider, error) {
@@ -120,7 +120,7 @@ func configureGoogleCloudDNSProvider(zone string, values map[string]string) (Pro
 		return nil, err
 	}
 
-	return &externalProvider{zone: zone, setter: p}, nil
+	return &externalProvider{zone: fqdn(zone), setter: p}, nil
 }
 
 func configureRoute53Provider(zone string, values map[string]string) (Provider, error) {
@@ -145,7 +145,7 @@ func configureRoute53Provider(zone string, values map[string]string) (Provider, 
 		return nil, err
 	}
 
-	return &externalProvider{zone: zone, setter: p}, nil
+	return &externalProvider{zone: fqdn(zone), setter: p}, nil
 }
 
 type externalProvider struct {
@@ -154,11 +154,18 @@ type externalProvider struct {
 }
 
 func (p *externalProvider) SetRecord(ctx context.Context, recordType, recordName, value string) error {
-	_, err := p.setter.SetRecords(ctx, fmt.Sprintf("%s.", p.zone), []libdns.Record{{
+	_, err := p.setter.SetRecords(ctx, p.zone, []libdns.Record{{
 		Type:  recordType,
-		Name:  strings.TrimSuffix(recordName, p.zone),
+		Name:  libdns.RelativeName(recordName, p.zone),
 		Value: value,
 		TTL:   1 * time.Minute,
 	}})
 	return err
+}
+
+func fqdn(v string) string {
+	if strings.HasSuffix(v, ".") {
+		return v
+	}
+	return fmt.Sprintf("%s.", v)
 }
