@@ -37,7 +37,7 @@ jobs:
         with:
           fetch-depth: 0
       - name: Run Trivy vulnerability scanner
-        uses: aquasecurity/trivy-action@v0.19.0
+        uses: aquasecurity/trivy-action@0.19.0
         with:
           image-ref: ghcr.io/jsiebens/ionscale:latest
           format: 'sarif'
