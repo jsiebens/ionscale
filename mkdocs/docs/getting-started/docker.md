@@ -4,7 +4,7 @@ You can install and run __ionscale__ using the Docker images published on [GitHu
 
 ## Requirements 
 
-- A Linux machine with port 80 and 443 open to ingress traffic.
+- A Linux machine with port 443 and 3478 open to ingress traffic.
 - Docker installed. See the [official installation documentation](https://docs.docker.com/install/)
 - A registered domain name.
 
@@ -33,15 +33,15 @@ Generate a configuration file for __ionscale__ with the following commands:
 
 ``` bash
 export IONSCALE_ACME_EMAIL=<your email>
-export IONSCALE_ADDR=https://ionscale.example.com
-export IONSCALE_SYSTEM_ADMIN_KEY=$(docker run ghcr.io/jsiebens/ionscale:0.13.0 genkey -n)
+export IONSCALE_DOMAIN=ionscale.example.com
+export IONSCALE_SYSTEM_ADMIN_KEY=$(docker run ghcr.io/jsiebens/ionscale:0.15.0 genkey -n)
 ```
 
 ``` bash
 tee ./config.yaml >/dev/null <<EOF
-http_listen_addr: ":80"
-https_listen_addr: ":443"
-server_url: "${IONSCALE_ADDR}"
+listen_addr: ":443"
+public_addr: "${IONSCALE_DOMAIN}:443"
+stun_public_addr: "${IONSCALE_DOMAIN}:3478"
 
 tls:
   acme: true
@@ -66,7 +66,7 @@ Run an __ionscale__ instance with the following command:
 docker run \
   -v $(pwd)/config.yaml:/etc/ionscale/config.yaml \
   -v $(pwd)/data:/data \
-  -p 80:80 \
   -p 443:443 \
-  ghcr.io/jsiebens/ionscale:0.13.0 server --config /etc/ionscale/config.yaml
+  -p 3478:3478/udp \
+  ghcr.io/jsiebens/ionscale:0.15.0 server --config /etc/ionscale/config.yaml
 ```

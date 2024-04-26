@@ -4,7 +4,7 @@ This tutorial will guide you through the steps needed to install and run __ionsc
 
 ## Prerequisites 
 
-- A Linux machine with port 80 and 443 open to ingress traffic.
+- A Linux machine with port 443 and 3478 open to ingress traffic.
 - A registered domain name.
 
 ## Step 1. Configure DNS
@@ -41,7 +41,7 @@ Run the following commands to install the __ionscale__ binary on your Linux host
 ``` bash
 sudo curl \
     -o "/usr/local/bin/ionscale" \
-    -sfL "https://github.com/jsiebens/ionscale/releases/download/v0.13.0/ionscale_linux_amd64"
+    -sfL "https://github.com/jsiebens/ionscale/releases/download/v0.15.0/ionscale_linux_amd64"
 
 sudo chmod +x "/usr/local/bin/ionscale"
 ```
@@ -60,19 +60,18 @@ Generate a configuration file for __ionscale__ with the following commands:
 
 ``` bash
 export IONSCALE_ACME_EMAIL=<your email>
-export IONSCALE_ADDR=https://ionscale.example.com
+export IONSCALE_DOMAIN=ionscale.example.com
 ```
 
 ``` bash
 sudo tee /etc/ionscale/config.yaml >/dev/null <<EOF
-http_listen_addr: ":80"
-https_listen_addr: ":443"
-server_url: "https://${IONSCALE_DOMAIN}"
+listen_addr: ":443"
+public_addr: "${IONSCALE_DOMAIN}:443"
+stun_public_addr: "${IONSCALE_DOMAIN}:3478"
 
 tls:
   acme: true
   acme_email: "${IONSCALE_ACME_EMAIL}"
-  acme_path: "/var/lib/ionscale/acme"
 
 database:
   url: "/var/lib/ionscale/ionscale.db?_pragma=busy_timeout(5000)&_pragma=journal_mode(WAL)"
