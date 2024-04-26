@@ -2,8 +2,6 @@ syntax = "proto3";
 
 package ionscale.v1;
 
-import "ionscale/v1/acl.proto";
-import "ionscale/v1/iam.proto";
 import "ionscale/v1/dns.proto";
 
 option go_package = "github.com/jsiebens/ionscale/pkg/gen/ionscale/v1;ionscalev1";
