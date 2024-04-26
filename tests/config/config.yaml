@@ -1,5 +1,5 @@
-web_listen_addr: ":443"
-web_public_addr: "ionscale:443"
+listen_addr: ":443"
+public_addr: "ionscale:443"
 stun_public_addr: "ionscale:3478"
 
 tls:
