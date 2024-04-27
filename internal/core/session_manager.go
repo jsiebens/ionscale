@@ -43,6 +43,16 @@ func (n *pollMapSessionManager) Register(tailnetID uint64, machineID uint64, ch 
 		t.Stop()
 		delete(n.timers, machineID)
 	}
+
+	timer := time.NewTimer(5 * time.Second)
+	go func() {
+		<-timer.C
+		if n.HasSession(tailnetID, machineID) {
+			n.NotifyAll(tailnetID, machineID)
+		}
+	}()
+
+	n.timers[machineID] = timer
 }
 
 func (n *pollMapSessionManager) Deregister(tailnetID uint64, machineID uint64) {
