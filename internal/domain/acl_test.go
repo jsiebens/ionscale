@@ -152,7 +152,7 @@ func TestACLPolicy_BuildFilterRulesWildcards(t *testing.T) {
 	actualRules := policy.BuildFilterRules([]Machine{*p1, *p2}, dst)
 	expectedRules := []tailcfg.FilterRule{
 		{
-			SrcIPs: []string{"*"},
+			SrcIPs: expectedSourceIPs(p1, p2),
 			DstPorts: []tailcfg.NetPortRange{
 				{
 					IP: "*",
@@ -195,7 +195,7 @@ func TestACLPolicy_BuildFilterRulesProto(t *testing.T) {
 	actualRules := policy.BuildFilterRules([]Machine{*p1, *p2}, dst)
 	expectedRules := []tailcfg.FilterRule{
 		{
-			SrcIPs: []string{"*"},
+			SrcIPs: expectedSourceIPs(p1, p2),
 			DstPorts: []tailcfg.NetPortRange{
 				{
 					IP: "*",
@@ -207,7 +207,7 @@ func TestACLPolicy_BuildFilterRulesProto(t *testing.T) {
 			},
 		},
 		{
-			SrcIPs: []string{"*"},
+			SrcIPs: expectedSourceIPs(p1, p2),
 			DstPorts: []tailcfg.NetPortRange{
 				{
 					IP: "*",
@@ -559,7 +559,7 @@ func TestACLPolicy_BuildFilterRulesAutogroupSelfAndOtherDestinations(t *testing.
 			},
 		},
 		{
-			SrcIPs: []string{"*"},
+			SrcIPs: expectedSourceIPs(p1, p2, p3),
 			DstPorts: []tailcfg.NetPortRange{
 				{
 					IP: dst.IPv4.String(),
@@ -728,6 +728,14 @@ func createMachine(user string, tags ...string) *Machine {
 		},
 		Tags: tags,
 	}
+}
+
+func expectedSourceIPs(m ...*Machine) []string {
+	x := &StringSet{}
+	for _, m := range m {
+		x = x.Add(m.IPv4.String(), m.IPv6.String())
+	}
+	return x.Items()
 }
 
 func TestACLPolicy_IsTagOwner(t *testing.T) {
@@ -969,7 +977,7 @@ func TestACLPolicy_BuildFilterRulesWildcardGrants(t *testing.T) {
 	actualRules := policy.BuildFilterRules([]Machine{*p1, *p2}, dst)
 	expectedRules := []tailcfg.FilterRule{
 		{
-			SrcIPs: []string{"*"},
+			SrcIPs: expectedSourceIPs(p1, p2),
 			DstPorts: []tailcfg.NetPortRange{
 				{
 					IP: "*",
@@ -1015,7 +1023,7 @@ func TestACLPolicy_BuildFilterRulesWithAppGrants(t *testing.T) {
 	actualRules := policy.BuildFilterRules([]Machine{*p1, *p2}, dst)
 	expectedRules := []tailcfg.FilterRule{
 		{
-			SrcIPs: []string{"*"},
+			SrcIPs: expectedSourceIPs(p1, p2),
 			CapGrant: []tailcfg.CapGrant{
 				{
 					Dsts: []netip.Prefix{

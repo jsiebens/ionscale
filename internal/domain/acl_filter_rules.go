@@ -274,7 +274,11 @@ func (a ACLPolicy) translateDestinationAliasToMachineIPs(alias string, m *Machin
 		return make([]string, 0)
 	}
 
-	return a.translateAliasToMachineIPs(alias, m, nil, f)
+	if alias == "*" {
+		return []string{"*"}
+	}
+
+	return a.translateAliasToMachineIPs(alias, m, f)
 }
 
 func (a ACLPolicy) translateSourceAliasToMachineIPs(alias string, m *Machine, u *User) []string {
@@ -287,10 +291,6 @@ func (a ACLPolicy) translateSourceAliasToMachineIPs(alias string, m *Machine, u 
 		return make([]string, 0)
 	}
 
-	return a.translateAliasToMachineIPs(alias, m, u, f)
-}
-
-func (a ACLPolicy) translateAliasToMachineIPs(alias string, m *Machine, u *User, f func(string, *Machine) []string) []string {
 	if u != nil && m.HasTags() {
 		return []string{}
 	}
@@ -299,14 +299,14 @@ func (a ACLPolicy) translateAliasToMachineIPs(alias string, m *Machine, u *User,
 		return []string{}
 	}
 
-	if alias == "*" && u != nil {
-		return m.IPs()
-	}
-
 	if alias == "*" {
-		return []string{"*"}
+		return append(m.IPs(), m.AllowedPrefixes()...)
 	}
 
+	return a.translateAliasToMachineIPs(alias, m, f)
+}
+
+func (a ACLPolicy) translateAliasToMachineIPs(alias string, m *Machine, f func(string, *Machine) []string) []string {
 	if alias == AutoGroupMember || alias == AutoGroupMembers || alias == AutoGroupSelf {
 		if !m.HasTags() {
 			return m.IPs()
