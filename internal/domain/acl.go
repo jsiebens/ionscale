@@ -18,11 +18,12 @@ import (
 )
 
 const (
-	AutoGroupSelf     = "autogroup:self"
-	AutoGroupMember   = "autogroup:member"
-	AutoGroupMembers  = "autogroup:members"
-	AutoGroupTagged   = "autogroup:tagged"
-	AutoGroupInternet = "autogroup:internet"
+	AutoGroupSelf      = "autogroup:self"
+	AutoGroupMember    = "autogroup:member"
+	AutoGroupMembers   = "autogroup:members"
+	AutoGroupTagged    = "autogroup:tagged"
+	AutoGroupInternet  = "autogroup:internet"
+	AutoGroupDangerAll = "autogroup:danger-all"
 )
 
 type AutoApprovers struct {

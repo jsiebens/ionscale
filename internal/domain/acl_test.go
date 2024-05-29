@@ -628,6 +628,56 @@ func TestACLPolicy_BuildFilterRulesAutogroupInternet(t *testing.T) {
 	assert.Equal(t, expectedRules, actualRules)
 }
 
+func TestACLPolicy_BuildFilterRulesAutogroupDangerAll(t *testing.T) {
+	p1 := createMachine("nick@example.com")
+	p2 := createMachine("jane@example.com")
+
+	policy := ACLPolicy{
+		ionscale.ACLPolicy{
+			ACLs: []ionscale.ACLEntry{
+				{
+					Action:      "accept",
+					Source:      []string{"autogroup:danger-all"},
+					Destination: []string{"*:*"},
+				},
+			},
+		},
+	}
+
+	dst := createMachine("john@example.com")
+
+	expectedDstPorts := []tailcfg.NetPortRange{}
+	for _, r := range autogroupInternetRanges() {
+		expectedDstPorts = append(expectedDstPorts, tailcfg.NetPortRange{
+			IP: r,
+			Ports: tailcfg.PortRange{
+				First: 0,
+				Last:  65535,
+			},
+		})
+	}
+
+	actualRules := policy.BuildFilterRules([]Machine{*p1, *p2}, dst)
+	expectedRules := []tailcfg.FilterRule{
+		{
+			SrcIPs: []string{
+				"0.0.0.0/0", "::/0",
+			},
+			DstPorts: []tailcfg.NetPortRange{
+				{
+					IP: "*",
+					Ports: tailcfg.PortRange{
+						First: 0,
+						Last:  65535,
+					},
+				},
+			},
+		},
+	}
+
+	assert.Equal(t, expectedRules, actualRules)
+}
+
 func TestWithUser(t *testing.T) {
 	policy := ACLPolicy{
 		ionscale.ACLPolicy{

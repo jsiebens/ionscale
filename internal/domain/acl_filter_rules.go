@@ -303,6 +303,10 @@ func (a ACLPolicy) translateSourceAliasToMachineIPs(alias string, m *Machine, u 
 		return append(m.IPs(), m.AllowedPrefixes()...)
 	}
 
+	if alias == AutoGroupDangerAll {
+		return []string{"0.0.0.0/0", "::/0"}
+	}
+
 	return a.translateAliasToMachineIPs(alias, m, f)
 }
 
