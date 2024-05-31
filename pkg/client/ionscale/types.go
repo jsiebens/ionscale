@@ -46,11 +46,13 @@ type ACLEntry struct {
 }
 
 type ACLSSH struct {
-	Action      string   `json:"action,omitempty" hujson:"Action,omitempty"`
-	Users       []string `json:"users,omitempty" hujson:"Users,omitempty"`
-	Source      []string `json:"src,omitempty" hujson:"Src,omitempty"`
-	Destination []string `json:"dst,omitempty" hujson:"Dst,omitempty"`
-	CheckPeriod string   `json:"checkPeriod,omitempty" hujson:"CheckPeriod,omitempty"`
+	Action          string   `json:"action,omitempty" hujson:"Action,omitempty"`
+	Source          []string `json:"src,omitempty" hujson:"Src,omitempty"`
+	Destination     []string `json:"dst,omitempty" hujson:"Dst,omitempty"`
+	Users           []string `json:"users,omitempty" hujson:"Users,omitempty"`
+	CheckPeriod     string   `json:"checkPeriod,omitempty" hujson:"CheckPeriod,omitempty"`
+	Recorder        []string `json:"recorder,omitempty" hujson:"Recorder,omitempty"`
+	EnforceRecorder bool     `json:"enforceRecorder,omitempty" hujson:"EnforceRecorder,omitempty"`
 }
 
 type ACLNodeAttrGrant struct {

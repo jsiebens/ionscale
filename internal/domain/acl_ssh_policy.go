@@ -2,6 +2,7 @@ package domain
 
 import (
 	"github.com/jsiebens/ionscale/pkg/client/ionscale"
+	"net/netip"
 	"strings"
 	"tailscale.com/tailcfg"
 )
@@ -29,6 +30,20 @@ func (a ACLPolicy) BuildSSHPolicy(srcs []Machine, dst *Machine) *tailcfg.SSHPoli
 		return result
 	}
 
+	expandRecorderAliases := func(aliases []string) []netip.AddrPort {
+		result := make([]netip.AddrPort, 0)
+
+		for _, alias := range aliases {
+			for _, src := range append(srcs, *dst) {
+				if src.HasTag(alias) {
+					result = append(result, netip.AddrPortFrom(*src.IPv4.Addr, 80))
+				}
+			}
+		}
+
+		return result
+	}
+
 	for _, rule := range a.SSH {
 		if rule.Action != "accept" && rule.Action != "check" {
 			continue
@@ -43,6 +58,17 @@ func (a ACLPolicy) BuildSSHPolicy(srcs []Machine, dst *Machine) *tailcfg.SSHPoli
 		if rule.Action == "check" {
 			action = &tailcfg.SSHAction{
 				HoldAndDelegate: "https://unused/machine/ssh/action/$SRC_NODE_ID/to/$DST_NODE_ID/" + safeCheckPeriod(rule.CheckPeriod),
+			}
+		}
+
+		if len(rule.Recorder) != 0 {
+			action.Recorders = expandRecorderAliases(rule.Recorder)
+			action.Message = "# This session is being recorded.\n"
+			if rule.EnforceRecorder {
+				action.OnRecordingFailure = &tailcfg.SSHRecorderFailureAction{
+					RejectSessionWithMessage:    "# Session rejected: failed to start session recording.",
+					TerminateSessionWithMessage: "# Session terminated: failed to record session.",
+				}
 			}
 		}
 
