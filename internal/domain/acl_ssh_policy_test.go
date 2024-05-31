@@ -1,8 +1,6 @@
 package domain
 
 import (
-	"encoding/json"
-	"fmt"
 	"github.com/jsiebens/ionscale/pkg/client/ionscale"
 	"github.com/stretchr/testify/assert"
 	"tailscale.com/tailcfg"
@@ -383,14 +381,6 @@ func TestACLPolicy_BuildSSHPolicy_WithTagsAndActionCheck(t *testing.T) {
 	actualRules := policy.BuildSSHPolicy([]Machine{*p1, *p2}, dst)
 
 	assert.Nil(t, actualRules.Rules)
-}
-
-func printRules(rules []*tailcfg.SSHRule) {
-	indent, err := json.MarshalIndent(rules, "", "  ")
-	if err != nil {
-		panic(err)
-	}
-	fmt.Println(string(indent))
 }
 
 func sshPrincipalsFromMachines(machines ...Machine) []*tailcfg.SSHPrincipal {

@@ -1,6 +1,7 @@
 package domain
 
 import (
+	"fmt"
 	"github.com/jsiebens/ionscale/pkg/client/ionscale"
 	"net/netip"
 	"strings"
@@ -41,6 +42,24 @@ func (a ACLPolicy) IsValidPeer(src *Machine, dest *Machine) bool {
 		}
 		if len(otherIps) != 0 {
 			for _, alias := range grant.Source {
+				if len(a.translateSourceAliasToMachineIPs(alias, src, nil)) != 0 {
+					return true
+				}
+			}
+		}
+	}
+
+	for _, ssh := range a.SSH {
+		selfIps, otherIps := a.translateDestinationAliasesToMachineIPs(ssh.Recorder, dest)
+		if len(selfIps) != 0 {
+			for _, alias := range ssh.Destination {
+				if len(a.translateSourceAliasToMachineIPs(alias, src, &dest.User)) != 0 {
+					return true
+				}
+			}
+		}
+		if len(otherIps) != 0 {
+			for _, alias := range ssh.Destination {
 				if len(a.translateSourceAliasToMachineIPs(alias, src, nil)) != 0 {
 					return true
 				}
@@ -100,7 +119,34 @@ func (a ACLPolicy) BuildFilterRules(peers []Machine, dst *Machine) []tailcfg.Fil
 		rules = matchSourceAndAppendRule(rules, acl.Source, other, nil)
 	}
 
+	for _, acl := range a.SSH {
+		ssh := a.prepareFilterRulesFromSSH(dst, acl)
+		rules = matchSourceAndAppendRule(rules, acl.Destination, ssh, nil)
+	}
+
 	return rules
+}
+
+func normalizeSSHRecordersToDestinationAliases(recorders []string) []string {
+	recorderAliases := make([]string, 0)
+	for _, alias := range recorders {
+		if strings.HasPrefix(alias, "tag:") {
+			recorderAliases = append(recorderAliases, fmt.Sprintf("%s:80", alias))
+		}
+	}
+	return recorderAliases
+}
+
+func (a ACLPolicy) prepareFilterRulesFromSSH(candidate *Machine, entry ionscale.ACLSSH) []tailcfg.FilterRule {
+	_, otherDstPorts := a.translateDestinationAliasesToMachineNetPortRanges(normalizeSSHRecordersToDestinationAliases(entry.Recorder), candidate)
+
+	var otherFilterRules []tailcfg.FilterRule
+
+	if len(otherDstPorts) != 0 {
+		otherFilterRules = append(otherFilterRules, tailcfg.FilterRule{IPProto: []int{protocolTCP}, DstPorts: otherDstPorts})
+	}
+
+	return otherFilterRules
 }
 
 func (a ACLPolicy) prepareFilterRulesFromACL(candidate *Machine, acl ionscale.ACLEntry) ([]tailcfg.FilterRule, []tailcfg.FilterRule) {
