@@ -34,7 +34,7 @@ jobs:
           go-version-file: 'go.mod'
           cache: true
       - name: Install cosign
-        uses: sigstore/cosign-installer@v3.1.1
+        uses: sigstore/cosign-installer@v3
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v5
         with:
