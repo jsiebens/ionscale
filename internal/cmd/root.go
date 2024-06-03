@@ -16,6 +16,7 @@ func Command() *cobra.Command {
 	rootCmd.AddCommand(machineCommands())
 	rootCmd.AddCommand(userCommands())
 	rootCmd.AddCommand(systemCommand())
+	rootCmd.AddCommand(recorderCommand())
 
 	return rootCmd
 }
