@@ -13,7 +13,7 @@ import (
 	"os/signal"
 	"path"
 	"syscall"
-	"tailscale.com/ssh/tailssh"
+	"tailscale.com/tailcfg"
 	"tailscale.com/tsnet"
 	"time"
 )
@@ -24,6 +24,11 @@ type RecorderConfig struct {
 	Dir         string
 	AuthKey     string
 	Hostname    string
+}
+
+type CastHeader struct {
+	Timestamp int64                `json:"timestamp"`
+	SrcNodeID tailcfg.StableNodeID `json:"srcNodeID"`
 }
 
 func Start(ctx context.Context, c RecorderConfig) error {
@@ -104,7 +109,7 @@ func record(dir string) func(echo.Context) error {
 			return err
 		}
 
-		var header tailssh.CastHeader
+		var header CastHeader
 		if err := json.Unmarshal(line, &header); err != nil {
 			return err
 		}
