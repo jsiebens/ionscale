@@ -48,6 +48,13 @@ message AuthorizeMachineRequest {
 
 message AuthorizeMachineResponse {}
 
+message RenameMachineRequest {
+  uint64 machine_id = 1;
+  string machine_new_name = 2;
+}
+
+message RenameMachineResponse {}
+
 message Machine {
   uint64 id = 1;
   string name = 2;
