@@ -164,6 +164,10 @@ func (a ACLPolicy) NodeCapabilities(m *Machine) []tailcfg.NodeCapability {
 					}
 				}
 			}
+
+			if (alias == AutoGroupMember || alias == AutoGroupMembers) && !m.HasTags() {
+				return true
+			}
 		}
 
 		return false

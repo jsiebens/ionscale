@@ -113,6 +113,38 @@ func TestACLPolicy_NodeAttributesWithUserAndTags(t *testing.T) {
 	assert.Equal(t, expectedAttrs, actualAttrs)
 }
 
+func TestACLPolicy_NodeAttributesWithAutoGroupMember(t *testing.T) {
+	p1 := createMachine("john@example.com")
+
+	policy := ACLPolicy{
+		ionscale.ACLPolicy{
+			NodeAttrs: []ionscale.ACLNodeAttrGrant{
+				{
+					Target: []string{"autogroup:member"},
+					Attr: []string{
+						"attr1",
+						"attr2",
+					},
+				},
+				{
+					Target: []string{"tag:web"},
+					Attr: []string{
+						"attr3",
+					},
+				},
+			},
+		},
+	}
+
+	actualAttrs := policy.NodeCapabilities(p1)
+	expectedAttrs := []tailcfg.NodeCapability{
+		tailcfg.NodeCapability("attr1"),
+		tailcfg.NodeCapability("attr2"),
+	}
+
+	assert.Equal(t, expectedAttrs, actualAttrs)
+}
+
 func TestACLPolicy_BuildFilterRulesEmptyACL(t *testing.T) {
 	p1 := createMachine("john@example.com")
 	p2 := createMachine("jane@example.com")
