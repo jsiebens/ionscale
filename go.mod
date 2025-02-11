@@ -1,6 +1,6 @@
 module github.com/jsiebens/ionscale
 
-go 1.22.0
+go 1.23.6
 
 require (
 	github.com/99designs/keyring v1.2.2
