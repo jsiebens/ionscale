@@ -124,7 +124,7 @@ func (h *RegistrationHandlers) authenticateMachine(c echo.Context, machineKey st
 		return h.followup(c, req)
 	}
 
-	if req.Auth.AuthKey == "" {
+	if req.Auth == nil || req.Auth.AuthKey == "" {
 		key := util.RandStringBytes(8)
 		authUrl := h.config.CreateUrl("/a/r/%s", key)
 

@@ -138,11 +138,14 @@ func ToNode(capVer tailcfg.CapabilityVersion, m *domain.Machine, tailnet *domain
 		allowedIPs = append(allowedIPs, netip.MustParsePrefix("0.0.0.0/0"), netip.MustParsePrefix("::/0"))
 	}
 
-	var derp string
+	var derp int
+	var legacyDerp string
 	if hostinfo.NetInfo != nil {
-		derp = fmt.Sprintf("127.3.3.40:%d", hostinfo.NetInfo.PreferredDERP)
+		derp = hostinfo.NetInfo.PreferredDERP
+		legacyDerp = fmt.Sprintf("127.3.3.40:%d", hostinfo.NetInfo.PreferredDERP)
 	} else {
-		derp = "127.3.3.40:0"
+		derp = 0
+		legacyDerp = "127.3.3.40:0"
 	}
 
 	var name = m.CompleteName()
@@ -157,16 +160,17 @@ func ToNode(capVer tailcfg.CapabilityVersion, m *domain.Machine, tailnet *domain
 	}
 
 	n := tailcfg.Node{
-		ID:         tailcfg.NodeID(m.ID),
-		StableID:   tailcfg.StableNodeID(strconv.FormatUint(m.ID, 10)),
-		Name:       fmt.Sprintf("%s.%s.%s.", name, sanitizedTailnetName, config.MagicDNSSuffix()),
-		Key:        *nKey,
-		Machine:    *mKey,
-		DiscoKey:   discoKey,
-		Addresses:  addrs,
-		AllowedIPs: allowedIPs,
-		Endpoints:  endpoints,
-		DERP:       derp,
+		ID:               tailcfg.NodeID(m.ID),
+		StableID:         tailcfg.StableNodeID(strconv.FormatUint(m.ID, 10)),
+		Name:             fmt.Sprintf("%s.%s.%s.", name, sanitizedTailnetName, config.MagicDNSSuffix()),
+		Key:              *nKey,
+		Machine:          *mKey,
+		DiscoKey:         discoKey,
+		Addresses:        addrs,
+		AllowedIPs:       allowedIPs,
+		Endpoints:        endpoints,
+		HomeDERP:         derp,
+		LegacyDERPString: legacyDerp,
 
 		Hostinfo: hostInfo.View(),
 		Created:  m.CreatedAt.UTC(),
@@ -257,9 +261,7 @@ func ToUserProfile(u domain.User) tailcfg.UserProfile {
 func ToUser(u domain.User) (tailcfg.User, tailcfg.Login) {
 	user := tailcfg.User{
 		ID:          tailcfg.UserID(u.ID),
-		LoginName:   u.Name,
 		DisplayName: u.Name,
-		Logins:      []tailcfg.LoginID{tailcfg.LoginID(u.ID)},
 	}
 	login := tailcfg.Login{
 		ID:          tailcfg.LoginID(u.ID),

@@ -7,7 +7,7 @@ import (
 	"golang.org/x/net/http2/h2c"
 	"io"
 	"net/http"
-	"tailscale.com/control/controlhttp"
+	"tailscale.com/control/controlhttp/controlhttpserver"
 	"tailscale.com/net/netutil"
 	"tailscale.com/types/key"
 )
@@ -27,7 +27,7 @@ func NewNoiseHandlers(controlKey key.MachinePrivate, createPeerHandler CreatePee
 }
 
 func (h *NoiseHandlers) Upgrade(c echo.Context) error {
-	conn, err := controlhttp.AcceptHTTP(c.Request().Context(), c.Response(), c.Request(), h.controlKey, nil)
+	conn, err := controlhttpserver.AcceptHTTP(c.Request().Context(), c.Response(), c.Request(), h.controlKey, nil)
 	if err != nil {
 		return logError(err)
 	}
