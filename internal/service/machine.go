@@ -162,6 +162,40 @@ func (s *Service) ExpireMachine(ctx context.Context, req *connect.Request[api.Ex
 	return connect.NewResponse(&api.ExpireMachineResponse{}), nil
 }
 
+func (s *Service) RenameMachine(ctx context.Context, req *connect.Request[api.RenameMachineRequest]) (*connect.Response[api.RenameMachineResponse], error) {
+	principal := CurrentPrincipal(ctx)
+	newName := req.Msg.MachineNewName
+
+	m, err := s.repository.GetMachine(ctx, req.Msg.MachineId)
+	if err != nil {
+		return nil, logError(err)
+	}
+
+	if m == nil {
+		return nil, connect.NewError(connect.CodeNotFound, fmt.Errorf("machine not found"))
+	}
+
+	if !principal.IsSystemAdmin() && !principal.IsTailnetAdmin(m.TailnetID) {
+		return nil, connect.NewError(connect.CodePermissionDenied, fmt.Errorf("permission denied"))
+	}
+
+	if m.Name == req.Msg.MachineNewName {
+		return nil, connect.NewError(connect.CodeAlreadyExists, fmt.Errorf("machine already named", req.Msg.MachineNewName))
+	}
+
+	nameIdx, err := s.repository.GetNextMachineNameIndex(ctx, m.TailnetID, newName)
+
+	m.Name = req.Msg.MachineNewName
+	m.NameIdx = nameIdx
+	if err := s.repository.SaveMachine(ctx, m); err != nil {
+		return nil, logError(err)
+	}
+
+	s.sessionManager.NotifyAll(m.TailnetID)
+
+	return connect.NewResponse(&api.RenameMachineResponse{}), nil
+}
+
 func (s *Service) AuthorizeMachine(ctx context.Context, req *connect.Request[api.AuthorizeMachineRequest]) (*connect.Response[api.AuthorizeMachineResponse], error) {
 	principal := CurrentPrincipal(ctx)
 

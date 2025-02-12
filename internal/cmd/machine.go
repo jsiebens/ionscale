@@ -33,6 +33,7 @@ func machineCommands() *cobra.Command {
 	command.AddCommand(disableExitNodeCommand())
 	command.AddCommand(disableMachineKeyExpiryCommand())
 	command.AddCommand(authorizeMachineCommand())
+	command.AddCommand(renameMachineCommand())
 
 	return command
 }
@@ -447,6 +448,35 @@ func configureSetMachineKeyExpiryCommand(cmdTmpl *cobra.Command, disable bool) *
 		if err != nil {
 			return err
 		}
+
+		return nil
+	}
+
+	return command
+}
+
+func renameMachineCommand() *cobra.Command {
+	command, tc := prepareCommand(false, &cobra.Command{
+		Use:          "rename",
+		Short:        "Rename given machine",
+		SilenceUsage: true,
+	})
+
+	var machineID uint64
+	var name string
+	command.Flags().Uint64Var(&machineID, "machine-id", 0, "Machine ID")
+	command.Flags().StringVar(&name, "new-name", "", "New name for the machine")
+
+	_ = command.MarkFlagRequired("machine-id")
+	_ = command.MarkFlagRequired("new-name")
+
+	command.RunE = func(cmd *cobra.Command, args []string) error {
+		req := api.RenameMachineRequest{MachineId: machineID, MachineNewName: name}
+		if _, err := tc.Client().RenameMachine(cmd.Context(), connect.NewRequest(&req)); err != nil {
+			return err
+		}
+
+		fmt.Println("Machine renamed to", name)
 
 		return nil
 	}
