@@ -33,6 +33,7 @@ func machineCommands() *cobra.Command {
 	command.AddCommand(disableExitNodeCommand())
 	command.AddCommand(disableMachineKeyExpiryCommand())
 	command.AddCommand(authorizeMachineCommand())
+	command.AddCommand(setMachineNameCommand())
 
 	return command
 }
@@ -161,6 +162,40 @@ func deleteMachineCommand() *cobra.Command {
 		}
 
 		fmt.Println("Machine deleted.")
+
+		return nil
+	}
+
+	return command
+}
+
+func setMachineNameCommand() *cobra.Command {
+	command, tc := prepareCommand(false, &cobra.Command{
+		Use:          "set-name",
+		Short:        "Set the name of a given machine",
+		SilenceUsage: true,
+	})
+
+	var machineID uint64
+	var useOSHostname bool
+	var name string
+	command.Flags().Uint64Var(&machineID, "machine-id", 0, "Machine ID")
+	command.Flags().StringVar(&name, "name", "", "New name for the machine")
+	command.Flags().BoolVar(&useOSHostname, "use-os-hostname", false, "Auto-generate from the machine OS hostname")
+
+	_ = command.MarkFlagRequired("machine-id")
+
+	command.RunE = func(cmd *cobra.Command, args []string) error {
+		if !useOSHostname && name == "" {
+			return fmt.Errorf("name is required when not using os hostname")
+		}
+
+		req := api.SetMachineNameRequest{MachineId: machineID, Name: name, UseOsHostname: useOSHostname}
+		if _, err := tc.Client().SetMachineName(cmd.Context(), connect.NewRequest(&req)); err != nil {
+			return err
+		}
+
+		fmt.Println("Machine name set.")
 
 		return nil
 	}

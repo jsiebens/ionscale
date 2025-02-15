@@ -148,6 +148,14 @@ func (t *TailscaleNode) Ping(target string) error {
 	return nil
 }
 
+func (t *TailscaleNode) SetHostname(hostname string) error {
+	_, _, err := t.execTailscaleCmd("set", "--hostname", hostname)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func (t *TailscaleNode) NetCheck() (*netcheck.Report, error) {
 	result, _, err := t.execTailscaleCmd("netcheck", "--format=json")
 	if err != nil {

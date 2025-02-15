@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/binary"
 	"encoding/json"
+	"fmt"
 	"github.com/jsiebens/ionscale/internal/config"
 	"github.com/jsiebens/ionscale/internal/core"
 	"github.com/jsiebens/ionscale/internal/domain"
@@ -15,6 +16,7 @@ import (
 	"tailscale.com/smallzstd"
 	"tailscale.com/tailcfg"
 	"tailscale.com/types/key"
+	"tailscale.com/util/dnsname"
 	"time"
 )
 
@@ -80,11 +82,26 @@ func (h *PollNetMapHandler) handlePollNetMap(c echo.Context, m *domain.Machine, 
 		return logError(err)
 	}
 
+	fmt.Println("======================================================")
+	fmt.Println(mapRequest.Hostinfo.Hostname)
+	fmt.Println(mapRequest.Stream)
+	fmt.Println("======================================================")
+
 	if !mapRequest.Stream {
 		m.HostInfo = domain.HostInfo(*mapRequest.Hostinfo)
 		m.DiscoKey = mapRequest.DiscoKey.String()
 		m.Endpoints = mapRequest.Endpoints
 		m.LastSeen = &now
+
+		sanitizeHostname := dnsname.SanitizeHostname(m.HostInfo.Hostname)
+		if m.UseOSHostname && m.Name != sanitizeHostname {
+			nameIdx, err := h.repository.GetNextMachineNameIndex(ctx, m.TailnetID, sanitizeHostname)
+			if err != nil {
+				return logError(err)
+			}
+			m.Name = sanitizeHostname
+			m.NameIdx = nameIdx
+		}
 
 		if err := h.repository.SaveMachine(ctx, m); err != nil {
 			return logError(err)

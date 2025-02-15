@@ -42,6 +42,7 @@ type Machine struct {
 	Tags              Tags
 	KeyExpiryDisabled bool
 	Authorized        bool
+	UseOSHostname     bool `gorm:"default:true"`
 
 	HostInfo     HostInfo
 	Endpoints    Endpoints
@@ -124,7 +125,7 @@ func (m *Machine) IsAllowedExitNode() bool {
 }
 
 func (m *Machine) AdvertisedPrefixes() []string {
-	result := []string{}
+	var result []string
 	for _, r := range m.HostInfo.RoutableIPs {
 		if r.Bits() != 0 {
 			result = append(result, r.String())

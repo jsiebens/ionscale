@@ -482,6 +482,7 @@ func (h *AuthenticationHandlers) endMachineRegistrationFlow(c echo.Context, form
 			ID:                util.NextID(),
 			Name:              sanitizeHostname,
 			NameIdx:           nameIdx,
+			UseOSHostname:     true,
 			MachineKey:        machineKey,
 			NodeKey:           nodeKey,
 			Ephemeral:         ephemeral || req.Ephemeral,
@@ -511,7 +512,7 @@ func (h *AuthenticationHandlers) endMachineRegistrationFlow(c echo.Context, form
 		tags := append(registeredTags, advertisedTags...)
 
 		sanitizeHostname := dnsname.SanitizeHostname(req.Hostinfo.Hostname)
-		if m.Name != sanitizeHostname {
+		if m.UseOSHostname && m.Name != sanitizeHostname {
 			nameIdx, err := h.repository.GetNextMachineNameIndex(ctx, tailnet.ID, sanitizeHostname)
 			if err != nil {
 				return logError(err)

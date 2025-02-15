@@ -8,6 +8,8 @@ import (
 	api "github.com/jsiebens/ionscale/pkg/gen/ionscale/v1"
 	"google.golang.org/protobuf/types/known/timestamppb"
 	"net/netip"
+	"strings"
+	"tailscale.com/util/dnsname"
 	"time"
 )
 
@@ -160,6 +162,72 @@ func (s *Service) ExpireMachine(ctx context.Context, req *connect.Request[api.Ex
 	s.sessionManager.NotifyAll(m.TailnetID)
 
 	return connect.NewResponse(&api.ExpireMachineResponse{}), nil
+}
+
+func (s *Service) SetMachineName(ctx context.Context, req *connect.Request[api.SetMachineNameRequest]) (*connect.Response[api.SetMachineNameResponse], error) {
+	principal := CurrentPrincipal(ctx)
+
+	m, err := s.repository.GetMachine(ctx, req.Msg.MachineId)
+	if err != nil {
+		return nil, logError(err)
+	}
+
+	if m == nil {
+		return nil, connect.NewError(connect.CodeNotFound, fmt.Errorf("machine not found"))
+	}
+
+	if !principal.IsSystemAdmin() && !principal.IsTailnetAdmin(m.TailnetID) {
+		return nil, connect.NewError(connect.CodePermissionDenied, fmt.Errorf("permission denied"))
+	}
+
+	if req.Msg.UseOsHostname {
+		sanitizeHostname := dnsname.SanitizeHostname(m.HostInfo.Hostname)
+		nameIdx, err := s.repository.GetNextMachineNameIndex(ctx, m.TailnetID, sanitizeHostname)
+		if err != nil {
+			return nil, logError(err)
+		}
+
+		m.Name = sanitizeHostname
+		m.NameIdx = nameIdx
+		m.UseOSHostname = true
+		if err := s.repository.SaveMachine(ctx, m); err != nil {
+			return nil, logError(err)
+		}
+
+		s.sessionManager.NotifyAll(m.TailnetID)
+
+		return connect.NewResponse(&api.SetMachineNameResponse{}), nil
+	}
+
+	if strings.TrimSpace(req.Msg.Name) == "" {
+		return nil, connect.NewError(connect.CodeInvalidArgument, fmt.Errorf("machine name is required when not using os hostname"))
+	}
+
+	sanitizeHostname := dnsname.SanitizeHostname(req.Msg.Name)
+
+	if sanitizeHostname == m.Name {
+		return connect.NewResponse(&api.SetMachineNameResponse{}), nil
+	}
+
+	nameIdx, err := s.repository.GetNextMachineNameIndex(ctx, m.TailnetID, sanitizeHostname)
+	if err != nil {
+		return nil, logError(err)
+	}
+
+	if nameIdx > 0 {
+		return nil, connect.NewError(connect.CodeAlreadyExists, fmt.Errorf("machine name already in use"))
+	}
+
+	m.Name = sanitizeHostname
+	m.NameIdx = 0
+	m.UseOSHostname = false
+	if err := s.repository.SaveMachine(ctx, m); err != nil {
+		return nil, logError(err)
+	}
+
+	s.sessionManager.NotifyAll(m.TailnetID)
+
+	return connect.NewResponse(&api.SetMachineNameResponse{}), nil
 }
 
 func (s *Service) AuthorizeMachine(ctx context.Context, req *connect.Request[api.AuthorizeMachineRequest]) (*connect.Response[api.AuthorizeMachineResponse], error) {
