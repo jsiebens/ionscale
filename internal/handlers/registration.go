@@ -86,14 +86,13 @@ func (h *RegistrationHandlers) Register(c echo.Context) error {
 		}
 
 		sanitizeHostname := dnsname.SanitizeHostname(req.Hostinfo.Hostname)
-		if m.Name != sanitizeHostname {
+		if m.UseOSHostname && m.Name != sanitizeHostname {
 			nameIdx, err := h.repository.GetNextMachineNameIndex(ctx, m.TailnetID, sanitizeHostname)
 			if err != nil {
 				return logError(err)
 			}
 			m.Name = sanitizeHostname
 			m.NameIdx = nameIdx
-
 		}
 
 		advertisedTags := domain.SanitizeTags(req.Hostinfo.RequestTags)
@@ -196,6 +195,7 @@ func (h *RegistrationHandlers) authenticateMachineWithAuthKey(c echo.Context, ma
 			ID:                util.NextID(),
 			Name:              sanitizeHostname,
 			NameIdx:           nameIdx,
+			UseOSHostname:     true,
 			MachineKey:        machineKey,
 			NodeKey:           nodeKey,
 			Ephemeral:         authKey.Ephemeral || req.Ephemeral,
@@ -225,7 +225,7 @@ func (h *RegistrationHandlers) authenticateMachineWithAuthKey(c echo.Context, ma
 		m.IPv6 = domain.IP{Addr: ipv6}
 	} else {
 		sanitizeHostname := dnsname.SanitizeHostname(req.Hostinfo.Hostname)
-		if m.Name != sanitizeHostname {
+		if m.UseOSHostname && m.Name != sanitizeHostname {
 			nameIdx, err := h.repository.GetNextMachineNameIndex(ctx, tailnet.ID, sanitizeHostname)
 			if err != nil {
 				return logError(err)

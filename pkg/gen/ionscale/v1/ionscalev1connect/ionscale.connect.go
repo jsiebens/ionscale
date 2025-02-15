@@ -132,6 +132,9 @@ const (
 	// IonscaleServiceListMachinesProcedure is the fully-qualified name of the IonscaleService's
 	// ListMachines RPC.
 	IonscaleServiceListMachinesProcedure = "/ionscale.v1.IonscaleService/ListMachines"
+	// IonscaleServiceSetMachineNameProcedure is the fully-qualified name of the IonscaleService's
+	// SetMachineName RPC.
+	IonscaleServiceSetMachineNameProcedure = "/ionscale.v1.IonscaleService/SetMachineName"
 	// IonscaleServiceAuthorizeMachineProcedure is the fully-qualified name of the IonscaleService's
 	// AuthorizeMachine RPC.
 	IonscaleServiceAuthorizeMachineProcedure = "/ionscale.v1.IonscaleService/AuthorizeMachine"
@@ -196,6 +199,7 @@ type IonscaleServiceClient interface {
 	DeleteUser(context.Context, *connect_go.Request[v1.DeleteUserRequest]) (*connect_go.Response[v1.DeleteUserResponse], error)
 	GetMachine(context.Context, *connect_go.Request[v1.GetMachineRequest]) (*connect_go.Response[v1.GetMachineResponse], error)
 	ListMachines(context.Context, *connect_go.Request[v1.ListMachinesRequest]) (*connect_go.Response[v1.ListMachinesResponse], error)
+	SetMachineName(context.Context, *connect_go.Request[v1.SetMachineNameRequest]) (*connect_go.Response[v1.SetMachineNameResponse], error)
 	AuthorizeMachine(context.Context, *connect_go.Request[v1.AuthorizeMachineRequest]) (*connect_go.Response[v1.AuthorizeMachineResponse], error)
 	ExpireMachine(context.Context, *connect_go.Request[v1.ExpireMachineRequest]) (*connect_go.Response[v1.ExpireMachineResponse], error)
 	DeleteMachine(context.Context, *connect_go.Request[v1.DeleteMachineRequest]) (*connect_go.Response[v1.DeleteMachineResponse], error)
@@ -382,6 +386,11 @@ func NewIonscaleServiceClient(httpClient connect_go.HTTPClient, baseURL string, 
 			baseURL+IonscaleServiceListMachinesProcedure,
 			opts...,
 		),
+		setMachineName: connect_go.NewClient[v1.SetMachineNameRequest, v1.SetMachineNameResponse](
+			httpClient,
+			baseURL+IonscaleServiceSetMachineNameProcedure,
+			opts...,
+		),
 		authorizeMachine: connect_go.NewClient[v1.AuthorizeMachineRequest, v1.AuthorizeMachineResponse](
 			httpClient,
 			baseURL+IonscaleServiceAuthorizeMachineProcedure,
@@ -465,6 +474,7 @@ type ionscaleServiceClient struct {
 	deleteUser                  *connect_go.Client[v1.DeleteUserRequest, v1.DeleteUserResponse]
 	getMachine                  *connect_go.Client[v1.GetMachineRequest, v1.GetMachineResponse]
 	listMachines                *connect_go.Client[v1.ListMachinesRequest, v1.ListMachinesResponse]
+	setMachineName              *connect_go.Client[v1.SetMachineNameRequest, v1.SetMachineNameResponse]
 	authorizeMachine            *connect_go.Client[v1.AuthorizeMachineRequest, v1.AuthorizeMachineResponse]
 	expireMachine               *connect_go.Client[v1.ExpireMachineRequest, v1.ExpireMachineResponse]
 	deleteMachine               *connect_go.Client[v1.DeleteMachineRequest, v1.DeleteMachineResponse]
@@ -641,6 +651,11 @@ func (c *ionscaleServiceClient) ListMachines(ctx context.Context, req *connect_g
 	return c.listMachines.CallUnary(ctx, req)
 }
 
+// SetMachineName calls ionscale.v1.IonscaleService.SetMachineName.
+func (c *ionscaleServiceClient) SetMachineName(ctx context.Context, req *connect_go.Request[v1.SetMachineNameRequest]) (*connect_go.Response[v1.SetMachineNameResponse], error) {
+	return c.setMachineName.CallUnary(ctx, req)
+}
+
 // AuthorizeMachine calls ionscale.v1.IonscaleService.AuthorizeMachine.
 func (c *ionscaleServiceClient) AuthorizeMachine(ctx context.Context, req *connect_go.Request[v1.AuthorizeMachineRequest]) (*connect_go.Response[v1.AuthorizeMachineResponse], error) {
 	return c.authorizeMachine.CallUnary(ctx, req)
@@ -721,6 +736,7 @@ type IonscaleServiceHandler interface {
 	DeleteUser(context.Context, *connect_go.Request[v1.DeleteUserRequest]) (*connect_go.Response[v1.DeleteUserResponse], error)
 	GetMachine(context.Context, *connect_go.Request[v1.GetMachineRequest]) (*connect_go.Response[v1.GetMachineResponse], error)
 	ListMachines(context.Context, *connect_go.Request[v1.ListMachinesRequest]) (*connect_go.Response[v1.ListMachinesResponse], error)
+	SetMachineName(context.Context, *connect_go.Request[v1.SetMachineNameRequest]) (*connect_go.Response[v1.SetMachineNameResponse], error)
 	AuthorizeMachine(context.Context, *connect_go.Request[v1.AuthorizeMachineRequest]) (*connect_go.Response[v1.AuthorizeMachineResponse], error)
 	ExpireMachine(context.Context, *connect_go.Request[v1.ExpireMachineRequest]) (*connect_go.Response[v1.ExpireMachineResponse], error)
 	DeleteMachine(context.Context, *connect_go.Request[v1.DeleteMachineRequest]) (*connect_go.Response[v1.DeleteMachineResponse], error)
@@ -903,6 +919,11 @@ func NewIonscaleServiceHandler(svc IonscaleServiceHandler, opts ...connect_go.Ha
 		svc.ListMachines,
 		opts...,
 	)
+	ionscaleServiceSetMachineNameHandler := connect_go.NewUnaryHandler(
+		IonscaleServiceSetMachineNameProcedure,
+		svc.SetMachineName,
+		opts...,
+	)
 	ionscaleServiceAuthorizeMachineHandler := connect_go.NewUnaryHandler(
 		IonscaleServiceAuthorizeMachineProcedure,
 		svc.AuthorizeMachine,
@@ -1016,6 +1037,8 @@ func NewIonscaleServiceHandler(svc IonscaleServiceHandler, opts ...connect_go.Ha
 			ionscaleServiceGetMachineHandler.ServeHTTP(w, r)
 		case IonscaleServiceListMachinesProcedure:
 			ionscaleServiceListMachinesHandler.ServeHTTP(w, r)
+		case IonscaleServiceSetMachineNameProcedure:
+			ionscaleServiceSetMachineNameHandler.ServeHTTP(w, r)
 		case IonscaleServiceAuthorizeMachineProcedure:
 			ionscaleServiceAuthorizeMachineHandler.ServeHTTP(w, r)
 		case IonscaleServiceExpireMachineProcedure:
@@ -1173,6 +1196,10 @@ func (UnimplementedIonscaleServiceHandler) GetMachine(context.Context, *connect_
 
 func (UnimplementedIonscaleServiceHandler) ListMachines(context.Context, *connect_go.Request[v1.ListMachinesRequest]) (*connect_go.Response[v1.ListMachinesResponse], error) {
 	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("ionscale.v1.IonscaleService.ListMachines is not implemented"))
+}
+
+func (UnimplementedIonscaleServiceHandler) SetMachineName(context.Context, *connect_go.Request[v1.SetMachineNameRequest]) (*connect_go.Response[v1.SetMachineNameResponse], error) {
+	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("ionscale.v1.IonscaleService.SetMachineName is not implemented"))
 }
 
 func (UnimplementedIonscaleServiceHandler) AuthorizeMachine(context.Context, *connect_go.Request[v1.AuthorizeMachineRequest]) (*connect_go.Response[v1.AuthorizeMachineResponse], error) {

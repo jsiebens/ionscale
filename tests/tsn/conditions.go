@@ -77,6 +77,17 @@ func HasExpiredPeer(name string) Condition {
 	}
 }
 
+func HasPeer(name string) Condition {
+	return func(status *ipnstate.Status) bool {
+		for _, peer := range status.Peer {
+			if strings.HasPrefix(peer.DNSName, name) {
+				return true
+			}
+		}
+		return false
+	}
+}
+
 func HasCapability(capability tailcfg.NodeCapability) Condition {
 	return func(status *ipnstate.Status) bool {
 		self := status.Self

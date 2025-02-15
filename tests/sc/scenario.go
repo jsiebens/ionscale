@@ -85,6 +85,23 @@ func (s *Scenario) ExpireMachines(tailnetID uint64) {
 	}
 }
 
+func (s *Scenario) FindMachine(tailnetID uint64, name string) (uint64, error) {
+	machines := s.ListMachines(tailnetID)
+
+	for _, m := range machines {
+		if m.Name == name {
+			return m.Id, nil
+		}
+	}
+	return 0, fmt.Errorf("machine %s not found", name)
+}
+
+func (s *Scenario) SetMachineName(machineID uint64, useOSHostname bool, name string) error {
+	req := &api.SetMachineNameRequest{MachineId: machineID, UseOsHostname: useOSHostname, Name: name}
+	_, err := s.ionscaleClient.SetMachineName(context.Background(), connect.NewRequest(req))
+	return err
+}
+
 func (s *Scenario) SetACLPolicy(tailnetID uint64, policy *ionscaleclt.ACLPolicy) {
 	_, err := s.ionscaleClient.SetACLPolicy(context.Background(), connect.NewRequest(&api.SetACLPolicyRequest{TailnetId: tailnetID, Policy: policy.Marshal()}))
 	require.NoError(s.t, err)
@@ -135,6 +152,10 @@ type TailscaleNodeConfig struct {
 }
 
 type TailscaleNodeOpt = func(*TailscaleNodeConfig)
+
+func RandomName() string {
+	return petname.Generate(3, "-")
+}
 
 func WithName(name string) TailscaleNodeOpt {
 	return func(config *TailscaleNodeConfig) {

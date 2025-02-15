@@ -48,6 +48,14 @@ message AuthorizeMachineRequest {
 
 message AuthorizeMachineResponse {}
 
+message SetMachineNameRequest {
+  uint64 machine_id = 1;
+  bool use_os_hostname = 2;
+  string name = 3;
+}
+
+message SetMachineNameResponse {}
+
 message Machine {
   uint64 id = 1;
   string name = 2;
