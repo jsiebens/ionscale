@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/binary"
 	"encoding/json"
-	"fmt"
 	"github.com/jsiebens/ionscale/internal/config"
 	"github.com/jsiebens/ionscale/internal/core"
 	"github.com/jsiebens/ionscale/internal/domain"
@@ -81,11 +80,6 @@ func (h *PollNetMapHandler) handlePollNetMap(c echo.Context, m *domain.Machine, 
 	if err != nil {
 		return logError(err)
 	}
-
-	fmt.Println("======================================================")
-	fmt.Println(mapRequest.Hostinfo.Hostname)
-	fmt.Println(mapRequest.Stream)
-	fmt.Println("======================================================")
 
 	if !mapRequest.Stream {
 		m.HostInfo = domain.HostInfo(*mapRequest.Hostinfo)
