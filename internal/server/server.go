@@ -122,6 +122,7 @@ func Start(ctx context.Context, c *config.Config) error {
 		idTokenHandlers := handlers.NewIDTokenHandlers(machinePublicKey, c, repository)
 		sshActionHandlers := handlers.NewSSHActionHandlers(machinePublicKey, c, repository)
 		queryFeatureHandlers := handlers.NewQueryFeatureHandlers(machinePublicKey, dnsProvider, repository)
+		updateHealthHandlers := handlers.NewUpdateHealthHandlers(machinePublicKey, repository)
 
 		e := echo.New()
 		e.Binder = handlers.JsonBinder{}
@@ -134,6 +135,7 @@ func Start(ctx context.Context, c *config.Config) error {
 		e.GET("/machine/ssh/action/:src_machine_id/to/:dst_machine_id/:check_period", sshActionHandlers.StartAuth)
 		e.GET("/machine/ssh/action/check/:key", sshActionHandlers.CheckAuth)
 		e.POST("/machine/feature/query", queryFeatureHandlers.QueryFeature)
+		e.POST("/machine/update-health", updateHealthHandlers.UpdateHealth)
 
 		return e
 	}
