@@ -131,19 +131,21 @@ func (h *PollNetMapHandler) handlePollNetMap(c echo.Context, m *domain.Machine, 
 
 	defer func() {
 		connectedDevices.WithLabelValues(m.Tailnet.Name).Dec()
-		h.sessionManager.Deregister(m.TailnetID, m.ID)
+		h.sessionManager.Deregister(m.TailnetID, m.ID, updateChan)
 		keepAliveTicker.Stop()
 		syncTicker.Stop()
 		_ = h.repository.SetMachineLastSeen(ctx, machineID)
 	}()
 
-	var latestSync = time.Now()
-	var latestUpdate = latestSync
+	var shouldUpdate bool = false
 
 	for {
 		select {
-		case <-updateChan:
-			latestUpdate = time.Now()
+		case _, ok := <-updateChan:
+			if !ok {
+				return nil
+			}
+			shouldUpdate = true
 		case <-keepAliveTicker.C:
 			if mapRequest.KeepAlive {
 				if _, err := c.Response().Write(keepAliveResponse); err != nil {
@@ -153,7 +155,7 @@ func (h *PollNetMapHandler) handlePollNetMap(c echo.Context, m *domain.Machine, 
 				c.Response().Flush()
 			}
 		case <-syncTicker.C:
-			if latestSync.Before(latestUpdate) {
+			if shouldUpdate {
 				machine, err := h.repository.GetMachine(ctx, machineID)
 				if err != nil {
 					return logError(err)
@@ -176,7 +178,7 @@ func (h *PollNetMapHandler) handlePollNetMap(c echo.Context, m *domain.Machine, 
 				}
 				c.Response().Flush()
 
-				latestSync = latestUpdate
+				shouldUpdate = false
 			}
 		case <-notify:
 			return nil
