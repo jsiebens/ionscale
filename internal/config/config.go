@@ -3,9 +3,7 @@ package config
 import (
 	"encoding/base64"
 	"fmt"
-	"github.com/caarlos0/env/v6"
 	"github.com/caddyserver/certmagic"
-	"github.com/imdario/mergo"
 	"github.com/jsiebens/ionscale/internal/domain"
 	"github.com/jsiebens/ionscale/internal/key"
 	"github.com/jsiebens/ionscale/internal/util"
@@ -14,6 +12,8 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"regexp"
+	"strings"
 	"tailscale.com/tailcfg"
 	tkey "tailscale.com/types/key"
 	"time"
@@ -61,6 +61,11 @@ func LoadConfig(path string) (*Config, error) {
 			return nil, err
 		}
 
+		b, err = expandEnvVars(b)
+		if err != nil {
+			return nil, err
+		}
+
 		if err := yaml.Unmarshal(b, cfg); err != nil {
 			return nil, err
 		}
@@ -73,20 +78,14 @@ func LoadConfig(path string) (*Config, error) {
 			return nil, err
 		}
 
-		// merge env configuration on top of the default/file configuration
+		b, err = expandEnvVars(b)
+		if err != nil {
+			return nil, err
+		}
+
 		if err := yaml.Unmarshal(b, cfg); err != nil {
 			return nil, err
 		}
-	}
-
-	envCfg := &Config{}
-	if err := env.Parse(envCfg, env.Options{Prefix: "IONSCALE_"}); err != nil {
-		return nil, err
-	}
-
-	// merge env configuration on top of the default/file configuration
-	if err := mergo.Merge(cfg, envCfg, mergo.WithOverride); err != nil {
-		return nil, err
 	}
 
 	keepAliveInterval = cfg.PollNet.KeepAliveInterval
@@ -143,19 +142,19 @@ type ServerKeys struct {
 }
 
 type Config struct {
-	ListenAddr        string   `yaml:"listen_addr,omitempty" env:"LISTEN_ADDR"`
-	StunListenAddr    string   `yaml:"stun_listen_addr,omitempty" env:"STUN_LISTEN_ADDR"`
-	MetricsListenAddr string   `yaml:"metrics_listen_addr,omitempty" env:"METRICS_LISTEN_ADDR"`
-	PublicAddr        string   `yaml:"public_addr,omitempty" env:"PUBLIC_ADDR"`
-	StunPublicAddr    string   `yaml:"stun_public_addr,omitempty" env:"STUN_PUBLIC_ADDR"`
-	Tls               Tls      `yaml:"tls,omitempty" envPrefix:"TLS_"`
-	PollNet           PollNet  `yaml:"poll_net,omitempty" envPrefix:"POLL_NET_"`
-	Keys              Keys     `yaml:"keys,omitempty" envPrefix:"KEYS_"`
-	Database          Database `yaml:"database,omitempty" envPrefix:"DB_"`
-	Auth              Auth     `yaml:"auth,omitempty" envPrefix:"AUTH_"`
+	ListenAddr        string   `yaml:"listen_addr,omitempty"`
+	StunListenAddr    string   `yaml:"stun_listen_addr,omitempty"`
+	MetricsListenAddr string   `yaml:"metrics_listen_addr,omitempty"`
+	PublicAddr        string   `yaml:"public_addr,omitempty"`
+	StunPublicAddr    string   `yaml:"stun_public_addr,omitempty"`
+	Tls               Tls      `yaml:"tls,omitempty"`
+	PollNet           PollNet  `yaml:"poll_net,omitempty"`
+	Keys              Keys     `yaml:"keys,omitempty"`
+	Database          Database `yaml:"database,omitempty"`
+	Auth              Auth     `yaml:"auth,omitempty"`
 	DNS               DNS      `yaml:"dns,omitempty"`
-	DERP              DERP     `yaml:"derp,omitempty" envPrefix:"DERP_"`
-	Logging           Logging  `yaml:"logging,omitempty" envPrefix:"LOGGING_"`
+	DERP              DERP     `yaml:"derp,omitempty"`
+	Logging           Logging  `yaml:"logging,omitempty"`
 
 	PublicUrl *url.URL `yaml:"-"`
 
@@ -166,50 +165,50 @@ type Config struct {
 }
 
 type Tls struct {
-	Disable     bool   `yaml:"disable" env:"DISABLE"`
-	ForceHttps  bool   `yaml:"force_https" env:"FORCE_HTTPS"`
-	CertFile    string `yaml:"cert_file,omitempty" env:"CERT_FILE"`
-	KeyFile     string `yaml:"key_file,omitempty" env:"KEY_FILE"`
-	AcmeEnabled bool   `yaml:"acme,omitempty" env:"ACME_ENABLED"`
-	AcmeEmail   string `yaml:"acme_email,omitempty" env:"ACME_EMAIL"`
-	AcmeCA      string `yaml:"acme_ca,omitempty" env:"ACME_CA"`
+	Disable     bool   `yaml:"disable"`
+	ForceHttps  bool   `yaml:"force_https"`
+	CertFile    string `yaml:"cert_file,omitempty"`
+	KeyFile     string `yaml:"key_file,omitempty"`
+	AcmeEnabled bool   `yaml:"acme,omitempty"`
+	AcmeEmail   string `yaml:"acme_email,omitempty"`
+	AcmeCA      string `yaml:"acme_ca,omitempty"`
 }
 
 type PollNet struct {
-	KeepAliveInterval time.Duration `yaml:"keep_alive_interval" env:"KEEP_ALIVE_INTERVAL"`
+	KeepAliveInterval time.Duration `yaml:"keep_alive_interval"`
 }
 
 type Logging struct {
-	Level  string `yaml:"level,omitempty" env:"LEVEL"`
-	Format string `yaml:"format,omitempty" env:"FORMAT"`
-	File   string `yaml:"file,omitempty" env:"FILE"`
+	Level  string `yaml:"level,omitempty"`
+	Format string `yaml:"format,omitempty"`
+	File   string `yaml:"file,omitempty"`
 }
 
 type Database struct {
-	Type            string        `yaml:"type,omitempty" env:"TYPE"`
-	Url             string        `yaml:"url,omitempty" env:"URL"`
-	MaxOpenConns    int           `yaml:"max_open_conns,omitempty" env:"MAX_OPEN_CONNS"`
-	MaxIdleConns    int           `yaml:"max_idle_conns,omitempty" env:"MAX_IDLE_CONNS"`
-	ConnMaxLifetime time.Duration `yaml:"conn_max_life_time,omitempty" env:"CONN_MAX_LIFE_TIME"`
-	ConnMaxIdleTime time.Duration `yaml:"conn_max_idle_time,omitempty" env:"CONN_MAX_IDLE_TIME"`
+	Type            string        `yaml:"type,omitempty"`
+	Url             string        `yaml:"url,omitempty"`
+	MaxOpenConns    int           `yaml:"max_open_conns,omitempty"`
+	MaxIdleConns    int           `yaml:"max_idle_conns,omitempty"`
+	ConnMaxLifetime time.Duration `yaml:"conn_max_life_time,omitempty"`
+	ConnMaxIdleTime time.Duration `yaml:"conn_max_idle_time,omitempty"`
 }
 
 type Keys struct {
-	ControlKey       string `yaml:"control_key,omitempty" env:"CONTROL_KEY"`
-	LegacyControlKey string `yaml:"legacy_control_key,omitempty" env:"LEGACY_CONTROL_KEY"`
-	SystemAdminKey   string `yaml:"system_admin_key,omitempty" env:"SYSTEM_ADMIN_KEY"`
+	ControlKey       string `yaml:"control_key,omitempty"`
+	LegacyControlKey string `yaml:"legacy_control_key,omitempty"`
+	SystemAdminKey   string `yaml:"system_admin_key,omitempty"`
 }
 
 type Auth struct {
-	Provider          AuthProvider      `yaml:"provider,omitempty" envPrefix:"PROVIDER_"`
+	Provider          AuthProvider      `yaml:"provider,omitempty"`
 	SystemAdminPolicy SystemAdminPolicy `yaml:"system_admins"`
 }
 
 type AuthProvider struct {
-	Issuer       string   `yaml:"issuer" env:"ISSUER"`
-	ClientID     string   `yaml:"client_id" env:"CLIENT_ID"`
-	ClientSecret string   `yaml:"client_secret" env:"CLIENT_SECRET"`
-	Scopes       []string `yaml:"additional_scopes"  env:"SCOPES"`
+	Issuer       string   `yaml:"issuer"`
+	ClientID     string   `yaml:"client_id"`
+	ClientSecret string   `yaml:"client_secret"`
+	Scopes       []string `yaml:"additional_scopes" `
 }
 
 type DNS struct {
@@ -355,4 +354,46 @@ func (c *Config) DefaultDERPMap() *tailcfg.DERPMap {
 			},
 		},
 	}
+}
+
+// Match ${VAR:default} syntax for variables with default values
+var optionalEnvRegex = regexp.MustCompile(`\${([a-zA-Z0-9_]+):([^}]*)}`)
+
+// Match ${VAR} syntax (without default) - these are required
+var requiredEnvRegex = regexp.MustCompile(`\${([a-zA-Z0-9_]+)}`)
+
+func expandEnvVars(config []byte) ([]byte, error) {
+	var result = config
+	var missingVars []string
+
+	result = optionalEnvRegex.ReplaceAllFunc(result, func(match []byte) []byte {
+		parts := optionalEnvRegex.FindSubmatch(match)
+		envVar := string(parts[1])
+		defaultValue := parts[2]
+
+		envValue := os.Getenv(envVar)
+		if envValue != "" {
+			return []byte(envValue)
+		}
+		return defaultValue
+	})
+
+	result = requiredEnvRegex.ReplaceAllFunc(result, func(match []byte) []byte {
+		parts := requiredEnvRegex.FindSubmatch(match)
+		envVar := string(parts[1])
+		envValue := os.Getenv(envVar)
+
+		if envValue == "" {
+			missingVars = append(missingVars, envVar)
+			return match
+		}
+
+		return []byte(envValue)
+	})
+
+	if len(missingVars) > 0 {
+		return nil, fmt.Errorf("missing required environment variables: %s", strings.Join(missingVars, ", "))
+	}
+
+	return result, nil
 }

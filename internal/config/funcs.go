@@ -25,18 +25,6 @@ func GetString(key, defaultValue string) string {
 	return defaultValue
 }
 
-func GetUint64(key string, defaultValue uint64) uint64 {
-	v := os.Getenv(key)
-	if v != "" {
-		vi, err := strconv.ParseUint(v, 10, 64)
-		if err != nil {
-			return defaultValue
-		}
-		return vi
-	}
-	return defaultValue
-}
-
 func validatePublicAddr(addr string) (*url.URL, string, int, error) {
 	scheme := "https"
 
