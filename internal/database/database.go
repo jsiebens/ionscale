@@ -39,8 +39,8 @@ func OpenDB(config *config.Database, logger *zap.Logger) (*sql.DB, domain.Reposi
 
 	sqlDB.SetMaxOpenConns(config.MaxOpenConns)
 	sqlDB.SetMaxIdleConns(config.MaxIdleConns)
-	sqlDB.SetConnMaxLifetime(config.ConnMaxLifetime)
-	sqlDB.SetConnMaxIdleTime(config.ConnMaxIdleTime)
+	sqlDB.SetConnMaxLifetime(config.ConnMaxLifetime.Std())
+	sqlDB.SetConnMaxIdleTime(config.ConnMaxIdleTime.Std())
 
 	repository := domain.NewRepository(db)
 

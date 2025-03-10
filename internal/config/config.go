@@ -2,17 +2,18 @@ package config
 
 import (
 	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"github.com/caddyserver/certmagic"
 	"github.com/jsiebens/ionscale/internal/domain"
 	"github.com/jsiebens/ionscale/internal/key"
 	"github.com/jsiebens/ionscale/internal/util"
 	"github.com/mitchellh/go-homedir"
-	"gopkg.in/yaml.v3"
 	"net/url"
 	"os"
 	"path/filepath"
 	"regexp"
+	"sigs.k8s.io/yaml"
 	"strings"
 	"tailscale.com/tailcfg"
 	tkey "tailscale.com/types/key"
@@ -88,7 +89,7 @@ func LoadConfig(path string) (*Config, error) {
 		}
 	}
 
-	keepAliveInterval = cfg.PollNet.KeepAliveInterval
+	keepAliveInterval = time.Duration(cfg.PollNet.KeepAliveInterval)
 	magicDNSSuffix = cfg.DNS.MagicDNSSuffix
 
 	if cfg.DNS.Provider.Zone != "" {
@@ -116,7 +117,7 @@ func defaultConfig() *Config {
 			AcmeCA:      certmagic.LetsEncryptProductionCA,
 		},
 		PollNet: PollNet{
-			KeepAliveInterval: defaultKeepAliveInterval,
+			KeepAliveInterval: Duration(defaultKeepAliveInterval),
 		},
 		DNS: DNS{
 			MagicDNSSuffix: defaultMagicDNSSuffix,
@@ -142,21 +143,21 @@ type ServerKeys struct {
 }
 
 type Config struct {
-	ListenAddr        string   `yaml:"listen_addr,omitempty"`
-	StunListenAddr    string   `yaml:"stun_listen_addr,omitempty"`
-	MetricsListenAddr string   `yaml:"metrics_listen_addr,omitempty"`
-	PublicAddr        string   `yaml:"public_addr,omitempty"`
-	StunPublicAddr    string   `yaml:"stun_public_addr,omitempty"`
-	Tls               Tls      `yaml:"tls,omitempty"`
-	PollNet           PollNet  `yaml:"poll_net,omitempty"`
-	Keys              Keys     `yaml:"keys,omitempty"`
-	Database          Database `yaml:"database,omitempty"`
-	Auth              Auth     `yaml:"auth,omitempty"`
-	DNS               DNS      `yaml:"dns,omitempty"`
-	DERP              DERP     `yaml:"derp,omitempty"`
-	Logging           Logging  `yaml:"logging,omitempty"`
+	ListenAddr        string   `json:"listen_addr,omitempty"`
+	StunListenAddr    string   `json:"stun_listen_addr,omitempty"`
+	MetricsListenAddr string   `json:"metrics_listen_addr,omitempty"`
+	PublicAddr        string   `json:"public_addr,omitempty"`
+	StunPublicAddr    string   `json:"stun_public_addr,omitempty"`
+	Tls               Tls      `json:"tls,omitempty"`
+	PollNet           PollNet  `json:"poll_net,omitempty"`
+	Keys              Keys     `json:"keys,omitempty"`
+	Database          Database `json:"database,omitempty"`
+	Auth              Auth     `json:"auth,omitempty"`
+	DNS               DNS      `json:"dns,omitempty"`
+	DERP              DERP     `json:"derp,omitempty"`
+	Logging           Logging  `json:"logging,omitempty"`
 
-	PublicUrl *url.URL `yaml:"-"`
+	PublicUrl *url.URL `json:"-"`
 
 	stunHost string
 	stunPort int
@@ -165,79 +166,79 @@ type Config struct {
 }
 
 type Tls struct {
-	Disable     bool   `yaml:"disable"`
-	ForceHttps  bool   `yaml:"force_https"`
-	CertFile    string `yaml:"cert_file,omitempty"`
-	KeyFile     string `yaml:"key_file,omitempty"`
-	AcmeEnabled bool   `yaml:"acme,omitempty"`
-	AcmeEmail   string `yaml:"acme_email,omitempty"`
-	AcmeCA      string `yaml:"acme_ca,omitempty"`
+	Disable     bool   `json:"disable"`
+	ForceHttps  bool   `json:"force_https"`
+	CertFile    string `json:"cert_file,omitempty"`
+	KeyFile     string `json:"key_file,omitempty"`
+	AcmeEnabled bool   `json:"acme,omitempty"`
+	AcmeEmail   string `json:"acme_email,omitempty"`
+	AcmeCA      string `json:"acme_ca,omitempty"`
 }
 
 type PollNet struct {
-	KeepAliveInterval time.Duration `yaml:"keep_alive_interval"`
+	KeepAliveInterval Duration `json:"keep_alive_interval"`
 }
 
 type Logging struct {
-	Level  string `yaml:"level,omitempty"`
-	Format string `yaml:"format,omitempty"`
-	File   string `yaml:"file,omitempty"`
+	Level  string `json:"level,omitempty"`
+	Format string `json:"format,omitempty"`
+	File   string `json:"file,omitempty"`
 }
 
 type Database struct {
-	Type            string        `yaml:"type,omitempty"`
-	Url             string        `yaml:"url,omitempty"`
-	MaxOpenConns    int           `yaml:"max_open_conns,omitempty"`
-	MaxIdleConns    int           `yaml:"max_idle_conns,omitempty"`
-	ConnMaxLifetime time.Duration `yaml:"conn_max_life_time,omitempty"`
-	ConnMaxIdleTime time.Duration `yaml:"conn_max_idle_time,omitempty"`
+	Type            string   `json:"type,omitempty"`
+	Url             string   `json:"url,omitempty"`
+	MaxOpenConns    int      `json:"max_open_conns,omitempty"`
+	MaxIdleConns    int      `json:"max_idle_conns,omitempty"`
+	ConnMaxLifetime Duration `json:"conn_max_life_time,omitempty"`
+	ConnMaxIdleTime Duration `json:"conn_max_idle_time,omitempty"`
 }
 
 type Keys struct {
-	ControlKey       string `yaml:"control_key,omitempty"`
-	LegacyControlKey string `yaml:"legacy_control_key,omitempty"`
-	SystemAdminKey   string `yaml:"system_admin_key,omitempty"`
+	ControlKey       string `json:"control_key,omitempty"`
+	LegacyControlKey string `json:"legacy_control_key,omitempty"`
+	SystemAdminKey   string `json:"system_admin_key,omitempty"`
 }
 
 type Auth struct {
-	Provider          AuthProvider      `yaml:"provider,omitempty"`
-	SystemAdminPolicy SystemAdminPolicy `yaml:"system_admins"`
+	Provider          AuthProvider      `json:"provider,omitempty"`
+	SystemAdminPolicy SystemAdminPolicy `json:"system_admins"`
 }
 
 type AuthProvider struct {
-	Issuer       string   `yaml:"issuer"`
-	ClientID     string   `yaml:"client_id"`
-	ClientSecret string   `yaml:"client_secret"`
-	Scopes       []string `yaml:"additional_scopes" `
+	Issuer       string   `json:"issuer"`
+	ClientID     string   `json:"client_id"`
+	ClientSecret string   `json:"client_secret"`
+	Scopes       []string `json:"additional_scopes" `
 }
 
 type DNS struct {
-	MagicDNSSuffix string      `yaml:"magic_dns_suffix"`
-	Provider       DNSProvider `yaml:"provider,omitempty"`
+	MagicDNSSuffix string      `json:"magic_dns_suffix"`
+	Provider       DNSProvider `json:"provider,omitempty"`
 }
 
 type DNSProvider struct {
-	Name          string            `yaml:"name"`
-	Zone          string            `yaml:"zone"`
-	Configuration map[string]string `yaml:"config"`
+	Name          string          `json:"name"`
+	Zone          string          `json:"zone"`
+	Configuration json.RawMessage `json:"config"`
 }
 
 type SystemAdminPolicy struct {
-	Subs    []string `yaml:"subs,omitempty"`
-	Emails  []string `yaml:"emails,omitempty"`
-	Filters []string `yaml:"filters,omitempty"`
+	Subs    []string `json:"subs,omitempty"`
+	Emails  []string `json:"emails,omitempty"`
+	Filters []string `json:"filters,omitempty"`
 }
 
 type DERP struct {
-	Server  DERPServer `yaml:"server,omitempty"`
-	Sources []string   `yaml:"sources,omitempty"`
+	Server  DERPServer `json:"server,omitempty"`
+	Sources []string   `json:"sources,omitempty"`
 }
 
 type DERPServer struct {
-	Disabled   bool   `yaml:"disabled,omitempty"`
-	RegionID   int    `yaml:"region_id,omitempty"`
-	RegionCode string `yaml:"region_code,omitempty"`
-	RegionName string `yaml:"region_name,omitempty"`
+	Disabled   bool   `json:"disabled,omitempty"`
+	RegionID   int    `json:"region_id,omitempty"`
+	RegionCode string `json:"region_code,omitempty"`
+	RegionName string `json:"region_name,omitempty"`
 }
 
 func (c *Config) Validate() (*Config, error) {
@@ -353,6 +354,37 @@ func (c *Config) DefaultDERPMap() *tailcfg.DERPMap {
 				},
 			},
 		},
+	}
+}
+
+type Duration time.Duration
+
+func (d Duration) Std() time.Duration {
+	return time.Duration(d)
+}
+
+func (d Duration) MarshalJSON() ([]byte, error) {
+	return json.Marshal(time.Duration(d).String())
+}
+
+func (d *Duration) UnmarshalJSON(b []byte) error {
+	var v interface{}
+	if err := json.Unmarshal(b, &v); err != nil {
+		return err
+	}
+	switch value := v.(type) {
+	case float64:
+		*d = Duration(value)
+		return nil
+	case string:
+		tmp, err := time.ParseDuration(value)
+		if err != nil {
+			return err
+		}
+		*d = Duration(tmp)
+		return nil
+	default:
+		return fmt.Errorf("invalid duration")
 	}
 }
 
