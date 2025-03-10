@@ -1,7 +1,6 @@
 package mapping
 
 import (
-	"encoding/json"
 	"fmt"
 	"github.com/jsiebens/ionscale/internal/config"
 	"github.com/jsiebens/ionscale/internal/domain"
@@ -14,19 +13,6 @@ import (
 	"tailscale.com/types/key"
 	"time"
 )
-
-func CopyViaJson[F any, T any](f F, t T) error {
-	raw, err := json.Marshal(f)
-	if err != nil {
-		return err
-	}
-
-	if err := json.Unmarshal(raw, t); err != nil {
-		return err
-	}
-
-	return nil
-}
 
 func ToDNSConfig(m *domain.Machine, tailnet *domain.Tailnet, c *domain.DNSConfig) *tailcfg.DNSConfig {
 	certsEnabled := c.HttpsCertsEnabled && config.DNSProviderConfigured()
