@@ -2,9 +2,9 @@ package dns
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"github.com/jsiebens/ionscale/internal/config"
-	"github.com/jsiebens/ionscale/internal/mapping"
 	"github.com/libdns/azure"
 	"github.com/libdns/cloudflare"
 	"github.com/libdns/digitalocean"
@@ -14,6 +14,14 @@ import (
 	"strings"
 	"time"
 )
+
+var factories = map[string]func() libdns.RecordSetter{
+	"azure":          azureProvider,
+	"cloudflare":     cloudflareProvider,
+	"digitalocean":   digitalOceanProvider,
+	"googleclouddns": googleCloudDNSProvider,
+	"route53":        route53Provider,
+}
 
 type Provider interface {
 	SetRecord(ctx context.Context, recordType, recordName, value string) error
@@ -29,60 +37,40 @@ func NewProvider(config config.DNS) (Provider, error) {
 		return nil, fmt.Errorf("invalid MagicDNS suffix [%s], not part of zone [%s]", config.MagicDNSSuffix, p.Zone)
 	}
 
-	switch p.Name {
-	case "azure":
-		return configureAzureProvider(p.Zone, p.Configuration)
-	case "cloudflare":
-		return configureCloudflareProvider(p.Zone, p.Configuration)
-	case "digitalocean":
-		return configureDigitalOceanProvider(p.Zone, p.Configuration)
-	case "googleclouddns":
-		return configureGoogleCloudDNSProvider(p.Zone, p.Configuration)
-	case "route53":
-		return configureRoute53Provider(p.Zone, p.Configuration)
-	default:
+	factory, ok := factories[p.Name]
+	if !ok {
 		return nil, fmt.Errorf("unknown dns provider: %s", p.Name)
 	}
+
+	return newProvider(p.Zone, p.Configuration, factory)
 }
 
-func configureAzureProvider(zone string, values map[string]string) (Provider, error) {
-	p := &azure.Provider{}
-	if err := mapping.CopyViaJson(values, p); err != nil {
+func newProvider(zone string, values json.RawMessage, factory func() libdns.RecordSetter) (Provider, error) {
+	p := factory()
+	if err := json.Unmarshal(values, p); err != nil {
 		return nil, err
 	}
 	return &externalProvider{zone: fqdn(zone), setter: p}, nil
 }
 
-func configureCloudflareProvider(zone string, values map[string]string) (Provider, error) {
-	p := &cloudflare.Provider{}
-	if err := mapping.CopyViaJson(values, p); err != nil {
-		return nil, err
-	}
-	return &externalProvider{zone: fqdn(zone), setter: p}, nil
+func azureProvider() libdns.RecordSetter {
+	return &azure.Provider{}
 }
 
-func configureDigitalOceanProvider(zone string, values map[string]string) (Provider, error) {
-	p := &digitalocean.Provider{}
-	if err := mapping.CopyViaJson(values, p); err != nil {
-		return nil, err
-	}
-	return &externalProvider{zone: fqdn(zone), setter: p}, nil
+func cloudflareProvider() libdns.RecordSetter {
+	return &cloudflare.Provider{}
 }
 
-func configureGoogleCloudDNSProvider(zone string, values map[string]string) (Provider, error) {
-	p := &googleclouddns.Provider{}
-	if err := mapping.CopyViaJson(values, p); err != nil {
-		return nil, err
-	}
-	return &externalProvider{zone: fqdn(zone), setter: p}, nil
+func digitalOceanProvider() libdns.RecordSetter {
+	return &digitalocean.Provider{}
 }
 
-func configureRoute53Provider(zone string, values map[string]string) (Provider, error) {
-	p := &route53.Provider{}
-	if err := mapping.CopyViaJson(values, p); err != nil {
-		return nil, err
-	}
-	return &externalProvider{zone: fqdn(zone), setter: p}, nil
+func googleCloudDNSProvider() libdns.RecordSetter {
+	return &googleclouddns.Provider{}
+}
+
+func route53Provider() libdns.RecordSetter {
+	return &route53.Provider{}
 }
 
 type externalProvider struct {

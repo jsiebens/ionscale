@@ -24,6 +24,7 @@ database:
   type: ${DB_TYPE:sqlite}
   url: ${DB_URL}
   max_open_conns: ${DB_MAX_OPEN_CONNS:5}
+  conn_max_life_time: ${DB_CONN_MAX_LIFE_TIME:5s}
 `
 	if _, err := tempFile.Write([]byte(yamlContent)); err != nil {
 		t.Fatalf("Failed to write to temp file: %v", err)

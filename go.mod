@@ -7,7 +7,6 @@ require (
 	github.com/a-h/templ v0.2.663
 	github.com/apparentlymart/go-cidr v1.1.0
 	github.com/bufbuild/connect-go v1.10.0
-	github.com/caarlos0/env/v6 v6.10.1
 	github.com/caddyserver/certmagic v0.20.0
 	github.com/coreos/go-oidc/v3 v3.10.0
 	github.com/dustinkirkland/golang-petname v0.0.0-20240422154211-76c06c4bde6b
@@ -18,7 +17,6 @@ require (
 	github.com/hashicorp/go-bexpr v0.1.14
 	github.com/hashicorp/go-getter v1.7.4
 	github.com/hashicorp/go-multierror v1.1.1
-	github.com/imdario/mergo v0.3.16
 	github.com/jsiebens/go-edit v0.1.0
 	github.com/jsiebens/mockoidc v0.1.0-rc2
 	github.com/klauspost/compress v1.17.11
@@ -36,6 +34,7 @@ require (
 	github.com/nleeper/goment v1.4.4
 	github.com/ory/dockertest/v3 v3.10.0
 	github.com/prometheus/client_golang v1.19.1
+	github.com/puzpuzpuz/xsync/v3 v3.5.1
 	github.com/rodaine/table v1.2.0
 	github.com/sony/sonyflake v1.2.0
 	github.com/spf13/cobra v1.8.1
@@ -55,6 +54,7 @@ require (
 	gorm.io/gorm v1.25.9
 	gorm.io/plugin/prometheus v0.1.0
 	inet.af/netaddr v0.0.0-20230525184311-b8eac61e914a
+	sigs.k8s.io/yaml v1.4.0
 	tailscale.com v1.80.0
 )
 
@@ -191,7 +191,6 @@ require (
 	github.com/prometheus/client_model v0.6.1 // indirect
 	github.com/prometheus/common v0.55.0 // indirect
 	github.com/prometheus/procfs v0.15.1 // indirect
-	github.com/puzpuzpuz/xsync/v3 v3.5.1 // indirect
 	github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec // indirect
 	github.com/safchain/ethtool v0.3.0 // indirect
 	github.com/sirupsen/logrus v1.9.3 // indirect
