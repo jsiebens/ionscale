@@ -111,7 +111,7 @@ func Start(ctx context.Context, c *config.Config) error {
 		return logError(fmt.Errorf("error configuring OIDC provider: %v", err))
 	}
 
-	dnsProvider, err := dns.NewProvider(c.DNS)
+	dnsZone, dnsProvider, err := dns.NewProvider(c.DNS)
 	if err != nil {
 		return logError(err)
 	}
@@ -121,10 +121,10 @@ func Start(ctx context.Context, c *config.Config) error {
 	createPeerHandler := func(machinePublicKey key.MachinePublic) http.Handler {
 		registrationHandlers := handlers.NewRegistrationHandlers(machinePublicKey, c, sessionManager, repository)
 		pollNetMapHandler := handlers.NewPollNetMapHandler(machinePublicKey, sessionManager, repository)
-		dnsHandlers := handlers.NewDNSHandlers(machinePublicKey, dnsProvider)
+		dnsHandlers := handlers.NewDNSHandlers(machinePublicKey, dnsZone, dnsProvider)
 		idTokenHandlers := handlers.NewIDTokenHandlers(machinePublicKey, c, repository)
 		sshActionHandlers := handlers.NewSSHActionHandlers(machinePublicKey, c, repository)
-		queryFeatureHandlers := handlers.NewQueryFeatureHandlers(machinePublicKey, dnsProvider, repository)
+		queryFeatureHandlers := handlers.NewQueryFeatureHandlers(machinePublicKey, repository)
 		updateHealthHandlers := handlers.NewUpdateHealthHandlers(machinePublicKey, repository)
 
 		e := echo.New()
@@ -153,7 +153,7 @@ func Start(ctx context.Context, c *config.Config) error {
 		repository,
 	)
 
-	rpcService := service.NewService(c, authProvider, dnsProvider, repository, sessionManager)
+	rpcService := service.NewService(c, authProvider, repository, sessionManager)
 	rpcPath, rpcHandler := NewRpcHandler(serverKey.SystemAdminKey, repository, rpcService)
 
 	metricsMux := echo.New()

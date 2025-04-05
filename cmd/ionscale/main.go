@@ -1,12 +1,9 @@
 package main
 
 import (
-	"github.com/jsiebens/ionscale/internal/cmd"
-	"os"
+	ionscalecmd "github.com/jsiebens/ionscale/cmd"
 )
 
 func main() {
-	if err := cmd.Execute(); err != nil {
-		os.Exit(1)
-	}
+	ionscalecmd.Main()
 }
