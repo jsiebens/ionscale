@@ -5,6 +5,9 @@ ionscale is an open-source alternative to Tailscale's control server, designed t
 !!! info "Beta status"
     ionscale is currently in beta. While it's stable for production use for small tailnets, we're actively developing new features and improvements.
 
+!!! warning "Documentation status"
+    This documentation is a work in progress. Some sections may be incomplete or missing. We're continuously improving the documentation to provide comprehensive coverage of all features.
+
 ## What is ionscale?
 
 Tailscale allows your devices to communicate securely across networks using WireGuard®. While Tailscale's client software is open source, their centralized coordination server (which manages public keys and network configurations) is proprietary.
