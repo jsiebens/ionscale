@@ -138,8 +138,8 @@ extra:
       link: https://github.com/jsiebens/ionscale/pkgs/container/ionscale
   
   # Page customization
-  version:
-    provider: mike
+#  version:
+#    provider: mike
   
   # Footer customization
   generator: false  # Hide "Made with Material for MkDocs"
