@@ -1,28 +1,51 @@
 site_name: ionscale
 
-repo_name: jsiebens/ionscale
-repo_url: https://github.com/jsiebens/ionscale
-edit_uri: ""
+# Remove the GitHub repository link from the top-right corner
+# repo_name: jsiebens/ionscale
+# repo_url: https://github.com/jsiebens/ionscale
+# edit_uri: ""
 
 nav:
   - Overview:
       - Introduction: index.md
+      - Supported Features: overview/features.md
   - Installation:
-      - Manual: ./getting-started/manual.md
-      - Docker: ./getting-started/docker.md
+      - Installation: ./installation/index.md
+      - Linux installation: ./installation/linux.md
+      - Docker installation: ./installation/docker.md
+  - Getting started:
+      - Getting started: ./getting-started/index.md
+      - Creating a tailnet: ./getting-started/tailnet.md
   - Configuration:
+      - OIDC: ./configuration/auth-oidc.md
+      - DNS providers: ./configuration/dns-providers.md
       - Reference: ./configuration/reference.md
 
 theme:
   name: material
   custom_dir: overrides
+  
+  # Custom stylesheets
+  extra_css:
+    - stylesheets/extra.css
+  
+  # Explicitly disable the logo to show only the site name
+  #logo: ""
+  favicon: assets/favicon.png
 
+  # Enhanced color scheme
   palette:
-    - scheme: default
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: indigo
+      accent: indigo
       toggle:
         icon: material/toggle-switch-off-outline
         name: Switch to dark mode
-    - scheme: slate
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: indigo
+      accent: indigo
       toggle:
         icon: material/toggle-switch
         name: Switch to light mode
@@ -32,9 +55,28 @@ theme:
     code: Roboto Mono
 
   features:
+    # Navigation
     - navigation.tracking
     - navigation.sections
-    - toc.integrate
+    - navigation.indexes
+    - navigation.top         # Back-to-top button
+    - navigation.footer      # Footer with previous/next links
+    
+    # Content
+    - content.code.copy      # Add copy button to code blocks
+    - content.code.annotate  # Allow code annotations
+    - content.tabs.link      # Sync all tabs with the same label
+    
+    # Search
+    - search.highlight
+    - search.share
+    - search.suggest
+    
+    # Table of contents
+    - toc.follow
+  
+  # Hide the table of contents on the navigation
+  toc_depth: 0
 
   include_search_page: false
   search_index_only: true
@@ -42,15 +84,66 @@ theme:
   language: en
 
 markdown_extensions:
+  # Admonitions and callouts
   - admonition
   - pymdownx.details
-  - pymdownx.superfences
+  
+  # Code blocks with syntax highlighting
   - pymdownx.highlight:
       anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
   - pymdownx.inlinehilite
+  
+  # Code annotations
   - pymdownx.snippets
-  - pymdownx.superfences
+  
+  # Tabbed content
+  - pymdownx.tabbed:
+      alternate_style: true
+  
+  # Content tabs
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  
+  # Better formatting options
+  - attr_list             # Add HTML attributes and CSS classes
+  - def_list              # Definition lists
+  - md_in_html            # Markdown within HTML
+  - tables                # Tables
+  - footnotes             # Footnotes
+  
+  # Typography improvements
+  - pymdownx.critic       # Track changes
+  - pymdownx.caret        # Superscript/subscript
+  - pymdownx.mark         # Highlighting
+  - pymdownx.tilde        # Strikethrough
+  - pymdownx.smartsymbols # Smart symbols (arrows, fractions)
 
 extra:
+  # Page status annotations
+  status:
+    new: Recently added
+    deprecated: No longer supported
+    beta: Currently in beta
+  
+  # Enhanced social cards
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/jsiebens/ionscale
+    - icon: fontawesome/brands/docker
+      link: https://github.com/jsiebens/ionscale/pkgs/container/ionscale
+  
+  # Page customization
+  version:
+    provider: mike
+  
+  # Footer customization
+  generator: false  # Hide "Made with Material for MkDocs"
+  
+  # Analytics (existing)
   analytics:
     provider: custom

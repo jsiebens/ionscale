@@ -1,0 +1,191 @@
+# Creating your first tailnet
+
+A tailnet is a private network that connects your devices securely using Tailscale. This guide will walk you through creating your first tailnet with ionscale.
+
+## Prerequisites
+
+Before creating a tailnet, make sure you have:
+
+- ionscale server installed and running
+- The ionscale CLI installed and configured
+- Authentication with system administrator privileges
+
+## Creating a tailnet
+
+The simplest way to create a tailnet is with the `tailnet create` command:
+
+```bash
+ionscale tailnet create --name "my-first-tailnet"
+```
+
+This creates a basic tailnet named "my-first-tailnet" with:
+
+- A default ACL policy that allows all connections 
+```
+{"acls": [{"action": "accept", "src": ["*"], "dst": ["*:*"]}]}
+```
+- A default IAM policy that determines who can access the tailnet
+
+!!! note
+    The tailnet name must be unique within your ionscale instance and should only contain alphanumeric characters, hyphens, and underscores.
+
+## Setting IAM policies for access control
+
+!!! important "OIDC required"
+    IAM policies are only relevant when an OIDC provider is configured. If your ionscale instance isn't using OIDC, access to tailnets is managed solely through auth keys, and the configuration in this section won't apply.
+
+When using OIDC authentication, you'll need to configure who can access your tailnet through IAM policies.
+
+### Configuring IAM during tailnet creation
+
+You can set a basic IAM policy when creating a tailnet using flags:
+
+```bash
+# Allow all users with an @example.com email address
+ionscale tailnet create --name "company-tailnet" --domain "example.com"
+
+# Allow only a specific user
+ionscale tailnet create --name "personal-tailnet" --email "user@example.com"
+```
+
+These flags provide quick ways to set up common IAM policies:
+
+- `--domain example.com`: Creates a **shared tailnet** that allows all users with an email address from the specified domain. This is ideal for company or team networks where multiple users need access. The IAM policy will contain a filter rule like `domain == "example.com"`.
+
+- `--email user@example.com`: Creates a **personal tailnet** that grants access only to the specific email address. This is suitable for individual use or when you want to tightly control access to a specific user. The IAM policy will contain an entry for the specified email.
+
+!!! note
+    You can't use both flags together. Choose either domain-based access for a shared network or email-based access for a personal network.
+
+### Configuring IAM after tailnet creation
+
+You can view and update the IAM policy for an existing tailnet:
+
+```bash
+# View current IAM policy
+ionscale iam get-policy --tailnet "my-first-tailnet"
+
+# Update IAM policy using a JSON file
+ionscale iam update-policy --tailnet "my-first-tailnet" --file policy.json
+```
+
+Example policy.json file:
+```json
+{
+  "filters": ["domain == example.com"],
+  "emails": ["specific-user@otherdomain.com"],
+  "roles": {
+    "admin@example.com": "admin"
+  }
+}
+```
+
+## Connecting devices to your tailnet
+
+How devices connect to your tailnet depends on your authentication configuration:
+
+### Using OIDC authentication
+
+If OIDC is configured, users with access (based on the IAM policy) connect via web authentication:
+
+```bash
+tailscale up --login-server=https://ionscale.example.com
+```
+
+This opens a browser window where users authenticate with the OIDC provider. After successful authentication, if the user has access based on the tailnet's IAM policy, the device will be connected.
+
+### Using auth keys
+
+Auth keys allow devices to join a tailnet without interactive authentication. This is useful for automated deployments, servers, or environments where browser-based authentication isn't practical.
+
+There are two main scenarios for creating auth keys:
+
+#### Without OIDC configured
+
+When OIDC is not configured, a system administrator must create auth keys with appropriate tags:
+
+```bash
+# Create an auth key with a tag
+ionscale auth-key create --tailnet "my-first-tailnet" --tags "tag:server"
+```
+
+The tags assigned to the key will determine what network access the device has once connected, based on your ACL rules.
+
+#### With OIDC configured
+
+When OIDC is configured, any user with access to a tailnet can create auth keys for that tailnet:
+
+```bash
+# As an authenticated user, create an auth key
+ionscale auth-key create --tailnet "my-first-tailnet"
+```
+
+Additionally, system administrators can create auth keys with specific tags:
+
+```bash
+# As a system administrator, create a key with tags
+ionscale auth-key create --tailnet "my-first-tailnet" --tags "tag:database"
+```
+
+#### Connecting with auth keys
+
+To connect a device using an auth key:
+
+```bash
+# Connect using the auth key
+tailscale up --login-server=https://ionscale.example.com --auth-key=...
+```
+
+!!! note
+    Auth keys in ionscale are single-use by default. Once a key has been used to authenticate a device, it cannot be used again.
+
+## Configuring ACL policies
+
+Access Control Lists (ACLs) define what network access is allowed within a tailnet. By default, tailnets are created with an open policy that allows all connections.
+
+To update the ACL policy:
+
+```bash
+# View current ACL policy
+ionscale acl get --tailnet "my-first-tailnet"
+
+# Update ACL policy
+ionscale acl update --tailnet "my-first-tailnet" --file acl.json
+```
+
+Example acl.json with more restrictive rules:
+```json
+{
+  "acls": [
+    {"action": "accept", "src": ["tag:web"], "dst": ["tag:db:5432"]},
+    {"action": "accept", "src": ["group:admins"], "dst": ["*:*"]}
+  ],
+  "groups": {
+    "admins": ["admin@example.com"]
+  },
+  "tagOwners": {
+    "tag:web": ["admin@example.com"],
+    "tag:db": ["admin@example.com"]
+  }
+}
+```
+
+!!! tip
+    ACLs give you fine-grained control over which devices can communicate within your tailnet. For more information, see the [Tailscale ACL documentation](https://tailscale.com/kb/1018/acls/).
+
+## Managing multiple tailnets
+
+You can create multiple tailnets to separate different network environments:
+
+```bash
+# List all tailnets
+ionscale tailnet list
+
+# Create tailnets for different teams or businesses
+ionscale tailnet create --name "tailnet-a"
+ionscale tailnet create --name "tailnet-b"
+ionscale tailnet create --name "tailnet-c"
+```
+
+!!! note
+    Each tailnet is a separate network with its own devices, ACLs, and IAM policies. Devices in different tailnets cannot communicate with each other by default.

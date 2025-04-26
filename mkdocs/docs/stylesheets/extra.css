@@ -1,0 +1,126 @@
+/* Custom CSS for ionscale documentation */
+
+/* Enhance code blocks */
+.md-typeset pre {
+  border-radius: 6px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+}
+
+/* Enhance code block headers */
+.md-typeset code {
+  border-radius: 3px;
+  font-size: 0.9em;
+  padding: 0.2em 0.4em;
+}
+
+/* Make admonitions stand out more */
+.md-typeset .admonition {
+  border-radius: 4px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  margin: 1.5em 0;
+}
+
+.md-typeset .admonition-title {
+  padding-left: 2.5rem;
+}
+
+/* Make tables more professional */
+.md-typeset table:not([class]) {
+  border-radius: 6px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+}
+
+.md-typeset table:not([class]) th {
+  background-color: rgba(63, 81, 181, 0.08);
+  font-weight: 600;
+}
+
+/* Enhance UI element spacing */
+.md-typeset ul li,
+.md-typeset ol li {
+  margin-bottom: 0.35em;
+}
+
+.md-typeset h1,
+.md-typeset h2,
+.md-typeset h3,
+.md-typeset h4 {
+  font-weight: 500;
+  margin-top: 1.5em;
+}
+
+.md-typeset h2 {
+  border-bottom: 1px solid rgba(63, 81, 181, 0.1);
+  padding-bottom: 0.3em;
+}
+
+/* Subtle border on the right for table of contents */
+.md-sidebar--secondary {
+  border-left: 1px solid rgba(0, 0, 0, 0.07);
+  background-color: rgba(0, 0, 0, 0.01);
+}
+
+/* Navigation improvements */
+.md-nav__item .md-nav__link--active {
+  font-weight: 600;
+}
+
+/* Responsive improvements */
+@media screen and (min-width: 76.25em) {
+  .md-sidebar--primary {
+    border-right: 1px solid rgba(0, 0, 0, 0.07);
+    background-color: rgba(0, 0, 0, 0.01);
+  }
+}
+
+/* Better footer */
+.md-footer-meta {
+  background-color: rgba(0, 0, 0, 0.87);
+}
+
+/* Remove the logo and style site name */
+.md-header__button.md-logo {
+  display: none;
+}
+
+/* Move the site name to the left */
+.md-header__title {
+  margin-left: 0;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  font-family: Lato, sans-serif;
+}
+
+.md-header__topic {
+  color: white;
+  font-size: 1.2rem;
+  line-height: 2.4rem;
+  margin-left: 0.6rem;
+}
+
+/* Badge styles for version/status indicators */
+.md-typeset .md-badge {
+  border-radius: 4px;
+  display: inline-block;
+  font-size: 0.75em;
+  font-weight: 700;
+  padding: 4px 6px;
+  margin: 0 0.5em;
+  vertical-align: middle;
+}
+
+.md-typeset .md-badge--new {
+  background-color: #28a745;
+  color: white;
+}
+
+.md-typeset .md-badge--beta {
+  background-color: #f0ad4e;
+  color: white;
+}
+
+.md-typeset .md-badge--deprecated {
+  background-color: #dc3545;
+  color: white;
+}
