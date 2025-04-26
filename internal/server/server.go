@@ -17,6 +17,7 @@ import (
 	"github.com/jsiebens/ionscale/internal/service"
 	"github.com/jsiebens/ionscale/internal/stunserver"
 	"github.com/jsiebens/ionscale/internal/templates"
+	"github.com/jsiebens/ionscale/internal/util"
 	"github.com/labstack/echo-contrib/echoprometheus"
 	"github.com/labstack/echo-contrib/pprof"
 	"github.com/labstack/echo/v4"
@@ -52,6 +53,8 @@ func Start(ctx context.Context, c *config.Config) error {
 		}
 		return err
 	}
+
+	util.EnsureIDProvider()
 
 	derpMap, err := derp.LoadDERPSources(c)
 	if err != nil {
