@@ -4,6 +4,7 @@ import (
 	"crypto/md5"
 	"crypto/rand"
 	"crypto/rsa"
+	"encoding/binary"
 	"encoding/hex"
 	"encoding/json"
 	"math/big"
@@ -29,6 +30,15 @@ func RandUint64(n uint64) uint64 {
 		panic(err)
 	}
 	return val.Uint64()
+}
+
+func RandUint16() uint16 {
+	var randomBytes [2]byte
+	_, err := rand.Read(randomBytes[:])
+	if err != nil {
+		panic(err)
+	}
+	return binary.BigEndian.Uint16(randomBytes[:])
 }
 
 func RandomBytes(size int) ([]byte, error) {
