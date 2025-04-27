@@ -30,9 +30,9 @@ type TailnetRepository interface {
 	DeleteTailnet(ctx context.Context, id uint64) error
 }
 
-func (t Tailnet) GetDERPMap(ctx context.Context, fallack DefaultDERPMap) (*DERPMap, error) {
+func (t Tailnet) GetDERPMap(ctx context.Context, fallback DefaultDERPMap) (*DERPMap, error) {
 	if t.DERPMap.Checksum == "" {
-		return fallack.GetDERPMap(ctx)
+		return fallback.GetDERPMap(ctx)
 	} else {
 		return &t.DERPMap, nil
 	}
