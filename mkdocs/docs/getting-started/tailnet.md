@@ -82,52 +82,39 @@ Example policy.json file:
 
 ## Connecting devices to your tailnet
 
-How devices connect to your tailnet depends on your authentication configuration:
+There are two main methods to connect devices to your tailnet:
 
-### Using OIDC authentication
+### Interactive login
 
-If OIDC is configured, users with access (based on the IAM policy) connect via web authentication:
+When you have an OIDC provider configured, users can connect to their tailnet through an interactive web authentication flow:
 
 ```bash
 tailscale up --login-server=https://ionscale.example.com
 ```
 
-This opens a browser window where users authenticate with the OIDC provider. After successful authentication, if the user has access based on the tailnet's IAM policy, the device will be connected.
+This opens a browser window where the user authenticates with the OIDC provider. After successful authentication, if the user has access based on the tailnet's IAM policy, the device will be connected to the tailnet.
 
-### Using auth keys
+!!! note
+    Interactive login requires an OIDC provider to be configured on your ionscale instance.
 
-Auth keys allow devices to join a tailnet without interactive authentication. This is useful for automated deployments, servers, or environments where browser-based authentication isn't practical.
+### Using pre-authentication keys
 
-There are two main scenarios for creating auth keys:
+Pre-authentication keys (auth keys) allow devices to join a tailnet without interactive authentication. This is useful for automated deployments, servers, or environments where browser-based authentication isn't practical.
 
-#### Without OIDC configured
-
-When OIDC is not configured, a system administrator must create auth keys with appropriate tags:
+To create an auth key:
 
 ```bash
-# Create an auth key with a tag
+# Create an auth key
+ionscale auth-key create --tailnet "my-first-tailnet"
+
+# Create an auth key with specific tags
 ionscale auth-key create --tailnet "my-first-tailnet" --tags "tag:server"
 ```
 
 The tags assigned to the key will determine what network access the device has once connected, based on your ACL rules.
 
-#### With OIDC configured
-
-When OIDC is configured, any user with access to a tailnet can create auth keys for that tailnet:
-
-```bash
-# As an authenticated user, create an auth key
-ionscale auth-key create --tailnet "my-first-tailnet"
-```
-
-Additionally, system administrators can create auth keys with specific tags:
-
-```bash
-# As a system administrator, create a key with tags
-ionscale auth-key create --tailnet "my-first-tailnet" --tags "tag:database"
-```
-
-#### Connecting with auth keys
+!!! note
+    In environments with OIDC, users with access to a tailnet can create auth keys for that tailnet. Without OIDC, only system administrators can create keys.
 
 To connect a device using an auth key:
 
