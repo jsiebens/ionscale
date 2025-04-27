@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"github.com/bufbuild/connect-go"
 	"github.com/jsiebens/ionscale/internal/domain"
@@ -59,7 +60,7 @@ func (s *Service) Authenticate(ctx context.Context, req *connect.Request[api.Aut
 			}
 
 			if len(m.Error) != 0 {
-				return connect.NewError(connect.CodePermissionDenied, fmt.Errorf(m.Error))
+				return connect.NewError(connect.CodePermissionDenied, errors.New(m.Error))
 			}
 
 			if err := stream.Send(&api.AuthenticateResponse{AuthUrl: authUrl}); err != nil {
