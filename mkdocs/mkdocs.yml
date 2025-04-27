@@ -17,6 +17,7 @@ nav:
       - Getting started: ./getting-started/index.md
       - Creating a tailnet: ./getting-started/tailnet.md
   - Configuration:
+      - DERP: ./configuration/derp.md
       - OIDC: ./configuration/auth-oidc.md
       - DNS providers: ./configuration/dns-providers.md
       - Reference: ./configuration/reference.md
