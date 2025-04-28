@@ -76,9 +76,3 @@ ionscale tailnet create -n NAME # Create a new tailnet
 ionscale auth-key list --tailnet NAME    # List auth keys for a tailnet
 ionscale auth-key create --tailnet NAME  # Create a new auth key
 ```
-
-## Next steps
-
-After setting up the CLI, you can:
-
-1. [Create your first tailnet](tailnet.md)

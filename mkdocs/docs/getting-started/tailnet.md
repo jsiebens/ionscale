@@ -126,39 +126,15 @@ tailscale up --login-server=https://ionscale.example.com --auth-key=...
 !!! note
     Auth keys in ionscale are single-use by default. Once a key has been used to authenticate a device, it cannot be used again.
 
-## Configuring ACL policies
+## Network access and security policies
 
-Access Control Lists (ACLs) define what network access is allowed within a tailnet. By default, tailnets are created with an open policy that allows all connections.
+By default, tailnets are created with an open policy that allows all connections between devices. For production environments, you'll want to configure:
 
-To update the ACL policy:
-
-```bash
-# View current ACL policy
-ionscale acl get --tailnet "my-first-tailnet"
-
-# Update ACL policy
-ionscale acl update --tailnet "my-first-tailnet" --file acl.json
-```
-
-Example acl.json with more restrictive rules:
-```json
-{
-  "acls": [
-    {"action": "accept", "src": ["tag:web"], "dst": ["tag:db:5432"]},
-    {"action": "accept", "src": ["group:admins"], "dst": ["*:*"]}
-  ],
-  "groups": {
-    "admins": ["admin@example.com"]
-  },
-  "tagOwners": {
-    "tag:web": ["admin@example.com"],
-    "tag:db": ["admin@example.com"]
-  }
-}
-```
+- **[IAM Policies](iam-policies.md)**: Manage who can access your tailnet
+- **[ACL Policies](acl-policies.md)**: Control which devices can communicate within your tailnet
 
 !!! tip
-    ACLs give you fine-grained control over which devices can communicate within your tailnet. For more information, see the [Tailscale ACL documentation](https://tailscale.com/kb/1018/acls/).
+    For detailed information on configuring security policies, see the dedicated documentation sections on [IAM Policies](iam-policies.md) and [ACL Policies](acl-policies.md).
 
 ## Managing multiple tailnets
 
