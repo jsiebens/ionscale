@@ -13,14 +13,14 @@ nav:
       - Installation: ./installation/index.md
       - Linux installation: ./installation/linux.md
       - Docker installation: ./installation/docker.md
-  - Getting started:
-      - Getting started: ./getting-started/index.md
-      - Creating a tailnet: ./getting-started/tailnet.md
   - Configuration:
+      - Configuration: ./configuration/index.md
       - DERP: ./configuration/derp.md
       - OIDC: ./configuration/auth-oidc.md
       - DNS providers: ./configuration/dns-providers.md
-      - Reference: ./configuration/reference.md
+  - Getting started:
+      - Getting started: ./getting-started/index.md
+      - Creating a tailnet: ./getting-started/tailnet.md
 
 theme:
   name: material
