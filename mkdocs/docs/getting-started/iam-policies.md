@@ -8,6 +8,7 @@ Identity and Access Management (IAM) policies in ionscale control who can access
 ## Understanding IAM policies
 
 IAM policies determine:
+
 - Which users can join a tailnet
 - What roles and permissions users have within the tailnet
 - How access decisions are made based on user attributes
