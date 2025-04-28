@@ -47,7 +47,7 @@ First, set up environment variables for the configuration:
 ```bash
 export IONSCALE_ACME_EMAIL="your-email@example.com"  # Used for Let's Encrypt notifications
 export IONSCALE_DOMAIN="ionscale.example.com"        # Your ionscale domain
-export IONSCALE_SYSTEM_ADMIN_KEY=$(docker run --rm ghcr.io/jsiebens/ionscale:0.16.0 genkey -n)
+export IONSCALE_SYSTEM_ADMIN_KEY=$(docker run --rm ghcr.io/jsiebens/ionscale: genkey -n)
 ```
 
 !!! important "System admin key"
@@ -90,7 +90,7 @@ docker run -d \
   -v $(pwd)/data:/data \
   -p 443:443 \
   -p 3478:3478/udp \
-  ghcr.io/jsiebens/ionscale:0.16.0 server --config /etc/ionscale/config.yaml
+  ghcr.io/jsiebens/ionscale: server --config /etc/ionscale/config.yaml
 ```
 
 This command:

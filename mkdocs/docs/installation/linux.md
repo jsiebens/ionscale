@@ -56,7 +56,7 @@ Install the ionscale binary on your system:
 ```bash
 # Download the latest version (adjust for your CPU architecture)
 sudo curl -o "/usr/local/bin/ionscale" \
-  -sfL "https://github.com/jsiebens/ionscale/releases/download/v0.16.0/ionscale_linux_amd64"
+  -sfL "https://github.com/jsiebens/ionscale/releases/download/v/ionscale_linux_amd64"
 
 # Make it executable
 sudo chmod +x "/usr/local/bin/ionscale"
