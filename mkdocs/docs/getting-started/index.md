@@ -8,7 +8,7 @@ The ionscale CLI is the primary tool for managing your ionscale instance. It all
 
 ```bash
 # Download the CLI (adjust the URL for your system architecture)
-curl -L -o ionscale https://github.com/jsiebens/ionscale/releases/download/v/ionscale_linux_amd64
+curl -L -o ionscale https://github.com/jsiebens/ionscale/releases/download/v0.17.0/ionscale_linux_amd64
 
 # Make it executable
 chmod +x ionscale

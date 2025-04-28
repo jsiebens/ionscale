@@ -90,7 +90,7 @@ docker run -d \
   -v $(pwd)/data:/data \
   -p 443:443 \
   -p 3478:3478/udp \
-  ghcr.io/jsiebens/ionscale: server --config /etc/ionscale/config.yaml
+  ghcr.io/jsiebens/ionscale:0.17.0 server --config /etc/ionscale/config.yaml
 ```
 
 This command:
