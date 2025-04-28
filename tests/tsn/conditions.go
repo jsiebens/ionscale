@@ -1,6 +1,7 @@
 package tsn
 
 import (
+	"net/netip"
 	"slices"
 	"strings"
 	"tailscale.com/ipn/ipnstate"
@@ -57,6 +58,24 @@ func HasUser(email string) Condition {
 		}
 
 		return false
+	}
+}
+
+func HasAllowedIP(route netip.Prefix) Condition {
+	return func(status *ipnstate.Status) bool {
+		if status.Self == nil || status.Self.AllowedIPs.Len() == 0 {
+			return false
+		}
+		return slices.Contains(status.Self.AllowedIPs.AsSlice(), route)
+	}
+}
+
+func IsMissingAllowedIP(route netip.Prefix) Condition {
+	return func(status *ipnstate.Status) bool {
+		if status.Self == nil || status.Self.AllowedIPs.Len() == 0 {
+			return true
+		}
+		return !slices.Contains(status.Self.AllowedIPs.AsSlice(), route)
 	}
 }
 

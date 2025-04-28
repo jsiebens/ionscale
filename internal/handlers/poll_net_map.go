@@ -11,6 +11,7 @@ import (
 	"github.com/klauspost/compress/zstd"
 	"github.com/labstack/echo/v4"
 	"net/http"
+	"slices"
 	"sync"
 	"tailscale.com/smallzstd"
 	"tailscale.com/tailcfg"
@@ -82,6 +83,10 @@ func (h *PollNetMapHandler) handlePollNetMap(c echo.Context, m *domain.Machine, 
 	}
 
 	if !mapRequest.Stream {
+		if !slices.Equal(m.HostInfo.RoutableIPs, mapRequest.Hostinfo.RoutableIPs) {
+			m.AutoAllowIPs = m.Tailnet.ACLPolicy.Get().FindAutoApprovedIPs(mapRequest.Hostinfo.RoutableIPs, m.Tags, &m.User)
+		}
+
 		m.HostInfo = domain.HostInfo(*mapRequest.Hostinfo)
 		m.DiscoKey = mapRequest.DiscoKey.String()
 		m.Endpoints = mapRequest.Endpoints
