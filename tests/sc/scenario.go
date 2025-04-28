@@ -117,6 +117,12 @@ func (s *Scenario) EnableMachineAutorization(tailnetID uint64) {
 	require.NoError(s.t, err)
 }
 
+func (s *Scenario) GetMachineRoutes(machineID uint64) *api.MachineRoutes {
+	routes, err := s.ionscaleClient.GetMachineRoutes(context.Background(), connect.NewRequest(&api.GetMachineRoutesRequest{MachineId: machineID}))
+	require.NoError(s.t, err)
+	return routes.Msg.Routes
+}
+
 func (s *Scenario) PushOIDCUser(sub, email, preferredUsername string) {
 	_, err := s.mockoidcClient.PushUser(context.Background(), connect.NewRequest(&mockoidcv1.PushUserRequest{Subject: sub, Email: email, PreferredUsername: preferredUsername}))
 	require.NoError(s.t, err)
