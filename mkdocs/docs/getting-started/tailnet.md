@@ -84,6 +84,9 @@ Example policy.json file:
 
 There are two main methods to connect devices to your tailnet:
 
+!!! tip
+    For detailed instructions on configuring various Tailscale clients to use ionscale as a control server, refer to the [Tailscale Knowledge Base](https://tailscale.com/kb/1507/custom-control-server).
+
 ### Interactive login
 
 When you have an OIDC provider configured, users can connect to their tailnet through an interactive web authentication flow:
@@ -122,9 +125,6 @@ To connect a device using an auth key:
 # Connect using the auth key
 tailscale up --login-server=https://ionscale.example.com --auth-key=...
 ```
-
-!!! note
-    Auth keys in ionscale are single-use by default. Once a key has been used to authenticate a device, it cannot be used again.
 
 ## Network access and security policies
 
