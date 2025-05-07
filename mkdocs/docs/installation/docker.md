@@ -13,7 +13,7 @@ Before you begin, make sure you have:
 - Ports 443 (HTTPS) and 3478/UDP (STUN) open in your firewall
 - Basic familiarity with the Linux command line
 
-## Domain and DNS configuration
+### Domain and DNS configuration
 
 ionscale requires a domain name to function properly. This enables secure HTTPS connections and proper Tailscale device discovery.
 
@@ -47,7 +47,7 @@ First, set up environment variables for the configuration:
 ```bash
 export IONSCALE_ACME_EMAIL="your-email@example.com"  # Used for Let's Encrypt notifications
 export IONSCALE_DOMAIN="ionscale.example.com"        # Your ionscale domain
-export IONSCALE_SYSTEM_ADMIN_KEY=$(docker run --rm ghcr.io/jsiebens/ionscale: genkey -n)
+export IONSCALE_SYSTEM_ADMIN_KEY=$(docker run --rm ghcr.io/jsiebens/ionscale:0.17.0 genkey -n)
 ```
 
 !!! important "System admin key"
