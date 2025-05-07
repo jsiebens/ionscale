@@ -33,8 +33,8 @@ If you configured ionscale with a system admin key during installation, you can 
 
 ```bash
 # Configure environment variables
-export IONSCALE_URL="https://ionscale.example.com"
-export IONSCALE_KEY="your-system-admin-key"
+export IONSCALE_ADDR="https://ionscale.example.com"
+export IONSCALE_SYSTEM_ADMIN_KEY="your-system-admin-key"
 
 # Verify connection
 ionscale version
@@ -48,7 +48,7 @@ If you configured ionscale with an OIDC provider, users designated as system adm
 
 ```bash
 # Configure URL only
-export IONSCALE_URL="https://ionscale.example.com"
+export IONSCALE_ADDR="https://ionscale.example.com"
 
 # Authenticate through OIDC
 ionscale auth login

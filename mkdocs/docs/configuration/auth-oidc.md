@@ -184,8 +184,8 @@ auth:
 If you've configured OIDC but no system administrators, you can still use the system admin key from your initial setup for administrative tasks:
 
 ```bash
-export IONSCALE_URL="https://your-ionscale-domain.com"
-export IONSCALE_KEY="your-system-admin-key"
+export IONSCALE_ADDR="https://your-ionscale-domain.com"
+export IONSCALE_SYSTEM_ADMIN_KEY="your-system-admin-key"
 ionscale tailnet list
 ```
 
