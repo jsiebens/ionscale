@@ -53,7 +53,7 @@ if [ -z "${IONSCALE_ACME_EMAIL}" ]; then
 fi
 
 # Set up directories and paths
-IONSCALE_VERSION=v0.17.0  # Updated version
+IONSCALE_VERSION=v0.17.0
 IONSCALE_DATA_DIR=/var/lib/ionscale
 IONSCALE_CONFIG_DIR=/etc/ionscale
 IONSCALE_SERVICE_FILE=/etc/systemd/system/ionscale.service
@@ -111,7 +111,7 @@ create_service_user() {
 
 # --- Binary installation ---
 download_and_install() {
-  info "Downloading ionscale binary v$IONSCALE_VERSION"
+  info "Downloading ionscale binary $IONSCALE_VERSION"
   $SUDO curl -o "$BIN_DIR/ionscale" -sfL "https://github.com/jsiebens/ionscale/releases/download/${IONSCALE_VERSION}/ionscale_linux_${SUFFIX}"
   $SUDO chmod +x "$BIN_DIR/ionscale"
 
