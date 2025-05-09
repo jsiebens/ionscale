@@ -1,8 +1,9 @@
 package handlers
 
 import (
-	"github.com/jsiebens/ionscale/internal/dns"
+	"github.com/jsiebens/ionscale/pkg/sdk/dnsplugin"
 	"github.com/labstack/echo/v4"
+	"github.com/libdns/libdns"
 	"net"
 	"net/http"
 	"strings"
@@ -11,14 +12,16 @@ import (
 	"time"
 )
 
-func NewDNSHandlers(_ key.MachinePublic, provider dns.Provider) *DNSHandlers {
+func NewDNSHandlers(_ key.MachinePublic, zone string, provider dnsplugin.Provider) *DNSHandlers {
 	return &DNSHandlers{
+		zone:     zone,
 		provider: provider,
 	}
 }
 
 type DNSHandlers struct {
-	provider dns.Provider
+	zone     string
+	provider dnsplugin.Provider
 }
 
 func (h *DNSHandlers) SetDNS(c echo.Context) error {
@@ -37,7 +40,15 @@ func (h *DNSHandlers) SetDNS(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusNotFound)
 	}
 
-	if err := h.provider.SetRecord(ctx, req.Type, req.Name, req.Value); err != nil {
+	_, err := h.provider.SetRecords(ctx, h.zone, []libdns.Record{
+		libdns.RR{
+			Type: req.Type,
+			Name: libdns.RelativeName(req.Name, h.zone),
+			Data: req.Value,
+			TTL:  1 * time.Minute,
+		}})
+
+	if err != nil {
 		return logError(err)
 	}
 
@@ -52,8 +63,8 @@ func (h *DNSHandlers) SetDNS(c echo.Context) error {
 		for {
 			select {
 			case <-tick.C:
-				txtrecords, _ := net.LookupTXT(req.Name)
-				for _, txt := range txtrecords {
+				records, _ := net.LookupTXT(req.Name)
+				for _, txt := range records {
 					if txt == req.Value {
 						return c.JSON(http.StatusOK, tailcfg.SetDNSResponse{})
 					}

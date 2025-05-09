@@ -2,7 +2,7 @@ package handlers
 
 import (
 	"fmt"
-	"github.com/jsiebens/ionscale/internal/dns"
+	"github.com/jsiebens/ionscale/internal/config"
 	"github.com/jsiebens/ionscale/internal/domain"
 	"github.com/labstack/echo/v4"
 	"net/http"
@@ -10,18 +10,16 @@ import (
 	"tailscale.com/types/key"
 )
 
-func NewQueryFeatureHandlers(machineKey key.MachinePublic, dnsProvider dns.Provider, repository domain.Repository) *QueryFeatureHandlers {
+func NewQueryFeatureHandlers(machineKey key.MachinePublic, repository domain.Repository) *QueryFeatureHandlers {
 	return &QueryFeatureHandlers{
-		machineKey:  machineKey,
-		dnsProvider: dnsProvider,
-		repository:  repository,
+		machineKey: machineKey,
+		repository: repository,
 	}
 }
 
 type QueryFeatureHandlers struct {
-	machineKey  key.MachinePublic
-	dnsProvider dns.Provider
-	repository  domain.Repository
+	machineKey key.MachinePublic
+	repository domain.Repository
 }
 
 func (h *QueryFeatureHandlers) QueryFeature(c echo.Context) error {
@@ -48,7 +46,7 @@ func (h *QueryFeatureHandlers) QueryFeature(c echo.Context) error {
 			return echo.NewHTTPError(http.StatusBadRequest)
 		}
 
-		if h.dnsProvider == nil || !machine.Tailnet.DNSConfig.HttpsCertsEnabled {
+		if !config.DNSProviderConfigured() || !machine.Tailnet.DNSConfig.HttpsCertsEnabled {
 			resp.Text = fmt.Sprintf(serverMessage, machine.Tailnet.Name)
 			resp.Complete = false
 		}
