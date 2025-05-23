@@ -225,6 +225,7 @@ func ToNode(capVer tailcfg.CapabilityVersion, m *domain.Machine, tailnet *domain
 
 	if m.HasTags() {
 		n.User = tailcfg.UserID(taggedDevicesUser.ID)
+		n.Tags = m.Tags
 		user = tailcfg.UserProfile{
 			ID:          tailcfg.UserID(taggedDevicesUser.ID),
 			LoginName:   "tagged-devices",

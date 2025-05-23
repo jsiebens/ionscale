@@ -80,3 +80,16 @@ func TestNodeWithSameHostname(t *testing.T) {
 		}, machines)
 	})
 }
+
+func TestNodeShouldSeeAssignedTags(t *testing.T) {
+	sc.Run(t, func(s *sc.Scenario) {
+		tailnet := s.CreateTailnet()
+		key := s.CreateAuthKey(tailnet.Id, true, "tag:server")
+
+		nodeA := s.NewTailscaleNode()
+
+		require.NoError(t, nodeA.Up(key, tsn.WithAdvertiseTags("tag:test")))
+		require.NoError(t, nodeA.WaitFor(tsn.HasTag("tag:server")))
+		require.NoError(t, nodeA.WaitFor(tsn.HasTag("tag:test")))
+	})
+}
