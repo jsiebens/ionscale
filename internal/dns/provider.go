@@ -34,8 +34,12 @@ func NewProvider(config config.DNS) (Provider, error) {
 		return nil, nil
 	}
 
-	if p.Name != "" && p.PluginPath != "" {
+	if p.Name == "" && p.PluginPath == "" {
 		return nil, fmt.Errorf("invalid dns provider configuration, either name or plugin_path should be set")
+	}
+
+	if p.Name != "" && p.PluginPath != "" {
+		return nil, fmt.Errorf("invalid dns provider configuration, only one of name or plugin_path should be set")
 	}
 
 	if !strings.HasSuffix(config.MagicDNSSuffix, p.Zone) {
