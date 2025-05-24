@@ -219,6 +219,7 @@ type DNS struct {
 
 type DNSProvider struct {
 	Name          string          `json:"name"`
+	PluginPath    string          `json:"plugin_path"`
 	Zone          string          `json:"zone"`
 	Configuration json.RawMessage `json:"config"`
 }

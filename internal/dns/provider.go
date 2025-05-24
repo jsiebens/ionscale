@@ -11,6 +11,7 @@ import (
 	"github.com/libdns/googleclouddns"
 	"github.com/libdns/libdns"
 	"github.com/libdns/route53"
+	"go.uber.org/zap"
 	"strings"
 	"time"
 )
@@ -33,16 +34,20 @@ func NewProvider(config config.DNS) (Provider, error) {
 		return nil, nil
 	}
 
+	if p.Name != "" && p.PluginPath != "" {
+		return nil, fmt.Errorf("invalid dns provider configuration, either name or plugin_path should be set")
+	}
+
 	if !strings.HasSuffix(config.MagicDNSSuffix, p.Zone) {
 		return nil, fmt.Errorf("invalid MagicDNS suffix [%s], not part of zone [%s]", config.MagicDNSSuffix, p.Zone)
 	}
 
 	factory, ok := factories[p.Name]
-	if !ok {
-		return nil, fmt.Errorf("unknown dns provider: %s", p.Name)
+	if ok {
+		return newProvider(p.Zone, p.Configuration, factory)
 	}
 
-	return newProvider(p.Zone, p.Configuration, factory)
+	return newPluginManager(p.PluginPath, fqdn(p.Zone), p.Configuration)
 }
 
 func newProvider(zone string, values json.RawMessage, factory func() libdns.RecordSetter) (Provider, error) {
@@ -54,22 +59,27 @@ func newProvider(zone string, values json.RawMessage, factory func() libdns.Reco
 }
 
 func azureProvider() libdns.RecordSetter {
+	zap.L().Warn("Builtin azure DNS plugin is deprecated and will be removed in a future release.")
 	return &azure.Provider{}
 }
 
 func cloudflareProvider() libdns.RecordSetter {
+	zap.L().Warn("Builtin cloudflare DNS plugin is deprecated and will be removed in a future release.")
 	return &cloudflare.Provider{}
 }
 
 func digitalOceanProvider() libdns.RecordSetter {
+	zap.L().Warn("Builtin digitalocean DNS plugin is deprecated and will be removed in a future release.")
 	return &digitalocean.Provider{}
 }
 
 func googleCloudDNSProvider() libdns.RecordSetter {
+	zap.L().Warn("Builtin googleclouddns DNS plugin is deprecated and will be removed in a future release.")
 	return &googleclouddns.Provider{}
 }
 
 func route53Provider() libdns.RecordSetter {
+	zap.L().Warn("Builtin route53 DNS plugin is deprecated and will be removed in a future release.")
 	return &route53.Provider{}
 }
 
