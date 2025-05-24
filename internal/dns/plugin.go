@@ -68,7 +68,7 @@ func (pm *pluginManager) ensureRunning(start bool) error {
 	}
 
 	// Create a new client
-	cmd := exec.Command(fmt.Sprintf(pm.pluginPath))
+	cmd := exec.Command(pm.pluginPath)
 	pm.client = plugin.NewClient(&plugin.ClientConfig{
 		HandshakeConfig: dnsplugin.Handshake,
 		Plugins:         dnsplugin.PluginMap,
