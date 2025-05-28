@@ -99,10 +99,7 @@ dns:
     name: "cloudflare"
     zone: "example.com"
     config:
-      auth_token: "your-cloudflare-api-token"
-      # OR use email/api_key authentication 
-      # email: "your-email@example.com"
-      # api_key: "your-global-api-key"
+      api_token: "your-cloudflare-api-token"
 ```
 
 For Cloudflare, create an API token with the "Edit" permission for "Zone:DNS".
@@ -138,6 +135,7 @@ dns:
       secret_access_key: "your-secret-access-key"
       # Optional region, defaults to us-east-1
       region: "us-east-1"
+      ...
 ```
 
 For AWS Route 53, create an IAM user with permissions to modify records in your hosted zone.
@@ -151,11 +149,9 @@ dns:
     name: "googleclouddns"
     zone: "example-com" # Note: GCP uses zone names without dots
     config:
-      project: "your-project-id"
-      # Either provide service account JSON directly
-      service_account_json: '{"type":"service_account","project_id":"your-project",...}'
-      # OR specify a path to a service account key file
-      # service_account_key_file: "/path/to/service-account-key.json"
+      gcp_project: "your-project-id"
+      # Optional path to a service account key file
+      # gcp_application_default: "/path/to/service-account-key.json"
 ```
 
 For Google Cloud DNS, create a service account with the "DNS Administrator" role.
@@ -169,7 +165,7 @@ dns:
     name: "digitalocean"
     zone: "example.com"
     config:
-      token: "your-digitalocean-api-token"
+      auth_token: "your-digitalocean-api-token"
 ```
 
 For DigitalOcean, create an API token with read and write access.
