@@ -2,9 +2,11 @@ package auth
 
 import (
 	"context"
+	"errors"
 	"fmt"
-	"github.com/jsiebens/ionscale/internal/config"
 	"strings"
+
+	"github.com/jsiebens/ionscale/internal/config"
 
 	"github.com/coreos/go-oidc/v3/oidc"
 	"golang.org/x/oauth2"
@@ -75,7 +77,7 @@ func (p *OIDCProvider) Exchange(redirectURI, code string) (*User, error) {
 		return nil, err
 	}
 
-	sub, email, tokenClaims, err := p.getTokenClaims(idToken)
+	sub, tokenClaims, err := p.getTokenClaims(idToken)
 	if err != nil {
 		return nil, err
 	}
@@ -83,6 +85,18 @@ func (p *OIDCProvider) Exchange(redirectURI, code string) (*User, error) {
 	userInfoClaims, err := p.getUserInfoClaims(oauth2Config, oauth2Token)
 	if err != nil {
 		return nil, err
+	}
+
+	var email string
+	if v, ok := userInfoClaims["email"]; ok {
+		email, ok = v.(string)
+		if !ok {
+			return nil, fmt.Errorf("failed to convert email into string: %v", email)
+		}
+	}
+
+	if email == "" {
+		return nil, errors.New("userinfo does not contain email, please check scopes")
 	}
 
 	domain := strings.Split(email, "@")[1]
@@ -99,24 +113,23 @@ func (p *OIDCProvider) Exchange(redirectURI, code string) (*User, error) {
 	}, nil
 }
 
-func (p *OIDCProvider) getTokenClaims(idToken *oidc.IDToken) (string, string, map[string]interface{}, error) {
+func (p *OIDCProvider) getTokenClaims(idToken *oidc.IDToken) (string, map[string]interface{}, error) {
 	var raw = make(map[string]interface{})
 	var claims struct {
-		Sub   string `json:"sub"`
-		Email string `json:"email"`
+		Sub string `json:"sub"`
 	}
 
 	// Extract default claims.
 	if err := idToken.Claims(&claims); err != nil {
-		return "", "", nil, fmt.Errorf("failed to parse id_token claims: %v", err)
+		return "", nil, fmt.Errorf("failed to parse id_token claims: %v", err)
 	}
 
 	// Extract raw claims.
 	if err := idToken.Claims(&raw); err != nil {
-		return "", "", nil, fmt.Errorf("failed to parse id_token claims: %v", err)
+		return "", nil, fmt.Errorf("failed to parse id_token claims: %v", err)
 	}
 
-	return claims.Sub, claims.Email, raw, nil
+	return claims.Sub, raw, nil
 }
 
 func (p *OIDCProvider) getUserInfoClaims(config oauth2.Config, token *oauth2.Token) (map[string]interface{}, error) {
