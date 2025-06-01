@@ -353,6 +353,10 @@ func setupLogging(config config.Logging) (*zap.Logger, error) {
 	pc.EncoderConfig.EncodeLevel = zapcore.CapitalLevelEncoder
 	pc.EncoderConfig.EncodeTime = zapcore.ISO8601TimeEncoder
 
+	if level.Level() == zap.DebugLevel {
+		pc.DisableStacktrace = false
+	}
+
 	if config.File != "" {
 		pc.OutputPaths = []string{config.File}
 	}
